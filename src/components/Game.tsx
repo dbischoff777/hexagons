@@ -224,63 +224,114 @@ const Game = () => {
         ctx.fillStyle = 'rgba(25, 0, 0, 0.9)'
         ctx.fillRect(0, 0, canvas.width, canvas.height)
 
-        // Game Over box
-        const boxWidth = 400
-        const boxHeight = 300
-        const boxX = (canvas.width - boxWidth) / 2
-        const boxY = (canvas.height - boxHeight) / 2
+        // Game Over container
+        const containerWidth = 400
+        const containerHeight = 500
+        const containerX = (canvas.width - containerWidth) / 2
+        const containerY = (canvas.height - containerHeight) / 2
 
-        // Draw box with gradient background
-        const gradient = ctx.createLinearGradient(boxX, boxY, boxX, boxY + boxHeight)
+        // Draw container with gradient background
+        const gradient = ctx.createLinearGradient(containerX, containerY, containerX, containerY + containerHeight)
         gradient.addColorStop(0, '#2C0A1E')
         gradient.addColorStop(1, '#1A0712')
         ctx.fillStyle = gradient
-        ctx.roundRect(boxX, boxY, boxWidth, boxHeight, 15)
+        ctx.roundRect(containerX, containerY, containerWidth, containerHeight, 15)
         ctx.fill()
 
-        // Box border with glow
+        // Container border with glow
         ctx.strokeStyle = '#FF4D6D'
         ctx.lineWidth = 3
         ctx.shadowColor = '#FF4D6D'
         ctx.shadowBlur = 15
-        ctx.roundRect(boxX, boxY, boxWidth, boxHeight, 15)
+        ctx.roundRect(containerX, containerY, containerWidth, containerHeight, 15)
         ctx.stroke()
-
-        // Reset shadow
         ctx.shadowBlur = 0
 
         // Game Over text
         ctx.font = 'bold 48px Arial'
         ctx.fillStyle = '#FF8FA3'
         ctx.textAlign = 'center'
-        ctx.fillText('GAME OVER', canvas.width / 2, boxY + 80)
+        ctx.fillText('GAME OVER', canvas.width / 2, containerY + 80)
 
         // Final Score text
         ctx.font = 'bold 32px Arial'
         ctx.fillStyle = '#FF4D6D'
-        ctx.fillText('Final Score', canvas.width / 2, boxY + 140)
+        ctx.fillText('Final Score', canvas.width / 2, containerY + 180)
         
         // Score with glow
         ctx.font = 'bold 56px Arial'
         ctx.fillStyle = '#FFFFFF'
         ctx.shadowColor = '#FF4D6D'
         ctx.shadowBlur = 10
-        ctx.fillText(score.toString(), canvas.width / 2, boxY + 200)
+        ctx.fillText(score.toString(), canvas.width / 2, containerY + 260)
         ctx.shadowBlur = 0
 
-        // Play Again hint
-        ctx.font = '24px Arial'
-        ctx.fillStyle = '#FF8FA3'
-        ctx.fillText('Refresh to play again', canvas.width / 2, boxY + 250)
+        // Draw button container last
+        const buttonContainerHeight = 100
+        const buttonContainerY = containerY + containerHeight - buttonContainerHeight
+
+        // Button container background
+        ctx.fillStyle = 'rgba(44, 10, 30, 0.95)'
+        ctx.beginPath()
+        ctx.roundRect(containerX, buttonContainerY, containerWidth, buttonContainerHeight, [0, 0, 15, 15])
+        ctx.fill()
+
+        // Play Again button
+        const buttonWidth = 200
+        const buttonHeight = 50
+        const buttonX = canvas.width / 2 - buttonWidth / 2
+        const buttonY = buttonContainerY + (buttonContainerHeight - buttonHeight) / 2
+
+        // Draw button with hover effect
+        ctx.fillStyle = '#FF4D6D'
+        ctx.shadowColor = '#FF4D6D'
+        ctx.shadowBlur = mousePosition && 
+          mousePosition.x >= buttonX && mousePosition.x <= buttonX + buttonWidth &&
+          mousePosition.y >= buttonY && mousePosition.y <= buttonY + buttonHeight ? 15 : 5
+        ctx.roundRect(buttonX, buttonY, buttonWidth, buttonHeight, 10)
+        ctx.fill()
+
+        // Button text
+        ctx.shadowBlur = 0
+        ctx.font = 'bold 24px Arial'
+        ctx.fillStyle = '#FFFFFF'
+        ctx.fillText('Play Again', canvas.width / 2, buttonY + buttonHeight/2 + 8)
       }
     }
 
     const handleClick = (event: MouseEvent) => {
-      if (isGameOver) return
-
       const rect = canvas.getBoundingClientRect()
       const mouseX = event.clientX - rect.left
       const mouseY = event.clientY - rect.top
+
+      if (isGameOver) {
+        const containerHeight = 500
+        const buttonContainerHeight = 100
+        const buttonWidth = 200
+        const buttonHeight = 50
+        const buttonX = canvas.width / 2 - buttonWidth / 2
+        const buttonY = (canvas.height - containerHeight) / 2 + containerHeight - buttonContainerHeight + (buttonContainerHeight - buttonHeight) / 2
+
+        if (mouseX >= buttonX && mouseX <= buttonX + buttonWidth &&
+            mouseY >= buttonY && mouseY <= buttonY + buttonHeight) {
+          // Reset game state
+          setPlacedTiles([{
+            ...createTileWithRandomEdges(0, 0),
+            isPlaced: true
+          }])
+          setScore(0)
+          setTimeLeft(INITIAL_TIME)
+          setIsGameOver(false)
+          setNextTiles([
+            { ...createTileWithRandomEdges(0, 0), isPlaced: false },
+            { ...createTileWithRandomEdges(0, 0), isPlaced: false },
+            { ...createTileWithRandomEdges(0, 0), isPlaced: false }
+          ])
+          setSelectedTileIndex(null)
+          return
+        }
+        return
+      }
 
       // Check if click is in next pieces area
       nextTiles.forEach((tile, index) => {
