@@ -454,13 +454,22 @@ const Game = () => {
           
           // Show score popup for immediate matches with the placed tile
           if (updatedPlacedTile.value > 0) {
-            const placedTileScore = updatedPlacedTile.value * 2  // Double points for each matching border
+            const placedTileScore = updatedPlacedTile.value * 2
+            
+            // Choose emoji based on score tiers
+            const matchEmoji = 
+              placedTileScore >= 20 ? '🌈✨' :   // Exceptional score
+              placedTileScore >= 15 ? '⚡💫' :   // Amazing score
+              placedTileScore >= 10 ? '🔥✨' :   // Great score
+              placedTileScore >= 5  ? '💎' :     // Good score
+              '💫'                               // Regular score
+
             setScorePopups(prev => [...prev, {
               score: placedTileScore,
               x: canvas.width / 2 - 100,
               y: canvas.height / 2 - 150,
               id: Date.now(),
-              emoji: placedTileScore >= 10 ? '🔥' : '✨'  // Fire for high scores, sparkles for regular
+              emoji: matchEmoji
             }])
             setScore(prevScore => prevScore + placedTileScore)
           }
@@ -474,13 +483,21 @@ const Game = () => {
             const multiplier = matchingTiles.length
             const clearBonus = totalMatchScore * multiplier * 2
             
+            // Choose emoji based on clear bonus achievements
+            const clearEmoji = 
+              clearBonus >= 100 ? '👑✨' :    // Epic clear
+              clearBonus >= 75  ? '🏆💫' :    // Amazing clear
+              clearBonus >= 50  ? '🎯⚡' :    // Great clear
+              clearBonus >= 25  ? '🎮💫' :    // Good clear
+              '🎪✨'                          // Regular clear
+
             setTimeout(() => {
               setScorePopups(prev => [...prev, {
                 score: clearBonus,
                 x: canvas.width / 2 - 100,
                 y: canvas.height / 2 - 150,
                 id: Date.now() + 1,
-                emoji: '🌟'  // Star for clearing bonus
+                emoji: clearEmoji
               }])
               setScore(prevScore => prevScore + clearBonus)
             }, 300)
