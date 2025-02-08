@@ -78,51 +78,67 @@ const Game = () => {
         ctx.fillText('▼', x, y - size - 10) // Arrow pointing to selected tile
       }
 
-      // Draw background
+      // Add shadow for depth
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.2)'
+      ctx.shadowBlur = 5
+      ctx.shadowOffsetY = 2
+
+      // Enhanced background colors
+      if (tile?.isPlaced) {
+        if (isMatched) {
+          ctx.fillStyle = 'rgba(255, 223, 186, 0.95)' // Warm glow for matches
+          ctx.shadowColor = 'rgba(255, 166, 0, 0.4)'
+          ctx.shadowBlur = 15
+        } else {
+          ctx.fillStyle = 'rgba(255, 255, 255, 0.95)'
+        }
+      } else if (tile) {
+        ctx.fillStyle = isSelected ? 'rgba(220, 230, 255, 0.95)' : 'rgba(245, 245, 245, 0.95)'
+      } else {
+        ctx.fillStyle = 'rgba(230, 230, 230, 0.3)' // More transparent grid
+      }
+      
+      // Draw hexagon with rounded corners
       ctx.beginPath()
       points.forEach((point, i) => {
         if (i === 0) ctx.moveTo(point[0], point[1])
         else ctx.lineTo(point[0], point[1])
       })
       ctx.closePath()
-
-      if (tile?.isPlaced) {
-        if (isMatched) {
-          ctx.fillStyle = 'rgba(255, 255, 200, 0.9)'
-        } else {
-          ctx.fillStyle = 'rgba(255, 255, 255, 0.9)'
-        }
-      } else if (tile) {
-        ctx.fillStyle = isSelected ? 'rgba(220, 230, 255, 0.9)' : 'rgba(240, 240, 240, 0.9)'
-      } else {
-        ctx.fillStyle = 'rgba(230, 230, 230, 0.5)'
-      }
       ctx.fill()
 
-      // Draw edges
+      // Reset shadow for edges
+      ctx.shadowColor = 'none'
+      ctx.shadowBlur = 0
+      ctx.shadowOffsetY = 0
+
+      // Draw edges with gradient
       if (tile?.edges) {
         for (let i = 0; i < 6; i++) {
           const start = points[i]
           const end = points[(i + 1) % 6]
           
+          const gradient = ctx.createLinearGradient(start[0], start[1], end[0], end[1])
+          gradient.addColorStop(0, tile.edges[i].color)
+          gradient.addColorStop(1, tile.edges[i].color)
+          
           ctx.beginPath()
           ctx.moveTo(start[0], start[1])
           ctx.lineTo(end[0], end[1])
-          ctx.strokeStyle = tile.edges[i].color
-          ctx.lineWidth = isSelected ? 3 : 2 // Thicker lines for selected tile
+          ctx.strokeStyle = gradient
+          ctx.lineWidth = isSelected ? 4 : 3
+          ctx.lineCap = 'round'
           ctx.stroke()
         }
 
-        // Draw number
-        ctx.fillStyle = isSelected ? '#1a1a1a' : '#444444'
-        ctx.font = isSelected ? 'bold 22px Arial' : 'bold 20px Arial'
+        // Draw number with shadow
+        ctx.shadowColor = 'rgba(0, 0, 0, 0.2)'
+        ctx.shadowBlur = 2
+        ctx.fillStyle = isSelected ? '#1a1a1a' : '#2d2d2d'
+        ctx.font = `bold ${isSelected ? 24 : 22}px Arial`
         ctx.textAlign = 'center'
         ctx.textBaseline = 'middle'
         ctx.fillText(tile.value.toString(), x, y)
-      } else {
-        ctx.strokeStyle = '#ddd'
-        ctx.lineWidth = 1
-        ctx.stroke()
       }
     }
 
