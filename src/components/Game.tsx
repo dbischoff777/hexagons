@@ -1,19 +1,22 @@
 import { useEffect, useRef, useState } from 'react'
-import { DragState, Tile } from '../types'
+import { DragState, PlacedTile } from '../types'
 import { createTileWithRandomEdges, hexToPixel } from '../utils/hexUtils'
 import { INITIAL_TIME, hasMatchingEdges, canAcceptMoreConnections, formatTime } from '../utils/gameUtils'
 import './Game.css'
 
 const Game = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null)
-  const [placedTiles, setPlacedTiles] = useState<Tile[]>([createTileWithRandomEdges(0, 0)])
+  const [placedTiles, setPlacedTiles] = useState<PlacedTile[]>([{
+    ...createTileWithRandomEdges(0, 0),
+    isPlaced: true
+  }])
   const [score, setScore] = useState<number>(0)
   const [timeLeft, setTimeLeft] = useState<number>(INITIAL_TIME)
   const [isGameOver, setIsGameOver] = useState<boolean>(false)
-  const [nextTiles, setNextTiles] = useState<Tile[]>([
-    createTileWithRandomEdges(0, 0),
-    createTileWithRandomEdges(0, 0),
-    createTileWithRandomEdges(0, 0)
+  const [nextTiles, setNextTiles] = useState<PlacedTile[]>([
+    { ...createTileWithRandomEdges(0, 0), isPlaced: true },
+    { ...createTileWithRandomEdges(0, 0), isPlaced: true },
+    { ...createTileWithRandomEdges(0, 0), isPlaced: true }
   ])
   const [dragState, setDragState] = useState<DragState>({
     isDragging: false,
@@ -48,7 +51,7 @@ const Game = () => {
     canvas.width = 1000
     canvas.height = 800
 
-    const drawHexagonWithColoredEdges = (x: number, y: number, size: number, tile?: Tile, isMatched: boolean = false) => {
+    const drawHexagonWithColoredEdges = (x: number, y: number, size: number, tile?: PlacedTile, isMatched: boolean = false) => {
       const points: [number, number][] = []
       
       // Calculate all points first
@@ -207,8 +210,8 @@ const Game = () => {
     }
 
     const handleMouseUp = (event: MouseEvent) => {
-      if (isGameOver) return // Prevent moves after game over
-      
+      if (isGameOver) return
+
       if (dragState.isDragging && dragState.tile) {
         const rect = canvas.getBoundingClientRect()
         const mouseX = event.clientX - rect.left
@@ -221,29 +224,51 @@ const Game = () => {
         const isValidPosition = Math.max(Math.abs(q), Math.abs(r), Math.abs(s)) <= Math.floor(cols/2)
         const isOccupied = placedTiles.some(tile => tile.q === q && tile.r === r)
 
-        if (isValidPosition && !isOccupied && dragState.tile) {
-          const newTile = { ...dragState.tile, q, r }
+        if (isValidPosition && !isOccupied) {
+          const newTile: PlacedTile = { 
+            ...dragState.tile, 
+            q, 
+            r,
+            isPlaced: true 
+          }
           const newPlacedTiles = [...placedTiles, newTile]
           
-          // Find all matching tiles
-          const matchingTiles = newPlacedTiles.filter(tile => hasMatchingEdges(tile, newPlacedTiles))
+          // Find all connected matching tiles recursively
+          const findConnectedMatches = (tile: PlacedTile, matches: Set<PlacedTile>) => {
+            if (!matches.has(tile) && hasMatchingEdges(tile, newPlacedTiles)) {
+              matches.add(tile)
+              // Check neighbors
+              newPlacedTiles.forEach(neighbor => {
+                if (!matches.has(neighbor) && 
+                    Math.abs(neighbor.q - tile.q) <= 1 && 
+                    Math.abs(neighbor.r - tile.r) <= 1 &&
+                    hasMatchingEdges(neighbor, newPlacedTiles)) {
+                  findConnectedMatches(neighbor, matches)
+                }
+              })
+            }
+            return matches
+          }
+
+          const matchingTilesSet = findConnectedMatches(newTile, new Set<PlacedTile>())
+          const matchingTiles = Array.from(matchingTilesSet)
           
-          // Check if matching tiles are in dead end
-          const deadEndTiles = matchingTiles.filter(tile => !canAcceptMoreConnections(tile, newPlacedTiles, cols))
-          
-          if (deadEndTiles.length >= 3) {
-            // Calculate new score: sum of dead end tile values * number of tiles
-            const tileSum = deadEndTiles.reduce((sum, tile) => sum + tile.value, 0)
-            const multiplier = deadEndTiles.length
+          // Check if all matching tiles are in dead ends
+          const deadEndTiles = matchingTiles.filter(tile => 
+            !canAcceptMoreConnections(tile, newPlacedTiles, cols)
+          )
+
+          if (deadEndTiles.length === matchingTiles.length && matchingTiles.length >= 3) {
+            const tileSum = matchingTiles.reduce((sum, tile) => sum + tile.value, 0)
+            const multiplier = matchingTiles.length
             const additionalScore = tileSum * multiplier
             
             setScore(prevScore => prevScore + additionalScore)
             
             setTimeout(() => {
-              setPlacedTiles(newPlacedTiles.filter(tile => !deadEndTiles.includes(tile)))
+              setPlacedTiles(newPlacedTiles.filter(tile => !matchingTiles.includes(tile)))
             }, 500)
           } else {
-            // Add score for matching tiles that aren't in dead ends
             const matchScore = matchingTiles.reduce((sum, tile) => sum + tile.value, 0)
             setScore(prevScore => prevScore + matchScore)
             setPlacedTiles(newPlacedTiles)

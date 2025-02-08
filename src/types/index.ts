@@ -17,4 +17,8 @@ export interface DragState {
   y: number
   offsetX: number
   offsetY: number
+}
+
+export interface PlacedTile extends Tile {
+  isPlaced: boolean  // Add flag to track if tile is properly placed
 } 
