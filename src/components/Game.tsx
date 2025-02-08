@@ -465,7 +465,7 @@ const Game = () => {
     <div className="game-container">
       <div className="game-hud">
         <div className="score">
-          {score}
+          {'Score: ' + score}
         </div>
         <div className={`timer ${
           timeLeft > INITIAL_TIME * 0.5 ? 'safe' : 
