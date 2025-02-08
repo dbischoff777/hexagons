@@ -27,6 +27,7 @@ const createTileWithRandomEdges = (q: number, r: number): Tile => ({
 const Game = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [placedTiles, setPlacedTiles] = useState<Tile[]>([createTileWithRandomEdges(0, 0)])
+  const [score, setScore] = useState<number>(0)
   const [selectedTile, setSelectedTile] = useState<Tile | null>(null)
   const [nextTiles, setNextTiles] = useState<Tile[]>([
     createTileWithRandomEdges(0, 0),
@@ -61,7 +62,7 @@ const Game = () => {
     canvas.width = 1000
     canvas.height = 800
 
-    const drawHexagonWithColoredEdges = (x: number, y: number, size: number, tile?: Tile) => {
+    const drawHexagonWithColoredEdges = (x: number, y: number, size: number, tile?: Tile, isMatched: boolean = false) => {
       const points: [number, number][] = []
       
       // Calculate all points first
@@ -74,6 +75,18 @@ const Game = () => {
 
       // Draw each edge with its color
       if (tile?.edges) {
+        // Draw highlight if matched
+        if (isMatched) {
+          ctx.fillStyle = 'rgba(255, 255, 0, 0.2)' // Light yellow highlight
+          ctx.beginPath()
+          points.forEach((point, i) => {
+            if (i === 0) ctx.moveTo(point[0], point[1])
+            else ctx.lineTo(point[0], point[1])
+          })
+          ctx.closePath()
+          ctx.fill()
+        }
+
         for (let i = 0; i < 6; i++) {
           const start = points[i]
           const end = points[(i + 1) % 6]
@@ -120,8 +133,44 @@ const Game = () => {
     const nextPiecesX = centerX + 400
     const nextPiecesY = 200
 
+    // Function to check if a tile has matching edges with its neighbors
+    const hasMatchingEdges = (tile: Tile): boolean => {
+      const directions = [
+        { q: 1, r: 0 },   // right
+        { q: 0, r: 1 },   // bottom right
+        { q: -1, r: 1 },  // bottom left
+        { q: -1, r: 0 },  // left
+        { q: 0, r: -1 },  // top left
+        { q: 1, r: -1 }   // top right
+      ]
+
+      let hasMatch = false
+      directions.forEach((dir, i) => {
+        const neighbor = placedTiles.find(t => 
+          t.q === tile.q + dir.q && 
+          t.r === tile.r + dir.r
+        )
+
+        if (neighbor) {
+          // Compare edges (opposite edges should match)
+          const oppositeEdge = (i + 3) % 6
+          if (tile.edges[i].color === neighbor.edges[oppositeEdge].color) {
+            hasMatch = true
+          }
+        }
+      })
+
+      return hasMatch
+    }
+
     const draw = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height)
+
+      // Draw score
+      ctx.fillStyle = '#000000'
+      ctx.font = 'bold 24px Arial'
+      ctx.textAlign = 'center'
+      ctx.fillText(`Score: ${score}`, canvas.width / 2, 40)
 
       // Draw empty grid
       for (let q = -rows; q <= rows; q++) {
@@ -137,7 +186,8 @@ const Game = () => {
       // Draw placed tiles
       placedTiles.forEach(tile => {
         const { x, y } = hexToPixel(tile.q, tile.r, centerX, centerY, tileSize)
-        drawHexagonWithColoredEdges(x, y, tileSize, tile)
+        const isMatched = hasMatchingEdges(tile)
+        drawHexagonWithColoredEdges(x, y, tileSize, tile, isMatched)
       })
 
       // Draw next pieces area
@@ -206,9 +256,12 @@ const Game = () => {
         const isValidPosition = Math.max(Math.abs(q), Math.abs(r), Math.abs(s)) <= Math.floor(cols/2)
         const isOccupied = placedTiles.some(tile => tile.q === q && tile.r === r)
 
-        if (isValidPosition && !isOccupied) {
+        if (isValidPosition && !isOccupied && dragState.tile) {
           // Place the tile
           setPlacedTiles([...placedTiles, { ...dragState.tile, q, r }])
+          
+          // Update score - for now, just add the tile's value
+          setScore(prevScore => prevScore + dragState.tile.value)
           
           // Generate new tiles array with a new tile replacing the used one
           const newTiles = [...nextTiles]
@@ -239,7 +292,7 @@ const Game = () => {
       canvas.removeEventListener('mousemove', handleMouseMove)
       canvas.removeEventListener('mouseup', handleMouseUp)
     }
-  }, [placedTiles, selectedTile, nextTiles, dragState])
+  }, [placedTiles, selectedTile, nextTiles, dragState, score])
 
   return (
     <div className="game-container">
