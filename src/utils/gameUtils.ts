@@ -21,22 +21,6 @@ export const hasMatchingEdges = (tile: Tile, placedTiles: Tile[]): boolean => {
   return hasMatch
 }
 
-export const canAcceptMoreConnections = (tile: Tile, allTiles: Tile[], cols: number): boolean => {
-  for (let i = 0; i < 6; i++) {
-    const newQ = tile.q + DIRECTIONS[i].q
-    const newR = tile.r + DIRECTIONS[i].r
-    
-    const newS = -newQ - newR
-    const isValidPosition = Math.max(Math.abs(newQ), Math.abs(newR), Math.abs(newS)) <= Math.floor(cols/2)
-    const isEmpty = !allTiles.some(t => t.q === newQ && t.r === newR)
-    
-    if (isValidPosition && isEmpty) {
-      return true
-    }
-  }
-  return false
-}
-
 export const formatTime = (seconds: number): string => {
   const minutes = Math.floor(seconds / 60)
   const remainingSeconds = seconds % 60
@@ -60,4 +44,17 @@ export const updateTileValues = (tiles: PlacedTile[]): PlacedTile[] => {
       value: matches > 0 ? matches : 0
     }
   })
+}
+
+export const isGridFull = (tiles: Tile[], cols: number): boolean => {
+  // Calculate total possible positions in the hexagonal grid
+  const radius = Math.floor(cols/2)
+  let totalPositions = 0
+  for (let q = -radius; q <= radius; q++) {
+    const rStart = Math.max(-radius, -q-radius)
+    const rEnd = Math.min(radius, -q+radius)
+    totalPositions += rEnd - rStart + 1
+  }
+  
+  return tiles.length >= totalPositions
 } 

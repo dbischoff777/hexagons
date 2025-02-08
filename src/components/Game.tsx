@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { PlacedTile } from '../types'
-import { createTileWithRandomEdges, hexToPixel } from '../utils/hexUtils'
-import { INITIAL_TIME, hasMatchingEdges, canAcceptMoreConnections, formatTime, updateTileValues } from '../utils/gameUtils'
+import { createTileWithRandomEdges, DIRECTIONS, hexToPixel } from '../utils/hexUtils'
+import { INITIAL_TIME, hasMatchingEdges, formatTime, updateTileValues, isGridFull } from '../utils/gameUtils'
 import './Game.css'
 
 const rotateTileEdges = (edges: { color: string }[]) => {
@@ -369,44 +369,25 @@ const Game = () => {
           // Update all tiles' values after placement
           const newPlacedTiles = updateTileValues([...placedTiles, newTile])
           
-          // Find all connected matching tiles recursively
-          const findConnectedMatches = (tile: PlacedTile, matches: Set<PlacedTile>) => {
-            if (!matches.has(tile) && hasMatchingEdges(tile, newPlacedTiles)) {
-              matches.add(tile)
-              // Check neighbors
-              newPlacedTiles.forEach(neighbor => {
-                if (!matches.has(neighbor) && 
-                    Math.abs(neighbor.q - tile.q) <= 1 && 
-                    Math.abs(neighbor.r - tile.r) <= 1 &&
-                    hasMatchingEdges(neighbor, newPlacedTiles)) {
-                  findConnectedMatches(neighbor, matches)
-                }
-              })
+          // Only check for matches if grid is full
+          if (isGridFull(newPlacedTiles, cols)) {
+            const matchingTiles = newPlacedTiles.filter(tile => hasMatchingEdges(tile, newPlacedTiles))
+            
+            if (matchingTiles.length >= 3) {
+              // Calculate score based on the number of matching borders
+              const tileSum = matchingTiles.reduce((sum, tile) => sum + tile.value, 0)
+              const multiplier = matchingTiles.length
+              const additionalScore = tileSum * multiplier * 2
+              
+              setScore(prevScore => prevScore + additionalScore)
+              
+              // Remove all highlighted tiles after delay
+              setTimeout(() => {
+                setPlacedTiles(newPlacedTiles.filter(tile => !hasMatchingEdges(tile, newPlacedTiles)))
+              }, 500)
             }
-            return matches
-          }
-
-          const matchingTilesSet = findConnectedMatches(newTile, new Set<PlacedTile>())
-          const matchingTiles = Array.from(matchingTilesSet)
-          
-          // Check if all matching tiles are in dead ends
-          const deadEndTiles = matchingTiles.filter(tile => 
-            !canAcceptMoreConnections(tile, newPlacedTiles, cols)
-          )
-
-          if (deadEndTiles.length === matchingTiles.length && matchingTiles.length >= 3) {
-            const tileSum = matchingTiles.reduce((sum, tile) => sum + tile.value, 0)
-            const multiplier = matchingTiles.length
-            const additionalScore = tileSum * multiplier
-            
-            setScore(prevScore => prevScore + additionalScore)
-            
-            setTimeout(() => {
-              setPlacedTiles(newPlacedTiles.filter(tile => !matchingTiles.includes(tile)))
-            }, 500)
           } else {
-            const matchScore = matchingTiles.reduce((sum, tile) => sum + tile.value, 0)
-            setScore(prevScore => prevScore + matchScore)
+            // Just update the board with new tile
             setPlacedTiles(newPlacedTiles)
           }
           
