@@ -62,20 +62,29 @@ const Game = () => {
         points.push([xPos, yPos])
       }
 
+      // Draw background
+      ctx.beginPath()
+      points.forEach((point, i) => {
+        if (i === 0) ctx.moveTo(point[0], point[1])
+        else ctx.lineTo(point[0], point[1])
+      })
+      ctx.closePath()
+
+      if (tile?.isPlaced) {
+        if (isMatched) {
+          ctx.fillStyle = 'rgba(255, 255, 200, 0.9)' // Light yellow for matched tiles
+        } else {
+          ctx.fillStyle = 'rgba(255, 255, 255, 0.9)' // White for placed tiles
+        }
+      } else if (tile) {
+        ctx.fillStyle = 'rgba(240, 240, 240, 0.9)' // Light gray for draggable tiles
+      } else {
+        ctx.fillStyle = 'rgba(230, 230, 230, 0.5)' // Very light gray for empty grid
+      }
+      ctx.fill()
+
       // Draw each edge with its color
       if (tile?.edges) {
-        // Draw highlight if matched
-        if (isMatched) {
-          ctx.fillStyle = 'rgba(255, 255, 0, 0.2)' // Light yellow highlight
-          ctx.beginPath()
-          points.forEach((point, i) => {
-            if (i === 0) ctx.moveTo(point[0], point[1])
-            else ctx.lineTo(point[0], point[1])
-          })
-          ctx.closePath()
-          ctx.fill()
-        }
-
         for (let i = 0; i < 6; i++) {
           const start = points[i]
           const end = points[(i + 1) % 6]
@@ -89,19 +98,13 @@ const Game = () => {
         }
 
         // Draw the number
-        ctx.fillStyle = '#000000'
-        ctx.font = '20px Arial'
+        ctx.fillStyle = isMatched ? '#000000' : '#444444'
+        ctx.font = 'bold 20px Arial'
         ctx.textAlign = 'center'
         ctx.textBaseline = 'middle'
         ctx.fillText(tile.value.toString(), x, y)
       } else {
-        // Draw empty hexagon for the grid
-        ctx.beginPath()
-        points.forEach((point, i) => {
-          if (i === 0) ctx.moveTo(point[0], point[1])
-          else ctx.lineTo(point[0], point[1])
-        })
-        ctx.closePath()
+        // Draw empty hexagon border
         ctx.strokeStyle = '#ddd'
         ctx.lineWidth = 1
         ctx.stroke()
