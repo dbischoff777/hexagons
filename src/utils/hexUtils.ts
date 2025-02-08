@@ -1,4 +1,11 @@
-export const COLORS = ['#FF0000', '#00FF00', '#0000FF', '#FFFF00', '#FF00FF', '#00FFFF']
+export const COLORS = [
+  '#FF1177',  // Neon pink
+  '#00FF9F',  // Neon green
+  '#00FFFF',  // Neon cyan
+  '#FFE900',  // Neon yellow
+  '#FF00FF',  // Neon magenta
+  '#4D4DFF'   // Neon blue
+]
 
 export const getRandomColor = () => COLORS[Math.floor(Math.random() * COLORS.length)]
 

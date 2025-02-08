@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { PlacedTile } from '../types'
-import { createTileWithRandomEdges, DIRECTIONS, hexToPixel } from '../utils/hexUtils'
+import { createTileWithRandomEdges, hexToPixel } from '../utils/hexUtils'
 import { INITIAL_TIME, hasMatchingEdges, formatTime, updateTileValues, isGridFull } from '../utils/gameUtils'
 import './Game.css'
 
@@ -160,12 +160,34 @@ const Game = () => {
 
       if (!isGameOver) {
         // Draw regular game elements only if game is not over
-        // Draw score and timer
-        ctx.fillStyle = '#000000'
+        // Draw score and timer with intensity based on remaining time
+        ctx.fillStyle = '#00FF9F'  // Score stays neon green
+        ctx.shadowColor = '#00FF9F'
+        ctx.shadowBlur = 10
         ctx.font = 'bold 24px Arial'
         ctx.textAlign = 'center'
         ctx.fillText(`Score: ${score}`, canvas.width / 2 - 100, 40)
+        
+        // Timer with dynamic color and glow based on remaining time
+        const timePercentage = timeLeft / INITIAL_TIME
+        const timerColor = timePercentage > 0.5 
+          ? '#00FF9F'  // Green when plenty of time
+          : timePercentage > 0.25 
+            ? '#FFE900'  // Yellow when < 50% time
+            : '#FF1177'  // Red when < 25% time
+        
+        // Increase glow intensity as time runs out
+        const glowIntensity = Math.min(20, 10 + (1 - timePercentage) * 25)
+        const pulseIntensity = timePercentage < 0.25 
+          ? Math.sin(Date.now() / 200) * 5 + glowIntensity  // Add pulsing effect when low on time
+          : glowIntensity
+        
+        ctx.fillStyle = timerColor
+        ctx.shadowColor = timerColor
+        ctx.shadowBlur = pulseIntensity
+        ctx.font = `bold ${24 + (1 - timePercentage) * 4}px Arial`  // Slightly larger font when time is low
         ctx.fillText(`Time: ${formatTime(timeLeft)}`, canvas.width / 2 + 100, 40)
+        ctx.shadowBlur = 0
 
         // Draw empty grid
         for (let q = -rows; q <= rows; q++) {
@@ -199,9 +221,12 @@ const Game = () => {
 
         // Add rotation hint text
         if (selectedTileIndex !== null) {
-          ctx.fillStyle = '#666666'
+          ctx.fillStyle = '#00FF9F'  // Neon green
+          ctx.shadowColor = '#00FF9F'
+          ctx.shadowBlur = 8
           ctx.font = '16px Arial'
-          ctx.fillText('Right click to rotate', nextPiecesX, nextPiecesY - 20)
+          ctx.fillText('Right click to rotate', nextPiecesX, nextPiecesY - 69)
+          ctx.shadowBlur = 0
         }
 
         // Draw cursor tile
