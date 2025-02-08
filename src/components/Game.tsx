@@ -23,6 +23,7 @@ const Game = () => {
     { ...createTileWithRandomEdges(0, 0), isPlaced: false }
   ])
   const [selectedTileIndex, setSelectedTileIndex] = useState<number | null>(null)
+  const [mousePosition, setMousePosition] = useState<{ x: number, y: number } | null>(null)
 
   // Timer effect
   useEffect(() => {
@@ -202,6 +203,21 @@ const Game = () => {
           ctx.font = '16px Arial'
           ctx.fillText('Right click to rotate', nextPiecesX, nextPiecesY - 20)
         }
+
+        // Draw cursor tile
+        if (selectedTileIndex !== null && mousePosition) {
+          // Draw semi-transparent selected tile at cursor
+          ctx.globalAlpha = 0.6
+          drawHexagonWithColoredEdges(
+            mousePosition.x,
+            mousePosition.y,
+            tileSize,
+            nextTiles[selectedTileIndex],
+            false,
+            true
+          )
+          ctx.globalAlpha = 1.0
+        }
       } else {
         // Draw only game over screen
         // Dark overlay with slight red tint
@@ -360,17 +376,27 @@ const Game = () => {
       }
     }
 
+    const handleMouseMove = (event: MouseEvent) => {
+      const rect = canvas.getBoundingClientRect()
+      setMousePosition({
+        x: event.clientX - rect.left,
+        y: event.clientY - rect.top
+      })
+    }
+
     // Add the context menu event listener with the click handler
+    canvas.addEventListener('mousemove', handleMouseMove)
     canvas.addEventListener('click', handleClick)
     canvas.addEventListener('contextmenu', handleContextMenu)
 
     draw()
 
     return () => {
+      canvas.removeEventListener('mousemove', handleMouseMove)
       canvas.removeEventListener('click', handleClick)
       canvas.removeEventListener('contextmenu', handleContextMenu)
     }
-  }, [placedTiles, nextTiles, selectedTileIndex, score, timeLeft, isGameOver])
+  }, [placedTiles, nextTiles, selectedTileIndex, score, timeLeft, isGameOver, mousePosition])
 
   return (
     <div className="game-container">
