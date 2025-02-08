@@ -247,23 +247,27 @@ const Game = () => {
         const mouseX = event.clientX - rect.left
         const mouseY = event.clientY - rect.top
 
-        // Convert pixel coordinates to hex coordinates
         const q = Math.round((mouseX - centerX) / (tileSize * 1.5))
         const r = Math.round((mouseY - centerY - q * tileSize * Math.sqrt(3)/2) / (tileSize * Math.sqrt(3)))
         const s = -q - r
 
-        // Check if position is valid and not occupied
         const isValidPosition = Math.max(Math.abs(q), Math.abs(r), Math.abs(s)) <= Math.floor(cols/2)
         const isOccupied = placedTiles.some(tile => tile.q === q && tile.r === r)
 
         if (isValidPosition && !isOccupied && dragState.tile) {
-          // Place the tile
-          setPlacedTiles([...placedTiles, { ...dragState.tile, q, r }])
+          const newTile = { ...dragState.tile, q, r }
+          const newPlacedTiles = [...placedTiles, newTile]
+          setPlacedTiles(newPlacedTiles)
           
-          // Update score - for now, just add the tile's value
-          setScore(prevScore => prevScore + dragState.tile.value)
+          // Calculate score from all matching tiles
+          let newScore = 0
+          newPlacedTiles.forEach(tile => {
+            if (hasMatchingEdges(tile)) {
+              newScore += tile.value
+            }
+          })
+          setScore(newScore)
           
-          // Generate new tiles array with a new tile replacing the used one
           const newTiles = [...nextTiles]
           newTiles[dragState.tileIndex] = createTileWithRandomEdges(0, 0)
           setNextTiles(newTiles)
