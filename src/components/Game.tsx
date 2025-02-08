@@ -571,12 +571,13 @@ const Game = () => {
         <div
           key={popup.id}
           className="score-popup"
+          data-type={popup.score >= 10 ? 'high' : popup.emoji === '🌟' ? 'clear' : 'normal'}
           style={{
             left: `${popup.x}px`,
             top: `${popup.y}px`
           }}
         >
-          {popup.emoji} {popup.score}
+          <span className="emoji">{popup.emoji}</span> {popup.score}
         </div>
       ))}
     </div>

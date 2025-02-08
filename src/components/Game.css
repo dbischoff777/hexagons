@@ -251,6 +251,20 @@
   white-space: nowrap;
 }
 
+/* Style all emojis with neon green */
+.score-popup .emoji {
+  color: #00FF9F;
+  text-shadow: 0 0 15px #00FF9F;
+  filter: hue-rotate(0deg) brightness(1.2);
+}
+
+/* Remove the previous color-specific styles */
+.score-popup[data-type="high"] .emoji,
+.score-popup[data-type="clear"] .emoji {
+  color: #00FF9F;
+  text-shadow: 0 0 15px #00FF9F;
+}
+
 .grid-full {
   animation: gridPulse 1.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
