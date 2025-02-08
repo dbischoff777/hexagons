@@ -28,7 +28,7 @@ const Game = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [placedTiles, setPlacedTiles] = useState<Tile[]>([createTileWithRandomEdges(0, 0)])
   const [selectedTile, setSelectedTile] = useState<Tile | null>(null)
-  const [nextTiles] = useState<Tile[]>([
+  const [nextTiles, setNextTiles] = useState<Tile[]>([
     createTileWithRandomEdges(0, 0),
     createTileWithRandomEdges(0, 0),
     createTileWithRandomEdges(0, 0)
@@ -36,6 +36,7 @@ const Game = () => {
   const [dragState, setDragState] = useState<{
     isDragging: boolean;
     tile: Tile | null;
+    tileIndex: number;
     x: number;
     y: number;
     offsetX: number;
@@ -43,6 +44,7 @@ const Game = () => {
   }>({
     isDragging: false,
     tile: null,
+    tileIndex: -1,
     x: 0,
     y: 0,
     offsetX: 0,
@@ -164,6 +166,7 @@ const Game = () => {
           setDragState({
             isDragging: true,
             tile: tile,
+            tileIndex: index,
             x: mouseX,
             y: mouseY,
             offsetX: mouseX - pieceX,
@@ -204,13 +207,20 @@ const Game = () => {
         const isOccupied = placedTiles.some(tile => tile.q === q && tile.r === r)
 
         if (isValidPosition && !isOccupied) {
+          // Place the tile
           setPlacedTiles([...placedTiles, { ...dragState.tile, q, r }])
+          
+          // Generate new tiles array with a new tile replacing the used one
+          const newTiles = [...nextTiles]
+          newTiles[dragState.tileIndex] = createTileWithRandomEdges(0, 0)
+          setNextTiles(newTiles)
         }
       }
       
       setDragState({
         isDragging: false,
         tile: null,
+        tileIndex: -1,
         x: 0,
         y: 0,
         offsetX: 0,
