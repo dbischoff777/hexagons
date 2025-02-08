@@ -70,39 +70,58 @@ const Game = () => {
           else ctx.lineTo(point[0], point[1])
         })
         ctx.closePath()
-        ctx.fillStyle = 'rgba(65, 105, 225, 0.3)' // Royal blue with transparency
+        
+        // Create gradient for glow effect
+        const gradient = ctx.createRadialGradient(x, y, size * 0.5, x, y, size * 1.2)
+        gradient.addColorStop(0, 'rgba(0, 255, 159, 0.3)')  // Neon green core
+        gradient.addColorStop(1, 'rgba(0, 255, 159, 0)')    // Fade out
+        ctx.fillStyle = gradient
         ctx.fill()
         
-        // Pulsing border
-        ctx.strokeStyle = '#4169E1' // Royal blue
-        ctx.lineWidth = 3
+        // Pulsing border with double stroke for intensity
+        ctx.strokeStyle = '#00FF9F'
+        ctx.lineWidth = 4
+        ctx.stroke()
+        ctx.lineWidth = 2
+        ctx.strokeStyle = 'rgba(0, 255, 159, 0.5)'
         ctx.stroke()
         
-        // Selection indicator
-        ctx.fillStyle = '#4169E1'
+        // Selection indicator with glow
+        ctx.fillStyle = '#00FF9F'
+        ctx.shadowColor = '#00FF9F'
+        ctx.shadowBlur = 15
         ctx.font = 'bold 24px Arial'
         ctx.textAlign = 'center'
-        ctx.fillText('▼', x, y - size - 10) // Arrow pointing to selected tile
+        ctx.fillText('▼', x, y - size - 10)
+        ctx.shadowBlur = 0
       }
 
       // Add shadow for depth
-      ctx.shadowColor = 'rgba(0, 0, 0, 0.2)'
-      ctx.shadowBlur = 5
+      ctx.shadowColor = 'rgba(0, 255, 159, 0.3)'
+      ctx.shadowBlur = 8
       ctx.shadowOffsetY = 2
 
       // Enhanced background colors
       if (tile?.isPlaced) {
         if (isMatched) {
-          ctx.fillStyle = 'rgba(255, 223, 186, 0.95)' // Warm glow for matches
-          ctx.shadowColor = 'rgba(255, 166, 0, 0.4)'
-          ctx.shadowBlur = 15
+          // Create gradient for matched tiles
+          const gradient = ctx.createRadialGradient(x, y, 0, x, y, size)
+          gradient.addColorStop(0, 'rgba(255, 17, 119, 0.2)')  // Neon pink core
+          gradient.addColorStop(1, 'rgba(26, 26, 46, 0.95)')   // Dark edge
+          ctx.fillStyle = gradient
+          ctx.shadowColor = '#FF1177'
+          ctx.shadowBlur = 20
         } else {
-          ctx.fillStyle = 'rgba(255, 255, 255, 0.95)'
+          ctx.fillStyle = 'rgba(26, 26, 46, 0.9)'
+          ctx.shadowColor = 'rgba(0, 255, 159, 0.4)'
+          ctx.shadowBlur = 10
         }
       } else if (tile) {
-        ctx.fillStyle = isSelected ? 'rgba(220, 230, 255, 0.95)' : 'rgba(245, 245, 245, 0.95)'
+        ctx.fillStyle = isSelected 
+          ? 'rgba(26, 26, 46, 0.95)'
+          : 'rgba(26, 26, 46, 0.8)'
       } else {
-        ctx.fillStyle = 'rgba(230, 230, 230, 0.3)' // More transparent grid
+        ctx.fillStyle = 'rgba(26, 26, 46, 0.3)'
       }
       
       // Draw hexagon with rounded corners
@@ -446,16 +465,7 @@ const Game = () => {
     <div className="game-container">
       <div className="game-hud">
         <div className="score">
-          Score: {score}
-          {scorePopups.map(popup => (
-            <div 
-              key={popup.id} 
-              className="score-increment"
-              style={{ color: '#00FF9F' }}
-            >
-              +{popup.score}
-            </div>
-          ))}
+          {score}
         </div>
         <div className={`timer ${
           timeLeft > INITIAL_TIME * 0.5 ? 'safe' : 
