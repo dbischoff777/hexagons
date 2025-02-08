@@ -79,6 +79,61 @@
   }
 }
 
+@keyframes rotateGrid {
+  0% {
+    transform: rotate(0deg);
+  }
+  5% {
+    transform: rotate(10deg);
+  }
+  15% {
+    transform: rotate(170deg);
+  }
+  20% {
+    transform: rotate(190deg);
+  }
+  25% {
+    transform: rotate(180deg);
+  }
+  100% {
+    transform: rotate(180deg);
+  }
+}
+
+@keyframes warningFlash {
+  0% {
+    box-shadow: 0 0 30px rgba(255, 233, 0, 0.2);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 0 50px rgba(255, 233, 0, 0.6);
+    transform: scale(1.02);
+  }
+  100% {
+    box-shadow: 0 0 30px rgba(255, 233, 0, 0.2);
+    transform: scale(1);
+  }
+}
+
+@keyframes warningText {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, calc(-50% - 20px));
+  }
+  20% {
+    opacity: 1;
+    transform: translate(-50%, -50%);
+  }
+  80% {
+    opacity: 1;
+    transform: translate(-50%, -50%);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, calc(-50% + 20px));
+  }
+}
+
 .game-container {
   display: flex;
   justify-content: center;
@@ -152,14 +207,26 @@
   animation: pulse 0.5s ease-in-out infinite;
 }
 
-canvas {
+.board-container {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 1000px;
+  height: 800px;
+}
+
+.game-board {
+  position: absolute;
+  transform-origin: center center;
+  will-change: transform;
   background-color: rgba(26, 26, 46, 0.8);
   border-radius: 15px;
   box-shadow: 0 0 30px rgba(0, 255, 159, 0.2);
-  transition: all 0.3s ease;
+  transition: box-shadow 0.3s ease;
 }
 
-canvas:hover {
+.game-board:hover {
   box-shadow: 0 0 40px rgba(0, 255, 159, 0.3);
 }
 
@@ -220,4 +287,29 @@ canvas:hover {
   letter-spacing: 1px;
   margin-bottom: 20px;
   text-align: center;
+}
+
+/* Update warning flash animation */
+.rotation-warning {
+  animation: warningFlash 0.4s ease-in-out 3;
+}
+
+.rotation-text {
+  position: absolute;
+  top: 15%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: #FFE900;
+  font-size: 32px;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 3px;
+  text-shadow: 0 0 15px #FFE900, 0 0 25px #FFE900;
+  pointer-events: none;
+  z-index: 2;
+  padding: 15px 30px;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 10px;
+  backdrop-filter: blur(5px);
+  animation: warningText 1.4s ease-in-out forwards;
 }

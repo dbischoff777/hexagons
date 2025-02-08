@@ -26,6 +26,9 @@ const Game = () => {
   const [selectedTileIndex, setSelectedTileIndex] = useState<number | null>(null)
   const [mousePosition, setMousePosition] = useState<{ x: number, y: number } | null>(null)
   const [scorePopups, setScorePopups] = useState<{ score: number, x: number, y: number, id: number }[]>([])
+  const [boardRotation, setBoardRotation] = useState<number>(0)
+  const [showWarning, setShowWarning] = useState(false)
+  const [showRotationText, setShowRotationText] = useState(false)
 
   // Timer effect
   useEffect(() => {
@@ -38,6 +41,49 @@ const Game = () => {
       setIsGameOver(true)
     }
   }, [timeLeft, isGameOver])
+
+  // Update rotation timer effect
+  useEffect(() => {
+    if (!isGameOver) {
+      const warningTimer = setInterval(() => {
+        setShowWarning(true)
+        setShowRotationText(true)
+        setTimeout(() => {
+          setShowWarning(false)
+          setShowRotationText(false)
+          
+          // Start a smooth rotation animation
+          let startTime: number | null = null
+          const duration = 2000 // 2 seconds duration
+          const startRotation = boardRotation
+          const targetRotation = startRotation + 180
+          
+          const animate = (currentTime: number) => {
+            if (!startTime) startTime = currentTime
+            const elapsed = currentTime - startTime
+            const progress = Math.min(elapsed / duration, 1)
+            
+            // Smooth easing function
+            const easeProgress = progress < 0.5
+              ? 2 * progress * progress // Ease in
+              : -1 + (4 - 2 * progress) * progress // Ease out
+            
+            const currentRotation = startRotation + (targetRotation - startRotation) * easeProgress
+            
+            setBoardRotation(currentRotation % 360)
+            
+            if (progress < 1) {
+              requestAnimationFrame(animate)
+            }
+          }
+          
+          requestAnimationFrame(animate)
+        }, 1500) // Warning duration
+      }, 15000)
+      
+      return () => clearInterval(warningTimer)
+    }
+  }, [isGameOver, boardRotation])
 
   // Main game effect
   useEffect(() => {
@@ -179,9 +225,13 @@ const Game = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height)
 
       if (!isGameOver) {
-        // Draw regular game elements only if game is not over
-        
-        // Draw empty grid
+        // Use transform matrix for better performance
+        ctx.setTransform(1, 0, 0, 1, centerX, centerY)
+        ctx.rotate((boardRotation * Math.PI) / 180)
+        ctx.translate(-centerX, -centerY)
+
+        // Batch similar operations
+        ctx.beginPath()
         for (let q = -rows; q <= rows; q++) {
           for (let r = Math.max(-cols, -q-cols); r <= Math.min(cols, -q+cols); r++) {
             const s = -q - r
@@ -192,14 +242,17 @@ const Game = () => {
           }
         }
 
-        // Draw placed tiles
+        // Draw all placed tiles in one batch
         placedTiles.forEach(tile => {
           const { x, y } = hexToPixel(tile.q, tile.r, centerX, centerY, tileSize)
           const isMatched = hasMatchingEdges(tile, placedTiles)
           drawHexagonWithColoredEdges(x, y, tileSize, tile, isMatched)
         })
 
-        // Draw next pieces area
+        // Reset transform
+        ctx.setTransform(1, 0, 0, 1, 0, 0)
+
+        // Draw next pieces area (unrotated)
         nextTiles.forEach((tile, index) => {
           drawHexagonWithColoredEdges(
             nextPiecesX, 
@@ -364,8 +417,18 @@ const Game = () => {
 
       // If a tile is selected and click is on the grid
       if (selectedTileIndex !== null) {
-        const q = Math.round((mouseX - centerX) / (tileSize * 1.5))
-        const r = Math.round((mouseY - centerY - q * tileSize * Math.sqrt(3)/2) / (tileSize * Math.sqrt(3)))
+        // Adjust click coordinates based on rotation
+        const adjustedX = mouseX - centerX
+        const adjustedY = mouseY - centerY
+        
+        // Apply inverse rotation to get true grid coordinates
+        const angle = (-boardRotation * Math.PI) / 180
+        const rotatedX = adjustedX * Math.cos(angle) - adjustedY * Math.sin(angle)
+        const rotatedY = adjustedX * Math.sin(angle) + adjustedY * Math.cos(angle)
+        
+        // Calculate grid position using rotated coordinates
+        const q = Math.round((rotatedX + centerX - centerX) / (tileSize * 1.5))
+        const r = Math.round((rotatedY + centerY - centerY - q * tileSize * Math.sqrt(3)/2) / (tileSize * Math.sqrt(3)))
         const s = -q - r
 
         const isValidPosition = Math.max(Math.abs(q), Math.abs(r), Math.abs(s)) <= Math.floor(cols/2)
@@ -475,7 +538,21 @@ const Game = () => {
           Time: {formatTime(timeLeft)}
         </div>
       </div>
-      <canvas ref={canvasRef} className={isGridFull(placedTiles, cols) ? 'grid-full' : ''} />
+      <div className="board-container">
+        <canvas 
+          ref={canvasRef} 
+          className={`
+            game-board 
+            ${isGridFull(placedTiles, cols) ? 'grid-full' : ''}
+            ${showWarning ? 'rotation-warning' : ''}
+          `}
+        />
+        {showRotationText && (
+          <div className="rotation-text">
+            Rotation Incoming!
+          </div>
+        )}
+      </div>
       {scorePopups.map(popup => (
         <div
           key={popup.id}
