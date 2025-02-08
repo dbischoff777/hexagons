@@ -137,56 +137,99 @@ const Game = () => {
     const draw = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height)
 
-      // Draw score and timer
-      ctx.fillStyle = '#000000'
-      ctx.font = 'bold 24px Arial'
-      ctx.textAlign = 'center'
-      ctx.fillText(`Score: ${score}`, canvas.width / 2 - 100, 40)
-      
-      // Format time as MM:SS
-      const timeString = formatTime(timeLeft)
-      ctx.fillText(`Time: ${timeString}`, canvas.width / 2 + 100, 40)
-
-      // Show game over message
-      if (isGameOver) {
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.7)'
-        ctx.fillRect(0, 0, canvas.width, canvas.height)
-        ctx.fillStyle = '#FFFFFF'
-        ctx.font = 'bold 48px Arial'
-        ctx.fillText('GAME OVER', canvas.width / 2, canvas.height / 2)
+      if (!isGameOver) {
+        // Draw regular game elements only if game is not over
+        // Draw score and timer
+        ctx.fillStyle = '#000000'
         ctx.font = 'bold 24px Arial'
-        ctx.fillText(`Final Score: ${score}`, canvas.width / 2, canvas.height / 2 + 50)
-      }
+        ctx.textAlign = 'center'
+        ctx.fillText(`Score: ${score}`, canvas.width / 2 - 100, 40)
+        ctx.fillText(`Time: ${formatTime(timeLeft)}`, canvas.width / 2 + 100, 40)
 
-      // Draw empty grid
-      for (let q = -rows; q <= rows; q++) {
-        for (let r = Math.max(-cols, -q-cols); r <= Math.min(cols, -q+cols); r++) {
-          const s = -q - r
-          if (Math.max(Math.abs(q), Math.abs(r), Math.abs(s)) <= Math.floor(cols/2)) {
-            const { x, y } = hexToPixel(q, r, centerX, centerY, tileSize)
-            drawHexagonWithColoredEdges(x, y, tileSize)
+        // Draw empty grid
+        for (let q = -rows; q <= rows; q++) {
+          for (let r = Math.max(-cols, -q-cols); r <= Math.min(cols, -q+cols); r++) {
+            const s = -q - r
+            if (Math.max(Math.abs(q), Math.abs(r), Math.abs(s)) <= Math.floor(cols/2)) {
+              const { x, y } = hexToPixel(q, r, centerX, centerY, tileSize)
+              drawHexagonWithColoredEdges(x, y, tileSize)
+            }
           }
         }
+
+        // Draw placed tiles
+        placedTiles.forEach(tile => {
+          const { x, y } = hexToPixel(tile.q, tile.r, centerX, centerY, tileSize)
+          const isMatched = hasMatchingEdges(tile, placedTiles)
+          drawHexagonWithColoredEdges(x, y, tileSize, tile, isMatched)
+        })
+
+        // Draw next pieces area
+        nextTiles.forEach((tile, index) => {
+          drawHexagonWithColoredEdges(
+            nextPiecesX, 
+            nextPiecesY + index * 100, 
+            tileSize, 
+            tile, 
+            false,
+            index === selectedTileIndex
+          )
+        })
+      } else {
+        // Draw only game over screen
+        // Dark overlay with slight red tint
+        ctx.fillStyle = 'rgba(25, 0, 0, 0.9)'
+        ctx.fillRect(0, 0, canvas.width, canvas.height)
+
+        // Game Over box
+        const boxWidth = 400
+        const boxHeight = 300
+        const boxX = (canvas.width - boxWidth) / 2
+        const boxY = (canvas.height - boxHeight) / 2
+
+        // Draw box with gradient background
+        const gradient = ctx.createLinearGradient(boxX, boxY, boxX, boxY + boxHeight)
+        gradient.addColorStop(0, '#2C0A1E')
+        gradient.addColorStop(1, '#1A0712')
+        ctx.fillStyle = gradient
+        ctx.roundRect(boxX, boxY, boxWidth, boxHeight, 15)
+        ctx.fill()
+
+        // Box border with glow
+        ctx.strokeStyle = '#FF4D6D'
+        ctx.lineWidth = 3
+        ctx.shadowColor = '#FF4D6D'
+        ctx.shadowBlur = 15
+        ctx.roundRect(boxX, boxY, boxWidth, boxHeight, 15)
+        ctx.stroke()
+
+        // Reset shadow
+        ctx.shadowBlur = 0
+
+        // Game Over text
+        ctx.font = 'bold 48px Arial'
+        ctx.fillStyle = '#FF8FA3'
+        ctx.textAlign = 'center'
+        ctx.fillText('GAME OVER', canvas.width / 2, boxY + 80)
+
+        // Final Score text
+        ctx.font = 'bold 32px Arial'
+        ctx.fillStyle = '#FF4D6D'
+        ctx.fillText('Final Score', canvas.width / 2, boxY + 140)
+        
+        // Score with glow
+        ctx.font = 'bold 56px Arial'
+        ctx.fillStyle = '#FFFFFF'
+        ctx.shadowColor = '#FF4D6D'
+        ctx.shadowBlur = 10
+        ctx.fillText(score.toString(), canvas.width / 2, boxY + 200)
+        ctx.shadowBlur = 0
+
+        // Play Again hint
+        ctx.font = '24px Arial'
+        ctx.fillStyle = '#FF8FA3'
+        ctx.fillText('Refresh to play again', canvas.width / 2, boxY + 250)
       }
-
-      // Draw placed tiles
-      placedTiles.forEach(tile => {
-        const { x, y } = hexToPixel(tile.q, tile.r, centerX, centerY, tileSize)
-        const isMatched = hasMatchingEdges(tile, placedTiles)
-        drawHexagonWithColoredEdges(x, y, tileSize, tile, isMatched)
-      })
-
-      // Draw next pieces area
-      nextTiles.forEach((tile, index) => {
-        drawHexagonWithColoredEdges(
-          nextPiecesX, 
-          nextPiecesY + index * 100, 
-          tileSize, 
-          tile, 
-          false,
-          index === selectedTileIndex
-        )
-      })
     }
 
     const handleClick = (event: MouseEvent) => {

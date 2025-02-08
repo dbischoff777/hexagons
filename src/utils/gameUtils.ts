@@ -1,7 +1,7 @@
 import { Tile } from '../types'
 import { DIRECTIONS } from './hexUtils'
 
-export const INITIAL_TIME = 180 // 3 minutes in seconds
+export const INITIAL_TIME = 10 // 3 minutes in seconds
 
 export const hasMatchingEdges = (tile: Tile, placedTiles: Tile[]): boolean => {
   let hasMatch = false
