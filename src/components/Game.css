@@ -13,6 +13,64 @@
   }
 }
 
+@keyframes tilePlace {
+  0% {
+    transform: scale(1.2);
+    filter: brightness(1.5);
+  }
+  100% {
+    transform: scale(1);
+    filter: brightness(1);
+  }
+}
+
+@keyframes tileRemove {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.2) rotate(180deg);
+    opacity: 0.5;
+    filter: brightness(1.5);
+  }
+  100% {
+    transform: scale(0);
+    opacity: 0;
+  }
+}
+
+@keyframes scorePopup {
+  0% {
+    transform: scale(0.5) translateY(20px);
+    opacity: 0;
+  }
+  20% {
+    transform: scale(1.2) translateY(-10px);
+    opacity: 1;
+  }
+  80% {
+    transform: scale(1) translateY(-10px);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-30px);
+    opacity: 0;
+  }
+}
+
+@keyframes gridPulse {
+  0% {
+    filter: brightness(1);
+  }
+  50% {
+    filter: brightness(1.3);
+  }
+  100% {
+    filter: brightness(1);
+  }
+}
+
 .game-container {
   display: flex;
   justify-content: center;
@@ -59,4 +117,40 @@ canvas {
   background-color: rgba(26, 26, 46, 0.8);  /* Slightly transparent dark background */
   border-radius: 15px;
   box-shadow: 0 0 20px rgba(0, 255, 159, 0.2);  /* Subtle neon green glow */
+}
+
+/* Animation classes */
+.tile-placed {
+  animation: tilePlace 0.3s ease-out;
+}
+
+.tile-removed {
+  animation: tileRemove 0.5s ease-in forwards;
+}
+
+.score-popup {
+  position: absolute;
+  color: #00FF9F;
+  font-size: 24px;
+  font-weight: bold;
+  text-shadow: 0 0 10px #00FF9F;
+  pointer-events: none;
+  animation: scorePopup 1s ease-out forwards;
+}
+
+.grid-full {
+  animation: gridPulse 1s ease-in-out;
+}
+
+.score {
+  color: #00FF9F;
+  position: relative;
+}
+
+.score-increment {
+  position: absolute;
+  right: -40px;
+  top: -20px;
+  font-size: 0.7em;
+  animation: scorePopup 1s ease-out forwards;
 }

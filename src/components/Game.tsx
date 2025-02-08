@@ -10,6 +10,7 @@ const rotateTileEdges = (edges: { color: string }[]) => {
 
 const Game = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null)
+  const cols = 7
   const [placedTiles, setPlacedTiles] = useState<PlacedTile[]>([{
     ...createTileWithRandomEdges(0, 0),
     isPlaced: true
@@ -24,6 +25,7 @@ const Game = () => {
   ])
   const [selectedTileIndex, setSelectedTileIndex] = useState<number | null>(null)
   const [mousePosition, setMousePosition] = useState<{ x: number, y: number } | null>(null)
+  const [scorePopups, setScorePopups] = useState<{ score: number, x: number, y: number, id: number }[]>([])
 
   // Timer effect
   useEffect(() => {
@@ -151,7 +153,6 @@ const Game = () => {
     const centerY = canvas.height / 2
     const tileSize = 40
     const rows = 7
-    const cols = 7
     const nextPiecesX = centerX + 400
     const nextPiecesY = 200
 
@@ -382,6 +383,15 @@ const Game = () => {
               setTimeout(() => {
                 setPlacedTiles(newPlacedTiles.filter(tile => !hasMatchingEdges(tile, newPlacedTiles)))
               }, 500)
+
+              if (matchingTiles.length >= 3) {
+                setScorePopups(prev => [...prev, {
+                  score: additionalScore,
+                  x: mouseX,
+                  y: mouseY,
+                  id: Date.now()
+                }])
+              }
             }
           } else {
             // Just update the board with new tile
@@ -435,7 +445,18 @@ const Game = () => {
   return (
     <div className="game-container">
       <div className="game-hud">
-        <div className="score">Score: {score}</div>
+        <div className="score">
+          Score: {score}
+          {scorePopups.map(popup => (
+            <div 
+              key={popup.id} 
+              className="score-increment"
+              style={{ color: '#00FF9F' }}
+            >
+              +{popup.score}
+            </div>
+          ))}
+        </div>
         <div className={`timer ${
           timeLeft > INITIAL_TIME * 0.5 ? 'safe' : 
           timeLeft > INITIAL_TIME * 0.25 ? 'warning' : 
@@ -444,7 +465,19 @@ const Game = () => {
           Time: {formatTime(timeLeft)}
         </div>
       </div>
-      <canvas ref={canvasRef}></canvas>
+      <canvas ref={canvasRef} className={isGridFull(placedTiles, cols) ? 'grid-full' : ''} />
+      {scorePopups.map(popup => (
+        <div
+          key={popup.id}
+          className="score-popup"
+          style={{
+            left: `${popup.x}px`,
+            top: `${popup.y}px`
+          }}
+        >
+          +{popup.score}
+        </div>
+      ))}
     </div>
   )
 }
