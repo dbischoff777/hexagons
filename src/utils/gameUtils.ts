@@ -1,7 +1,7 @@
-import { Tile } from '../types'
+import { Tile, PlacedTile } from '../types'
 import { DIRECTIONS } from './hexUtils'
 
-export const INITIAL_TIME = 10 // 3 minutes in seconds
+export const INITIAL_TIME = 180 // 3 minutes in seconds
 
 export const hasMatchingEdges = (tile: Tile, placedTiles: Tile[]): boolean => {
   let hasMatch = false
@@ -41,4 +41,23 @@ export const formatTime = (seconds: number): string => {
   const minutes = Math.floor(seconds / 60)
   const remainingSeconds = seconds % 60
   return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`
+}
+
+export const updateTileValues = (tiles: PlacedTile[]): PlacedTile[] => {
+  return tiles.map(tile => {
+    let matches = 0
+    DIRECTIONS.forEach((dir, i) => {
+      const neighborTile = tiles.find(t => 
+        t.q === tile.q + dir.q && t.r === tile.r + dir.r
+      )
+      if (neighborTile && tile.edges[i].color === neighborTile.edges[(i + 3) % 6].color) {
+        matches++
+      }
+    })
+    
+    return {
+      ...tile,
+      value: matches > 0 ? matches : 0
+    }
+  })
 } 

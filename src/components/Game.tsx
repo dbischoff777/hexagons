@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { PlacedTile } from '../types'
 import { createTileWithRandomEdges, hexToPixel } from '../utils/hexUtils'
-import { INITIAL_TIME, hasMatchingEdges, canAcceptMoreConnections, formatTime } from '../utils/gameUtils'
+import { INITIAL_TIME, hasMatchingEdges, canAcceptMoreConnections, formatTime, updateTileValues } from '../utils/gameUtils'
 import './Game.css'
 
 const rotateTileEdges = (edges: { color: string }[]) => {
@@ -356,13 +356,18 @@ const Game = () => {
 
         if (isValidPosition && !isOccupied) {
           const selectedTile = nextTiles[selectedTileIndex]
+          
+          // Place the new tile
           const newTile: PlacedTile = { 
             ...selectedTile, 
             q, 
             r,
+            value: 0,
             isPlaced: true 
           }
-          const newPlacedTiles = [...placedTiles, newTile]
+          
+          // Update all tiles' values after placement
+          const newPlacedTiles = updateTileValues([...placedTiles, newTile])
           
           // Find all connected matching tiles recursively
           const findConnectedMatches = (tile: PlacedTile, matches: Set<PlacedTile>) => {
