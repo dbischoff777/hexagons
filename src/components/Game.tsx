@@ -4,6 +4,10 @@ import { createTileWithRandomEdges, hexToPixel } from '../utils/hexUtils'
 import { INITIAL_TIME, hasMatchingEdges, canAcceptMoreConnections, formatTime } from '../utils/gameUtils'
 import './Game.css'
 
+const rotateTileEdges = (edges: { color: string }[]) => {
+  return [...edges.slice(-1), ...edges.slice(0, -1)]
+}
+
 const Game = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [placedTiles, setPlacedTiles] = useState<PlacedTile[]>([{
@@ -191,6 +195,13 @@ const Game = () => {
             index === selectedTileIndex
           )
         })
+
+        // Add rotation hint text
+        if (selectedTileIndex !== null) {
+          ctx.fillStyle = '#666666'
+          ctx.font = '16px Arial'
+          ctx.fillText('Right click to rotate', nextPiecesX, nextPiecesY - 20)
+        }
       } else {
         // Draw only game over screen
         // Dark overlay with slight red tint
@@ -336,11 +347,28 @@ const Game = () => {
       }
     }
 
+    const handleContextMenu = (event: MouseEvent) => {
+      event.preventDefault() // Prevent default context menu
+      
+      if (selectedTileIndex !== null) {
+        const newTiles = [...nextTiles]
+        newTiles[selectedTileIndex] = {
+          ...newTiles[selectedTileIndex],
+          edges: rotateTileEdges(newTiles[selectedTileIndex].edges)
+        }
+        setNextTiles(newTiles)
+      }
+    }
+
+    // Add the context menu event listener with the click handler
     canvas.addEventListener('click', handleClick)
+    canvas.addEventListener('contextmenu', handleContextMenu)
+
     draw()
 
     return () => {
       canvas.removeEventListener('click', handleClick)
+      canvas.removeEventListener('contextmenu', handleContextMenu)
     }
   }, [placedTiles, nextTiles, selectedTileIndex, score, timeLeft, isGameOver])
 
