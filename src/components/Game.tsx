@@ -25,7 +25,7 @@ const Game = () => {
   ])
   const [selectedTileIndex, setSelectedTileIndex] = useState<number | null>(null)
   const [mousePosition, setMousePosition] = useState<{ x: number, y: number } | null>(null)
-  const [scorePopups, setScorePopups] = useState<{ score: number, x: number, y: number, id: number, emoji: string }[]>([])
+  const [scorePopups, setScorePopups] = useState<{ score: number, x: number, y: number, id: number, emoji: string, text: string }[]>([])
   const [boardRotation, setBoardRotation] = useState<number>(0)
   const [showWarning, setShowWarning] = useState(false)
   const [showRotationText, setShowRotationText] = useState(false)
@@ -456,20 +456,21 @@ const Game = () => {
           if (updatedPlacedTile.value > 0) {
             const placedTileScore = updatedPlacedTile.value * 2
             
-            // Choose emoji based on score tiers
-            const matchEmoji = 
-              placedTileScore >= 20 ? '🌈✨' :   // Exceptional score
-              placedTileScore >= 15 ? '⚡💫' :   // Amazing score
-              placedTileScore >= 10 ? '🔥✨' :   // Great score
-              placedTileScore >= 5  ? '💎' :     // Good score
-              '💫'                               // Regular score
+            // Choose emoji and text based on score tiers
+            const matchInfo = 
+              placedTileScore >= 20 ? { emoji: '🌈✨', text: 'EXCEPTIONAL!' } :
+              placedTileScore >= 15 ? { emoji: '⚡💫', text: 'AMAZING!' } :
+              placedTileScore >= 10 ? { emoji: '🔥✨', text: 'GREAT!' } :
+              placedTileScore >= 5  ? { emoji: '💎', text: 'GOOD!' } :
+              { emoji: '💫', text: 'MATCH!' }
 
             setScorePopups(prev => [...prev, {
               score: placedTileScore,
               x: canvas.width / 2 - 100,
               y: canvas.height / 2 - 150,
               id: Date.now(),
-              emoji: matchEmoji
+              emoji: matchInfo.emoji,
+              text: matchInfo.text
             }])
             setScore(prevScore => prevScore + placedTileScore)
           }
@@ -483,13 +484,13 @@ const Game = () => {
             const multiplier = matchingTiles.length
             const clearBonus = totalMatchScore * multiplier * 2
             
-            // Choose emoji based on clear bonus achievements
-            const clearEmoji = 
-              clearBonus >= 100 ? '👑✨' :    // Epic clear
-              clearBonus >= 75  ? '🏆💫' :    // Amazing clear
-              clearBonus >= 50  ? '🎯⚡' :    // Great clear
-              clearBonus >= 25  ? '🎮💫' :    // Good clear
-              '🎪✨'                          // Regular clear
+            // Choose emoji and text based on clear bonus achievements
+            const clearInfo = 
+              clearBonus >= 100 ? { emoji: '👑✨', text: 'EPIC CLEAR!' } :
+              clearBonus >= 75  ? { emoji: '🏆💫', text: 'AMAZING CLEAR!' } :
+              clearBonus >= 50  ? { emoji: '🎯⚡', text: 'GREAT CLEAR!' } :
+              clearBonus >= 25  ? { emoji: '🎮💫', text: 'GOOD CLEAR!' } :
+              { emoji: '🎪✨', text: 'CLEAR!' }
 
             setTimeout(() => {
               setScorePopups(prev => [...prev, {
@@ -497,7 +498,8 @@ const Game = () => {
                 x: canvas.width / 2 - 100,
                 y: canvas.height / 2 - 150,
                 id: Date.now() + 1,
-                emoji: clearEmoji
+                emoji: clearInfo.emoji,
+                text: clearInfo.text
               }])
               setScore(prevScore => prevScore + clearBonus)
             }, 300)
@@ -588,13 +590,17 @@ const Game = () => {
         <div
           key={popup.id}
           className="score-popup"
-          data-type={popup.score >= 10 ? 'high' : popup.emoji === '🌟' ? 'clear' : 'normal'}
+          data-type={popup.score >= 10 ? 'high' : popup.emoji.includes('🎪') ? 'clear' : 'normal'}
           style={{
             left: `${popup.x}px`,
             top: `${popup.y}px`
           }}
         >
-          <span className="emoji">{popup.emoji}</span> {popup.score}
+          <span className="emoji">{popup.emoji}</span>
+          <div className="popup-content">
+            <div className="popup-text">{popup.text}</div>
+            <div className="popup-score">+{popup.score}</div>
+          </div>
         </div>
       ))}
     </div>

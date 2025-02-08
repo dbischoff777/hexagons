@@ -249,13 +249,31 @@
   text-align: center;
   min-width: 120px;
   white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
-/* Style all emojis with neon green */
+.popup-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.popup-text {
+  font-size: 24px;
+  letter-spacing: 1px;
+  margin-bottom: 5px;
+}
+
+.popup-score {
+  font-size: 36px;
+}
+
 .score-popup .emoji {
   color: #00FF9F;
   text-shadow: 0 0 15px #00FF9F;
-  filter: hue-rotate(0deg) brightness(1.2);
+  font-size: 48px;
 }
 
 /* Remove the previous color-specific styles */

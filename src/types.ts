@@ -15,4 +15,5 @@ export interface ScorePopup {
   y: number
   id: number
   emoji: string
+  text: string
 } 
