@@ -163,6 +163,35 @@ const Game = () => {
       return hasMatch
     }
 
+    const canAcceptMoreConnections = (tile: Tile, allTiles: Tile[]): boolean => {
+      const directions = [
+        { q: 1, r: 0 },   // right
+        { q: 0, r: 1 },   // bottom right
+        { q: -1, r: 1 },  // bottom left
+        { q: -1, r: 0 },  // left
+        { q: 0, r: -1 },  // top left
+        { q: 1, r: -1 }   // top right
+      ]
+
+      // Check each direction for empty spaces
+      for (let i = 0; i < 6; i++) {
+        const newQ = tile.q + directions[i].q
+        const newR = tile.r + directions[i].r
+        
+        // Check if position is within board bounds
+        const newS = -newQ - newR
+        const isValidPosition = Math.max(Math.abs(newQ), Math.abs(newR), Math.abs(newS)) <= Math.floor(cols/2)
+        
+        // Check if position is empty
+        const isEmpty = !allTiles.some(t => t.q === newQ && t.r === newR)
+        
+        if (isValidPosition && isEmpty) {
+          return true
+        }
+      }
+      return false
+    }
+
     const draw = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height)
 
@@ -257,16 +286,30 @@ const Game = () => {
         if (isValidPosition && !isOccupied && dragState.tile) {
           const newTile = { ...dragState.tile, q, r }
           const newPlacedTiles = [...placedTiles, newTile]
-          setPlacedTiles(newPlacedTiles)
           
-          // Calculate score from all matching tiles
-          let newScore = 0
-          newPlacedTiles.forEach(tile => {
-            if (hasMatchingEdges(tile)) {
-              newScore += tile.value
-            }
-          })
-          setScore(newScore)
+          // Find all matching tiles
+          const matchingTiles = newPlacedTiles.filter(tile => hasMatchingEdges(tile))
+          
+          // Check if matching tiles are in dead end
+          const deadEndTiles = matchingTiles.filter(tile => !canAcceptMoreConnections(tile, newPlacedTiles))
+          
+          if (deadEndTiles.length >= 3) {
+            // Calculate new score: sum of dead end tile values * number of tiles
+            const tileSum = deadEndTiles.reduce((sum, tile) => sum + tile.value, 0)
+            const multiplier = deadEndTiles.length
+            const additionalScore = tileSum * multiplier
+            
+            setScore(prevScore => prevScore + additionalScore)
+            
+            setTimeout(() => {
+              setPlacedTiles(newPlacedTiles.filter(tile => !deadEndTiles.includes(tile)))
+            }, 500)
+          } else {
+            // Add score for matching tiles that aren't in dead ends
+            const matchScore = matchingTiles.reduce((sum, tile) => sum + tile.value, 0)
+            setScore(prevScore => prevScore + matchScore)
+            setPlacedTiles(newPlacedTiles)
+          }
           
           const newTiles = [...nextTiles]
           newTiles[dragState.tileIndex] = createTileWithRandomEdges(0, 0)
