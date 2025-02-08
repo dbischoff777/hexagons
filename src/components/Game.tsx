@@ -24,6 +24,8 @@ const createTileWithRandomEdges = (q: number, r: number): Tile => ({
   value: getRandomValue()
 })
 
+const INITIAL_TIME = 180 // 3 minutes in seconds
+
 const Game = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [placedTiles, setPlacedTiles] = useState<Tile[]>([createTileWithRandomEdges(0, 0)])
@@ -51,6 +53,21 @@ const Game = () => {
     offsetX: 0,
     offsetY: 0
   })
+  const [timeLeft, setTimeLeft] = useState<number>(INITIAL_TIME)
+  const [isGameOver, setIsGameOver] = useState<boolean>(false)
+
+  // Timer effect
+  useEffect(() => {
+    if (timeLeft > 0 && !isGameOver) {
+      const timer = setInterval(() => {
+        setTimeLeft(prev => prev - 1)
+      }, 1000)
+
+      return () => clearInterval(timer)
+    } else if (timeLeft === 0) {
+      setIsGameOver(true)
+    }
+  }, [timeLeft, isGameOver])
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -195,11 +212,28 @@ const Game = () => {
     const draw = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height)
 
-      // Draw score
+      // Draw score and timer
       ctx.fillStyle = '#000000'
       ctx.font = 'bold 24px Arial'
       ctx.textAlign = 'center'
-      ctx.fillText(`Score: ${score}`, canvas.width / 2, 40)
+      ctx.fillText(`Score: ${score}`, canvas.width / 2 - 100, 40)
+      
+      // Format time as MM:SS
+      const minutes = Math.floor(timeLeft / 60)
+      const seconds = timeLeft % 60
+      const timeString = `${minutes}:${seconds.toString().padStart(2, '0')}`
+      ctx.fillText(`Time: ${timeString}`, canvas.width / 2 + 100, 40)
+
+      // Show game over message
+      if (isGameOver) {
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.7)'
+        ctx.fillRect(0, 0, canvas.width, canvas.height)
+        ctx.fillStyle = '#FFFFFF'
+        ctx.font = 'bold 48px Arial'
+        ctx.fillText('GAME OVER', canvas.width / 2, canvas.height / 2)
+        ctx.font = 'bold 24px Arial'
+        ctx.fillText(`Final Score: ${score}`, canvas.width / 2, canvas.height / 2 + 50)
+      }
 
       // Draw empty grid
       for (let q = -rows; q <= rows; q++) {
@@ -271,6 +305,8 @@ const Game = () => {
     }
 
     const handleMouseUp = (event: MouseEvent) => {
+      if (isGameOver) return // Prevent moves after game over
+      
       if (dragState.isDragging && dragState.tile) {
         const rect = canvas.getBoundingClientRect()
         const mouseX = event.clientX - rect.left
@@ -339,7 +375,7 @@ const Game = () => {
       canvas.removeEventListener('mousemove', handleMouseMove)
       canvas.removeEventListener('mouseup', handleMouseUp)
     }
-  }, [placedTiles, selectedTile, nextTiles, dragState, score])
+  }, [placedTiles, selectedTile, nextTiles, dragState, score, timeLeft, isGameOver])
 
   return (
     <div className="game-container">
