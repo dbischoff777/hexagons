@@ -14,9 +14,9 @@ const Game = () => {
   const [timeLeft, setTimeLeft] = useState<number>(INITIAL_TIME)
   const [isGameOver, setIsGameOver] = useState<boolean>(false)
   const [nextTiles, setNextTiles] = useState<PlacedTile[]>([
-    createTileWithRandomEdges(0, 0),
-    createTileWithRandomEdges(0, 0),
-    createTileWithRandomEdges(0, 0)
+    { ...createTileWithRandomEdges(0, 0), isPlaced: false },
+    { ...createTileWithRandomEdges(0, 0), isPlaced: false },
+    { ...createTileWithRandomEdges(0, 0), isPlaced: false }
   ])
   const [selectedTileIndex, setSelectedTileIndex] = useState<number | null>(null)
 
@@ -245,7 +245,7 @@ const Game = () => {
         const pieceY = nextPiecesY + index * 100
         const distance = Math.sqrt((mouseX - pieceX) ** 2 + (mouseY - pieceY) ** 2)
         
-        if (distance < tileSize) {
+        if (distance < tileSize && !tile.isPlaced) {
           setSelectedTileIndex(index)
           return
         }
@@ -313,7 +313,7 @@ const Game = () => {
           
           // Generate new tile for the used slot
           const newTiles = [...nextTiles]
-          newTiles[selectedTileIndex] = createTileWithRandomEdges(0, 0)
+          newTiles[selectedTileIndex] = { ...createTileWithRandomEdges(0, 0), isPlaced: false }
           setNextTiles(newTiles)
           setSelectedTileIndex(null)
         }
