@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { DragState, PlacedTile } from '../types'
+import { PlacedTile } from '../types'
 import { createTileWithRandomEdges, hexToPixel } from '../utils/hexUtils'
 import { INITIAL_TIME, hasMatchingEdges, canAcceptMoreConnections, formatTime } from '../utils/gameUtils'
 import './Game.css'
@@ -14,19 +14,11 @@ const Game = () => {
   const [timeLeft, setTimeLeft] = useState<number>(INITIAL_TIME)
   const [isGameOver, setIsGameOver] = useState<boolean>(false)
   const [nextTiles, setNextTiles] = useState<PlacedTile[]>([
-    { ...createTileWithRandomEdges(0, 0), isPlaced: true },
-    { ...createTileWithRandomEdges(0, 0), isPlaced: true },
-    { ...createTileWithRandomEdges(0, 0), isPlaced: true }
+    createTileWithRandomEdges(0, 0),
+    createTileWithRandomEdges(0, 0),
+    createTileWithRandomEdges(0, 0)
   ])
-  const [dragState, setDragState] = useState<DragState>({
-    isDragging: false,
-    tile: null,
-    tileIndex: -1,
-    x: 0,
-    y: 0,
-    offsetX: 0,
-    offsetY: 0
-  })
+  const [selectedTileIndex, setSelectedTileIndex] = useState<number | null>(null)
 
   // Timer effect
   useEffect(() => {
@@ -51,7 +43,7 @@ const Game = () => {
     canvas.width = 1000
     canvas.height = 800
 
-    const drawHexagonWithColoredEdges = (x: number, y: number, size: number, tile?: PlacedTile, isMatched: boolean = false) => {
+    const drawHexagonWithColoredEdges = (x: number, y: number, size: number, tile?: PlacedTile, isMatched: boolean = false, isSelected: boolean = false) => {
       const points: [number, number][] = []
       
       // Calculate all points first
@@ -60,6 +52,30 @@ const Game = () => {
         const xPos = x + size * Math.cos(angle)
         const yPos = y + size * Math.sin(angle)
         points.push([xPos, yPos])
+      }
+
+      // Draw selection highlight first (if selected)
+      if (isSelected) {
+        // Outer glow effect
+        ctx.beginPath()
+        points.forEach((point, i) => {
+          if (i === 0) ctx.moveTo(point[0], point[1])
+          else ctx.lineTo(point[0], point[1])
+        })
+        ctx.closePath()
+        ctx.fillStyle = 'rgba(65, 105, 225, 0.3)' // Royal blue with transparency
+        ctx.fill()
+        
+        // Pulsing border
+        ctx.strokeStyle = '#4169E1' // Royal blue
+        ctx.lineWidth = 3
+        ctx.stroke()
+        
+        // Selection indicator
+        ctx.fillStyle = '#4169E1'
+        ctx.font = 'bold 24px Arial'
+        ctx.textAlign = 'center'
+        ctx.fillText('▼', x, y - size - 10) // Arrow pointing to selected tile
       }
 
       // Draw background
@@ -72,18 +88,18 @@ const Game = () => {
 
       if (tile?.isPlaced) {
         if (isMatched) {
-          ctx.fillStyle = 'rgba(255, 255, 200, 0.9)' // Light yellow for matched tiles
+          ctx.fillStyle = 'rgba(255, 255, 200, 0.9)'
         } else {
-          ctx.fillStyle = 'rgba(255, 255, 255, 0.9)' // White for placed tiles
+          ctx.fillStyle = 'rgba(255, 255, 255, 0.9)'
         }
       } else if (tile) {
-        ctx.fillStyle = 'rgba(240, 240, 240, 0.9)' // Light gray for draggable tiles
+        ctx.fillStyle = isSelected ? 'rgba(220, 230, 255, 0.9)' : 'rgba(240, 240, 240, 0.9)'
       } else {
-        ctx.fillStyle = 'rgba(230, 230, 230, 0.5)' // Very light gray for empty grid
+        ctx.fillStyle = 'rgba(230, 230, 230, 0.5)'
       }
       ctx.fill()
 
-      // Draw each edge with its color
+      // Draw edges
       if (tile?.edges) {
         for (let i = 0; i < 6; i++) {
           const start = points[i]
@@ -93,18 +109,17 @@ const Game = () => {
           ctx.moveTo(start[0], start[1])
           ctx.lineTo(end[0], end[1])
           ctx.strokeStyle = tile.edges[i].color
-          ctx.lineWidth = 2
+          ctx.lineWidth = isSelected ? 3 : 2 // Thicker lines for selected tile
           ctx.stroke()
         }
 
-        // Draw the number
-        ctx.fillStyle = isMatched ? '#000000' : '#444444'
-        ctx.font = 'bold 20px Arial'
+        // Draw number
+        ctx.fillStyle = isSelected ? '#1a1a1a' : '#444444'
+        ctx.font = isSelected ? 'bold 22px Arial' : 'bold 20px Arial'
         ctx.textAlign = 'center'
         ctx.textBaseline = 'middle'
         ctx.fillText(tile.value.toString(), x, y)
       } else {
-        // Draw empty hexagon border
         ctx.strokeStyle = '#ddd'
         ctx.lineWidth = 1
         ctx.stroke()
@@ -163,16 +178,20 @@ const Game = () => {
 
       // Draw next pieces area
       nextTiles.forEach((tile, index) => {
-        drawHexagonWithColoredEdges(nextPiecesX, nextPiecesY + index * 100, tileSize, tile)
+        drawHexagonWithColoredEdges(
+          nextPiecesX, 
+          nextPiecesY + index * 100, 
+          tileSize, 
+          tile, 
+          false,
+          index === selectedTileIndex
+        )
       })
-
-      // Draw dragging tile
-      if (dragState.isDragging && dragState.tile) {
-        drawHexagonWithColoredEdges(dragState.x, dragState.y, tileSize, dragState.tile)
-      }
     }
 
-    const handleMouseDown = (event: MouseEvent) => {
+    const handleClick = (event: MouseEvent) => {
+      if (isGameOver) return
+
       const rect = canvas.getBoundingClientRect()
       const mouseX = event.clientX - rect.left
       const mouseY = event.clientY - rect.top
@@ -184,42 +203,13 @@ const Game = () => {
         const distance = Math.sqrt((mouseX - pieceX) ** 2 + (mouseY - pieceY) ** 2)
         
         if (distance < tileSize) {
-          setDragState({
-            isDragging: true,
-            tile: tile,
-            tileIndex: index,
-            x: mouseX,
-            y: mouseY,
-            offsetX: mouseX - pieceX,
-            offsetY: mouseY - pieceY
-          })
+          setSelectedTileIndex(index)
+          return
         }
       })
-    }
 
-    const handleMouseMove = (event: MouseEvent) => {
-      if (dragState.isDragging) {
-        const rect = canvas.getBoundingClientRect()
-        const mouseX = event.clientX - rect.left
-        const mouseY = event.clientY - rect.top
-        
-        setDragState(prev => ({
-          ...prev,
-          x: mouseX - prev.offsetX,
-          y: mouseY - prev.offsetY
-        }))
-        draw()
-      }
-    }
-
-    const handleMouseUp = (event: MouseEvent) => {
-      if (isGameOver) return
-
-      if (dragState.isDragging && dragState.tile) {
-        const rect = canvas.getBoundingClientRect()
-        const mouseX = event.clientX - rect.left
-        const mouseY = event.clientY - rect.top
-
+      // If a tile is selected and click is on the grid
+      if (selectedTileIndex !== null) {
         const q = Math.round((mouseX - centerX) / (tileSize * 1.5))
         const r = Math.round((mouseY - centerY - q * tileSize * Math.sqrt(3)/2) / (tileSize * Math.sqrt(3)))
         const s = -q - r
@@ -228,8 +218,9 @@ const Game = () => {
         const isOccupied = placedTiles.some(tile => tile.q === q && tile.r === r)
 
         if (isValidPosition && !isOccupied) {
+          const selectedTile = nextTiles[selectedTileIndex]
           const newTile: PlacedTile = { 
-            ...dragState.tile, 
+            ...selectedTile, 
             q, 
             r,
             isPlaced: true 
@@ -277,35 +268,22 @@ const Game = () => {
             setPlacedTiles(newPlacedTiles)
           }
           
+          // Generate new tile for the used slot
           const newTiles = [...nextTiles]
-          newTiles[dragState.tileIndex] = createTileWithRandomEdges(0, 0)
+          newTiles[selectedTileIndex] = createTileWithRandomEdges(0, 0)
           setNextTiles(newTiles)
+          setSelectedTileIndex(null)
         }
       }
-      
-      setDragState({
-        isDragging: false,
-        tile: null,
-        tileIndex: -1,
-        x: 0,
-        y: 0,
-        offsetX: 0,
-        offsetY: 0
-      })
-      draw()
     }
 
-    canvas.addEventListener('mousedown', handleMouseDown)
-    canvas.addEventListener('mousemove', handleMouseMove)
-    canvas.addEventListener('mouseup', handleMouseUp)
+    canvas.addEventListener('click', handleClick)
     draw()
 
     return () => {
-      canvas.removeEventListener('mousedown', handleMouseDown)
-      canvas.removeEventListener('mousemove', handleMouseMove)
-      canvas.removeEventListener('mouseup', handleMouseUp)
+      canvas.removeEventListener('click', handleClick)
     }
-  }, [placedTiles, nextTiles, dragState, score, timeLeft, isGameOver])
+  }, [placedTiles, nextTiles, selectedTileIndex, score, timeLeft, isGameOver])
 
   return (
     <div className="game-container">
