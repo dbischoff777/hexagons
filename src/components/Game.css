@@ -1,8 +1,58 @@
+@keyframes pulse {
+  0% {
+    text-shadow: 0 0 10px currentColor;
+    transform: scale(1);
+  }
+  50% {
+    text-shadow: 0 0 20px currentColor, 0 0 30px currentColor;
+    transform: scale(1.05);
+  }
+  100% {
+    text-shadow: 0 0 10px currentColor;
+    transform: scale(1);
+  }
+}
+
 .game-container {
   display: flex;
   justify-content: center;
   align-items: center;
   min-height: 100vh;
+}
+
+.game-hud {
+  position: absolute;
+  top: 40px;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  gap: 200px;
+  pointer-events: none;
+  z-index: 1;
+  font-size: 28px;
+  font-weight: bold;
+}
+
+.score, .timer {
+  font-family: Arial, sans-serif;
+  font-weight: bold;
+  text-shadow: 0 0 10px currentColor;
+  letter-spacing: 1px;
+}
+
+.timer.safe {
+  color: #00FF9F;
+}
+
+.timer.warning {
+  color: #FFE900;
+  animation: pulse 1s ease-in-out infinite;
+}
+
+.timer.danger {
+  color: #FF1177;
+  animation: pulse 0.5s ease-in-out infinite;
 }
 
 canvas {

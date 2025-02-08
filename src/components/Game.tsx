@@ -160,35 +160,7 @@ const Game = () => {
 
       if (!isGameOver) {
         // Draw regular game elements only if game is not over
-        // Draw score and timer with intensity based on remaining time
-        ctx.fillStyle = '#00FF9F'  // Score stays neon green
-        ctx.shadowColor = '#00FF9F'
-        ctx.shadowBlur = 10
-        ctx.font = 'bold 24px Arial'
-        ctx.textAlign = 'center'
-        ctx.fillText(`Score: ${score}`, canvas.width / 2 - 100, 40)
         
-        // Timer with dynamic color and glow based on remaining time
-        const timePercentage = timeLeft / INITIAL_TIME
-        const timerColor = timePercentage > 0.5 
-          ? '#00FF9F'  // Green when plenty of time
-          : timePercentage > 0.25 
-            ? '#FFE900'  // Yellow when < 50% time
-            : '#FF1177'  // Red when < 25% time
-        
-        // Increase glow intensity as time runs out
-        const glowIntensity = Math.min(20, 10 + (1 - timePercentage) * 25)
-        const pulseIntensity = timePercentage < 0.25 
-          ? Math.sin(Date.now() / 200) * 5 + glowIntensity  // Add pulsing effect when low on time
-          : glowIntensity
-        
-        ctx.fillStyle = timerColor
-        ctx.shadowColor = timerColor
-        ctx.shadowBlur = pulseIntensity
-        ctx.font = `bold ${24 + (1 - timePercentage) * 4}px Arial`  // Slightly larger font when time is low
-        ctx.fillText(`Time: ${formatTime(timeLeft)}`, canvas.width / 2 + 100, 40)
-        ctx.shadowBlur = 0
-
         // Draw empty grid
         for (let q = -rows; q <= rows; q++) {
           for (let r = Math.max(-cols, -q-cols); r <= Math.min(cols, -q+cols); r++) {
@@ -462,6 +434,16 @@ const Game = () => {
 
   return (
     <div className="game-container">
+      <div className="game-hud">
+        <div className="score">Score: {score}</div>
+        <div className={`timer ${
+          timeLeft > INITIAL_TIME * 0.5 ? 'safe' : 
+          timeLeft > INITIAL_TIME * 0.25 ? 'warning' : 
+          'danger'
+        }`}>
+          Time: {formatTime(timeLeft)}
+        </div>
+      </div>
       <canvas ref={canvasRef}></canvas>
     </div>
   )
