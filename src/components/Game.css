@@ -44,23 +44,20 @@
 
 @keyframes scorePopup {
   0% {
-    transform: scale(0.5) translateY(0);
+    transform: translate(-50%, 0) scale(0.5);
     opacity: 0;
-    filter: blur(4px);
   }
   20% {
-    transform: scale(1.5) translateY(-20px);
+    transform: translate(-50%, -50%) scale(1.2);
     opacity: 1;
-    filter: blur(0);
   }
   80% {
-    transform: scale(1) translateY(-40px);
+    transform: translate(-50%, -100%) scale(1);
     opacity: 1;
   }
   100% {
-    transform: translateY(-60px) scale(0.8);
+    transform: translate(-50%, -150%) scale(0.8);
     opacity: 0;
-    filter: blur(4px);
   }
 }
 
@@ -240,14 +237,18 @@
 }
 
 .score-popup {
-  position: fixed;
+  position: absolute;
   color: #00FF9F;
-  font-size: 32px;
+  font-size: 48px;
   font-weight: bold;
   text-shadow: 0 0 15px #00FF9F;
   pointer-events: none;
   animation: scorePopup 1s cubic-bezier(0.4, 0, 0.2, 1) forwards;
   z-index: 2;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  min-width: 120px;
+  white-space: nowrap;
 }
 
 .grid-full {

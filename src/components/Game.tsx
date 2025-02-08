@@ -449,36 +449,48 @@ const Game = () => {
           // Update all tiles' values after placement
           const newPlacedTiles = updateTileValues([...placedTiles, newTile])
           
-          // Only check for matches if grid is full
-          if (isGridFull(newPlacedTiles, cols)) {
-            const matchingTiles = newPlacedTiles.filter(tile => hasMatchingEdges(tile, newPlacedTiles))
-            
-            if (matchingTiles.length >= 3) {
-              // Calculate score based on the number of matching borders
-              const tileSum = matchingTiles.reduce((sum, tile) => sum + tile.value, 0)
-              const multiplier = matchingTiles.length
-              const additionalScore = tileSum * multiplier * 2
-              
-              setScore(prevScore => prevScore + additionalScore)
-              
-              // Remove all highlighted tiles after delay
-              setTimeout(() => {
-                setPlacedTiles(newPlacedTiles.filter(tile => !hasMatchingEdges(tile, newPlacedTiles)))
-              }, 500)
-
-              if (matchingTiles.length >= 3) {
-                setScorePopups(prev => [...prev, {
-                  score: additionalScore,
-                  x: mouseX,
-                  y: mouseY,
-                  id: Date.now()
-                }])
-              }
-            }
-          } else {
-            // Just update the board with new tile
-            setPlacedTiles(newPlacedTiles)
+          // Get the updated tile with its correct value
+          const updatedPlacedTile = newPlacedTiles.find(tile => tile.q === q && tile.r === r)!
+          
+          // Show score popup for immediate matches with the placed tile
+          if (updatedPlacedTile.value > 0) {
+            const placedTileScore = updatedPlacedTile.value * 2  // Double points for each matching border
+            setScorePopups(prev => [...prev, {
+              score: placedTileScore,
+              x: canvas.width / 2 - 100,
+              y: canvas.height / 2 - 150,
+              id: Date.now()
+            }])
+            setScore(prevScore => prevScore + placedTileScore)
           }
+
+          // Check for matches for grid-full bonus
+          const matchingTiles = newPlacedTiles.filter(tile => hasMatchingEdges(tile, newPlacedTiles))
+          
+          // Additional bonus for clearing tiles when grid is full
+          if (matchingTiles.length >= 3 && isGridFull(newPlacedTiles, cols)) {
+            const totalMatchScore = matchingTiles.reduce((sum, tile) => sum + tile.value, 0)
+            const multiplier = matchingTiles.length
+            const clearBonus = totalMatchScore * multiplier * 2
+            
+            setTimeout(() => {
+              setScorePopups(prev => [...prev, {
+                score: clearBonus,
+                x: canvas.width / 2 - 100,
+                y: canvas.height / 2 - 150,
+                id: Date.now() + 1
+              }])
+              setScore(prevScore => prevScore + clearBonus)
+            }, 300)
+
+            // Remove matching tiles
+            setTimeout(() => {
+              setPlacedTiles(newPlacedTiles.filter(tile => !hasMatchingEdges(tile, newPlacedTiles)))
+            }, 500)
+          }
+          
+          // Update board with new tile
+          setPlacedTiles(newPlacedTiles)
           
           // Generate new tile for the used slot
           const newTiles = [...nextTiles]
