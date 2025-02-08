@@ -25,7 +25,7 @@ const Game = () => {
   ])
   const [selectedTileIndex, setSelectedTileIndex] = useState<number | null>(null)
   const [mousePosition, setMousePosition] = useState<{ x: number, y: number } | null>(null)
-  const [scorePopups, setScorePopups] = useState<{ score: number, x: number, y: number, id: number }[]>([])
+  const [scorePopups, setScorePopups] = useState<{ score: number, x: number, y: number, id: number, emoji: string }[]>([])
   const [boardRotation, setBoardRotation] = useState<number>(0)
   const [showWarning, setShowWarning] = useState(false)
   const [showRotationText, setShowRotationText] = useState(false)
@@ -459,7 +459,8 @@ const Game = () => {
               score: placedTileScore,
               x: canvas.width / 2 - 100,
               y: canvas.height / 2 - 150,
-              id: Date.now()
+              id: Date.now(),
+              emoji: placedTileScore >= 10 ? '🔥' : '✨'  // Fire for high scores, sparkles for regular
             }])
             setScore(prevScore => prevScore + placedTileScore)
           }
@@ -478,7 +479,8 @@ const Game = () => {
                 score: clearBonus,
                 x: canvas.width / 2 - 100,
                 y: canvas.height / 2 - 150,
-                id: Date.now() + 1
+                id: Date.now() + 1,
+                emoji: '🌟'  // Star for clearing bonus
               }])
               setScore(prevScore => prevScore + clearBonus)
             }, 300)
@@ -574,7 +576,7 @@ const Game = () => {
             top: `${popup.y}px`
           }}
         >
-          +{popup.score}
+          {popup.emoji} {popup.score}
         </div>
       ))}
     </div>
