@@ -2,19 +2,21 @@ import { useEffect, useRef, useState } from 'react'
 import { PlacedTile } from '../types'
 import { createTileWithRandomEdges, hexToPixel } from '../utils/hexUtils'
 import { INITIAL_TIME, hasMatchingEdges, formatTime, updateTileValues, isGridFull } from '../utils/gameUtils'
+import SoundManager from '../utils/soundManager'
 import './Game.css'
 
 interface GameProps {
   musicEnabled: boolean
   soundEnabled: boolean
   timedMode: boolean
+  onGameOver: () => void
 }
 
 const rotateTileEdges = (edges: { color: string }[]) => {
   return [...edges.slice(-1), ...edges.slice(0, -1)]
 }
 
-const Game = ({ musicEnabled, soundEnabled, timedMode }: GameProps) => {
+const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver }: GameProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const cols = 7
   const [placedTiles, setPlacedTiles] = useState<PlacedTile[]>([{
@@ -35,6 +37,7 @@ const Game = ({ musicEnabled, soundEnabled, timedMode }: GameProps) => {
   const [boardRotation, setBoardRotation] = useState<number>(0)
   const [showWarning, setShowWarning] = useState(false)
   const [showRotationText, setShowRotationText] = useState(false)
+  const soundManager = SoundManager.getInstance()
 
   // Timer effect
   useEffect(() => {
@@ -593,9 +596,9 @@ const Game = ({ musicEnabled, soundEnabled, timedMode }: GameProps) => {
     }
 
     const handleContextMenu = (event: MouseEvent) => {
-      event.preventDefault() // Prevent default context menu
-      
+      event.preventDefault()
       if (selectedTileIndex !== null) {
+        soundManager.playSound('tileRotate')
         const newTiles = [...nextTiles]
         newTiles[selectedTileIndex] = {
           ...newTiles[selectedTileIndex],
