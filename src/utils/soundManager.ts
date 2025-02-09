@@ -7,7 +7,7 @@ class SoundManager {
 
   private constructor() {
     // Initialize background music
-    this.backgroundMusic = new Audio('/sounds/background.mp3')
+    this.backgroundMusic = new Audio('/sounds/background.ogg')
     this.backgroundMusic.loop = true
     this.backgroundMusic.volume = 0.4
 
