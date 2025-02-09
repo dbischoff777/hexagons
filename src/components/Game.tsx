@@ -20,36 +20,36 @@ const rotateTileEdges = (edges: { color: string }[]) => {
 const SCORE_FEEDBACK = {
   // Regular matches
   LOW: [
-    { emoji: '✨', text: 'Nice!' },
-    { emoji: '🎯', text: 'Good!' },
-    { emoji: '👍', text: 'Cool!' },
+    { emoji: '✨💫', text: 'Nice!' },
+    { emoji: '🎯✨', text: 'Good!' },
+    { emoji: '👍💫', text: 'Cool!' },
   ],
   MEDIUM: [
-    { emoji: '🌟', text: 'Great!' },
-    { emoji: '💫', text: 'Awesome!' },
-    { emoji: '⭐', text: 'Sweet!' },
+    { emoji: '🌟💫', text: 'Great!' },
+    { emoji: '💫⭐', text: 'Awesome!' },
+    { emoji: '⭐✨', text: 'Sweet!' },
   ],
   HIGH: [
-    { emoji: '🔥', text: 'Amazing!' },
-    { emoji: '⚡', text: 'Fantastic!' },
-    { emoji: '💥', text: 'Incredible!' },
+    { emoji: '🔥⚡', text: 'Amazing!' },
+    { emoji: '⚡💥', text: 'Fantastic!' },
+    { emoji: '💥🔥', text: 'Incredible!' },
   ],
   EPIC: [
-    { emoji: '🌈', text: 'EPIC!' },
-    { emoji: '👑', text: 'LEGENDARY!' },
-    { emoji: '💎', text: 'BRILLIANT!' },
+    { emoji: '🌈✨', text: 'EPIC!' },
+    { emoji: '👑💫', text: 'LEGENDARY!' },
+    { emoji: '💎✨', text: 'BRILLIANT!' },
   ],
   
   // Combos
   COMBO: [
-    { emoji: '🎯', text: '2x COMBO!' },
-    { emoji: '🔥', text: '3x COMBO!' },
-    { emoji: '⚡', text: '4x COMBO!' },
-    { emoji: '💫', text: '5x COMBO!' },
-    { emoji: '🌟', text: '6x COMBO!' },
-    { emoji: '💥', text: '7x COMBO!' },
-    { emoji: '👑', text: '8x COMBO!' },
-    { emoji: '🌈', text: 'MEGA COMBO!' },
+    { emoji: '🎯💫', text: '2x COMBO!' },
+    { emoji: '🔥💫', text: '3x COMBO!' },
+    { emoji: '⚡💫', text: '4x COMBO!' },
+    { emoji: '💫✨', text: '5x COMBO!' },
+    { emoji: '🌟💫', text: '6x COMBO!' },
+    { emoji: '💥⚡', text: '7x COMBO!' },
+    { emoji: '👑✨', text: '8x COMBO!' },
+    { emoji: '🌈💫', text: 'MEGA COMBO!' },
   ],
   
   // Grid clears
@@ -63,9 +63,9 @@ const SCORE_FEEDBACK = {
   
   // Quick placements
   QUICK: [
-    { emoji: '⚡', text: 'QUICK!' },
-    { emoji: '💨', text: 'SWIFT!' },
-    { emoji: '🚀', text: 'SPEEDY!' },
+    { emoji: '⚡💨', text: 'QUICK!' },
+    { emoji: '💨✨', text: 'SWIFT!' },
+    { emoji: '🚀💫', text: 'SPEEDY!' },
   ]
 }
 

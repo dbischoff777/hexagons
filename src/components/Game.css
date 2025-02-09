@@ -297,21 +297,21 @@
 
 .emoji {
   display: inline-block;
-  animation: emoji-bounce 1s ease-out;
+  animation: emoji-bounce-pair 1s ease-out;
 }
 
-@keyframes emoji-bounce {
+@keyframes emoji-bounce-pair {
   0% {
-    transform: scale(0.5);
+    transform: scale(0.5) rotate(-10deg);
   }
   20% {
-    transform: scale(1.2);
+    transform: scale(1.2) rotate(5deg);
   }
   40% {
-    transform: scale(1);
+    transform: scale(1) rotate(0deg);
   }
   100% {
-    transform: scale(1);
+    transform: scale(1) rotate(0deg);
   }
 }
 
@@ -335,6 +335,9 @@
   color: #00FF9F;
   text-shadow: 0 0 15px #00FF9F;
   font-size: 48px;
+  display: inline-block;
+  letter-spacing: -8px;
+  margin-right: 8px;
 }
 
 /* Remove the previous color-specific styles */
@@ -476,4 +479,33 @@
 
 .power-up-item span:first-child {
   font-size: 18px;
+}
+
+/* Update popup types with new colors for emoji pairs */
+.score-popup[data-type='epic'] .emoji {
+  background: linear-gradient(45deg, #FFD700, #FF69B4);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 0 0 15px rgba(255, 215, 0, 0.8);
+}
+
+.score-popup[data-type='high'] .emoji {
+  background: linear-gradient(45deg, #FF4D4D, #FF9F1C);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 0 0 15px rgba(255, 77, 77, 0.8);
+}
+
+.score-popup[data-type='combo'] .emoji {
+  background: linear-gradient(45deg, #FFD700, #FF6B6B);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 0 0 15px rgba(255, 215, 0, 0.8);
+}
+
+.score-popup[data-type='quick'] .emoji {
+  background: linear-gradient(45deg, #00FFFF, #4D4DFF);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 0 0 15px rgba(0, 255, 255, 0.8);
 }
