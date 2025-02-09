@@ -124,15 +124,15 @@ const drawEdgeNumbers = (
     ctx.save()
     ctx.translate(textX, textY)
     
-    // Black background circle for visibility
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.9)'
+    // More subtle background for normal mode
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.7)'
     ctx.beginPath()
     ctx.arc(0, 0, 15, 0, Math.PI * 2)
     ctx.fill()
 
-    // White text for maximum contrast
-    ctx.fillStyle = '#FFFFFF'
-    ctx.font = 'bold 20px Arial'  // Slightly larger for symbols
+    // Light grey text for normal mode
+    ctx.fillStyle = '#CCCCCC'
+    ctx.font = 'bold 16px Arial'
     ctx.textAlign = 'center'
     ctx.textBaseline = 'middle'
     ctx.fillText(getEdgeValue(edge.color, true).toString(), 0, 0)

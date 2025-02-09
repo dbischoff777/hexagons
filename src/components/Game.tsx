@@ -397,42 +397,19 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver }: GameProps) 
           } else {
             const color = tile.edges[i].color
             
-            if (colorMode.isColorBlind && colorMode.currentScheme.patterns) {
-              // Create pattern for colorblind mode
-              const patternCanvas = document.createElement('canvas')
-              const patternCtx = patternCanvas.getContext('2d')!
-              patternCanvas.width = 10
-              patternCanvas.height = 10
-              
-              // Set pattern color
-              patternCtx.strokeStyle = color
-              patternCtx.fillStyle = color
-              
-              // Draw pattern based on color
-              const pattern = colorMode.currentScheme.patterns[color]
-              const parser = new DOMParser()
-              const svgDoc = parser.parseFromString(pattern, 'image/svg+xml')
-              const patternElement = svgDoc.querySelector('pattern')
-              
-              if (patternElement) {
-                const patternContent = patternElement.innerHTML
-                const tempSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10">${patternContent}</svg>`
-                const img = new Image()
-                img.src = 'data:image/svg+xml;base64,' + btoa(tempSvg)
-                
-                img.onload = () => {
-                  patternCtx.drawImage(img, 0, 0)
-                }
-              }
-              
-              ctx.strokeStyle = ctx.createPattern(patternCanvas, 'repeat')!
+            // Regular color mode with wider edges
+            if (tile.isJoker) {
+              // For joker tiles, use a solid color instead of gradient
+              ctx.strokeStyle = '#FFFFFF'
+              ctx.shadowColor = '#FFFFFF'
+              ctx.shadowBlur = 10
             } else {
-              // Regular color mode
               const gradient = ctx.createLinearGradient(start[0], start[1], end[0], end[1])
               gradient.addColorStop(0, color)
               gradient.addColorStop(1, color)
               ctx.strokeStyle = gradient
             }
+            ctx.lineWidth = isSelected ? 5 : 3  // Wider edges
           }
           
           ctx.beginPath()
@@ -1089,7 +1066,7 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver }: GameProps) 
     }
   }, [scorePopups])
 
-  // Inside your Game component, add this effect to update potential matches
+  // Inside your Game component, modify the effect for potential matches
   useEffect(() => {
     if (selectedTileIndex !== null && (settings.showMatchHints || settings.isColorBlind)) {
       const selectedTile = nextTiles[selectedTileIndex]
@@ -1097,39 +1074,44 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver }: GameProps) 
       
       // Create a map of potential matches for each tile
       const matchMap = new Map<string, number[]>()
+      const tileKeys = new Set(placedTiles.map(tile => `${tile.q},${tile.r}`))
       
-      placedTiles.forEach(tile => {
-        const key = `${tile.q},${tile.r}`
+      // Initialize all positions with zeros
+      tileKeys.forEach(key => {
         matchMap.set(key, Array(6).fill(0))
       })
 
-      // Update the map with match strengths
+      // Update only the positions that have matches
       hints.forEach(hint => {
-        placedTiles.forEach(tile => {
-          const key = `${tile.q},${tile.r}`
-          const currentStrengths = matchMap.get(key)
-          if (currentStrengths) {
-            currentStrengths[hint.targetEdge.position] = Math.max(
-              currentStrengths[hint.targetEdge.position],
-              hint.strength
-            )
-          }
-        })
+        const key = `${hint.targetEdge.q},${hint.targetEdge.r}`
+        const strengths = matchMap.get(key)
+        if (strengths) {
+          strengths[hint.targetEdge.position] = Math.max(
+            strengths[hint.targetEdge.position],
+            hint.strength
+          )
+        }
       })
 
-      // Update placed tiles with match potentials
-      setPlacedTiles(prev => prev.map(tile => ({
-        ...tile,
-        matchPotential: matchMap.get(`${tile.q},${tile.r}`) || Array(6).fill(0)
-      })))
+      // Update placed tiles with match potentials in a single operation
+      setPlacedTiles(prev => 
+        prev.map(tile => {
+          const key = `${tile.q},${tile.r}`
+          return {
+            ...tile,
+            matchPotential: matchMap.get(key) || Array(6).fill(0)
+          }
+        })
+      )
     } else {
-      // Clear match potentials when no tile is selected
-      setPlacedTiles(prev => prev.map(tile => ({
-        ...tile,
-        matchPotential: undefined
-      })))
+      setPlacedTiles(prev => 
+        prev.map(tile => ({
+          ...tile,
+          matchPotential: undefined
+        }))
+      )
     }
-  }, [selectedTileIndex, placedTiles, settings.showMatchHints, settings.isColorBlind])
+  }, [selectedTileIndex, nextTiles, settings.showMatchHints, settings.isColorBlind])
 
   return (
     <div className="game-container">
