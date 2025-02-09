@@ -656,13 +656,13 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver }: GameProps) 
             setCombo(prev => ({
               count: quickPlacement ? prev.count + 1 : 1,
               timer: 3,
-              multiplier: Math.min(2, 1 + (prev.count * 0.1)),
+              multiplier: 1 + (quickPlacement ? prev.count + 1 : 1) * 0.5, // Each combo level adds 50% more
               lastPlacementTime: now
             }))
 
             // Add combo popup if streak exists
             if (combo.count > 1) {
-              const comboBonus = Math.round(placedTileScore * (combo.multiplier - 1))
+              const comboBonus = Math.round(placedTileScore * combo.multiplier) - placedTileScore // Calculate actual bonus
               if (comboBonus > 0) {
                 setScorePopups(prev => [...prev, {
                   score: comboBonus,
@@ -670,10 +670,10 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver }: GameProps) 
                   y: canvas.height / 2 - 50,
                   id: Date.now() + 2,
                   emoji: '🔥',
-                  text: `${combo.count}x COMBO!`
+                  text: `${combo.count + 1}x COMBO!`
                 }])
+                setScore(prevScore => prevScore + comboBonus)
               }
-              setScore(prevScore => prevScore + comboBonus)
             }
           } else {
             // Reset combo if no match
