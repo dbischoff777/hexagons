@@ -269,6 +269,31 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver }: GameProps) 
           ctx.textAlign = 'center'
           ctx.textBaseline = 'middle'
           ctx.fillText(tile.value.toString(), x, y + 12)  // Move number down
+
+          // Show joker info when selected
+          if (isSelected) {
+            // Draw info box above tile
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.1)'
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)'
+            ctx.lineWidth = 1
+            const text = 'Matches any color'
+            const padding = 10
+            const boxWidth = ctx.measureText(text).width + padding * 2
+            const boxHeight = 30
+            const boxX = x - boxWidth / 2
+            const boxY = y - size * 2
+
+            // Draw box with rounded corners
+            ctx.beginPath()
+            ctx.roundRect(boxX, boxY, boxWidth, boxHeight, 5)
+            ctx.fill()
+            ctx.stroke()
+
+            // Draw description text
+            ctx.fillStyle = '#fff'
+            ctx.font = '14px Arial'
+            ctx.fillText(text, x, boxY + boxHeight/2)
+          }
         } else {
           // Regular tile number
           ctx.shadowColor = 'rgba(0, 0, 0, 0.2)'
