@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
-import { PlacedTile } from '../types'
-import { createTileWithRandomEdges, hexToPixel } from '../utils/hexUtils'
+import { PlacedTile, PowerUpState } from '../types'
+import { createTileWithRandomEdges, hexToPixel, getAdjacentTiles, COLORS } from '../utils/hexUtils'
 import { INITIAL_TIME, hasMatchingEdges, formatTime, updateTileValues, isGridFull } from '../utils/gameUtils'
 import SoundManager from '../utils/soundManager'
 import './Game.css'
@@ -38,6 +38,11 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver }: GameProps) 
   const [showWarning, setShowWarning] = useState(false)
   const [showRotationText, setShowRotationText] = useState(false)
   const soundManager = SoundManager.getInstance()
+  const [powerUps, setPowerUps] = useState<PowerUpState>({
+    freeze: { active: false, remainingTime: 0 },
+    colorShift: { active: false },
+    multiplier: { active: false, value: 1, remainingTime: 0 }
+  })
 
   // Timer effect
   useEffect(() => {
@@ -278,6 +283,52 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver }: GameProps) 
           ctx.textAlign = 'center'
           ctx.textBaseline = 'middle'
           ctx.fillText(tile.value.toString(), x, y)
+        }
+      }
+
+      // Inside drawHexagonWithColoredEdges function, after drawing the tile number
+      if (tile?.powerUp) {
+        const powerUpIcons = {
+          freeze: '❄️',
+          colorShift: '🎨',
+          multiplier: '✨'
+        }
+
+        // Draw power-up icon above the number
+        ctx.font = 'bold 16px Arial'
+        ctx.textAlign = 'center'
+        ctx.textBaseline = 'middle'
+        ctx.fillText(powerUpIcons[tile.powerUp.type], x, y - 15)
+
+        // Show power-up info when selected
+        if (isSelected) {
+          const descriptions = {
+            freeze: 'Pauses the timer for 5s',
+            colorShift: 'Changes adjacent tile colors',
+            multiplier: 'Doubles points for 15s'
+          }
+
+          // Draw info box above tile
+          ctx.fillStyle = 'rgba(0, 255, 159, 0.1)'
+          ctx.strokeStyle = 'rgba(0, 255, 159, 0.3)'
+          ctx.lineWidth = 1
+          const text = descriptions[tile.powerUp.type]
+          const padding = 10
+          const boxWidth = ctx.measureText(text).width + padding * 2
+          const boxHeight = 30
+          const boxX = x - boxWidth / 2
+          const boxY = y - size * 2
+
+          // Draw box with rounded corners
+          ctx.beginPath()
+          ctx.roundRect(boxX, boxY, boxWidth, boxHeight, 5)
+          ctx.fill()
+          ctx.stroke()
+
+          // Draw description text
+          ctx.fillStyle = '#fff'
+          ctx.font = '14px Arial'
+          ctx.fillText(descriptions[tile.powerUp.type], x, boxY + boxHeight/2)
         }
       }
     }
@@ -586,6 +637,11 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver }: GameProps) 
           // Update board with new tile
           setPlacedTiles(newPlacedTiles)
           
+          // Add this line to activate power-up if present
+          if (selectedTile.powerUp) {
+            activatePowerUp(selectedTile)
+          }
+          
           // Generate new tile for the used slot
           const newTiles = [...nextTiles]
           newTiles[selectedTileIndex] = { ...createTileWithRandomEdges(0, 0), isPlaced: false }
@@ -630,6 +686,81 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver }: GameProps) 
     }
   }, [placedTiles, nextTiles, selectedTileIndex, score, timeLeft, isGameOver, mousePosition])
 
+  // Add power-up activation handler
+  const activatePowerUp = (tile: PlacedTile) => {
+    if (!tile.powerUp) return
+
+    const { type } = tile.powerUp
+    soundManager.playSound('powerUp')
+
+    switch (type) {
+      case 'freeze':
+        setPowerUps(prev => ({
+          ...prev,
+          freeze: { active: true, remainingTime: tile.powerUp!.duration! }
+        }))
+        break
+
+      case 'colorShift':
+        const adjacentTiles = getAdjacentTiles(tile, placedTiles)
+        const randomColor = COLORS[Math.floor(Math.random() * COLORS.length)]
+        const updatedTiles = placedTiles.map(t => {
+          if (adjacentTiles.includes(t)) {
+            return {
+              ...t,
+              edges: t.edges.map(() => ({ color: randomColor }))
+            }
+          }
+          return t
+        })
+        setPlacedTiles(updatedTiles)
+        break
+
+      case 'multiplier':
+        setPowerUps(prev => ({
+          ...prev,
+          multiplier: { 
+            active: true, 
+            value: tile.powerUp!.multiplier!, 
+            remainingTime: tile.powerUp!.duration! 
+          }
+        }))
+        break
+    }
+  }
+
+  // Add power-up timer effect
+  useEffect(() => {
+    if (!isGameOver) {
+      const timer = setInterval(() => {
+        setPowerUps((prev: PowerUpState) => ({
+          freeze: {
+            active: prev.freeze.remainingTime > 0,
+            remainingTime: Math.max(0, prev.freeze.remainingTime - 1)
+          },
+          colorShift: prev.colorShift,
+          multiplier: {
+            active: prev.multiplier.remainingTime > 0,
+            value: prev.multiplier.remainingTime > 0 ? prev.multiplier.value : 1,
+            remainingTime: Math.max(0, prev.multiplier.remainingTime - 1)
+          }
+        }))
+      }, 1000)
+
+      return () => clearInterval(timer)
+    }
+  }, [isGameOver])
+
+  // Modify timer effect to respect freeze power-up
+  useEffect(() => {
+    if (timedMode && timeLeft > 0 && !isGameOver && !powerUps.freeze.active) {
+      const timer = setInterval(() => {
+        setTimeLeft(prev => prev - 1)
+      }, 1000)
+      return () => clearInterval(timer)
+    }
+  }, [timeLeft, isGameOver, timedMode, powerUps.freeze.active])
+
   return (
     <div className="game-container">
       <div className="game-hud">
@@ -645,6 +776,18 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver }: GameProps) 
             Time: {formatTime(timeLeft)}
           </div>
         )}
+        <div className="power-up-indicator">
+          {powerUps.freeze.active && (
+            <div className="power-up-timer active">
+              ❄️ {powerUps.freeze.remainingTime}s
+            </div>
+          )}
+          {powerUps.multiplier.active && (
+            <div className="power-up-timer active">
+              ✨ {powerUps.multiplier.remainingTime}s
+            </div>
+          )}
+        </div>
       </div>
       <div className="board-container">
         <canvas 

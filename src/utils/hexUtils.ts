@@ -1,4 +1,4 @@
-import { Tile } from "../types"
+import { Tile, PowerUp } from "../types"
 
 export const COLORS = [
   '#FF1177',  // Neon pink
@@ -11,27 +11,42 @@ export const COLORS = [
 
 export const getRandomColor = () => COLORS[Math.floor(Math.random() * COLORS.length)]
 
-export const createTileWithRandomEdges = (q: number, r: number): Tile => {
-  // Small chance to create a joker tile (10%)
-  const isJoker = Math.random() < 0.1
+export const getAdjacentTiles = (tile: Tile, allTiles: Tile[]): Tile[] => {
+  return allTiles.filter(t => 
+    (Math.abs(t.q - tile.q) <= 1 && Math.abs(t.r - tile.r) <= 1) && // Adjacent coordinates
+    !(t.q === tile.q && t.r === tile.r) // Not the same tile
+  )
+}
 
-  if (isJoker) {
-    return {
-      edges: Array(6).fill({ color: 'rainbow' }), // Special color for joker
-      q,
-      r,
-      value: 0,
-      isJoker: true
+export const createTileWithRandomEdges = (q: number, r: number): Tile => {
+  // Small chance to create a power-up tile (15%)
+  const powerUpChance = Math.random()
+  let powerUp: PowerUp | undefined
+
+  if (powerUpChance < 0.15) {
+    const powerUpTypes: PowerUp['type'][] = ['freeze', 'colorShift', 'multiplier']
+    const randomType = powerUpTypes[Math.floor(Math.random() * powerUpTypes.length)]
+    
+    powerUp = {
+      type: randomType,
+      duration: randomType === 'freeze' ? 5 : 
+               randomType === 'multiplier' ? 15 : undefined,
+      multiplier: randomType === 'multiplier' ? 2 : undefined,
+      active: false
     }
   }
 
-  return {
+  // Small chance to create a joker tile (10%)
+  const isJoker = !powerUp && Math.random() < 0.1
+
+  return isJoker ? {
+    edges: Array(6).fill({ color: 'rainbow' }),
+    q, r, value: 0, isJoker: true
+  } : {
     edges: Array(6).fill(0).map(() => ({
       color: COLORS[Math.floor(Math.random() * COLORS.length)]
     })),
-    q,
-    r,
-    value: 0
+    q, r, value: 0, powerUp
   }
 }
 
