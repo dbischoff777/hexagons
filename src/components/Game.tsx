@@ -464,13 +464,17 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver }: GameProps) 
           }
         } else {
           // Regular tile number
-          ctx.shadowColor = 'rgba(0, 0, 0, 0.2)'
-          ctx.shadowBlur = 2
-          ctx.fillStyle = isSelected ? '#1a1a1a' : '#2d2d2d'
-          ctx.font = `bold ${isSelected ? 24 : 22}px Arial`
-          ctx.textAlign = 'center'
-          ctx.textBaseline = 'middle'
-          ctx.fillText(tile.value.toString(), x, y)
+          if (tile.value > 0) {
+            // Draw number with better visibility
+            ctx.fillStyle = '#00FFFF'  // Bright cyan
+            ctx.shadowColor = '#00FFFF'
+            ctx.shadowBlur = 8
+            ctx.font = `bold ${isSelected ? 24 : 22}px Arial`
+            ctx.textAlign = 'center'
+            ctx.textBaseline = 'middle'
+            ctx.fillText(tile.value.toString(), x, y)
+            ctx.shadowBlur = 0
+          }
         }
       }
 

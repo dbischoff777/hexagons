@@ -124,14 +124,16 @@ const drawEdgeNumbers = (
     ctx.save()
     ctx.translate(textX, textY)
     
-    // More subtle background for normal mode
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.7)'
+    // Darker background for better contrast
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.85)'
     ctx.beginPath()
     ctx.arc(0, 0, 15, 0, Math.PI * 2)
     ctx.fill()
 
-    // Light grey text for normal mode
-    ctx.fillStyle = '#CCCCCC'
+    // Bright cyan text with glow
+    ctx.fillStyle = '#00FFFF'  // Bright cyan
+    ctx.shadowColor = '#00FFFF'
+    ctx.shadowBlur = 4
     ctx.font = 'bold 16px Arial'
     ctx.textAlign = 'center'
     ctx.textBaseline = 'middle'
