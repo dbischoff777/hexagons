@@ -13,7 +13,9 @@ export const hasMatchingEdges = (tile: Tile, placedTiles: Tile[]): boolean => {
 
     if (neighbor) {
       const oppositeEdge = (i + 3) % 6
-      if (tile.edges[i].color === neighbor.edges[oppositeEdge].color) {
+      // Joker tiles always match
+      if (tile.isJoker || neighbor.isJoker || 
+          tile.edges[i].color === neighbor.edges[oppositeEdge].color) {
         hasMatch = true
       }
     }
@@ -34,8 +36,16 @@ export const updateTileValues = (tiles: PlacedTile[]): PlacedTile[] => {
       const neighborTile = tiles.find(t => 
         t.q === tile.q + dir.q && t.r === tile.r + dir.r
       )
-      if (neighborTile && tile.edges[i].color === neighborTile.edges[(i + 3) % 6].color) {
+      if (neighborTile && (
+        tile.isJoker || 
+        neighborTile.isJoker || 
+        tile.edges[i].color === neighborTile.edges[(i + 3) % 6].color
+      )) {
         matches++
+        // Bonus points for joker matches
+        if (tile.isJoker || neighborTile.isJoker) {
+          matches++
+        }
       }
     })
     

@@ -3,6 +3,7 @@ export interface Tile {
   q: number
   r: number
   value: number
+  isJoker?: boolean
 }
 
 export interface PlacedTile extends Tile {

@@ -212,17 +212,44 @@ const Game = () => {
           const start = points[i]
           const end = points[(i + 1) % 6]
           
-          const gradient = ctx.createLinearGradient(start[0], start[1], end[0], end[1])
-          gradient.addColorStop(0, tile.edges[i].color)
-          gradient.addColorStop(1, tile.edges[i].color)
+          if (tile.isJoker) {
+            // Rainbow gradient for joker edges
+            const gradient = ctx.createLinearGradient(start[0], start[1], end[0], end[1])
+            gradient.addColorStop(0, '#FF1177')
+            gradient.addColorStop(0.2, '#FFE900')
+            gradient.addColorStop(0.4, '#00FF9F')
+            gradient.addColorStop(0.6, '#00FFFF')
+            gradient.addColorStop(0.8, '#4D4DFF')
+            gradient.addColorStop(1, '#FF1177')
+            ctx.strokeStyle = gradient
+            
+            // Add glow effect for joker
+            ctx.shadowColor = '#FFFFFF'
+            ctx.shadowBlur = 10
+          } else {
+            const gradient = ctx.createLinearGradient(start[0], start[1], end[0], end[1])
+            gradient.addColorStop(0, tile.edges[i].color)
+            gradient.addColorStop(1, tile.edges[i].color)
+            ctx.strokeStyle = gradient
+          }
           
           ctx.beginPath()
           ctx.moveTo(start[0], start[1])
           ctx.lineTo(end[0], end[1])
-          ctx.strokeStyle = gradient
           ctx.lineWidth = isSelected ? 4 : 3
           ctx.lineCap = 'round'
           ctx.stroke()
+        }
+
+        // Special joker indicator
+        if (tile.isJoker) {
+          ctx.fillStyle = '#FFFFFF'
+          ctx.shadowColor = '#FFFFFF'
+          ctx.shadowBlur = 15
+          ctx.font = 'bold 20px Arial'
+          ctx.textAlign = 'center'
+          ctx.textBaseline = 'middle'
+          ctx.fillText('★', x, y)
         }
 
         // Draw number with shadow
