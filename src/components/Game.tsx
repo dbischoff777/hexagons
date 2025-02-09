@@ -181,12 +181,33 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver }: GameProps) 
       // Enhanced background colors
       if (tile?.isPlaced) {
         if (isMatched) {
-          // Create gradient for matched tiles
+          // Create gradient based on tile value (1-12 range)
+          const maxValue = 12
+          const valueRatio = Math.min(tile.value / maxValue, 1)
+          
+          // Create color based on value ranges
+          let glowColor
+          let fillColor
+          if (valueRatio <= 0.25) {         // 1-3: Green
+            glowColor = '#00FF9F'
+            fillColor = 'rgba(0, 255, 159, 0.2)'
+          } else if (valueRatio <= 0.5) {   // 4-6: Blue
+            glowColor = '#00FFFF'
+            fillColor = 'rgba(0, 255, 255, 0.2)'
+          } else if (valueRatio <= 0.75) {  // 7-9: Purple
+            glowColor = '#B14FFF'
+            fillColor = 'rgba(177, 79, 255, 0.2)'
+          } else {                          // 10-12: Pink
+            glowColor = '#FF1177'
+            fillColor = 'rgba(255, 17, 119, 0.2)'
+          }
+          
           const gradient = ctx.createRadialGradient(x, y, 0, x, y, size)
-          gradient.addColorStop(0, 'rgba(255, 17, 119, 0.2)')  // Neon pink core
-          gradient.addColorStop(1, 'rgba(26, 26, 46, 0.95)')   // Dark edge
+          gradient.addColorStop(0, fillColor)
+          gradient.addColorStop(1, 'rgba(26, 26, 46, 0.95)')
           ctx.fillStyle = gradient
-          ctx.shadowColor = '#FF1177'
+          
+          ctx.shadowColor = glowColor
           ctx.shadowBlur = 20
         } else {
           ctx.fillStyle = 'rgba(26, 26, 46, 0.9)'
