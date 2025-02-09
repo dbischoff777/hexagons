@@ -4,6 +4,7 @@ import AccessibilitySettings from './AccessibilitySettings'
 import Game from './Game'
 import { loadGameState, clearSavedGame } from '../utils/gameStateUtils'
 import StatisticsPage from './StatisticsPage'
+import ConfirmModal from './ConfirmModal'
 
 
 interface StartPageProps {
@@ -19,6 +20,8 @@ const StartPage: React.FC<StartPageProps> = ({ onStartGame, onMusicToggle, onSou
   const [showTutorial, setShowTutorial] = useState(false)
   const [showStatistics, setShowStatistics] = useState(false)
   const [hasSavedGame, setHasSavedGame] = useState(false)
+  const [showConfirmModal, setShowConfirmModal] = useState(false)
+  const [pendingGameMode, setPendingGameMode] = useState<boolean | null>(null)
 
   useEffect(() => {
     // Check for saved game on mount
@@ -28,10 +31,8 @@ const StartPage: React.FC<StartPageProps> = ({ onStartGame, onMusicToggle, onSou
 
   const handleNewGame = (timedMode: boolean) => {
     if (hasSavedGame) {
-      if (window.confirm('Starting a new game will erase your saved progress. Continue?')) {
-        clearSavedGame()
-        onStartGame(timedMode)
-      }
+      setShowConfirmModal(true)
+      setPendingGameMode(timedMode)
     } else {
       onStartGame(timedMode)
     }
@@ -156,6 +157,23 @@ const StartPage: React.FC<StartPageProps> = ({ onStartGame, onMusicToggle, onSou
           )}
         </div>
       </div>
+
+      {showConfirmModal && (
+        <ConfirmModal
+          message="Starting a new game will erase your saved progress. Continue?"
+          onConfirm={() => {
+            clearSavedGame()
+            if (pendingGameMode !== null) {
+              onStartGame(pendingGameMode)
+            }
+            setShowConfirmModal(false)
+          }}
+          onCancel={() => {
+            setShowConfirmModal(false)
+            setPendingGameMode(null)
+          }}
+        />
+      )}
     </div>
   )
 }
