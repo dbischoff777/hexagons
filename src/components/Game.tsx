@@ -583,13 +583,13 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver }: GameProps) 
           // Get the updated tile with its correct value
           const updatedPlacedTile = newPlacedTiles.find(tile => tile.q === q && tile.r === r)!
           
-          // For placed tile score
+          // Show score popup for immediate matches with the placed tile
           const placedTileScore = calculateScore(updatedPlacedTile.value * 2)
           if (placedTileScore > 0) {  // Only show if score is positive
             setScorePopups(prev => [...prev, {
               score: placedTileScore,
               x: canvas.width / 2 - 100,
-              y: canvas.height / 2 - 150,
+              y: canvas.height / 2 - 200,
               id: Date.now(),
               emoji: '🌈✨',
               text: 'EXCEPTIONAL!'
@@ -664,14 +664,14 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver }: GameProps) 
             }
           })
 
-          // For combo popup
+          // Add combo popup right after
           if (combo.count > 1) {
             const comboBonus = Math.round(placedTileScore * (combo.multiplier - 1))
             if (comboBonus > 0) {  // Only show if bonus is positive
               setScorePopups(prev => [...prev, {
                 score: comboBonus,
                 x: canvas.width / 2,
-                y: canvas.height / 2 - 100,
+                y: canvas.height / 2 - 50,
                 id: Date.now() + 2,
                 emoji: '🔥',
                 text: `${combo.count}x COMBO!`
