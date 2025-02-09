@@ -4,7 +4,6 @@ import { createTileWithRandomEdges, hexToPixel, getAdjacentTiles, COLORS } from 
 import { INITIAL_TIME, hasMatchingEdges, formatTime, updateTileValues, isGridFull } from '../utils/gameUtils'
 import SoundManager from '../utils/soundManager'
 import './Game.css'
-import { useColorMode } from '../contexts/ColorModeContext'
 import { useAccessibility } from '../contexts/AccessibilityContext'
 import { drawAccessibilityOverlay, findPotentialMatches } from '../utils/accessibilityUtils'
 
@@ -138,7 +137,6 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver }: GameProps) 
   })
   const [isQuickPlacement, setIsQuickPlacement] = useState(false)
   const [activePopupPositions, setActivePopupPositions] = useState<PopupPosition[]>([])
-  const { colorMode } = useColorMode()
   const { settings } = useAccessibility()
 
   // Modify the findAvailableYPosition function
@@ -552,12 +550,6 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver }: GameProps) 
             const s = -q - r
             if (Math.max(Math.abs(q), Math.abs(r), Math.abs(s)) <= Math.floor(cols/2)) {
               const { x, y } = hexToPixel(q, r, centerX, centerY, tileSize)
-              
-              // Check if this position is valid for placement
-              const isValidPosition = Math.max(Math.abs(q), Math.abs(r), Math.abs(s)) <= Math.floor(cols/2)
-              const isOccupied = placedTiles.some(tile => tile.q === q && tile.r === r)
-              const isValidPlacement = selectedTileIndex !== null && isValidPosition && !isOccupied
-              
               drawHexagonWithColoredEdges(x, y, tileSize, undefined, false)
             }
           }
@@ -1013,7 +1005,6 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver }: GameProps) 
   useEffect(() => {
     if (timedMode && timeLeft > 0 && !isGameOver) {
       const timer = setInterval(() => {
-        // Only decrement time if freeze power-up is not active
         if (!powerUps.freeze.active) {
           setTimeLeft(prev => prev - 1)
         }
@@ -1021,8 +1012,9 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver }: GameProps) 
       return () => clearInterval(timer)
     } else if (timedMode && timeLeft === 0) {
       setIsGameOver(true)
+      onGameOver()
     }
-  }, [timeLeft, isGameOver, timedMode, powerUps.freeze.active])
+  }, [timeLeft, isGameOver, timedMode, powerUps.freeze.active, onGameOver])
 
   // Add combo timer effect
   useEffect(() => {
