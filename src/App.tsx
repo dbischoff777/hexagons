@@ -29,15 +29,9 @@ function App() {
     setTimedMode(timed)
     setGameStarted(true)
     setTutorialMode(false)
-    setSavedGameState(savedGame && !timed ? savedGame : null)
+    setSavedGameState(savedGame && savedGame.timedMode === timed ? savedGame : null)
     soundManager.playSound('buttonClick')
     soundManager.startBackgroundMusic()
-  }
-
-  const handleStartTutorial = () => {
-    setGameStarted(true)
-    setTutorialMode(true)
-    soundManager.playSound('buttonClick')
   }
 
   const handleExitGame = () => {
