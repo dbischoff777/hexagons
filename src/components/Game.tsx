@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { PlacedTile, PowerUpState } from '../types'
+import { PlacedTile, PowerUpState, ComboState } from '../types'
 import { createTileWithRandomEdges, hexToPixel, getAdjacentTiles, COLORS } from '../utils/hexUtils'
 import { INITIAL_TIME, hasMatchingEdges, formatTime, updateTileValues, isGridFull } from '../utils/gameUtils'
 import SoundManager from '../utils/soundManager'
@@ -43,6 +43,13 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver }: GameProps) 
     colorShift: { active: false },
     multiplier: { active: false, value: 1, remainingTime: 0 }
   })
+  const [combo, setCombo] = useState<ComboState>({
+    count: 0,
+    timer: 0,
+    multiplier: 1,
+    lastPlacementTime: 0
+  })
+  const [isQuickPlacement, setIsQuickPlacement] = useState(false)
 
   // Timer effect
   useEffect(() => {
@@ -576,28 +583,19 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver }: GameProps) 
           // Get the updated tile with its correct value
           const updatedPlacedTile = newPlacedTiles.find(tile => tile.q === q && tile.r === r)!
           
-          // Show score popup for immediate matches with the placed tile
-          if (updatedPlacedTile.value > 0) {
-            const placedTileScore = updatedPlacedTile.value * 2
-            
-            // Choose emoji and text based on score tiers
-            const matchInfo = 
-              placedTileScore >= 20 ? { emoji: '🌈✨', text: 'EXCEPTIONAL!' } :
-              placedTileScore >= 15 ? { emoji: '⚡💫', text: 'AMAZING!' } :
-              placedTileScore >= 10 ? { emoji: '🔥✨', text: 'GREAT!' } :
-              placedTileScore >= 5  ? { emoji: '💎', text: 'GOOD!' } :
-              { emoji: '💫', text: 'MATCH!' }
-
+          // For placed tile score
+          const placedTileScore = calculateScore(updatedPlacedTile.value * 2)
+          if (placedTileScore > 0) {  // Only show if score is positive
             setScorePopups(prev => [...prev, {
               score: placedTileScore,
               x: canvas.width / 2 - 100,
               y: canvas.height / 2 - 150,
               id: Date.now(),
-              emoji: matchInfo.emoji,
-              text: matchInfo.text
+              emoji: '🌈✨',
+              text: 'EXCEPTIONAL!'
             }])
-            setScore(prevScore => prevScore + placedTileScore)
           }
+          setScore(prevScore => prevScore + placedTileScore)
 
           // Check for matches for grid-full bonus
           const matchingTiles = newPlacedTiles.filter(tile => hasMatchingEdges(tile, newPlacedTiles))
@@ -606,7 +604,7 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver }: GameProps) 
           if (matchingTiles.length >= 3 && isGridFull(newPlacedTiles, cols)) {
             const totalMatchScore = matchingTiles.reduce((sum, tile) => sum + tile.value, 0)
             const multiplier = matchingTiles.length
-            const clearBonus = totalMatchScore * multiplier * 2
+            const clearBonus = calculateScore(totalMatchScore * multiplier * 2)
             
             // Choose emoji and text based on clear bonus achievements
             const clearInfo = 
@@ -647,6 +645,40 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver }: GameProps) 
           newTiles[selectedTileIndex] = { ...createTileWithRandomEdges(0, 0), isPlaced: false }
           setNextTiles(newTiles)
           setSelectedTileIndex(null)
+
+          // Update combo
+          const now = Date.now()
+          const timeSinceLastPlacement = now - combo.lastPlacementTime
+          const quickPlacement = timeSinceLastPlacement < 2000
+          setIsQuickPlacement(quickPlacement)
+
+          setCombo(prev => {
+            const newCount = quickPlacement ? prev.count + 1 : 1
+            const newMultiplier = Math.min(2, 1 + (newCount * 0.1)) // Max 2x multiplier
+            
+            return {
+              count: newCount,
+              timer: 3, // 3 seconds to maintain combo
+              multiplier: newMultiplier,
+              lastPlacementTime: now
+            }
+          })
+
+          // For combo popup
+          if (combo.count > 1) {
+            const comboBonus = Math.round(placedTileScore * (combo.multiplier - 1))
+            if (comboBonus > 0) {  // Only show if bonus is positive
+              setScorePopups(prev => [...prev, {
+                score: comboBonus,
+                x: canvas.width / 2,
+                y: canvas.height / 2 - 100,
+                id: Date.now() + 2,
+                emoji: '🔥',
+                text: `${combo.count}x COMBO!`
+              }])
+            }
+            setScore(prevScore => prevScore + comboBonus)
+          }
         }
       }
     }
@@ -761,6 +793,33 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver }: GameProps) 
     }
   }, [timeLeft, isGameOver, timedMode, powerUps.freeze.active])
 
+  // Add combo timer effect
+  useEffect(() => {
+    if (combo.timer > 0) {
+      const timer = setInterval(() => {
+        setCombo(prev => ({
+          ...prev,
+          timer: Math.max(0, prev.timer - 1)
+        }))
+      }, 1000)
+      return () => clearInterval(timer)
+    } else if (combo.count > 0) {
+      // Reset combo when timer runs out
+      setCombo({
+        count: 0,
+        timer: 0,
+        multiplier: 1,
+        lastPlacementTime: 0
+      })
+    }
+  }, [combo.timer])
+
+  // Update score calculation to include combo multiplier
+  const calculateScore = (baseScore: number) => {
+    const powerUpMultiplier = powerUps.multiplier.active ? powerUps.multiplier.value : 1
+    return Math.round(baseScore * powerUpMultiplier * combo.multiplier)
+  }
+
   return (
     <div className="game-container">
       <div className="game-hud">
@@ -788,6 +847,14 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver }: GameProps) 
             </div>
           )}
         </div>
+        {combo.count > 1 && (
+          <div className={`combo-counter ${isQuickPlacement ? 'quick' : ''}`}>
+            <span className="combo-icon">🔥</span>
+            <span className="combo-text">x{combo.count}</span>
+            <div className="combo-timer" style={{ width: `${(combo.timer / 3) * 100}%` }} />
+          </div>
+
+        )}
       </div>
       <div className="board-container">
         <canvas 

@@ -31,4 +31,11 @@ export interface PowerUpState {
   freeze: { active: boolean, remainingTime: number }
   colorShift: { active: boolean }
   multiplier: { active: boolean, value: number, remainingTime: number }
+}
+
+export interface ComboState {
+  count: number
+  timer: number
+  multiplier: number
+  lastPlacementTime: number
 } 
