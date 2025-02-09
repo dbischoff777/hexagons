@@ -51,18 +51,6 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver }: GameProps) 
   })
   const [isQuickPlacement, setIsQuickPlacement] = useState(false)
 
-  // Timer effect
-  useEffect(() => {
-    if (timedMode && timeLeft > 0 && !isGameOver) {
-      const timer = setInterval(() => {
-        setTimeLeft(prev => prev - 1)
-      }, 1000)
-      return () => clearInterval(timer)
-    } else if (timedMode && timeLeft === 0) {
-      setIsGameOver(true)
-    }
-  }, [timeLeft, isGameOver, timedMode])
-
   // Update rotation timer effect
   useEffect(() => {
     if (!isGameOver) {
@@ -789,13 +777,18 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver }: GameProps) 
     }
   }, [isGameOver])
 
-  // Modify timer effect to respect freeze power-up
+  // Keep only this modified timer effect
   useEffect(() => {
-    if (timedMode && timeLeft > 0 && !isGameOver && !powerUps.freeze.active) {
+    if (timedMode && timeLeft > 0 && !isGameOver) {
       const timer = setInterval(() => {
-        setTimeLeft(prev => prev - 1)
+        // Only decrement time if freeze power-up is not active
+        if (!powerUps.freeze.active) {
+          setTimeLeft(prev => prev - 1)
+        }
       }, 1000)
       return () => clearInterval(timer)
+    } else if (timedMode && timeLeft === 0) {
+      setIsGameOver(true)
     }
   }, [timeLeft, isGameOver, timedMode, powerUps.freeze.active])
 
