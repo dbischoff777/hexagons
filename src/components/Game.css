@@ -718,6 +718,5 @@
 }
 
 .exit-button::before {
-  content: '🚪';
   font-size: 16px;
 }
