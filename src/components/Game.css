@@ -287,19 +287,17 @@
   animation: gridPulse 1.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Update score position */
+/* Restore original score styles */
 .score {
-  position: absolute;
-  top: 10px;
-  left: 10px;
-  background: rgba(0, 255, 159, 0.2);
-  padding: 8px 15px;
-  border-radius: 8px;
   color: #00FF9F;
-  font-size: 18px;
-  font-weight: bold;
-  border: 1px solid rgba(0, 255, 159, 0.3);
-  backdrop-filter: blur(4px);
+  font-size: 48px;
+  text-shadow: 0 0 20px #00FF9F;
+  transition: all 0.3s ease;
+  position: static; /* Remove absolute positioning */
+  background: none;
+  padding: 0;
+  border: none;
+  backdrop-filter: none;
 }
 
 .score-increment {
