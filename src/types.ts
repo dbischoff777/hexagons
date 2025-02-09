@@ -1,5 +1,8 @@
 export interface Tile {
-  edges: { color: string }[]
+  edges: { 
+    color: string
+    pattern?: string 
+  }[]
   q: number
   r: number
   value: number
@@ -9,6 +12,7 @@ export interface Tile {
 
 export interface PlacedTile extends Tile {
   isPlaced: boolean
+  matchPotential?: number[]
 }
 
 export interface ScorePopup {

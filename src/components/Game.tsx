@@ -4,6 +4,9 @@ import { createTileWithRandomEdges, hexToPixel, getAdjacentTiles, COLORS } from 
 import { INITIAL_TIME, hasMatchingEdges, formatTime, updateTileValues, isGridFull } from '../utils/gameUtils'
 import SoundManager from '../utils/soundManager'
 import './Game.css'
+import { useColorMode } from '../contexts/ColorModeContext'
+import { useAccessibility } from '../contexts/AccessibilityContext'
+import { drawAccessibilityOverlay, findPotentialMatches } from '../utils/accessibilityUtils'
 
 interface GameProps {
   musicEnabled: boolean
@@ -135,6 +138,8 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver }: GameProps) 
   })
   const [isQuickPlacement, setIsQuickPlacement] = useState(false)
   const [activePopupPositions, setActivePopupPositions] = useState<PopupPosition[]>([])
+  const { colorMode } = useColorMode()
+  const { settings } = useAccessibility()
 
   // Modify the findAvailableYPosition function
   const findAvailableYPosition = (baseY: number, type: 'score' | 'combo' | 'quick' | 'clear'): number => {
@@ -241,7 +246,14 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver }: GameProps) 
     canvas.width = 1000
     canvas.height = 800
 
-    const drawHexagonWithColoredEdges = (x: number, y: number, size: number, tile?: PlacedTile, isMatched: boolean = false, isSelected: boolean = false, isValidPlacement: boolean = false) => {
+    const drawHexagonWithColoredEdges = (
+      x: number, 
+      y: number, 
+      size: number, 
+      tile?: PlacedTile, 
+      isMatched: boolean = false, 
+      isSelected: boolean = false
+    ) => {
       const points: [number, number][] = []
       
       // Calculate all points first
@@ -253,7 +265,7 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver }: GameProps) 
       }
 
       // Draw valid placement highlight
-      if (isValidPlacement && selectedTileIndex !== null) {
+      if (selectedTileIndex !== null) {
         ctx.beginPath()
         points.forEach((point, i) => {
           if (i === 0) ctx.moveTo(point[0], point[1])
@@ -372,38 +384,60 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver }: GameProps) 
       ctx.shadowBlur = 0
       ctx.shadowOffsetY = 0
 
-      // Draw edges with gradient
+      // Draw edges
       if (tile?.edges) {
         for (let i = 0; i < 6; i++) {
           const start = points[i]
           const end = points[(i + 1) % 6]
           
-          if (tile.isJoker) {
-            // Rainbow gradient for joker edges
-            const gradient = ctx.createLinearGradient(start[0], start[1], end[0], end[1])
-            gradient.addColorStop(0, '#FF1177')
-            gradient.addColorStop(0.2, '#FFE900')
-            gradient.addColorStop(0.4, '#00FF9F')
-            gradient.addColorStop(0.6, '#00FFFF')
-            gradient.addColorStop(0.8, '#4D4DFF')
-            gradient.addColorStop(1, '#FF1177')
-            ctx.strokeStyle = gradient
-            
-            // Add glow effect for joker
-            ctx.shadowColor = '#FFFFFF'
-            ctx.shadowBlur = 10
+          if (settings.isColorBlind) {
+            // In colorblind mode, use only black/white for edges
+            ctx.strokeStyle = isMatched ? '#FFFFFF' : '#888888'
+            ctx.lineWidth = isSelected ? 4 : 2
           } else {
-            const gradient = ctx.createLinearGradient(start[0], start[1], end[0], end[1])
-            gradient.addColorStop(0, tile.edges[i].color)
-            gradient.addColorStop(1, tile.edges[i].color)
-            ctx.strokeStyle = gradient
+            const color = tile.edges[i].color
+            
+            if (colorMode.isColorBlind && colorMode.currentScheme.patterns) {
+              // Create pattern for colorblind mode
+              const patternCanvas = document.createElement('canvas')
+              const patternCtx = patternCanvas.getContext('2d')!
+              patternCanvas.width = 10
+              patternCanvas.height = 10
+              
+              // Set pattern color
+              patternCtx.strokeStyle = color
+              patternCtx.fillStyle = color
+              
+              // Draw pattern based on color
+              const pattern = colorMode.currentScheme.patterns[color]
+              const parser = new DOMParser()
+              const svgDoc = parser.parseFromString(pattern, 'image/svg+xml')
+              const patternElement = svgDoc.querySelector('pattern')
+              
+              if (patternElement) {
+                const patternContent = patternElement.innerHTML
+                const tempSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10">${patternContent}</svg>`
+                const img = new Image()
+                img.src = 'data:image/svg+xml;base64,' + btoa(tempSvg)
+                
+                img.onload = () => {
+                  patternCtx.drawImage(img, 0, 0)
+                }
+              }
+              
+              ctx.strokeStyle = ctx.createPattern(patternCanvas, 'repeat')!
+            } else {
+              // Regular color mode
+              const gradient = ctx.createLinearGradient(start[0], start[1], end[0], end[1])
+              gradient.addColorStop(0, color)
+              gradient.addColorStop(1, color)
+              ctx.strokeStyle = gradient
+            }
           }
           
           ctx.beginPath()
           ctx.moveTo(start[0], start[1])
           ctx.lineTo(end[0], end[1])
-          ctx.lineWidth = isSelected ? 4 : 3
-          ctx.lineCap = 'round'
           ctx.stroke()
         }
 
@@ -508,6 +542,11 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver }: GameProps) 
           ctx.fillText(descriptions[tile.powerUp.type], x, boxY + boxHeight/2)
         }
       }
+
+      // Draw accessibility overlay
+      if (tile && (settings.isColorBlind || settings.showEdgeNumbers)) {
+        drawAccessibilityOverlay(ctx, tile, x, y, size, settings)
+      }
     }
 
     const centerX = canvas.width / 2 - 100
@@ -538,7 +577,7 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver }: GameProps) 
               const isOccupied = placedTiles.some(tile => tile.q === q && tile.r === r)
               const isValidPlacement = selectedTileIndex !== null && isValidPosition && !isOccupied
               
-              drawHexagonWithColoredEdges(x, y, tileSize, undefined, false, false, isValidPlacement)
+              drawHexagonWithColoredEdges(x, y, tileSize, undefined, false)
             }
           }
         }
@@ -546,7 +585,7 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver }: GameProps) 
         // Draw all placed tiles in one batch
         placedTiles.forEach(tile => {
           const { x, y } = hexToPixel(tile.q, tile.r, centerX, centerY, tileSize)
-          const isMatched = hasMatchingEdges(tile, placedTiles)
+          const isMatched = hasMatchingEdges(tile, placedTiles, settings.isColorBlind)
           drawHexagonWithColoredEdges(x, y, tileSize, tile, isMatched)
         })
 
@@ -770,7 +809,7 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver }: GameProps) 
           setScore(prevScore => prevScore + placedTileScore)
 
           // Check for matches for grid-full bonus
-          const matchingTiles = newPlacedTiles.filter(tile => hasMatchingEdges(tile, newPlacedTiles))
+          const matchingTiles = newPlacedTiles.filter(tile => hasMatchingEdges(tile, newPlacedTiles, settings.isColorBlind))
           
           // Additional bonus for clearing tiles when grid is full
           if (matchingTiles.length >= 3 && isGridFull(newPlacedTiles, cols)) {
@@ -795,7 +834,7 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver }: GameProps) 
 
             // Remove matching tiles
             setTimeout(() => {
-              setPlacedTiles(newPlacedTiles.filter(tile => !hasMatchingEdges(tile, newPlacedTiles)))
+              setPlacedTiles(newPlacedTiles.filter(tile => !hasMatchingEdges(tile, newPlacedTiles, settings.isColorBlind)))
             }, 500)
           }
           
@@ -869,6 +908,22 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver }: GameProps) 
             })
             setIsQuickPlacement(false)
           }
+
+          // When selecting a tile, calculate potential matches
+          if (settings.showMatchHints || settings.isColorBlind) {
+            const hints = findPotentialMatches(selectedTile, placedTiles, settings.isColorBlind)
+            // Update tile matchPotential based on hints
+            setPlacedTiles(prev => prev.map(tile => ({
+              ...tile,
+              matchPotential: hints
+                .filter(hint => {
+                  const tileKey = `${tile.q},${tile.r}`
+                  const hintKey = `${hint.targetEdge.q},${hint.targetEdge.r}`
+                  return tileKey === hintKey
+                })
+                .map(hint => hint.strength)
+            })))
+          }
         }
       }
     }
@@ -906,7 +961,7 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver }: GameProps) 
       canvas.removeEventListener('click', handleClick)
       canvas.removeEventListener('contextmenu', handleContextMenu)
     }
-  }, [placedTiles, nextTiles, selectedTileIndex, score, timeLeft, isGameOver, mousePosition])
+  }, [placedTiles, nextTiles, selectedTileIndex, score, timeLeft, isGameOver, mousePosition, settings])
 
   // Add power-up activation handler
   const activatePowerUp = (tile: PlacedTile) => {
@@ -1033,6 +1088,48 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver }: GameProps) 
       return () => clearTimeout(timer)
     }
   }, [scorePopups])
+
+  // Inside your Game component, add this effect to update potential matches
+  useEffect(() => {
+    if (selectedTileIndex !== null && (settings.showMatchHints || settings.isColorBlind)) {
+      const selectedTile = nextTiles[selectedTileIndex]
+      const hints = findPotentialMatches(selectedTile, placedTiles, settings.isColorBlind)
+      
+      // Create a map of potential matches for each tile
+      const matchMap = new Map<string, number[]>()
+      
+      placedTiles.forEach(tile => {
+        const key = `${tile.q},${tile.r}`
+        matchMap.set(key, Array(6).fill(0))
+      })
+
+      // Update the map with match strengths
+      hints.forEach(hint => {
+        placedTiles.forEach(tile => {
+          const key = `${tile.q},${tile.r}`
+          const currentStrengths = matchMap.get(key)
+          if (currentStrengths) {
+            currentStrengths[hint.targetEdge.position] = Math.max(
+              currentStrengths[hint.targetEdge.position],
+              hint.strength
+            )
+          }
+        })
+      })
+
+      // Update placed tiles with match potentials
+      setPlacedTiles(prev => prev.map(tile => ({
+        ...tile,
+        matchPotential: matchMap.get(`${tile.q},${tile.r}`) || Array(6).fill(0)
+      })))
+    } else {
+      // Clear match potentials when no tile is selected
+      setPlacedTiles(prev => prev.map(tile => ({
+        ...tile,
+        matchPotential: undefined
+      })))
+    }
+  }, [selectedTileIndex, placedTiles, settings.showMatchHints, settings.isColorBlind])
 
   return (
     <div className="game-container">

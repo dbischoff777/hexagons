@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import React, { useState } from 'react'
 import './StartPage.css'
+import AccessibilitySettings from './AccessibilitySettings'
 
 interface StartPageProps {
   onStartGame: (withTimer: boolean) => void
@@ -7,7 +8,7 @@ interface StartPageProps {
   onSoundToggle: (enabled: boolean) => void
 }
 
-const StartPage = ({ onStartGame, onMusicToggle, onSoundToggle }: StartPageProps) => {
+const StartPage: React.FC<StartPageProps> = ({ onStartGame, onMusicToggle, onSoundToggle }) => {
   const [isMusicEnabled, setIsMusicEnabled] = useState(true)
   const [isSoundEnabled, setIsSoundEnabled] = useState(true)
   const [showGameModes, setShowGameModes] = useState(false)
@@ -25,36 +26,38 @@ const StartPage = ({ onStartGame, onMusicToggle, onSoundToggle }: StartPageProps
   return (
     <div className="start-page">
       <div className="start-container">
-        <h1 className="game-title">HexMatch</h1>
+        <h1 className="game-title">HEXMATCH</h1>
         <p className="welcome-text">Match the edges, clear the grid, beat the clock!</p>
-        
-        <div className="controls">
+
+        <div className="button-group">
           <button 
-            className={`control-button ${isMusicEnabled ? 'enabled' : ''}`}
+            className={`option-button ${isMusicEnabled ? 'enabled' : ''}`}
             onClick={handleMusicToggle}
           >
             {isMusicEnabled ? '🎵 Music On' : '🔇 Music Off'}
           </button>
           
           <button 
-            className={`control-button ${isSoundEnabled ? 'enabled' : ''}`}
+            className={`option-button ${isSoundEnabled ? 'enabled' : ''}`}
             onClick={handleSoundToggle}
           >
             {isSoundEnabled ? '🔊 Sound On' : '🔈 Sound Off'}
           </button>
+
+          <AccessibilitySettings />
         </div>
 
         {!showGameModes ? (
           <button 
-            className="start-button primary" 
+            className="start-button" 
             onClick={() => setShowGameModes(true)}
           >
-            Start Game
+            Play Game
           </button>
         ) : (
           <div className="game-modes">
             <button 
-              className="start-button timed-mode" 
+              className="mode-button timed" 
               onClick={() => onStartGame(true)}
             >
               Timed Mode
@@ -62,7 +65,7 @@ const StartPage = ({ onStartGame, onMusicToggle, onSoundToggle }: StartPageProps
             </button>
             
             <button 
-              className="start-button zen-mode" 
+              className="mode-button zen" 
               onClick={() => onStartGame(false)}
             >
               Zen Mode

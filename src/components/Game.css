@@ -493,6 +493,7 @@
 /* Update popup types with new colors for emoji pairs */
 .score-popup[data-type='epic'] .emoji {
   background: linear-gradient(45deg, #FFD700, #FF69B4);
+  background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   text-shadow: 0 0 15px rgba(255, 215, 0, 0.8);
@@ -500,6 +501,7 @@
 
 .score-popup[data-type='high'] .emoji {
   background: linear-gradient(45deg, #FF4D4D, #FF9F1C);
+  background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   text-shadow: 0 0 15px rgba(255, 77, 77, 0.8);
@@ -507,6 +509,7 @@
 
 .score-popup[data-type='combo'] .emoji {
   background: linear-gradient(45deg, #FFD700, #FF6B6B);
+  background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   text-shadow: 0 0 15px rgba(255, 215, 0, 0.8);
@@ -514,6 +517,7 @@
 
 .score-popup[data-type='quick'] .emoji {
   background: linear-gradient(45deg, #00FFFF, #4D4DFF);
+  background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   text-shadow: 0 0 15px rgba(0, 255, 255, 0.8);

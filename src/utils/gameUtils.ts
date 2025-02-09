@@ -1,9 +1,14 @@
 import { Tile, PlacedTile } from '../types'
 import { DIRECTIONS } from './hexUtils'
+import { getEdgeValue } from './accessibilityUtils'
 
 export const INITIAL_TIME = 180 // 3 minutes in seconds
 
-export const hasMatchingEdges = (tile: Tile, placedTiles: Tile[]): boolean => {
+export const hasMatchingEdges = (
+  tile: PlacedTile, 
+  placedTiles: PlacedTile[], 
+  isColorBlind: boolean = false
+): boolean => {
   let hasMatch = false
   DIRECTIONS.forEach((dir, i) => {
     const neighbor = placedTiles.find(t => 
@@ -13,10 +18,19 @@ export const hasMatchingEdges = (tile: Tile, placedTiles: Tile[]): boolean => {
 
     if (neighbor) {
       const oppositeEdge = (i + 3) % 6
-      // Joker tiles always match
-      if (tile.isJoker || neighbor.isJoker || 
-          tile.edges[i].color === neighbor.edges[oppositeEdge].color) {
-        hasMatch = true
+      if (isColorBlind) {
+        // In colorblind mode, match by numbers only
+        const tileValue = getEdgeValue(tile.edges[i].color, true)
+        const neighborValue = getEdgeValue(neighbor.edges[oppositeEdge].color, true)
+        if (tileValue === neighborValue) {
+          hasMatch = true
+        }
+      } else {
+        // Regular color matching
+        if (tile.isJoker || neighbor.isJoker || 
+            tile.edges[i].color === neighbor.edges[oppositeEdge].color) {
+          hasMatch = true
+        }
       }
     }
   })

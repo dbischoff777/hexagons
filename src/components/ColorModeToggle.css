@@ -1,0 +1,35 @@
+.color-mode-toggle {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  padding: 12px 24px;
+  background: rgba(0, 255, 159, 0.1);
+  border: 2px solid #00FF9F;
+  border-radius: 25px;
+  color: #00FF9F;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  z-index: 100;
+  text-shadow: 0 0 10px rgba(0, 255, 159, 0.5);
+}
+
+.color-mode-toggle:hover {
+  background: rgba(0, 255, 159, 0.2);
+  transform: scale(1.05);
+  box-shadow: 0 0 15px rgba(0, 255, 159, 0.3);
+}
+
+.color-mode-toggle:active {
+  transform: scale(0.95);
+}
+
+/* Add responsive styling */
+@media (max-width: 768px) {
+  .color-mode-toggle {
+    top: 10px;
+    right: 10px;
+    padding: 8px 16px;
+    font-size: 14px;
+  }
+} 

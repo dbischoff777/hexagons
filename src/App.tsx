@@ -3,6 +3,7 @@ import './App.css'
 import Game from './components/Game'
 import StartPage from './components/StartPage'
 import SoundManager from './utils/soundManager'
+import { AccessibilityProvider } from './contexts/AccessibilityContext'
 
 function App() {
   const [gameStarted, setGameStarted] = useState(false)
@@ -26,29 +27,37 @@ function App() {
     soundManager.startBackgroundMusic()
   }
 
+  const handleMusicToggle = (enabled: boolean) => {
+    setIsMusicEnabled(enabled)
+    soundManager.playSound('buttonClick')
+  }
+
+  const handleSoundToggle = (enabled: boolean) => {
+    setIsSoundEnabled(enabled)
+    if (enabled) soundManager.playSound('buttonClick')
+  }
+
   if (!gameStarted) {
     return (
-      <StartPage 
-        onStartGame={handleStartGame}
-        onMusicToggle={(enabled) => {
-          setIsMusicEnabled(enabled)
-          soundManager.playSound('buttonClick')
-        }}
-        onSoundToggle={(enabled) => {
-          setIsSoundEnabled(enabled)
-          if (enabled) soundManager.playSound('buttonClick')
-        }}
-      />
+      <AccessibilityProvider>
+        <StartPage 
+          onStartGame={handleStartGame}
+          onMusicToggle={handleMusicToggle}
+          onSoundToggle={handleSoundToggle}
+        />
+      </AccessibilityProvider>
     )
   }
 
   return (
-    <Game 
-      musicEnabled={isMusicEnabled} 
-      soundEnabled={isSoundEnabled}
-      timedMode={isTimedMode}
-      onGameOver={() => soundManager.playSound('gameOver')}
-    />
+    <AccessibilityProvider>
+      <Game 
+        musicEnabled={isMusicEnabled} 
+        soundEnabled={isSoundEnabled}
+        timedMode={isTimedMode}
+        onGameOver={() => soundManager.playSound('gameOver')}
+      />
+    </AccessibilityProvider>
   )
 }
 
