@@ -96,7 +96,7 @@ const Game = () => {
     canvas.width = 1000
     canvas.height = 800
 
-    const drawHexagonWithColoredEdges = (x: number, y: number, size: number, tile?: PlacedTile, isMatched: boolean = false, isSelected: boolean = false) => {
+    const drawHexagonWithColoredEdges = (x: number, y: number, size: number, tile?: PlacedTile, isMatched: boolean = false, isSelected: boolean = false, isValidPlacement: boolean = false) => {
       const points: [number, number][] = []
       
       // Calculate all points first
@@ -105,6 +105,28 @@ const Game = () => {
         const xPos = x + size * Math.cos(angle)
         const yPos = y + size * Math.sin(angle)
         points.push([xPos, yPos])
+      }
+
+      // Draw valid placement highlight
+      if (isValidPlacement && selectedTileIndex !== null) {
+        ctx.beginPath()
+        points.forEach((point, i) => {
+          if (i === 0) ctx.moveTo(point[0], point[1])
+          else ctx.lineTo(point[0], point[1])
+        })
+        ctx.closePath()
+        
+        // Create pulsing glow effect
+        const pulseIntensity = Math.sin(Date.now() / 200) * 0.2 + 0.4 // Values between 0.2 and 0.6
+        ctx.fillStyle = `rgba(0, 255, 159, ${pulseIntensity * 0.2})`
+        ctx.fill()
+        
+        // Add neon outline
+        ctx.strokeStyle = '#00FF9F'
+        ctx.lineWidth = 2
+        ctx.setLineDash([5, 5])  // Dashed line
+        ctx.stroke()
+        ctx.setLineDash([])  // Reset dash
       }
 
       // Draw selection highlight first (if selected)
@@ -230,14 +252,19 @@ const Game = () => {
         ctx.rotate((boardRotation * Math.PI) / 180)
         ctx.translate(-centerX, -centerY)
 
-        // Batch similar operations
-        ctx.beginPath()
+        // Draw grid with valid placement highlights
         for (let q = -rows; q <= rows; q++) {
           for (let r = Math.max(-cols, -q-cols); r <= Math.min(cols, -q+cols); r++) {
             const s = -q - r
             if (Math.max(Math.abs(q), Math.abs(r), Math.abs(s)) <= Math.floor(cols/2)) {
               const { x, y } = hexToPixel(q, r, centerX, centerY, tileSize)
-              drawHexagonWithColoredEdges(x, y, tileSize)
+              
+              // Check if this position is valid for placement
+              const isValidPosition = Math.max(Math.abs(q), Math.abs(r), Math.abs(s)) <= Math.floor(cols/2)
+              const isOccupied = placedTiles.some(tile => tile.q === q && tile.r === r)
+              const isValidPlacement = selectedTileIndex !== null && isValidPosition && !isOccupied
+              
+              drawHexagonWithColoredEdges(x, y, tileSize, undefined, false, false, isValidPlacement)
             }
           }
         }
