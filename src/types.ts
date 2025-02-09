@@ -42,4 +42,28 @@ export interface ComboState {
   timer: number
   multiplier: number
   lastPlacementTime: number
+}
+
+export interface GameState {
+  placedTiles: PlacedTile[]
+  nextTiles: PlacedTile[]
+  score: number
+  timeLeft: number
+  moveHistory: {
+    placedTiles: PlacedTile[]
+    nextTiles: PlacedTile[]
+    score: number
+  }[]
+  startTime: number
+}
+
+export interface GameStatistics {
+  gamesPlayed: number
+  highScore: number
+  totalScore: number
+  totalMatches: number
+  averageScore: number
+  longestCombo: number
+  totalPlayTime: number
+  lastPlayed: string
 } 

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { PlacedTile, PowerUpState, ComboState } from '../types'
+import { PlacedTile, PowerUpState, ComboState, GameState } from '../types'
 import { createTileWithRandomEdges, hexToPixel, getAdjacentTiles, COLORS } from '../utils/hexUtils'
 import { INITIAL_TIME, hasMatchingEdges, formatTime, updateTileValues, isGridFull } from '../utils/gameUtils'
 import SoundManager from '../utils/soundManager'
@@ -9,6 +9,7 @@ import { drawAccessibilityOverlay, findPotentialMatches } from '../utils/accessi
 import { TutorialState } from '../types/tutorial'
 import { TUTORIAL_STEPS } from '../constants/tutorialSteps'
 import { TutorialMessage } from './TutorialMessage'
+import { saveGameState, loadGameState, updateStatistics, clearSavedGame, getStatistics } from '../utils/gameStateUtils'
 
 interface GameProps {
   musicEnabled: boolean
@@ -16,6 +17,7 @@ interface GameProps {
   timedMode: boolean
   onGameOver: () => void
   tutorial?: boolean
+  onSkipTutorial?: () => void
 }
 
 interface PopupPosition {
@@ -106,7 +108,7 @@ const getFeedbackForClear = (clearScore: number) => {
   return SCORE_FEEDBACK.CLEAR[0]
 }
 
-const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = false }: GameProps) => {
+const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = false, onSkipTutorial }: GameProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const cols = 7
   const [placedTiles, setPlacedTiles] = useState<PlacedTile[]>([{
@@ -148,6 +150,11 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
     rotationCount: 0,
     hasPlaced: false
   })
+  const [previousState, setPreviousState] = useState<{
+    placedTiles: PlacedTile[]
+    nextTiles: PlacedTile[]
+    score: number
+  } | null>(null)
 
   // Modify the findAvailableYPosition function
   const findAvailableYPosition = (baseY: number, type: 'score' | 'combo' | 'quick' | 'clear'): number => {
@@ -575,28 +582,6 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
         // Reset transform
         ctx.setTransform(1, 0, 0, 1, 0, 0)
 
-        // Draw next pieces area (unrotated)
-        nextTiles.forEach((tile, index) => {
-          drawHexagonWithColoredEdges(
-            nextPiecesX, 
-            nextPiecesY + index * 100, 
-            tileSize, 
-            tile, 
-            false,
-            index === selectedTileIndex
-          )
-        })
-
-        // Add rotation hint text
-        if (selectedTileIndex !== null) {
-          ctx.fillStyle = '#00FF9F'  // Neon green
-          ctx.shadowColor = '#00FF9F'
-          ctx.shadowBlur = 8
-          ctx.font = '16px Arial'
-          ctx.fillText('Right click to rotate', nextPiecesX, nextPiecesY - 69)
-          ctx.shadowBlur = 0
-        }
-
         // Draw cursor tile
         if (selectedTileIndex !== null && mousePosition) {
           // Draw semi-transparent selected tile at cursor
@@ -907,6 +892,15 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
                 .map(hint => hint.strength)
             })))
           }
+
+          // After successful tile placement, save the state
+          if (isValidPosition && !isOccupied) {
+            setPreviousState({
+              placedTiles,
+              nextTiles,
+              score
+            })
+          }
         }
       }
 
@@ -1166,8 +1160,64 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
     setTutorialState(prev => ({ ...prev, active: tutorial }))
   }, [tutorial])
 
+  // Modify the game over effect to track game duration internally
+  useEffect(() => {
+    if (isGameOver) {
+      const gameEndTime = Date.now()
+      const gameStartTime = tutorialState.active ? gameEndTime : loadGameState()?.startTime ?? gameEndTime
+      const playTime = (gameEndTime - gameStartTime) / 1000
+      
+      updateStatistics({
+        gamesPlayed: 1,
+        totalScore: score,
+        highScore: Math.max(score, getStatistics().highScore),
+        totalPlayTime: playTime,
+        longestCombo: Math.max(combo.count, getStatistics().longestCombo),
+        lastPlayed: new Date().toISOString()
+      })
+      clearSavedGame()
+    }
+  }, [isGameOver])
+
+  // Modify the auto-save effect to include startTime
+  useEffect(() => {
+    if (!isGameOver && !tutorialState.active) {
+      const gameState: GameState = {
+        placedTiles,
+        nextTiles,
+        score,
+        timeLeft,
+        moveHistory: previousState ? [previousState] : [],
+        startTime: loadGameState()?.startTime ?? Date.now()
+      }
+      saveGameState(gameState)
+
+    }
+  }, [placedTiles, nextTiles, score, timeLeft, previousState, isGameOver, tutorialState.active])
+
+  // Add this function to handle undoing moves
+  const handleUndo = () => {
+    if (previousState) {
+      setPlacedTiles(previousState.placedTiles)
+      setNextTiles(previousState.nextTiles)
+      setScore(previousState.score)
+      setPreviousState(null)
+      soundManager.playSound('undo')
+    }
+  }
+
   return (
     <div className="game-container">
+      <div className="game-controls">
+        {tutorialState.active && (
+          <button 
+            className="skip-tutorial-button"
+            onClick={onSkipTutorial}
+          >
+            Skip Tutorial
+          </button>
+        )}
+      </div>
       <div className="game-hud">
         <div className="score">
           {'Score: ' + score}
@@ -1208,6 +1258,94 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
             Rotation Incoming!
           </div>
         )}
+      </div>
+      <div className="next-tiles-container">
+        <div className="next-tiles">
+          {nextTiles.map((tile, index) => (
+            <div 
+              key={index} 
+              className={`next-tile ${selectedTileIndex === index ? 'selected' : ''}`}
+              onClick={() => setSelectedTileIndex(selectedTileIndex === index ? null : index)}
+            >
+              <canvas
+                ref={el => {
+                  if (el) {
+                    const ctx = el.getContext('2d')
+                    if (ctx) {
+                      el.width = 100
+                      el.height = 100
+                      
+                      // Draw tile background
+                      ctx.fillStyle = 'rgba(26, 26, 46, 0.9)'
+                      ctx.beginPath()
+                      ctx.arc(50, 50, 40, 0, Math.PI * 2)
+                      ctx.fill()
+
+                      // Draw tile edges
+                      tile.edges.forEach((edge, i) => {
+                        const angle = (i * Math.PI) / 3
+                        const startX = 50 + 35 * Math.cos(angle)
+                        const startY = 50 + 35 * Math.sin(angle)
+                        const endX = 50 + 35 * Math.cos(angle + Math.PI / 3)
+                        const endY = 50 + 35 * Math.sin(angle + Math.PI / 3)
+
+                        ctx.beginPath()
+                        ctx.moveTo(startX, startY)
+                        ctx.lineTo(endX, endY)
+                        ctx.strokeStyle = edge.color
+                        ctx.lineWidth = selectedTileIndex === index ? 5 : 3
+                        ctx.stroke()
+                      })
+
+                      // Draw selection indicator
+                      if (selectedTileIndex === index) {
+                        ctx.strokeStyle = '#00FF9F'
+                        ctx.lineWidth = 3
+                        ctx.setLineDash([5, 5])
+                        ctx.beginPath()
+                        ctx.arc(50, 50, 45, 0, Math.PI * 2)
+                        ctx.stroke()
+                        ctx.setLineDash([])
+                      }
+
+                      // Draw tile value if it exists
+                      if (tile.value > 0) {
+                        ctx.fillStyle = '#00FFFF'
+                        ctx.font = 'bold 24px Arial'
+                        ctx.textAlign = 'center'
+                        ctx.textBaseline = 'middle'
+                        ctx.fillText(tile.value.toString(), 50, 50)
+                      }
+
+                      // Draw power-up indicator if present
+                      if (tile.powerUp) {
+                        const powerUpIcons = {
+                          freeze: '❄️',
+                          colorShift: '🎨',
+                          multiplier: '✨'
+                        }
+                        ctx.font = '16px Arial'
+                        ctx.fillText(powerUpIcons[tile.powerUp.type], 50, 20)
+                      }
+                    }
+                  }
+                }}
+                style={{
+                  cursor: 'pointer',
+                  transition: 'transform 0.2s ease',
+                  transform: selectedTileIndex === index ? 'scale(1.1)' : 'scale(1)'
+                }}
+              />
+            </div>
+          ))}
+        </div>
+        <button 
+          className="undo-button"
+          onClick={handleUndo}
+          disabled={!previousState}
+        >
+          Undo Last Move
+        </button>
       </div>
       {scorePopups.map(popup => (
         <div

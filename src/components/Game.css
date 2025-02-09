@@ -167,7 +167,7 @@
   justify-content: center;
   gap: 300px;
   pointer-events: none;
-  z-index: 1;
+  z-index: 2;
   font-size: 32px;
   font-weight: bold;
   text-transform: uppercase;
@@ -211,6 +211,7 @@
   align-items: center;
   width: 1000px;
   height: 800px;
+  z-index: 1;
 }
 
 .game-board {
@@ -238,13 +239,13 @@
 
 .score-popup {
   position: absolute;
+  z-index: 4;
   color: #00FF9F;
   font-size: 48px;
   font-weight: bold;
   text-shadow: 0 0 15px #00FF9F;
   pointer-events: none;
   animation: popup-appear 1s ease-out forwards;
-  z-index: 2;
   transform: translate(-50%, -50%);
   text-align: center;
   min-width: 120px;
@@ -388,18 +389,6 @@
   font-size: 0.8em;
 }
 
-/* Update next pieces area positioning */
-.next-pieces {
-  position: absolute;
-  right: 100px;
-  top: 50%;
-  transform: translateY(-50%);
-  display: flex;
-  flex-direction: column;
-  gap: 30px;
-  align-items: center;
-}
-
 /* Update rotation hint text */
 .rotation-hint {
   color: #00FF9F;
@@ -438,10 +427,11 @@
 /* Adjust power-up indicator position */
 .power-up-indicator {
   position: absolute;
-  top: 10px;
-  right: 10px;
+  top: 100px;
+  right: 20px;
   display: flex;
   gap: 10px;
+  z-index: 2;
 }
 
 .power-up-timer {
@@ -527,7 +517,7 @@
 
 .tutorial-message {
   position: fixed;
-  z-index: 1000;
+  z-index: 5;
   padding: 20px;
   background: rgba(26, 26, 46, 0.95);
   border: 2px solid #00FF9F;
@@ -588,4 +578,118 @@
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+.game-controls {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  z-index: 5;
+}
+
+.skip-tutorial-button {
+  padding: 8px 16px;
+  border: 2px solid #00FF9F;
+  background: rgba(0, 255, 159, 0.1);
+  color: #00FF9F;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.skip-tutorial-button:hover {
+  background: rgba(0, 255, 159, 0.2);
+  transform: scale(1.05);
+}
+
+.game-statistics {
+  position: absolute;
+  bottom: 20px;
+  left: 20px;
+  color: #00FF9F;
+  font-size: 14px;
+}
+
+/* Update next tiles container styling */
+.next-tiles-container {
+  position: absolute;
+  right: 50px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  z-index: 3;
+}
+
+.next-tiles {
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+/* Update undo button styling to match the game theme */
+.undo-button {
+  width: 100%;
+  padding: 12px 20px;
+  border: 2px solid #00FF9F;
+  background: rgba(0, 255, 159, 0.1);
+  color: #00FF9F;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-weight: bold;
+}
+
+.undo-button:hover:not(:disabled) {
+  background: rgba(0, 255, 159, 0.2);
+  transform: scale(1.05);
+}
+
+.undo-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.undo-button::before {
+  content: '↩️';
+  font-size: 16px;
+}
+
+.next-tile {
+  position: relative;
+  width: 100px;
+  height: 100px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: all 0.2s ease;
+}
+
+.next-tile:hover {
+  transform: scale(1.05);
+}
+
+.next-tile.selected {
+  transform: scale(1.1);
+}
+
+.next-tile canvas {
+  border-radius: 50%;
+  box-shadow: 0 0 15px rgba(0, 255, 159, 0.2);
+}
+
+.next-tile.selected canvas {
+  box-shadow: 0 0 25px rgba(0, 255, 159, 0.4);
 }
