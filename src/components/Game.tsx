@@ -241,25 +241,35 @@ const Game = () => {
           ctx.stroke()
         }
 
-        // Special joker indicator
+        // Special joker indicator and number for joker tiles
         if (tile.isJoker) {
+          // Draw star above the number
           ctx.fillStyle = '#FFFFFF'
           ctx.shadowColor = '#FFFFFF'
           ctx.shadowBlur = 15
           ctx.font = 'bold 20px Arial'
           ctx.textAlign = 'center'
           ctx.textBaseline = 'middle'
-          ctx.fillText('★', x, y)
-        }
+          ctx.fillText('★', x, y - 12)  // Move star up
 
-        // Draw number with shadow
-        ctx.shadowColor = 'rgba(0, 0, 0, 0.2)'
-        ctx.shadowBlur = 2
-        ctx.fillStyle = isSelected ? '#1a1a1a' : '#2d2d2d'
-        ctx.font = `bold ${isSelected ? 24 : 22}px Arial`
-        ctx.textAlign = 'center'
-        ctx.textBaseline = 'middle'
-        ctx.fillText(tile.value.toString(), x, y)
+          // Draw number below the star
+          ctx.shadowColor = 'rgba(0, 0, 0, 0.2)'
+          ctx.shadowBlur = 2
+          ctx.fillStyle = isSelected ? '#1a1a1a' : '#2d2d2d'
+          ctx.font = `bold ${isSelected ? 24 : 22}px Arial`
+          ctx.textAlign = 'center'
+          ctx.textBaseline = 'middle'
+          ctx.fillText(tile.value.toString(), x, y + 12)  // Move number down
+        } else {
+          // Regular tile number
+          ctx.shadowColor = 'rgba(0, 0, 0, 0.2)'
+          ctx.shadowBlur = 2
+          ctx.fillStyle = isSelected ? '#1a1a1a' : '#2d2d2d'
+          ctx.font = `bold ${isSelected ? 24 : 22}px Arial`
+          ctx.textAlign = 'center'
+          ctx.textBaseline = 'middle'
+          ctx.fillText(tile.value.toString(), x, y)
+        }
       }
     }
 
