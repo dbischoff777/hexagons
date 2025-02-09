@@ -10,6 +10,7 @@ interface StartPageProps {
 const StartPage = ({ onStartGame, onMusicToggle, onSoundToggle }: StartPageProps) => {
   const [isMusicEnabled, setIsMusicEnabled] = useState(true)
   const [isSoundEnabled, setIsSoundEnabled] = useState(true)
+  const [showGameModes, setShowGameModes] = useState(false)
 
   const handleMusicToggle = () => {
     setIsMusicEnabled(!isMusicEnabled)
@@ -43,23 +44,32 @@ const StartPage = ({ onStartGame, onMusicToggle, onSoundToggle }: StartPageProps
           </button>
         </div>
 
-        <div className="game-modes">
+        {!showGameModes ? (
           <button 
-            className="start-button timed-mode" 
-            onClick={() => onStartGame(true)}
+            className="start-button primary" 
+            onClick={() => setShowGameModes(true)}
           >
-            Timed Mode
-            <span className="mode-desc">Race against the clock!</span>
+            Start Game
           </button>
-          
-          <button 
-            className="start-button zen-mode" 
-            onClick={() => onStartGame(false)}
-          >
-            Zen Mode
-            <span className="mode-desc">Play at your own pace</span>
-          </button>
-        </div>
+        ) : (
+          <div className="game-modes">
+            <button 
+              className="start-button timed-mode" 
+              onClick={() => onStartGame(true)}
+            >
+              Timed Mode
+              <span className="mode-desc">Race against the clock!</span>
+            </button>
+            
+            <button 
+              className="start-button zen-mode" 
+              onClick={() => onStartGame(false)}
+            >
+              Zen Mode
+              <span className="mode-desc">Play at your own pace</span>
+            </button>
+          </div>
+        )}
       </div>
     </div>
   )
