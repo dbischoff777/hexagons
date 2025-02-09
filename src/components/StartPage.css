@@ -238,29 +238,6 @@
   box-shadow: 0 0 20px rgba(0, 255, 159, 0.3);
 }
 
-.exit-tutorial-button {
-  position: fixed;
-  top: 20px;
-  right: 20px;
-  padding: 10px 20px;
-  background: rgba(255, 17, 119, 0.2);
-  color: #FF1177;
-  border: 2px solid #FF1177;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  z-index: 1000;
-  font-size: 1em;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-}
-
-.exit-tutorial-button:hover {
-  background: rgba(255, 17, 119, 0.3);
-  transform: scale(1.05);
-  box-shadow: 0 0 20px rgba(255, 17, 119, 0.3);
-}
-
 .continue-button {
   width: 100%;
   padding: 1.5rem;

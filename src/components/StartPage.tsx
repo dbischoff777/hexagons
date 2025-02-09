@@ -27,10 +27,6 @@ const StartPage: React.FC<StartPageProps> = ({ onStartGame, onMusicToggle, onSou
     setHasSavedGame(!!savedGame)
   }, [])
 
-  const handleTutorialEnd = () => {
-    setShowTutorial(false)
-  }
-
   const handleNewGame = (timedMode: boolean) => {
     if (hasSavedGame) {
       if (window.confirm('Starting a new game will erase your saved progress. Continue?')) {
@@ -60,16 +56,11 @@ const StartPage: React.FC<StartPageProps> = ({ onStartGame, onMusicToggle, onSou
           musicEnabled={isMusicEnabled}
           soundEnabled={isSoundEnabled}
           timedMode={false}
-          onGameOver={handleTutorialEnd}
-          tutorial={true} onExit={function (): void {
-            throw new Error('Function not implemented.')
-          } }        />
-        <button 
-          className="exit-tutorial-button"
-          onClick={handleTutorialEnd}
-        >
-          Exit Tutorial
-        </button>
+          onGameOver={() => setShowTutorial(false)}
+          tutorial={true}
+          onExit={() => setShowTutorial(false)}
+          onSkipTutorial={() => setShowTutorial(false)}
+        />
       </div>
     )
   }
