@@ -88,23 +88,47 @@
   box-shadow: 0 0 10px rgba(0, 255, 159, 0.2);
 }
 
-.start-button {
-  background: #00FF9F;
-  border: none;
-  color: #1a1a2e;
-  padding: 15px 40px;
-  font-size: 24px;
-  border-radius: 12px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  text-transform: uppercase;
-  font-weight: bold;
-  letter-spacing: 2px;
+.game-modes {
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+  width: 100%;
 }
 
-.start-button:hover {
-  transform: scale(1.05);
-  box-shadow: 0 0 30px rgba(0, 255, 159, 0.4);
+.start-button {
+  flex: 1;
+  max-width: 240px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 20px;
+}
+
+.timed-mode {
+  background: #00FF9F;
+  border: none;
+}
+
+.zen-mode {
+  background: transparent;
+  border: 2px solid #00FF9F;
+  color: #00FF9F;
+}
+
+.zen-mode:hover {
+  background: rgba(0, 255, 159, 0.1);
+}
+
+.mode-desc {
+  font-size: 14px;
+  opacity: 0.8;
+  font-weight: normal;
+  letter-spacing: 1px;
+}
+
+.zen-mode .mode-desc {
+  color: #fff;
 }
 
 @keyframes glow {

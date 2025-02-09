@@ -4,11 +4,17 @@ import { createTileWithRandomEdges, hexToPixel } from '../utils/hexUtils'
 import { INITIAL_TIME, hasMatchingEdges, formatTime, updateTileValues, isGridFull } from '../utils/gameUtils'
 import './Game.css'
 
+interface GameProps {
+  musicEnabled: boolean
+  soundEnabled: boolean
+  timedMode: boolean
+}
+
 const rotateTileEdges = (edges: { color: string }[]) => {
   return [...edges.slice(-1), ...edges.slice(0, -1)]
 }
 
-const Game = () => {
+const Game = ({ musicEnabled, soundEnabled, timedMode }: GameProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const cols = 7
   const [placedTiles, setPlacedTiles] = useState<PlacedTile[]>([{
@@ -16,7 +22,7 @@ const Game = () => {
     isPlaced: true
   }])
   const [score, setScore] = useState<number>(0)
-  const [timeLeft, setTimeLeft] = useState<number>(INITIAL_TIME)
+  const [timeLeft, setTimeLeft] = useState<number>(timedMode ? INITIAL_TIME : Infinity)
   const [isGameOver, setIsGameOver] = useState<boolean>(false)
   const [nextTiles, setNextTiles] = useState<PlacedTile[]>([
     { ...createTileWithRandomEdges(0, 0), isPlaced: false },
@@ -32,15 +38,15 @@ const Game = () => {
 
   // Timer effect
   useEffect(() => {
-    if (timeLeft > 0 && !isGameOver) {
+    if (timedMode && timeLeft > 0 && !isGameOver) {
       const timer = setInterval(() => {
         setTimeLeft(prev => prev - 1)
       }, 1000)
       return () => clearInterval(timer)
-    } else if (timeLeft === 0) {
+    } else if (timedMode && timeLeft === 0) {
       setIsGameOver(true)
     }
-  }, [timeLeft, isGameOver])
+  }, [timeLeft, isGameOver, timedMode])
 
   // Update rotation timer effect
   useEffect(() => {
@@ -454,7 +460,7 @@ const Game = () => {
             isPlaced: true
           }])
           setScore(0)
-          setTimeLeft(INITIAL_TIME)
+          setTimeLeft(timedMode ? INITIAL_TIME : Infinity)
           setIsGameOver(false)
           setNextTiles([
             { ...createTileWithRandomEdges(0, 0), isPlaced: false },
@@ -627,13 +633,15 @@ const Game = () => {
         <div className="score">
           {'Score: ' + score}
         </div>
-        <div className={`timer ${
-          timeLeft > INITIAL_TIME * 0.5 ? 'safe' : 
-          timeLeft > INITIAL_TIME * 0.25 ? 'warning' : 
-          'danger'
-        }`}>
-          Time: {formatTime(timeLeft)}
-        </div>
+        {timedMode && (
+          <div className={`timer ${
+            timeLeft > INITIAL_TIME * 0.5 ? 'safe' : 
+            timeLeft > INITIAL_TIME * 0.25 ? 'warning' : 
+            'danger'
+          }`}>
+            Time: {formatTime(timeLeft)}
+          </div>
+        )}
       </div>
       <div className="board-container">
         <canvas 

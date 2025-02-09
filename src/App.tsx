@@ -7,18 +7,28 @@ function App() {
   const [gameStarted, setGameStarted] = useState(false)
   const [isMusicEnabled, setIsMusicEnabled] = useState(true)
   const [isSoundEnabled, setIsSoundEnabled] = useState(true)
+  const [isTimedMode, setIsTimedMode] = useState(true)
 
   if (!gameStarted) {
     return (
       <StartPage 
-        onStartGame={() => setGameStarted(true)}
+        onStartGame={(withTimer) => {
+          setIsTimedMode(withTimer)
+          setGameStarted(true)
+        }}
         onMusicToggle={setIsMusicEnabled}
         onSoundToggle={setIsSoundEnabled}
       />
     )
   }
 
-  return <Game musicEnabled={isMusicEnabled} soundEnabled={isSoundEnabled} />
+  return (
+    <Game 
+      musicEnabled={isMusicEnabled} 
+      soundEnabled={isSoundEnabled}
+      timedMode={isTimedMode}
+    />
+  )
 }
 
 export default App

@@ -2,7 +2,7 @@ import { useState } from 'react'
 import './StartPage.css'
 
 interface StartPageProps {
-  onStartGame: () => void
+  onStartGame: (withTimer: boolean) => void
   onMusicToggle: (enabled: boolean) => void
   onSoundToggle: (enabled: boolean) => void
 }
@@ -43,9 +43,23 @@ const StartPage = ({ onStartGame, onMusicToggle, onSoundToggle }: StartPageProps
           </button>
         </div>
 
-        <button className="start-button" onClick={onStartGame}>
-          Start Game
-        </button>
+        <div className="game-modes">
+          <button 
+            className="start-button timed-mode" 
+            onClick={() => onStartGame(true)}
+          >
+            Timed Mode
+            <span className="mode-desc">Race against the clock!</span>
+          </button>
+          
+          <button 
+            className="start-button zen-mode" 
+            onClick={() => onStartGame(false)}
+          >
+            Zen Mode
+            <span className="mode-desc">Play at your own pace</span>
+          </button>
+        </div>
       </div>
     </div>
   )
