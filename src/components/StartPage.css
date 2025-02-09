@@ -1,0 +1,126 @@
+.start-page {
+  width: 100%;
+  height: 100vh;
+  height: 100dvh; /* For mobile browsers */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #1a1a2e;
+  position: relative;
+  overflow: hidden;
+  margin: 0;
+  padding: 0;
+}
+
+.start-page::before {
+  content: '';
+  position: fixed; /* Changed from absolute */
+  top: 50%;
+  left: 50%;
+  width: 200%;
+  height: 200%;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(circle at center, rgba(0, 255, 159, 0.1) 0%, transparent 70%);
+  animation: ambient 8s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.start-container {
+  position: relative;
+  min-width: 400px;
+  max-width: 90%;
+  background: rgba(26, 26, 46, 0.95);
+  padding: 60px;
+  border-radius: 20px;
+  box-shadow: 0 0 30px rgba(0, 255, 159, 0.2);
+  text-align: center;
+  z-index: 1;
+  backdrop-filter: blur(10px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 30px;
+  margin: auto; /* Added auto margin */
+}
+
+.game-title {
+  color: #00FF9F;
+  font-size: 72px;
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 4px;
+  text-shadow: 0 0 20px #00FF9F;
+  animation: glow 2s ease-in-out infinite;
+}
+
+.welcome-text {
+  color: #fff;
+  font-size: 24px;
+  margin: 0;
+  opacity: 0.9;
+}
+
+.controls {
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+  margin: 0;
+}
+
+.control-button {
+  background: rgba(0, 0, 0, 0.3);
+  border: 2px solid #00FF9F;
+  color: #00FF9F;
+  padding: 10px 20px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 18px;
+}
+
+.control-button:hover {
+  background: rgba(0, 255, 159, 0.1);
+  box-shadow: 0 0 15px rgba(0, 255, 159, 0.3);
+}
+
+.control-button.enabled {
+  background: rgba(0, 255, 159, 0.1);
+  box-shadow: 0 0 10px rgba(0, 255, 159, 0.2);
+}
+
+.start-button {
+  background: #00FF9F;
+  border: none;
+  color: #1a1a2e;
+  padding: 15px 40px;
+  font-size: 24px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  font-weight: bold;
+  letter-spacing: 2px;
+}
+
+.start-button:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 30px rgba(0, 255, 159, 0.4);
+}
+
+@keyframes glow {
+  0%, 100% {
+    text-shadow: 0 0 20px #00FF9F;
+  }
+  50% {
+    text-shadow: 0 0 40px #00FF9F;
+  }
+}
+
+@keyframes ambient {
+  0%, 100% {
+    transform: translate(-50%, -50%) rotate(0deg);
+  }
+  50% {
+    transform: translate(-50%, -50%) rotate(180deg);
+  }
+} 
