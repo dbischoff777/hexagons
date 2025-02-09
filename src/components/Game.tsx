@@ -10,6 +10,7 @@ import { TutorialState } from '../types/tutorial'
 import { TUTORIAL_STEPS } from '../constants/tutorialSteps'
 import { TutorialMessage } from './TutorialMessage'
 import { saveGameState, loadGameState, updateStatistics, clearSavedGame, getStatistics } from '../utils/gameStateUtils'
+import Particles from './Particles'
 
 interface GameProps {
   musicEnabled: boolean
@@ -1245,6 +1246,10 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
 
   return (
     <div className="game-container">
+      <Particles 
+        intensity={0.3} 
+        color={isGridFull(placedTiles, cols) ? '#FFD700' : '#00FF9F'}
+      />
       <div className="game-controls">
         {tutorialState.active ? (
           <button 
