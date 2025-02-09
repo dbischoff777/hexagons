@@ -11,27 +11,59 @@ function App() {
   const [gameStarted, setGameStarted] = useState(false)
   const [tutorialMode, setTutorialMode] = useState(false)
   const [timedMode, setTimedMode] = useState(false)
-  const [isMusicEnabled, setIsMusicEnabled] = useState(true)
-  const [isSoundEnabled, setIsSoundEnabled] = useState(true)
   const [savedGameState, setSavedGameState] = useState<GameState | null>(null)
   const soundManager = SoundManager.getInstance()
 
+  // Load saved game state on component mount
   useEffect(() => {
-    soundManager.setMusicEnabled(isMusicEnabled)
-  }, [isMusicEnabled])
+    const savedGame = loadGameState()
+    setSavedGameState(savedGame)
+  }, [])
+
+  const [musicEnabled, setMusicEnabled] = useState<boolean>(false) // Default to false
+  const [soundEnabled, setSoundEnabled] = useState<boolean>(false) // Default to false
+
+  // Update audio settings when savedGameState changes
+  useEffect(() => {
+    if (savedGameState?.audioSettings) {
+      setMusicEnabled(savedGameState.audioSettings.musicEnabled)
+      setSoundEnabled(savedGameState.audioSettings.soundEnabled)
+    }
+  }, [savedGameState])
 
   useEffect(() => {
-    soundManager.setSoundEnabled(isSoundEnabled)
-  }, [isSoundEnabled])
+    soundManager.setMusicEnabled(musicEnabled)
+  }, [musicEnabled])
+
+  useEffect(() => {
+    soundManager.setSoundEnabled(soundEnabled)
+  }, [soundEnabled])
 
   const handleStartGame = (timed: boolean) => {
     const savedGame = loadGameState()
     setTimedMode(timed)
     setGameStarted(true)
     setTutorialMode(false)
-    setSavedGameState(savedGame && savedGame.timedMode === timed ? savedGame : null)
-    soundManager.playSound('buttonClick')
-    soundManager.startBackgroundMusic()
+    
+    // Only use saved game if it matches timed mode, but preserve current audio settings
+    if (savedGame && savedGame.timedMode === timed) {
+      setSavedGameState({
+        ...savedGame,
+        audioSettings: {
+          musicEnabled,
+          soundEnabled
+        }
+      })
+    } else {
+      setSavedGameState(null)
+    }
+    
+    if (soundEnabled) {
+      soundManager.playSound('buttonClick')
+    }
+    if (musicEnabled) {
+      soundManager.startBackgroundMusic()
+    }
   }
 
   const handleExitGame = () => {
@@ -42,12 +74,12 @@ function App() {
   }
 
   const handleMusicToggle = (enabled: boolean) => {
-    setIsMusicEnabled(enabled)
+    setMusicEnabled(enabled)
     soundManager.playSound('buttonClick')
   }
 
   const handleSoundToggle = (enabled: boolean) => {
-    setIsSoundEnabled(enabled)
+    setSoundEnabled(enabled)
     if (enabled) soundManager.playSound('buttonClick')
   }
 
@@ -58,6 +90,8 @@ function App() {
           onStartGame={handleStartGame}
           onMusicToggle={handleMusicToggle}
           onSoundToggle={handleSoundToggle}
+          musicEnabled={musicEnabled}
+          soundEnabled={soundEnabled}
         />
       </AccessibilityProvider>
     )
@@ -66,8 +100,8 @@ function App() {
   return (
     <AccessibilityProvider>
       <Game 
-        musicEnabled={isMusicEnabled} 
-        soundEnabled={isSoundEnabled}
+        musicEnabled={musicEnabled} 
+        soundEnabled={soundEnabled}
         timedMode={timedMode}
         tutorial={tutorialMode}
         onGameOver={handleExitGame}

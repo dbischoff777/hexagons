@@ -11,11 +11,11 @@ interface StartPageProps {
   onStartGame: (withTimer: boolean) => void
   onMusicToggle: (enabled: boolean) => void
   onSoundToggle: (enabled: boolean) => void
+  musicEnabled: boolean
+  soundEnabled: boolean
 }
 
-const StartPage: React.FC<StartPageProps> = ({ onStartGame, onMusicToggle, onSoundToggle }) => {
-  const [isMusicEnabled, setIsMusicEnabled] = useState(true)
-  const [isSoundEnabled, setIsSoundEnabled] = useState(true)
+const StartPage: React.FC<StartPageProps> = ({ onStartGame, onMusicToggle, onSoundToggle, musicEnabled, soundEnabled }) => {
   const [showGameModes, setShowGameModes] = useState(false)
   const [showTutorial, setShowTutorial] = useState(false)
   const [showStatistics, setShowStatistics] = useState(false)
@@ -53,8 +53,8 @@ const StartPage: React.FC<StartPageProps> = ({ onStartGame, onMusicToggle, onSou
     return (
       <div className="start-page">
         <Game 
-          musicEnabled={isMusicEnabled}
-          soundEnabled={isSoundEnabled}
+          musicEnabled={musicEnabled}
+          soundEnabled={soundEnabled}
           timedMode={false}
           onGameOver={() => setShowTutorial(false)}
           tutorial={true}
@@ -76,26 +76,20 @@ const StartPage: React.FC<StartPageProps> = ({ onStartGame, onMusicToggle, onSou
             <div className="setting-item">
               <label>Music</label>
               <button 
-                className={`setting-button ${isMusicEnabled ? 'active' : ''}`}
-                onClick={() => {
-                  setIsMusicEnabled(!isMusicEnabled)
-                  onMusicToggle(!isMusicEnabled)
-                }}
+                className={`setting-button ${musicEnabled ? 'active' : ''}`}
+                onClick={() => onMusicToggle(!musicEnabled)}
               >
-                {isMusicEnabled ? '🎵 ON' : '🔇 OFF'}
+                {musicEnabled ? '🎵 ON' : '🔇 OFF'}
               </button>
             </div>
             
             <div className="setting-item">
               <label>Sound FX</label>
               <button 
-                className={`setting-button ${isSoundEnabled ? 'active' : ''}`}
-                onClick={() => {
-                  setIsSoundEnabled(!isSoundEnabled)
-                  onSoundToggle(!isSoundEnabled)
-                }}
+                className={`setting-button ${soundEnabled ? 'active' : ''}`}
+                onClick={() => onSoundToggle(!soundEnabled)}
               >
-                {isSoundEnabled ? '🔊 ON' : '🔈 OFF'}
+                {soundEnabled ? '🔊 ON' : '🔈 OFF'}
               </button>
             </div>
 

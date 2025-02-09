@@ -1212,11 +1212,15 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
         timedMode,
         boardRotation,
         powerUps,
-        combo
+        combo,
+        audioSettings: {
+          musicEnabled,
+          soundEnabled
+        }
       }
       saveGameState(gameState)
     }
-  }, [placedTiles, nextTiles, score, timeLeft, previousState, isGameOver, tutorialState.active, boardRotation, powerUps, combo])
+  }, [placedTiles, nextTiles, score, timeLeft, previousState, isGameOver, tutorialState.active, boardRotation, powerUps, combo, musicEnabled, soundEnabled])
 
   // Add this function to handle undoing moves
   const handleUndo = () => {
@@ -1247,7 +1251,7 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
     }
   }, [placedTiles, cols, isGameOver, tutorialState.active])
 
-  // Modify the exit handler to update statistics
+  // Modify the exit handler
   const handleExit = () => {
     // Calculate game duration
     const gameEndTime = Date.now()
@@ -1261,7 +1265,7 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
       lastPlayed: new Date().toISOString()
     })
 
-    // Save current game state instead of clearing it
+    // Save current game state with audio settings
     const gameState: GameState = {
       placedTiles,
       nextTiles,
@@ -1272,7 +1276,11 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
       timedMode,
       boardRotation,
       powerUps,
-      combo
+      combo,
+      audioSettings: {
+        musicEnabled,
+        soundEnabled
+      }
     }
     saveGameState(gameState)
 

@@ -53,12 +53,16 @@ export interface GameState {
     placedTiles: PlacedTile[]
     nextTiles: PlacedTile[]
     score: number
-  }[]
+  }[] | null
   startTime: number
   timedMode: boolean
   boardRotation: number
   powerUps: PowerUpState
   combo: ComboState
+  audioSettings: {
+    musicEnabled: boolean
+    soundEnabled: boolean
+  }
 }
 
 export interface GameStatistics {
