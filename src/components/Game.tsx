@@ -12,6 +12,11 @@ interface GameProps {
   onGameOver: () => void
 }
 
+interface PopupPosition {
+  y: number
+  expiresAt: number
+}
+
 const rotateTileEdges = (edges: { color: string }[]) => {
   return [...edges.slice(-1), ...edges.slice(0, -1)]
 }
@@ -128,6 +133,30 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver }: GameProps) 
     lastPlacementTime: 0
   })
   const [isQuickPlacement, setIsQuickPlacement] = useState(false)
+  const [activePopupPositions, setActivePopupPositions] = useState<PopupPosition[]>([])
+
+  // Add function to find available Y position for new popup
+  const findAvailableYPosition = (baseY: number): number => {
+    const POPUP_HEIGHT = 80 // Approximate height of popup including margins
+    const now = Date.now()
+    
+    // Clean expired positions
+    const currentPositions = activePopupPositions.filter(pos => pos.expiresAt > now)
+    
+    // Find first available Y position that doesn't overlap
+    let testY = baseY
+    while (currentPositions.some(pos => Math.abs(pos.y - testY) < POPUP_HEIGHT)) {
+      testY -= POPUP_HEIGHT
+    }
+    
+    // Update active positions
+    setActivePopupPositions([
+      ...currentPositions,
+      { y: testY, expiresAt: now + 1000 } // 1000ms = popup duration
+    ])
+    
+    return testY
+  }
 
   // Update rotation timer effect
   useEffect(() => {
@@ -699,10 +728,11 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver }: GameProps) 
           const placedTileScore = calculateScore(updatedPlacedTile.value * 2)
           if (placedTileScore > 0) {
             const feedback = getFeedbackForScore(placedTileScore)
+            const popupY = findAvailableYPosition(canvas.height / 2 - 200)
             setScorePopups(prev => [...prev, {
               score: placedTileScore,
               x: canvas.width / 2 - 100,
-              y: canvas.height / 2 - 200,
+              y: popupY,
               id: Date.now(),
               emoji: feedback.emoji,
               text: feedback.text
@@ -722,10 +752,11 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver }: GameProps) 
             const clearInfo = getFeedbackForClear(clearBonus)
 
             setTimeout(() => {
+              const popupY = findAvailableYPosition(canvas.height / 2 - 150)
               setScorePopups(prev => [...prev, {
                 score: clearBonus,
                 x: canvas.width / 2 - 100,
-                y: canvas.height / 2 - 150,
+                y: popupY,
                 id: Date.now() + 1,
                 emoji: clearInfo.emoji,
                 text: clearInfo.text
@@ -775,21 +806,23 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver }: GameProps) 
                 
                 // Add quick placement bonus feedback
                 if (isQuickPlacement) {
+                  const quickY = findAvailableYPosition(canvas.height / 2 - 100)
                   const quickInfo = getRandomFeedback('QUICK')
                   setScorePopups(prev => [...prev, {
                     score: 0,
                     x: canvas.width / 2,
-                    y: canvas.height / 2 - 100,
+                    y: quickY,
                     id: Date.now() + 3,
                     emoji: quickInfo.emoji,
                     text: quickInfo.text
                   }])
                 }
                 
+                const comboY = findAvailableYPosition(canvas.height / 2 - 50)
                 setScorePopups(prev => [...prev, {
                   score: comboBonus,
                   x: canvas.width / 2,
-                  y: canvas.height / 2 - 50,
+                  y: comboY,
                   id: Date.now() + 2,
                   emoji: comboInfo.emoji,
                   text: comboInfo.text
@@ -953,15 +986,19 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver }: GameProps) 
     return Math.round(baseScore * powerUpMultiplier * combo.multiplier)
   }
 
-  // Add popup cleanup effect
+  // Update popup cleanup effect to also clean positions
   useEffect(() => {
-    const POPUP_DURATION = 1000 // Duration in milliseconds before removing popup
+    const POPUP_DURATION = 1000
 
     if (scorePopups.length > 0) {
       const timer = setTimeout(() => {
+        const now = Date.now()
         setScorePopups(prev => prev.filter(popup => 
-          Date.now() - popup.id < POPUP_DURATION
+          now - popup.id < POPUP_DURATION
         ))
+        setActivePopupPositions(prev => 
+          prev.filter(pos => pos.expiresAt > now)
+        )
       }, POPUP_DURATION)
 
       return () => clearTimeout(timer)
