@@ -18,6 +18,7 @@ interface GameProps {
   onGameOver: () => void
   tutorial?: boolean
   onSkipTutorial?: () => void
+  onExit: () => void
 }
 
 interface PopupPosition {
@@ -108,7 +109,7 @@ const getFeedbackForClear = (clearScore: number) => {
   return SCORE_FEEDBACK.CLEAR[0]
 }
 
-const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = false, onSkipTutorial }: GameProps) => {
+const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = false, onSkipTutorial, onExit }: GameProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const cols = 7
   const [placedTiles, setPlacedTiles] = useState<PlacedTile[]>([{
@@ -1209,12 +1210,19 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
   return (
     <div className="game-container">
       <div className="game-controls">
-        {tutorialState.active && (
+        {tutorialState.active ? (
           <button 
             className="skip-tutorial-button"
             onClick={onSkipTutorial}
           >
             Skip Tutorial
+          </button>
+        ) : (
+          <button 
+            className="exit-button"
+            onClick={onExit}
+          >
+            Exit Game
           </button>
         )}
       </div>

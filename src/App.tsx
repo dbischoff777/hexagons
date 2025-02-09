@@ -7,9 +7,10 @@ import { AccessibilityProvider } from './contexts/AccessibilityContext'
 
 function App() {
   const [gameStarted, setGameStarted] = useState(false)
+  const [tutorialMode, setTutorialMode] = useState(false)
+  const [timedMode, setTimedMode] = useState(false)
   const [isMusicEnabled, setIsMusicEnabled] = useState(true)
   const [isSoundEnabled, setIsSoundEnabled] = useState(true)
-  const [isTimedMode, setIsTimedMode] = useState(true)
   const soundManager = SoundManager.getInstance()
 
   useEffect(() => {
@@ -20,11 +21,24 @@ function App() {
     soundManager.setSoundEnabled(isSoundEnabled)
   }, [isSoundEnabled])
 
-  const handleStartGame = (withTimer: boolean) => {
-    soundManager.playSound('buttonClick')
-    setIsTimedMode(withTimer)
+  const handleStartGame = (timed: boolean) => {
+    setTimedMode(timed)
     setGameStarted(true)
+    setTutorialMode(false)
+    soundManager.playSound('buttonClick')
     soundManager.startBackgroundMusic()
+  }
+
+  const handleStartTutorial = () => {
+    setGameStarted(true)
+    setTutorialMode(true)
+    soundManager.playSound('buttonClick')
+  }
+
+  const handleExitGame = () => {
+    setGameStarted(false)
+    setTutorialMode(false)
+    soundManager.playSound('buttonClick')
   }
 
   const handleMusicToggle = (enabled: boolean) => {
@@ -42,6 +56,7 @@ function App() {
       <AccessibilityProvider>
         <StartPage 
           onStartGame={handleStartGame}
+          onStartTutorial={handleStartTutorial}
           onMusicToggle={handleMusicToggle}
           onSoundToggle={handleSoundToggle}
         />
@@ -54,8 +69,11 @@ function App() {
       <Game 
         musicEnabled={isMusicEnabled} 
         soundEnabled={isSoundEnabled}
-        timedMode={isTimedMode}
-        onGameOver={() => soundManager.playSound('gameOver')}
+        timedMode={timedMode}
+        tutorial={tutorialMode}
+        onGameOver={handleExitGame}
+        onSkipTutorial={handleExitGame}
+        onExit={handleExitGame}
       />
     </AccessibilityProvider>
   )

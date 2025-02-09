@@ -104,7 +104,9 @@
 }
 
 .game-start {
-  margin-top: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
   width: 100%;
   max-width: 500px;
 }
@@ -257,4 +259,43 @@
   background: rgba(255, 17, 119, 0.3);
   transform: scale(1.05);
   box-shadow: 0 0 20px rgba(255, 17, 119, 0.3);
+}
+
+.continue-button {
+  width: 100%;
+  padding: 1.5rem;
+  font-size: 1.8rem;
+  background: linear-gradient(45deg, #00FF9F, #00FFFF);
+  border: none;
+  border-radius: 1rem;
+  color: #1a1a2e;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-weight: bold;
+  letter-spacing: 0.2rem;
+  margin-bottom: 1rem;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+.stats-button {
+  margin-top: 1rem;
+  padding: 1rem 2rem;
+  font-size: 1.2rem;
+  background: rgba(0, 255, 159, 0.15);
+  color: #00FF9F;
+  border: 2px solid #00FF9F;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.stats-button:hover {
+  background: rgba(0, 255, 159, 0.25);
+  transform: scale(1.05);
 } 

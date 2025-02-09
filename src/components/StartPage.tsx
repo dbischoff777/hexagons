@@ -1,22 +1,56 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import './StartPage.css'
 import AccessibilitySettings from './AccessibilitySettings'
 import Game from './Game'
+import { GameStatistics } from '../types'
+import { getStatistics, loadGameState, clearSavedGame } from '../utils/gameStateUtils'
+import StatisticsPage from './StatisticsPage'
 
 interface StartPageProps {
   onStartGame: (withTimer: boolean) => void
   onMusicToggle: (enabled: boolean) => void
   onSoundToggle: (enabled: boolean) => void
+  onStartTutorial: () => void
 }
 
-const StartPage: React.FC<StartPageProps> = ({ onStartGame, onMusicToggle, onSoundToggle }) => {
+const StartPage: React.FC<StartPageProps> = ({ onStartGame, onMusicToggle, onSoundToggle, onStartTutorial }) => {
   const [isMusicEnabled, setIsMusicEnabled] = useState(true)
   const [isSoundEnabled, setIsSoundEnabled] = useState(true)
   const [showGameModes, setShowGameModes] = useState(false)
   const [showTutorial, setShowTutorial] = useState(false)
+  const [showStatistics, setShowStatistics] = useState(false)
+  const [hasSavedGame, setHasSavedGame] = useState(false)
+
+  useEffect(() => {
+    // Check for saved game on mount
+    const savedGame = loadGameState()
+    setHasSavedGame(!!savedGame)
+  }, [])
 
   const handleTutorialEnd = () => {
     setShowTutorial(false)
+  }
+
+  const handleNewGame = (timedMode: boolean) => {
+    if (hasSavedGame) {
+      if (window.confirm('Starting a new game will erase your saved progress. Continue?')) {
+        clearSavedGame()
+        onStartGame(timedMode)
+      }
+    } else {
+      onStartGame(timedMode)
+    }
+  }
+
+  const handleContinueGame = () => {
+    const savedGame = loadGameState()
+    if (savedGame) {
+      onStartGame(false) // or check saved game mode
+    }
+  }
+
+  if (showStatistics) {
+    return <StatisticsPage onBack={() => setShowStatistics(false)} />
   }
 
   if (showTutorial) {
@@ -27,8 +61,9 @@ const StartPage: React.FC<StartPageProps> = ({ onStartGame, onMusicToggle, onSou
           soundEnabled={isSoundEnabled}
           timedMode={false}
           onGameOver={handleTutorialEnd}
-          tutorial={true}
-        />
+          tutorial={true} onExit={function (): void {
+            throw new Error('Function not implemented.')
+          } }        />
         <button 
           className="exit-tutorial-button"
           onClick={handleTutorialEnd}
@@ -83,6 +118,14 @@ const StartPage: React.FC<StartPageProps> = ({ onStartGame, onMusicToggle, onSou
         <div className="game-start">
           {!showGameModes ? (
             <>
+              {hasSavedGame && (
+                <button 
+                  className="continue-button"
+                  onClick={handleContinueGame}
+                >
+                  Continue Game
+                </button>
+              )}
               <button 
                 className="play-button" 
                 onClick={() => setShowGameModes(true)}
@@ -95,12 +138,18 @@ const StartPage: React.FC<StartPageProps> = ({ onStartGame, onMusicToggle, onSou
               >
                 Play Tutorial
               </button>
+              <button 
+                className="stats-button"
+                onClick={() => setShowStatistics(true)}
+              >
+                Statistics
+              </button>
             </>
           ) : (
             <div className="mode-selection">
               <button 
                 className="mode-button timed" 
-                onClick={() => onStartGame(true)}
+                onClick={() => handleNewGame(true)}
               >
                 <span className="mode-title">TIMED MODE</span>
                 <span className="mode-desc">Race against the clock</span>
@@ -108,7 +157,7 @@ const StartPage: React.FC<StartPageProps> = ({ onStartGame, onMusicToggle, onSou
               
               <button 
                 className="mode-button zen" 
-                onClick={() => onStartGame(false)}
+                onClick={() => handleNewGame(false)}
               >
                 <span className="mode-title">ZEN MODE</span>
                 <span className="mode-desc">Play at your own pace</span>
