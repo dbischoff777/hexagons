@@ -20,14 +20,23 @@ export const clearSavedGame = () => {
 
 export const updateStatistics = (stats: Partial<GameStatistics>) => {
   const currentStats = getStatistics()
+  
+  // Calculate new total score for average calculation
+  const newTotalScore = (currentStats.totalScore || 0) + (stats.totalScore || 0)
+  const newGamesPlayed = (currentStats.gamesPlayed || 0) + (stats.gamesPlayed || 0)
+  
   const updatedStats = {
     ...currentStats,
     ...stats,
-    gamesPlayed: (currentStats.gamesPlayed || 0) + (stats.gamesPlayed ? 1 : 0),
-    averageScore: stats.totalScore 
-      ? Math.round((currentStats.totalScore + stats.totalScore) / (currentStats.gamesPlayed + 1))
-      : currentStats.averageScore
+    gamesPlayed: newGamesPlayed,
+    totalScore: newTotalScore,
+    averageScore: newGamesPlayed > 0 ? Math.round(newTotalScore / newGamesPlayed) : 0,
+    totalPlayTime: (currentStats.totalPlayTime || 0) + (stats.totalPlayTime || 0),
+    highScore: Math.max(currentStats.highScore || 0, stats.highScore || 0),
+    longestCombo: Math.max(currentStats.longestCombo || 0, stats.longestCombo || 0),
+    lastPlayed: stats.lastPlayed || currentStats.lastPlayed
   }
+  
   localStorage.setItem(STORAGE_KEYS.STATISTICS, JSON.stringify(updatedStats))
   return updatedStats
 }

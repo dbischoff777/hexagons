@@ -171,6 +171,9 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
     score: number
   } | null>(null)
 
+  // Add a ref to track game start time
+  const gameStartTimeRef = useRef<number>(savedGameState?.startTime ?? Date.now())
+
   // Modify the findAvailableYPosition function
   const findAvailableYPosition = (baseY: number, type: 'score' | 'combo' | 'quick' | 'clear'): number => {
     const POPUP_HEIGHTS = {
@@ -1244,6 +1247,39 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
     }
   }, [placedTiles, cols, isGameOver, tutorialState.active])
 
+  // Modify the exit handler to update statistics
+  const handleExit = () => {
+    // Calculate game duration
+    const gameEndTime = Date.now()
+    const playTime = (gameEndTime - gameStartTimeRef.current) / 1000 // Convert to seconds
+
+    // Update statistics before exiting
+    updateStatistics({
+      gamesPlayed: 0, // Don't count as completed game since we're saving it
+      totalScore: 0,  // Don't update score since game isn't finished
+      totalPlayTime: playTime,
+      lastPlayed: new Date().toISOString()
+    })
+
+    // Save current game state instead of clearing it
+    const gameState: GameState = {
+      placedTiles,
+      nextTiles,
+      score,
+      timeLeft,
+      moveHistory: previousState ? [previousState] : [],
+      startTime: gameStartTimeRef.current,
+      timedMode,
+      boardRotation,
+      powerUps,
+      combo
+    }
+    saveGameState(gameState)
+
+    // Call the original onExit handler
+    onExit()
+  }
+
   return (
     <div className="game-container">
       <Particles 
@@ -1261,7 +1297,7 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
         ) : (
           <button 
             className="exit-button"
-            onClick={onExit}
+            onClick={handleExit}
           >
             Exit Game
           </button>
