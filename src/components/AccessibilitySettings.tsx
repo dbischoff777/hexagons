@@ -1,19 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react'
-import { useAccessibility } from '../contexts/AccessibilityContext'
 import './AccessibilitySettings.css'
+import { useAccessibility } from '../contexts/AccessibilityContext'
 
-const AccessibilitySettings: React.FC = () => {
-  const { settings, updateSettings } = useAccessibility()
+const AccessibilitySettings = () => {
   const [isOpen, setIsOpen] = useState(false)
+  const { settings, updateSettings } = useAccessibility()
   const menuRef = useRef<HTMLDivElement>(null)
-
-  const toggleColorBlindMode = (enabled: boolean) => {
-    updateSettings({ 
-      isColorBlind: enabled,
-      showEdgeNumbers: enabled,
-      showMatchHints: settings.showMatchHints
-    })
-  }
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -27,33 +19,59 @@ const AccessibilitySettings: React.FC = () => {
   }, [])
 
   return (
-    <div className="dropdown-menu" ref={menuRef}>
+    <div className="accessibility-container" ref={menuRef}>
       <button 
-        className="option-button"
+        className={`setting-button ${isOpen ? 'active' : ''}`} 
         onClick={() => setIsOpen(!isOpen)}
       >
-        👁️ Options
+        ⚙️ Settings
       </button>
 
       {isOpen && (
-        <div className="dropdown-content">
-          <label className="dropdown-item">
-            <input
-              type="checkbox"
-              checked={settings.isColorBlind}
-              onChange={e => toggleColorBlindMode(e.target.checked)}
-            />
-            <span>Color Blind Mode</span>
-          </label>
+        <div className="accessibility-popup">
+          <div className="setting-option">
+            <div className="setting-header">
+              <label>
+                <input
+                  type="checkbox"
+                  checked={settings.isColorBlind}
+                  onChange={(e) => updateSettings({ isColorBlind: e.target.checked })}
+                />
+                Color Blind Mode
+              </label>
+              <div className="setting-preview">
+                <div className="preview-tile colorblind">
+                  <span>● ■ ▲</span>
+                  <small>Uses distinct symbols</small>
+                </div>
+                <div className="preview-tile normal">
+                  <span style={{ background: 'linear-gradient(45deg, #FF1177, #00FF9F, #4D4DFF)' }}>
+                    Colors
+                  </span>
+                  <small>Normal mode</small>
+                </div>
+              </div>
+            </div>
+          </div>
 
-          <label className="dropdown-item">
-            <input
-              type="checkbox"
-              checked={settings.showMatchHints}
-              onChange={e => updateSettings({ ...settings, showMatchHints: e.target.checked })}
-            />
-            <span>Show Match Hints</span>
-          </label>
+          <div className="setting-option">
+            <div className="setting-header">
+              <label>
+                <input
+                  type="checkbox"
+                  checked={settings.showMatchHints}
+                  onChange={(e) => updateSettings({ showMatchHints: e.target.checked })}
+                />
+                Show Match Hints
+              </label>
+              <div className="setting-preview">
+                <div className="preview-hint">
+                  <span className="hint-indicator">🟢</span>
+                  <small>Shows possible matches</small>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       )}
     </div>

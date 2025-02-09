@@ -13,66 +13,75 @@ const StartPage: React.FC<StartPageProps> = ({ onStartGame, onMusicToggle, onSou
   const [isSoundEnabled, setIsSoundEnabled] = useState(true)
   const [showGameModes, setShowGameModes] = useState(false)
 
-  const handleMusicToggle = () => {
-    setIsMusicEnabled(!isMusicEnabled)
-    onMusicToggle(!isMusicEnabled)
-  }
-
-  const handleSoundToggle = () => {
-    setIsSoundEnabled(!isSoundEnabled)
-    onSoundToggle(!isSoundEnabled)
-  }
-
   return (
     <div className="start-page">
       <div className="start-container">
         <h1 className="game-title">HEXMATCH</h1>
         <p className="welcome-text">Match the edges, clear the grid, beat the clock!</p>
 
-        <div className="button-group">
-          <button 
-            className={`option-button ${isMusicEnabled ? 'enabled' : ''}`}
-            onClick={handleMusicToggle}
-          >
-            {isMusicEnabled ? '🎵 Music On' : '🔇 Music Off'}
-          </button>
-          
-          <button 
-            className={`option-button ${isSoundEnabled ? 'enabled' : ''}`}
-            onClick={handleSoundToggle}
-          >
-            {isSoundEnabled ? '🔊 Sound On' : '🔈 Sound Off'}
-          </button>
+        <div className="settings-bar">
+          <div className="settings-group">
+            <div className="setting-item">
+              <label>Music</label>
+              <button 
+                className={`setting-button ${isMusicEnabled ? 'active' : ''}`}
+                onClick={() => {
+                  setIsMusicEnabled(!isMusicEnabled)
+                  onMusicToggle(!isMusicEnabled)
+                }}
+              >
+                {isMusicEnabled ? '🎵 ON' : '🔇 OFF'}
+              </button>
+            </div>
+            
+            <div className="setting-item">
+              <label>Sound FX</label>
+              <button 
+                className={`setting-button ${isSoundEnabled ? 'active' : ''}`}
+                onClick={() => {
+                  setIsSoundEnabled(!isSoundEnabled)
+                  onSoundToggle(!isSoundEnabled)
+                }}
+              >
+                {isSoundEnabled ? '🔊 ON' : '🔈 OFF'}
+              </button>
+            </div>
 
-          <AccessibilitySettings />
+            <div className="setting-item">
+              <label>Accessibility</label>
+              <AccessibilitySettings />
+            </div>
+          </div>
         </div>
 
-        {!showGameModes ? (
-          <button 
-            className="start-button" 
-            onClick={() => setShowGameModes(true)}
-          >
-            Play Game
-          </button>
-        ) : (
-          <div className="game-modes">
+        <div className="game-start">
+          {!showGameModes ? (
             <button 
-              className="mode-button timed" 
-              onClick={() => onStartGame(true)}
+              className="play-button" 
+              onClick={() => setShowGameModes(true)}
             >
-              Timed Mode
-              <span className="mode-desc">Race against the clock!</span>
+              PLAY
             </button>
-            
-            <button 
-              className="mode-button zen" 
-              onClick={() => onStartGame(false)}
-            >
-              Zen Mode
-              <span className="mode-desc">Play at your own pace</span>
-            </button>
-          </div>
-        )}
+          ) : (
+            <div className="mode-selection">
+              <button 
+                className="mode-button timed" 
+                onClick={() => onStartGame(true)}
+              >
+                <span className="mode-title">TIMED MODE</span>
+                <span className="mode-desc">Race against the clock</span>
+              </button>
+              
+              <button 
+                className="mode-button zen" 
+                onClick={() => onStartGame(false)}
+              >
+                <span className="mode-title">ZEN MODE</span>
+                <span className="mode-desc">Play at your own pace</span>
+              </button>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   )

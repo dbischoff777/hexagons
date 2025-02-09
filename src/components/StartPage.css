@@ -26,87 +26,111 @@
 }
 
 .start-container {
-  position: relative;
-  width: 100%;
-  max-width: 600px;
-  padding: 40px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 30px;
+  gap: 2rem;
+  max-width: 800px;
+  width: 90%;
+  padding: 2rem;
 }
 
 .game-title {
+  font-size: 5rem;
   color: #00FF9F;
-  font-size: 72px;
+  text-shadow: 0 0 20px rgba(0, 255, 159, 0.5);
   margin: 0;
-  text-transform: uppercase;
-  letter-spacing: 4px;
-  text-shadow: 0 0 20px #00FF9F;
+  letter-spacing: 0.5rem;
   animation: glow 2s ease-in-out infinite;
 }
 
 .welcome-text {
+  font-size: 1.2rem;
   color: #fff;
-  font-size: 20px;
-  margin: 0;
   opacity: 0.9;
   text-align: center;
+  margin: 0;
 }
 
-.button-group {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-  justify-content: center;
+.settings-bar {
   width: 100%;
-  max-width: 400px;
+  display: flex;
+  justify-content: center;
+  margin: 1rem 0;
 }
 
-.option-button {
-  flex: 1;
-  min-width: 120px;
-  padding: 12px 20px;
+.settings-group {
+  display: flex;
+  gap: 1.5rem;
   background: rgba(0, 0, 0, 0.3);
-  border: 2px solid #00FF9F;
-  border-radius: 12px;
+  padding: 1.2rem;
+  border-radius: 1rem;
+  border: 1px solid rgba(0, 255, 159, 0.2);
+}
+
+.setting-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.setting-item label {
+  color: #fff;
+  font-size: 0.9rem;
+  opacity: 0.8;
+}
+
+.setting-button {
+  background: none;
+  border: 1px solid #00FF9F;
   color: #00FF9F;
-  font-size: 16px;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
   cursor: pointer;
   transition: all 0.2s ease;
+  font-size: 1rem;
+  min-width: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
 }
 
-.option-button:hover,
-.option-button.enabled {
+.setting-button:hover,
+.setting-button.active {
   background: rgba(0, 255, 159, 0.1);
-  box-shadow: 0 0 15px rgba(0, 255, 159, 0.3);
+  box-shadow: 0 0 10px rgba(0, 255, 159, 0.3);
 }
 
-.start-button {
+.game-start {
+  margin-top: 2rem;
+  width: 100%;
+  max-width: 500px;
+}
+
+.play-button {
+  width: 100%;
+  padding: 1.5rem;
+  font-size: 2rem;
   background: #00FF9F;
   border: none;
+  border-radius: 1rem;
   color: #1a1a2e;
-  padding: 20px 60px;
-  font-size: 24px;
-  border-radius: 12px;
   cursor: pointer;
   transition: all 0.3s ease;
-  text-transform: uppercase;
   font-weight: bold;
-  letter-spacing: 2px;
-  margin-top: 20px;
+  letter-spacing: 0.2rem;
 }
 
-.start-button:hover {
-  transform: scale(1.05);
+.play-button:hover {
+  transform: translateY(-2px);
   box-shadow: 0 0 30px rgba(0, 255, 159, 0.4);
 }
 
-.game-modes {
+.mode-selection {
   display: flex;
-  gap: 20px;
-  width: 100%;
-  max-width: 500px;
+  gap: 1rem;
   animation: fadeIn 0.3s ease-out;
 }
 
@@ -115,17 +139,16 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
-  padding: 20px;
-  border-radius: 12px;
-  font-size: 20px;
+  gap: 0.5rem;
+  padding: 1.5rem;
+  border-radius: 1rem;
   cursor: pointer;
   transition: all 0.3s ease;
+  border: none;
 }
 
 .mode-button.timed {
   background: #00FF9F;
-  border: none;
   color: #1a1a2e;
 }
 
@@ -136,22 +159,24 @@
 }
 
 .mode-button:hover {
-  transform: scale(1.05);
+  transform: translateY(-2px);
   box-shadow: 0 0 20px rgba(0, 255, 159, 0.3);
 }
 
+.mode-title {
+  font-size: 1.5rem;
+  font-weight: bold;
+  letter-spacing: 0.1rem;
+}
+
 .mode-desc {
-  font-size: 14px;
+  font-size: 0.9rem;
   opacity: 0.8;
 }
 
-.zen .mode-desc {
-  color: #fff;
-}
-
 @keyframes glow {
-  0%, 100% { text-shadow: 0 0 20px #00FF9F; }
-  50% { text-shadow: 0 0 40px #00FF9F; }
+  0%, 100% { text-shadow: 0 0 20px rgba(0, 255, 159, 0.5); }
+  50% { text-shadow: 0 0 40px rgba(0, 255, 159, 0.8); }
 }
 
 @keyframes ambient {
