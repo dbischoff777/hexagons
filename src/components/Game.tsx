@@ -393,7 +393,7 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver }: GameProps) 
           if (settings.isColorBlind) {
             // In colorblind mode, use only black/white for edges
             ctx.strokeStyle = isMatched ? '#FFFFFF' : '#888888'
-            ctx.lineWidth = isSelected ? 4 : 2
+            ctx.lineWidth = isSelected ? 6 : 4  // Increased from 4:2
           } else {
             const color = tile.edges[i].color
             
@@ -409,7 +409,7 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver }: GameProps) 
               gradient.addColorStop(1, color)
               ctx.strokeStyle = gradient
             }
-            ctx.lineWidth = isSelected ? 5 : 3  // Wider edges
+            ctx.lineWidth = isSelected ? 7 : 5  // Increased from 5:3
           }
           
           ctx.beginPath()
