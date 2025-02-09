@@ -1,9 +1,9 @@
 export const COLORS = [
   '#FF1177',  // Neon pink
-  '#00FF9F',  // Neon green
+  //'#00FF9F',  // Neon green
   '#00FFFF',  // Neon cyan
   '#FFE900',  // Neon yellow
-  '#FF00FF',  // Neon magenta
+  //'#FF00FF',  // Neon magenta
   '#4D4DFF'   // Neon blue
 ]
 
