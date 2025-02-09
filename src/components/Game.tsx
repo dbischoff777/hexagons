@@ -570,8 +570,11 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
       ctx.clearRect(0, 0, canvas.width, canvas.height)
 
       if (!isGameOver) {
-        // Use transform matrix for better performance
-        ctx.setTransform(1, 0, 0, 1, centerX, centerY)
+        // Save the current context state
+        ctx.save()
+        
+        // Move to center, rotate, then move back
+        ctx.translate(centerX, centerY)
         ctx.rotate((boardRotation * Math.PI) / 180)
         ctx.translate(-centerX, -centerY)
 
@@ -593,12 +596,11 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
           drawHexagonWithColoredEdges(x, y, tileSize, tile, isMatched)
         })
 
-        // Reset transform
-        ctx.setTransform(1, 0, 0, 1, 0, 0)
+        // Restore the context to its original state
+        ctx.restore()
 
-        // Draw cursor tile
+        // Draw cursor tile without rotation
         if (selectedTileIndex !== null && mousePosition) {
-          // Draw semi-transparent selected tile at cursor
           ctx.globalAlpha = 0.6
           drawHexagonWithColoredEdges(
             mousePosition.x,
@@ -1222,6 +1224,24 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
       soundManager.playSound('undo')
     }
   }
+
+  // Update the rotation effect
+  useEffect(() => {
+    if (isGridFull(placedTiles, cols) && !isGameOver && !tutorialState.active) {
+      setShowRotationText(true)
+      setTimeout(() => {
+        // Always rotate to either 0 or 180 degrees
+        setBoardRotation(prev => prev === 0 ? 180 : 0)
+        setShowRotationText(false)
+        
+        // Update tile positions after rotation
+        setPlacedTiles(tiles => tiles.map(tile => ({
+          ...tile,
+          edges: rotateTileEdges(tile.edges)
+        })))
+      }, 2000)
+    }
+  }, [placedTiles, cols, isGameOver, tutorialState.active])
 
   return (
     <div className="game-container">
