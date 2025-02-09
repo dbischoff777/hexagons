@@ -15,6 +15,7 @@ interface GameProps {
 interface PopupPosition {
   y: number
   expiresAt: number
+  type: 'score' | 'combo' | 'quick' | 'clear'
 }
 
 const rotateTileEdges = (edges: { color: string }[]) => {
@@ -135,24 +136,52 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver }: GameProps) 
   const [isQuickPlacement, setIsQuickPlacement] = useState(false)
   const [activePopupPositions, setActivePopupPositions] = useState<PopupPosition[]>([])
 
-  // Add function to find available Y position for new popup
-  const findAvailableYPosition = (baseY: number): number => {
-    const POPUP_HEIGHT = 80 // Approximate height of popup including margins
+  // Modify the findAvailableYPosition function
+  const findAvailableYPosition = (baseY: number, type: 'score' | 'combo' | 'quick' | 'clear'): number => {
+    const POPUP_HEIGHTS = {
+      score: 100,  // Regular score popups
+      combo: 90,   // Combo popups
+      quick: 80,   // Quick placement popups
+      clear: 120   // Clear bonus popups
+    }
+    
     const now = Date.now()
     
     // Clean expired positions
     const currentPositions = activePopupPositions.filter(pos => pos.expiresAt > now)
     
+    // Define game area boundaries
+    const minY = 100  // Minimum distance from top of game area
+    const maxY = canvasRef.current?.height ?? 800 - 100  // Maximum distance from bottom
+    
     // Find first available Y position that doesn't overlap
-    let testY = baseY
-    while (currentPositions.some(pos => Math.abs(pos.y - testY) < POPUP_HEIGHT)) {
-      testY -= POPUP_HEIGHT
+    let testY = Math.min(Math.max(baseY, minY), maxY)  // Clamp initial position
+    let attempts = 0
+    const MAX_ATTEMPTS = 10  // Prevent infinite loops
+    
+    while (currentPositions.some(pos => {
+      const minSpacing = Math.max(POPUP_HEIGHTS[type], POPUP_HEIGHTS[pos.type])
+      return Math.abs(pos.y - testY) < minSpacing
+    })) {
+      testY -= 40  // Move up by smaller increments
+      
+      // If we hit the top, start from bottom and work up
+      if (testY < minY) {
+        testY = maxY
+      }
+      
+      attempts++
+      if (attempts > MAX_ATTEMPTS) {
+        // If we can't find a spot, use the original position
+        testY = baseY
+        break
+      }
     }
     
     // Update active positions
     setActivePopupPositions([
       ...currentPositions,
-      { y: testY, expiresAt: now + 1000 } // 1000ms = popup duration
+      { y: testY, expiresAt: now + 1000, type }
     ])
     
     return testY
@@ -728,10 +757,10 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver }: GameProps) 
           const placedTileScore = calculateScore(updatedPlacedTile.value * 2)
           if (placedTileScore > 0) {
             const feedback = getFeedbackForScore(placedTileScore)
-            const popupY = findAvailableYPosition(canvas.height / 2 - 200)
+            const popupY = findAvailableYPosition(canvas.height / 2 - 100, 'score')
             setScorePopups(prev => [...prev, {
               score: placedTileScore,
-              x: canvas.width / 2 - 100,
+              x: canvas.width / 2,
               y: popupY,
               id: Date.now(),
               emoji: feedback.emoji,
@@ -752,10 +781,10 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver }: GameProps) 
             const clearInfo = getFeedbackForClear(clearBonus)
 
             setTimeout(() => {
-              const popupY = findAvailableYPosition(canvas.height / 2 - 150)
+              const popupY = findAvailableYPosition(canvas.height / 2 - 50, 'clear')
               setScorePopups(prev => [...prev, {
                 score: clearBonus,
-                x: canvas.width / 2 - 100,
+                x: canvas.width / 2,
                 y: popupY,
                 id: Date.now() + 1,
                 emoji: clearInfo.emoji,
@@ -806,7 +835,7 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver }: GameProps) 
                 
                 // Add quick placement bonus feedback
                 if (isQuickPlacement) {
-                  const quickY = findAvailableYPosition(canvas.height / 2 - 100)
+                  const quickY = findAvailableYPosition(canvas.height / 2, 'quick')
                   const quickInfo = getRandomFeedback('QUICK')
                   setScorePopups(prev => [...prev, {
                     score: 0,
@@ -818,7 +847,7 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver }: GameProps) 
                   }])
                 }
                 
-                const comboY = findAvailableYPosition(canvas.height / 2 - 50)
+                const comboY = findAvailableYPosition(canvas.height / 2 + 50, 'combo')
                 setScorePopups(prev => [...prev, {
                   score: comboBonus,
                   x: canvas.width / 2,
