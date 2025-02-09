@@ -585,7 +585,7 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver }: GameProps) 
           
           // Show score popup for immediate matches with the placed tile
           const placedTileScore = calculateScore(updatedPlacedTile.value * 2)
-          if (placedTileScore > 0) {  // Only show if score is positive
+          if (placedTileScore > 0) {
             setScorePopups(prev => [...prev, {
               score: placedTileScore,
               x: canvas.width / 2 - 100,
@@ -646,38 +646,44 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver }: GameProps) 
           setNextTiles(newTiles)
           setSelectedTileIndex(null)
 
-          // Update combo
-          const now = Date.now()
-          const timeSinceLastPlacement = now - combo.lastPlacementTime
-          const quickPlacement = timeSinceLastPlacement < 2000
-          setIsQuickPlacement(quickPlacement)
+          // Update combo only if there's a match
+          if (placedTileScore > 0) {
+            const now = Date.now()
+            const timeSinceLastPlacement = now - combo.lastPlacementTime
+            const quickPlacement = timeSinceLastPlacement < 2000
+            setIsQuickPlacement(quickPlacement)
 
-          setCombo(prev => {
-            const newCount = quickPlacement ? prev.count + 1 : 1
-            const newMultiplier = Math.min(2, 1 + (newCount * 0.1)) // Max 2x multiplier
-            
-            return {
-              count: newCount,
-              timer: 3, // 3 seconds to maintain combo
-              multiplier: newMultiplier,
+            setCombo(prev => ({
+              count: quickPlacement ? prev.count + 1 : 1,
+              timer: 3,
+              multiplier: Math.min(2, 1 + (prev.count * 0.1)),
               lastPlacementTime: now
-            }
-          })
+            }))
 
-          // Add combo popup right after
-          if (combo.count > 1) {
-            const comboBonus = Math.round(placedTileScore * (combo.multiplier - 1))
-            if (comboBonus > 0) {  // Only show if bonus is positive
-              setScorePopups(prev => [...prev, {
-                score: comboBonus,
-                x: canvas.width / 2,
-                y: canvas.height / 2 - 50,
-                id: Date.now() + 2,
-                emoji: '🔥',
-                text: `${combo.count}x COMBO!`
-              }])
+            // Add combo popup if streak exists
+            if (combo.count > 1) {
+              const comboBonus = Math.round(placedTileScore * (combo.multiplier - 1))
+              if (comboBonus > 0) {
+                setScorePopups(prev => [...prev, {
+                  score: comboBonus,
+                  x: canvas.width / 2,
+                  y: canvas.height / 2 - 50,
+                  id: Date.now() + 2,
+                  emoji: '🔥',
+                  text: `${combo.count}x COMBO!`
+                }])
+              }
+              setScore(prevScore => prevScore + comboBonus)
             }
-            setScore(prevScore => prevScore + comboBonus)
+          } else {
+            // Reset combo if no match
+            setCombo({
+              count: 0,
+              timer: 0,
+              multiplier: 1,
+              lastPlacementTime: 0
+            })
+            setIsQuickPlacement(false)
           }
         }
       }
@@ -847,14 +853,6 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver }: GameProps) 
             </div>
           )}
         </div>
-        {combo.count > 1 && (
-          <div className={`combo-counter ${isQuickPlacement ? 'quick' : ''}`}>
-            <span className="combo-icon">🔥</span>
-            <span className="combo-text">x{combo.count}</span>
-            <div className="combo-timer" style={{ width: `${(combo.timer / 3) * 100}%` }} />
-          </div>
-
-        )}
       </div>
       <div className="board-container">
         <canvas 

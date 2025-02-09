@@ -287,17 +287,26 @@
   animation: gridPulse 1.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Restore original score styles */
+/* Update score container to be flex column */
 .score {
+  min-width: 200px;
+  padding: 15px 30px;
+  border-radius: 15px;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(8px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
   color: #00FF9F;
   font-size: 48px;
   text-shadow: 0 0 20px #00FF9F;
   transition: all 0.3s ease;
-  position: static; /* Remove absolute positioning */
-  background: none;
-  padding: 0;
-  border: none;
-  backdrop-filter: none;
+}
+
+.score:hover {
+  transform: scale(1.05);
+  background: rgba(0, 0, 0, 0.4);
 }
 
 .score-increment {
@@ -356,7 +365,7 @@
 /* Adjust power-up indicator position */
 .power-up-indicator {
   position: absolute;
-  top: 60px;
+  top: 10px;
   right: 10px;
   display: flex;
   gap: 10px;
@@ -406,55 +415,4 @@
 
 .power-up-item span:first-child {
   font-size: 18px;
-}
-
-/* Keep combo counter on the right */
-.combo-counter {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  background: rgba(255, 17, 119, 0.2);
-  padding: 8px 15px;
-  border-radius: 20px;
-  color: #FF1177;
-  font-size: 18px;
-  font-weight: bold;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  overflow: hidden;
-  border: 1px solid rgba(255, 17, 119, 0.3);
-  backdrop-filter: blur(4px);
-}
-
-.combo-counter.quick {
-  animation: comboFlash 0.3s ease-out;
-}
-
-.combo-icon {
-  font-size: 24px;
-}
-
-.combo-text {
-  min-width: 40px;
-  text-align: right;
-}
-
-.combo-timer {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  height: 3px;
-  background: linear-gradient(to right, #FF1177, #FF4DA6);
-  transition: width 0.1s linear;
-}
-
-@keyframes comboFlash {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.2); }
-  100% { transform: scale(1); }
-}
-
-.combo-counter.quick .combo-text {
-  animation: comboFlash 0.3s ease-out;
 }
