@@ -6,12 +6,16 @@ import SoundManager from '../utils/soundManager'
 import './Game.css'
 import { useAccessibility } from '../contexts/AccessibilityContext'
 import { drawAccessibilityOverlay, findPotentialMatches } from '../utils/accessibilityUtils'
+import { TutorialState } from '../types/tutorial'
+import { TUTORIAL_STEPS } from '../constants/tutorialSteps'
+import { TutorialMessage } from './TutorialMessage'
 
 interface GameProps {
   musicEnabled: boolean
   soundEnabled: boolean
   timedMode: boolean
   onGameOver: () => void
+  tutorial?: boolean
 }
 
 interface PopupPosition {
@@ -102,7 +106,7 @@ const getFeedbackForClear = (clearScore: number) => {
   return SCORE_FEEDBACK.CLEAR[0]
 }
 
-const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver }: GameProps) => {
+const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = false }: GameProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const cols = 7
   const [placedTiles, setPlacedTiles] = useState<PlacedTile[]>([{
@@ -138,6 +142,12 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver }: GameProps) 
   const [isQuickPlacement, setIsQuickPlacement] = useState(false)
   const [activePopupPositions, setActivePopupPositions] = useState<PopupPosition[]>([])
   const { settings } = useAccessibility()
+  const [tutorialState, setTutorialState] = useState<TutorialState>({
+    active: tutorial,
+    currentStep: 0,
+    rotationCount: 0,
+    hasPlaced: false
+  })
 
   // Modify the findAvailableYPosition function
   const findAvailableYPosition = (baseY: number, type: 'score' | 'combo' | 'quick' | 'clear'): number => {
@@ -899,6 +909,17 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver }: GameProps) 
           }
         }
       }
+
+      if (tutorialState.active) {
+        const currentStep = TUTORIAL_STEPS[tutorialState.currentStep]
+        
+        if (currentStep.requiresAction === 'select' && selectedTileIndex !== null) {
+          progressTutorial()
+        } else if (currentStep.requiresAction === 'place') {
+          setTutorialState(prev => ({ ...prev, hasPlaced: true }))
+          progressTutorial()
+        }
+      }
     }
 
     const handleContextMenu = (event: MouseEvent) => {
@@ -911,6 +932,20 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver }: GameProps) 
           edges: rotateTileEdges(newTiles[selectedTileIndex].edges)
         }
         setNextTiles(newTiles)
+      }
+
+      if (tutorialState.active) {
+        const currentStep = TUTORIAL_STEPS[tutorialState.currentStep]
+        if (currentStep.requiresAction === 'rotate') {
+          setTutorialState(prev => {
+            const newRotationCount = prev.rotationCount + 1
+            if (newRotationCount >= 3) { // Require 3 rotations before progressing
+              progressTutorial()
+              return { ...prev, rotationCount: 0 }
+            }
+            return { ...prev, rotationCount: newRotationCount }
+          })
+        }
       }
     }
 
@@ -1109,6 +1144,28 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver }: GameProps) 
     }
   }, [selectedTileIndex, nextTiles, settings.showMatchHints, settings.isColorBlind])
 
+  // Add tutorial progress function
+  const progressTutorial = () => {
+    if (tutorialState.currentStep < TUTORIAL_STEPS.length - 1) {
+      setTutorialState(prev => ({
+        ...prev,
+        currentStep: prev.currentStep + 1,
+        rotationCount: 0,
+        hasPlaced: false
+      }))
+    } else {
+      setTutorialState(prev => ({
+        ...prev,
+        active: false
+      }))
+    }
+  }
+
+  // Add effect to handle tutorial prop changes
+  useEffect(() => {
+    setTutorialState(prev => ({ ...prev, active: tutorial }))
+  }, [tutorial])
+
   return (
     <div className="game-container">
       <div className="game-hud">
@@ -1169,6 +1226,17 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver }: GameProps) 
           </div>
         </div>
       ))}
+      {tutorialState.active && (
+        <TutorialMessage 
+          step={TUTORIAL_STEPS[tutorialState.currentStep]}
+          canProgress={!TUTORIAL_STEPS[tutorialState.currentStep].requiresAction || 
+            (TUTORIAL_STEPS[tutorialState.currentStep].requiresAction === 'select' && selectedTileIndex !== null) ||
+            (TUTORIAL_STEPS[tutorialState.currentStep].requiresAction === 'rotate' && tutorialState.rotationCount >= 3) ||
+            (TUTORIAL_STEPS[tutorialState.currentStep].requiresAction === 'place' && tutorialState.hasPlaced)
+          }
+          onNext={progressTutorial}
+        />
+      )}
     </div>
   )
 }

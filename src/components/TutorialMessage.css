@@ -1,0 +1,64 @@
+.tutorial-message {
+  position: fixed;
+  z-index: 1000;
+  padding: 20px;
+  background: rgba(26, 26, 46, 0.95);
+  border: 2px solid #00FF9F;
+  border-radius: 10px;
+  box-shadow: 0 0 20px rgba(0, 255, 159, 0.3);
+  color: white;
+  max-width: 300px;
+  animation: fadeIn 0.3s ease-out;
+}
+
+.tutorial-message.center {
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.tutorial-message.right {
+  top: 50%;
+  right: 20px;
+  transform: translateY(-50%);
+}
+
+.tutorial-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
+}
+
+.tutorial-content p {
+  margin: 0;
+  text-align: center;
+  line-height: 1.4;
+}
+
+.tutorial-next-button {
+  background: #00FF9F;
+  color: #1a1a2e;
+  border: none;
+  padding: 8px 20px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: all 0.2s ease;
+}
+
+.tutorial-next-button:hover {
+  background: #00CC7F;
+  transform: scale(1.05);
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+} 

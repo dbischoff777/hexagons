@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import './StartPage.css'
 import AccessibilitySettings from './AccessibilitySettings'
+import Game from './Game'
 
 interface StartPageProps {
   onStartGame: (withTimer: boolean) => void
@@ -12,6 +13,31 @@ const StartPage: React.FC<StartPageProps> = ({ onStartGame, onMusicToggle, onSou
   const [isMusicEnabled, setIsMusicEnabled] = useState(true)
   const [isSoundEnabled, setIsSoundEnabled] = useState(true)
   const [showGameModes, setShowGameModes] = useState(false)
+  const [showTutorial, setShowTutorial] = useState(false)
+
+  const handleTutorialEnd = () => {
+    setShowTutorial(false)
+  }
+
+  if (showTutorial) {
+    return (
+      <div className="start-page">
+        <Game 
+          musicEnabled={isMusicEnabled}
+          soundEnabled={isSoundEnabled}
+          timedMode={false}
+          onGameOver={handleTutorialEnd}
+          tutorial={true}
+        />
+        <button 
+          className="exit-tutorial-button"
+          onClick={handleTutorialEnd}
+        >
+          Exit Tutorial
+        </button>
+      </div>
+    )
+  }
 
   return (
     <div className="start-page">
@@ -56,12 +82,20 @@ const StartPage: React.FC<StartPageProps> = ({ onStartGame, onMusicToggle, onSou
 
         <div className="game-start">
           {!showGameModes ? (
-            <button 
-              className="play-button" 
-              onClick={() => setShowGameModes(true)}
-            >
-              PLAY
-            </button>
+            <>
+              <button 
+                className="play-button" 
+                onClick={() => setShowGameModes(true)}
+              >
+                PLAY
+              </button>
+              <button 
+                className="tutorial-button"
+                onClick={() => setShowTutorial(true)}
+              >
+                Play Tutorial
+              </button>
+            </>
           ) : (
             <div className="mode-selection">
               <button 
