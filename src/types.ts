@@ -55,6 +55,10 @@ export interface GameState {
     score: number
   }[]
   startTime: number
+  timedMode: boolean
+  boardRotation: number
+  powerUps: PowerUpState
+  combo: ComboState
 }
 
 export interface GameStatistics {
@@ -66,4 +70,4 @@ export interface GameStatistics {
   longestCombo: number
   totalPlayTime: number
   lastPlayed: string
-} 
+}

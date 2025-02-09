@@ -4,6 +4,8 @@ import Game from './components/Game'
 import StartPage from './components/StartPage'
 import SoundManager from './utils/soundManager'
 import { AccessibilityProvider } from './contexts/AccessibilityContext'
+import { GameState } from './types'
+import { loadGameState } from './utils/gameStateUtils'
 
 function App() {
   const [gameStarted, setGameStarted] = useState(false)
@@ -11,6 +13,7 @@ function App() {
   const [timedMode, setTimedMode] = useState(false)
   const [isMusicEnabled, setIsMusicEnabled] = useState(true)
   const [isSoundEnabled, setIsSoundEnabled] = useState(true)
+  const [savedGameState, setSavedGameState] = useState<GameState | null>(null)
   const soundManager = SoundManager.getInstance()
 
   useEffect(() => {
@@ -22,9 +25,11 @@ function App() {
   }, [isSoundEnabled])
 
   const handleStartGame = (timed: boolean) => {
+    const savedGame = loadGameState()
     setTimedMode(timed)
     setGameStarted(true)
     setTutorialMode(false)
+    setSavedGameState(savedGame && !timed ? savedGame : null)
     soundManager.playSound('buttonClick')
     soundManager.startBackgroundMusic()
   }
@@ -38,6 +43,7 @@ function App() {
   const handleExitGame = () => {
     setGameStarted(false)
     setTutorialMode(false)
+    setSavedGameState(null)
     soundManager.playSound('buttonClick')
   }
 
@@ -56,7 +62,6 @@ function App() {
       <AccessibilityProvider>
         <StartPage 
           onStartGame={handleStartGame}
-          onStartTutorial={handleStartTutorial}
           onMusicToggle={handleMusicToggle}
           onSoundToggle={handleSoundToggle}
         />
@@ -74,6 +79,7 @@ function App() {
         onGameOver={handleExitGame}
         onSkipTutorial={handleExitGame}
         onExit={handleExitGame}
+        savedGameState={savedGameState}
       />
     </AccessibilityProvider>
   )

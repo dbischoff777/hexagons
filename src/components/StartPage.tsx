@@ -2,18 +2,17 @@ import React, { useState, useEffect } from 'react'
 import './StartPage.css'
 import AccessibilitySettings from './AccessibilitySettings'
 import Game from './Game'
-import { GameStatistics } from '../types'
-import { getStatistics, loadGameState, clearSavedGame } from '../utils/gameStateUtils'
+import { loadGameState, clearSavedGame } from '../utils/gameStateUtils'
 import StatisticsPage from './StatisticsPage'
+
 
 interface StartPageProps {
   onStartGame: (withTimer: boolean) => void
   onMusicToggle: (enabled: boolean) => void
   onSoundToggle: (enabled: boolean) => void
-  onStartTutorial: () => void
 }
 
-const StartPage: React.FC<StartPageProps> = ({ onStartGame, onMusicToggle, onSoundToggle, onStartTutorial }) => {
+const StartPage: React.FC<StartPageProps> = ({ onStartGame, onMusicToggle, onSoundToggle }) => {
   const [isMusicEnabled, setIsMusicEnabled] = useState(true)
   const [isSoundEnabled, setIsSoundEnabled] = useState(true)
   const [showGameModes, setShowGameModes] = useState(false)
@@ -41,7 +40,7 @@ const StartPage: React.FC<StartPageProps> = ({ onStartGame, onMusicToggle, onSou
   const handleContinueGame = () => {
     const savedGame = loadGameState()
     if (savedGame) {
-      onStartGame(false) // or check saved game mode
+      onStartGame(savedGame.timedMode)
     }
   }
 

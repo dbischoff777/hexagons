@@ -19,6 +19,7 @@ interface GameProps {
   tutorial?: boolean
   onSkipTutorial?: () => void
   onExit: () => void
+  savedGameState?: GameState | null
 }
 
 interface PopupPosition {
@@ -109,39 +110,51 @@ const getFeedbackForClear = (clearScore: number) => {
   return SCORE_FEEDBACK.CLEAR[0]
 }
 
-const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = false, onSkipTutorial, onExit }: GameProps) => {
+const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = false, onSkipTutorial, onExit, savedGameState }: GameProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const cols = 7
-  const [placedTiles, setPlacedTiles] = useState<PlacedTile[]>([{
-    ...createTileWithRandomEdges(0, 0),
-    isPlaced: true
-  }])
-  const [score, setScore] = useState<number>(0)
-  const [timeLeft, setTimeLeft] = useState<number>(timedMode ? INITIAL_TIME : Infinity)
+  
+  // Initialize all state from saved game if it exists
+  const [placedTiles, setPlacedTiles] = useState<PlacedTile[]>(
+    savedGameState?.placedTiles ?? [{
+      ...createTileWithRandomEdges(0, 0),
+      isPlaced: true
+    }]
+  )
+  const [score, setScore] = useState<number>(savedGameState?.score ?? 0)
+  const [timeLeft, setTimeLeft] = useState<number>(
+    savedGameState?.timeLeft ?? (timedMode ? INITIAL_TIME : Infinity)
+  )
   const [isGameOver, setIsGameOver] = useState<boolean>(false)
-  const [nextTiles, setNextTiles] = useState<PlacedTile[]>([
-    { ...createTileWithRandomEdges(0, 0), isPlaced: false },
-    { ...createTileWithRandomEdges(0, 0), isPlaced: false },
-    { ...createTileWithRandomEdges(0, 0), isPlaced: false }
-  ])
+  const [nextTiles, setNextTiles] = useState<PlacedTile[]>(
+    savedGameState?.nextTiles ?? [
+      { ...createTileWithRandomEdges(0, 0), isPlaced: false },
+      { ...createTileWithRandomEdges(0, 0), isPlaced: false },
+      { ...createTileWithRandomEdges(0, 0), isPlaced: false }
+    ]
+  )
   const [selectedTileIndex, setSelectedTileIndex] = useState<number | null>(null)
   const [mousePosition, setMousePosition] = useState<{ x: number, y: number } | null>(null)
   const [scorePopups, setScorePopups] = useState<{ score: number, x: number, y: number, id: number, emoji: string, text: string }[]>([])
-  const [boardRotation, setBoardRotation] = useState<number>(0)
+  const [boardRotation, setBoardRotation] = useState<number>(savedGameState?.boardRotation ?? 0)
   const [showWarning, setShowWarning] = useState(false)
   const [showRotationText, setShowRotationText] = useState(false)
   const soundManager = SoundManager.getInstance()
-  const [powerUps, setPowerUps] = useState<PowerUpState>({
-    freeze: { active: false, remainingTime: 0 },
-    colorShift: { active: false },
-    multiplier: { active: false, value: 1, remainingTime: 0 }
-  })
-  const [combo, setCombo] = useState<ComboState>({
-    count: 0,
-    timer: 0,
-    multiplier: 1,
-    lastPlacementTime: 0
-  })
+  const [powerUps, setPowerUps] = useState<PowerUpState>(
+    savedGameState?.powerUps ?? {
+      freeze: { active: false, remainingTime: 0 },
+      colorShift: { active: false },
+      multiplier: { active: false, value: 1, remainingTime: 0 }
+    }
+  )
+  const [combo, setCombo] = useState<ComboState>(
+    savedGameState?.combo ?? {
+      count: 0,
+      timer: 0,
+      multiplier: 1,
+      lastPlacementTime: 0
+    }
+  )
   const [isQuickPlacement, setIsQuickPlacement] = useState(false)
   const [activePopupPositions, setActivePopupPositions] = useState<PopupPosition[]>([])
   const { settings } = useAccessibility()
@@ -1180,7 +1193,7 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
     }
   }, [isGameOver])
 
-  // Modify the auto-save effect to include startTime
+  // Modify the auto-save effect
   useEffect(() => {
     if (!isGameOver && !tutorialState.active) {
       const gameState: GameState = {
@@ -1189,12 +1202,15 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
         score,
         timeLeft,
         moveHistory: previousState ? [previousState] : [],
-        startTime: loadGameState()?.startTime ?? Date.now()
+        startTime: loadGameState()?.startTime ?? Date.now(),
+        timedMode,
+        boardRotation,
+        powerUps,
+        combo
       }
       saveGameState(gameState)
-
     }
-  }, [placedTiles, nextTiles, score, timeLeft, previousState, isGameOver, tutorialState.active])
+  }, [placedTiles, nextTiles, score, timeLeft, previousState, isGameOver, tutorialState.active, boardRotation, powerUps, combo])
 
   // Add this function to handle undoing moves
   const handleUndo = () => {
