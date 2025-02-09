@@ -16,6 +16,84 @@ const rotateTileEdges = (edges: { color: string }[]) => {
   return [...edges.slice(-1), ...edges.slice(0, -1)]
 }
 
+// Add this near the top of the file, outside the component
+const SCORE_FEEDBACK = {
+  // Regular matches
+  LOW: [
+    { emoji: '✨', text: 'Nice!' },
+    { emoji: '🎯', text: 'Good!' },
+    { emoji: '👍', text: 'Cool!' },
+  ],
+  MEDIUM: [
+    { emoji: '🌟', text: 'Great!' },
+    { emoji: '💫', text: 'Awesome!' },
+    { emoji: '⭐', text: 'Sweet!' },
+  ],
+  HIGH: [
+    { emoji: '🔥', text: 'Amazing!' },
+    { emoji: '⚡', text: 'Fantastic!' },
+    { emoji: '💥', text: 'Incredible!' },
+  ],
+  EPIC: [
+    { emoji: '🌈', text: 'EPIC!' },
+    { emoji: '👑', text: 'LEGENDARY!' },
+    { emoji: '💎', text: 'BRILLIANT!' },
+  ],
+  
+  // Combos
+  COMBO: [
+    { emoji: '🎯', text: '2x COMBO!' },
+    { emoji: '🔥', text: '3x COMBO!' },
+    { emoji: '⚡', text: '4x COMBO!' },
+    { emoji: '💫', text: '5x COMBO!' },
+    { emoji: '🌟', text: '6x COMBO!' },
+    { emoji: '💥', text: '7x COMBO!' },
+    { emoji: '👑', text: '8x COMBO!' },
+    { emoji: '🌈', text: 'MEGA COMBO!' },
+  ],
+  
+  // Grid clears
+  CLEAR: [
+    { emoji: '🎪✨', text: 'CLEAR!' },
+    { emoji: '🎮💫', text: 'GOOD CLEAR!' },
+    { emoji: '🎯⚡', text: 'GREAT CLEAR!' },
+    { emoji: '🏆💫', text: 'AMAZING CLEAR!' },
+    { emoji: '👑✨', text: 'EPIC CLEAR!' },
+  ],
+  
+  // Quick placements
+  QUICK: [
+    { emoji: '⚡', text: 'QUICK!' },
+    { emoji: '💨', text: 'SWIFT!' },
+    { emoji: '🚀', text: 'SPEEDY!' },
+  ]
+}
+
+const getRandomFeedback = (category: keyof typeof SCORE_FEEDBACK) => {
+  const options = SCORE_FEEDBACK[category]
+  return options[Math.floor(Math.random() * options.length)]
+}
+
+const getFeedbackForScore = (score: number) => {
+  if (score >= 100) return getRandomFeedback('EPIC')
+  if (score >= 75) return getRandomFeedback('HIGH')
+  if (score >= 50) return getRandomFeedback('MEDIUM')
+  return getRandomFeedback('LOW')
+}
+
+const getFeedbackForCombo = (comboCount: number) => {
+  const index = Math.min(comboCount - 2, SCORE_FEEDBACK.COMBO.length - 1)
+  return SCORE_FEEDBACK.COMBO[index]
+}
+
+const getFeedbackForClear = (clearScore: number) => {
+  if (clearScore >= 100) return SCORE_FEEDBACK.CLEAR[4]
+  if (clearScore >= 75) return SCORE_FEEDBACK.CLEAR[3]
+  if (clearScore >= 50) return SCORE_FEEDBACK.CLEAR[2]
+  if (clearScore >= 25) return SCORE_FEEDBACK.CLEAR[1]
+  return SCORE_FEEDBACK.CLEAR[0]
+}
+
 const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver }: GameProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const cols = 7
@@ -87,7 +165,7 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver }: GameProps) 
           }
           
           requestAnimationFrame(animate)
-        }, 1500) // Warning duration
+        }, 1500)
       }, 15000)
       
       return () => clearInterval(warningTimer)
@@ -620,13 +698,14 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver }: GameProps) 
           // Show score popup for immediate matches with the placed tile
           const placedTileScore = calculateScore(updatedPlacedTile.value * 2)
           if (placedTileScore > 0) {
+            const feedback = getFeedbackForScore(placedTileScore)
             setScorePopups(prev => [...prev, {
               score: placedTileScore,
               x: canvas.width / 2 - 100,
               y: canvas.height / 2 - 200,
               id: Date.now(),
-              emoji: '🌈✨',
-              text: 'EXCEPTIONAL!'
+              emoji: feedback.emoji,
+              text: feedback.text
             }])
           }
           setScore(prevScore => prevScore + placedTileScore)
@@ -640,13 +719,7 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver }: GameProps) 
             const multiplier = matchingTiles.length
             const clearBonus = calculateScore(totalMatchScore * multiplier * 2)
             
-            // Choose emoji and text based on clear bonus achievements
-            const clearInfo = 
-              clearBonus >= 100 ? { emoji: '👑✨', text: 'EPIC CLEAR!' } :
-              clearBonus >= 75  ? { emoji: '🏆💫', text: 'AMAZING CLEAR!' } :
-              clearBonus >= 50  ? { emoji: '🎯⚡', text: 'GREAT CLEAR!' } :
-              clearBonus >= 25  ? { emoji: '🎮💫', text: 'GOOD CLEAR!' } :
-              { emoji: '🎪✨', text: 'CLEAR!' }
+            const clearInfo = getFeedbackForClear(clearBonus)
 
             setTimeout(() => {
               setScorePopups(prev => [...prev, {
@@ -698,13 +771,28 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver }: GameProps) 
             if (combo.count > 1) {
               const comboBonus = Math.round(placedTileScore * combo.multiplier) - placedTileScore // Calculate actual bonus
               if (comboBonus > 0) {
+                const comboInfo = getFeedbackForCombo(combo.count + 1)
+                
+                // Add quick placement bonus feedback
+                if (isQuickPlacement) {
+                  const quickInfo = getRandomFeedback('QUICK')
+                  setScorePopups(prev => [...prev, {
+                    score: 0,
+                    x: canvas.width / 2,
+                    y: canvas.height / 2 - 100,
+                    id: Date.now() + 3,
+                    emoji: quickInfo.emoji,
+                    text: quickInfo.text
+                  }])
+                }
+                
                 setScorePopups(prev => [...prev, {
                   score: comboBonus,
                   x: canvas.width / 2,
                   y: canvas.height / 2 - 50,
                   id: Date.now() + 2,
-                  emoji: '🔥',
-                  text: `${combo.count + 1}x COMBO!`
+                  emoji: comboInfo.emoji,
+                  text: comboInfo.text
                 }])
                 setScore(prevScore => prevScore + comboBonus)
               }
@@ -864,6 +952,21 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver }: GameProps) 
     const powerUpMultiplier = powerUps.multiplier.active ? powerUps.multiplier.value : 1
     return Math.round(baseScore * powerUpMultiplier * combo.multiplier)
   }
+
+  // Add popup cleanup effect
+  useEffect(() => {
+    const POPUP_DURATION = 1000 // Duration in milliseconds before removing popup
+
+    if (scorePopups.length > 0) {
+      const timer = setTimeout(() => {
+        setScorePopups(prev => prev.filter(popup => 
+          Date.now() - popup.id < POPUP_DURATION
+        ))
+      }, POPUP_DURATION)
+
+      return () => clearTimeout(timer)
+    }
+  }, [scorePopups])
 
   return (
     <div className="game-container">

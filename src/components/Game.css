@@ -243,7 +243,7 @@
   font-weight: bold;
   text-shadow: 0 0 15px #00FF9F;
   pointer-events: none;
-  animation: scorePopup 1s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  animation: popup-appear 1s ease-out forwards;
   z-index: 2;
   transform: translate(-50%, -50%);
   text-align: center;
@@ -252,6 +252,67 @@
   display: flex;
   align-items: center;
   gap: 10px;
+}
+
+.score-popup[data-type='epic'] {
+  font-size: 1.5em;
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
+}
+
+.score-popup[data-type='high'] {
+  font-size: 1.3em;
+  text-shadow: 0 0 8px rgba(255, 255, 255, 0.6);
+}
+
+.score-popup[data-type='combo'] {
+  font-size: 1.2em;
+  color: #FFD700;
+  text-shadow: 0 0 8px rgba(255, 215, 0, 0.6);
+}
+
+.score-popup[data-type='quick'] {
+  font-size: 1.1em;
+  color: #00FFFF;
+  text-shadow: 0 0 8px rgba(0, 255, 255, 0.6);
+}
+
+@keyframes popup-appear {
+  0% {
+    transform: translate(-50%, -50%) scale(0.5);
+    opacity: 0;
+  }
+  20% {
+    transform: translate(-50%, -80%) scale(1.2);
+    opacity: 1;
+  }
+  50% {
+    transform: translate(-50%, -100%) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, -120%) scale(0.8);
+    opacity: 0;
+  }
+}
+
+.emoji {
+  display: inline-block;
+  animation: emoji-bounce 1s ease-out;
+}
+
+@keyframes emoji-bounce {
+  0% {
+    transform: scale(0.5);
+  }
+  20% {
+    transform: scale(1.2);
+  }
+  40% {
+    transform: scale(1);
+  }
+  100% {
+    transform: scale(1);
+  }
 }
 
 .popup-content {
