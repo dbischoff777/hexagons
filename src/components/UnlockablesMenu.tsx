@@ -43,6 +43,74 @@ const UnlockablesMenu: React.FC<UnlockablesMenuProps> = ({ onSelectTheme, onClos
     )
   );
 
+  const drawThemePreview = (
+    ctx: CanvasRenderingContext2D, 
+    colors: { background: string; primary: string; secondary: string; accent: string; },
+    width: number,
+    height: number
+  ) => {
+    // Clear canvas
+    ctx.clearRect(0, 0, width, height);
+    
+    // Draw background
+    ctx.fillStyle = colors.background;
+    ctx.fillRect(0, 0, width, height);
+
+    // Draw a hexagon tile preview
+    const centerX = width / 2;
+    const centerY = height / 2;
+    const size = Math.min(width, height) * 0.3;
+
+    // Draw hexagon
+    ctx.beginPath();
+    for (let i = 0; i < 6; i++) {
+      const angle = (i * Math.PI) / 3;
+      const x = centerX + size * Math.cos(angle);
+      const y = centerY + size * Math.sin(angle);
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.closePath();
+
+    // Fill with secondary color (tile background)
+    const gradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, size);
+    gradient.addColorStop(0, colors.secondary);
+    gradient.addColorStop(1, colors.background);
+    ctx.fillStyle = gradient;
+    ctx.fill();
+
+    // Draw edges with primary color
+    ctx.strokeStyle = colors.primary;
+    ctx.lineWidth = 3;
+    ctx.stroke();
+
+    // Draw a small score popup preview
+    const popupWidth = width * 0.4;
+    const popupHeight = height * 0.2;
+    const popupX = width * 0.55;
+    const popupY = height * 0.2;
+
+    // Popup background
+    ctx.fillStyle = colors.accent;
+    ctx.globalAlpha = 0.2;
+    ctx.beginPath();
+    ctx.roundRect(popupX, popupY, popupWidth, popupHeight, 5);
+    ctx.fill();
+    ctx.globalAlpha = 1;
+
+    // Popup border
+    ctx.strokeStyle = colors.accent;
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Add text preview
+    ctx.fillStyle = '#FFFFFF';
+    ctx.font = '10px Arial';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('+100', popupX + popupWidth/2, popupY + popupHeight/2);
+  };
+
   return (
     <div className="unlockables-overlay" onClick={handleOverlayClick}>
       <div className="unlockables-container">
@@ -54,23 +122,26 @@ const UnlockablesMenu: React.FC<UnlockablesMenuProps> = ({ onSelectTheme, onClos
             {themes.map(theme => {
               const isUnlocked = theme.unlocked || theme.id === 'default';
               const themeConfig = THEMES.find(t => t.id === theme.id) || THEMES[0];
+              
               return (
                 <div 
                   key={theme.id}
                   className={`theme-item ${isUnlocked ? 'unlocked' : 'locked'} ${currentTheme.id === theme.id ? 'selected' : ''}`}
                   onClick={() => isUnlocked && onSelectTheme(theme.id)}
                 >
-                  <div 
+                  <canvas 
                     className="theme-preview"
-                    style={{
-                      background: themeConfig.colors.background,
-                      border: `2px solid ${themeConfig.colors.primary}`
+                    width={120}
+                    height={80}
+                    ref={canvas => {
+                      if (canvas) {
+                        const ctx = canvas.getContext('2d');
+                        if (ctx) {
+                          drawThemePreview(ctx, themeConfig.colors, canvas.width, canvas.height);
+                        }
+                      }
                     }}
-                  >
-                    <div className="preview-element" style={{ background: themeConfig.colors.primary }} />
-                    <div className="preview-element" style={{ background: themeConfig.colors.secondary }} />
-                    <div className="preview-element" style={{ background: themeConfig.colors.accent }} />
-                  </div>
+                  />
                   <div className="theme-info">
                     <span className="theme-name">{theme.name}</span>
                     {renderUnlockLevel(theme)}

@@ -44,24 +44,38 @@
 }
 
 .theme-item {
-  background: rgba(0, 0, 0, 0.3);
-  border-radius: 8px;
-  padding: 15px;
-  transition: all 0.3s ease;
-  min-height: 150px;
   display: flex;
   flex-direction: column;
+  align-items: center;
+  padding: 10px;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+  transition: all 0.2s ease;
 }
 
 .theme-preview {
-  height: 100px;
-  border-radius: 4px;
-  margin-bottom: 1rem;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  width: 120px;
+  height: 80px;
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  transition: transform 0.2s ease;
+}
+
+.theme-item:hover .theme-preview {
+  transform: scale(1.05);
+}
+
+.theme-item.selected {
+  box-shadow: 0 0 0 2px #00ff9f;
   background: rgba(0, 255, 159, 0.1);
-  font-size: 2rem;
+}
+
+.theme-item.locked {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .theme-info {
@@ -84,20 +98,6 @@
 .unlock-level {
   color: #00FF9F;
   font-size: 0.9em;
-}
-
-.locked {
-  opacity: 0.5;
-  filter: grayscale(1);
-}
-
-.theme-item.unlocked:hover {
-  transform: translateY(-2px);
-  cursor: pointer;
-}
-
-.theme-item.selected {
-  border: 2px solid #00FF9F;
 }
 
 .close-button {

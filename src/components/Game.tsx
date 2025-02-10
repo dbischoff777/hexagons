@@ -534,50 +534,114 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
         }
       }
 
-      // Inside drawHexagonWithColoredEdges function, after drawing the tile number
+      // Add enhanced power-up background effects
+      if (tile?.powerUp) {
+        // Create special background for power-up tiles
+        const powerUpGradient = ctx.createRadialGradient(x, y, 0, x, y, size);
+        
+        switch (tile.powerUp.type) {
+          case 'freeze':
+            powerUpGradient.addColorStop(0, 'rgba(100, 200, 255, 0.3)');
+            powerUpGradient.addColorStop(1, 'rgba(50, 150, 255, 0.1)');
+            break;
+          case 'colorShift':
+            powerUpGradient.addColorStop(0, 'rgba(255, 100, 255, 0.3)');
+            powerUpGradient.addColorStop(1, 'rgba(200, 50, 255, 0.1)');
+            break;
+          case 'multiplier':
+            powerUpGradient.addColorStop(0, 'rgba(255, 215, 0, 0.3)');
+            powerUpGradient.addColorStop(1, 'rgba(255, 180, 0, 0.1)');
+            break;
+        }
+        
+        ctx.fillStyle = powerUpGradient;
+        ctx.beginPath();
+        points.forEach((point, i) => {
+          if (i === 0) ctx.moveTo(point[0], point[1]);
+          else ctx.lineTo(point[0], point[1]);
+        });
+        ctx.closePath();
+        ctx.fill();
+
+        // Add pulsing glow effect for power-up tiles
+        const pulseIntensity = Math.sin(Date.now() / 500) * 0.2 + 0.4;
+        ctx.shadowColor = tile.powerUp.type === 'freeze' ? '#00FFFF' :
+                         tile.powerUp.type === 'colorShift' ? '#FF00FF' :
+                         '#FFD700';
+        ctx.shadowBlur = 15 * pulseIntensity;
+      }
+
+      // Draw power-up indicator with enhanced visuals
       if (tile?.powerUp) {
         const powerUpIcons = {
           freeze: '❄️',
           colorShift: '🎨',
           multiplier: '✨'
+        };
+        
+        // Draw circular background for power-up icon
+        ctx.beginPath();
+        ctx.arc(x, y - 12, 15, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+        ctx.fill();
+        
+        // Draw icon with glow effect
+        ctx.font = 'bold 16px Arial';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillStyle = '#FFFFFF';
+        ctx.shadowColor = tile.powerUp.type === 'freeze' ? '#00FFFF' :
+                         tile.powerUp.type === 'colorShift' ? '#FF00FF' :
+                         '#FFD700';
+        ctx.shadowBlur = 10;
+        ctx.fillText(powerUpIcons[tile.powerUp.type], x, y - 12);
+        
+        // Draw duration indicator if applicable
+        if (tile.powerUp.duration) {
+          ctx.font = 'bold 14px Arial';
+          ctx.fillStyle = '#FFFFFF';
+          ctx.shadowBlur = 5;
+          ctx.fillText(`${tile.powerUp.duration}s`, x, y + 12);
         }
-
-        // Draw power-up icon above the number
-        ctx.font = 'bold 16px Arial'
-        ctx.textAlign = 'center'
-        ctx.textBaseline = 'middle'
-        ctx.fillText(powerUpIcons[tile.powerUp.type], x, y - 15)
 
         // Show power-up info when selected
         if (isSelected) {
           const descriptions = {
-            freeze: 'Pauses the timer for 5s',
-            colorShift: 'Changes adjacent tile colors',
-            multiplier: 'Doubles points for 15s'
-          }
+            freeze: 'Freezes Timer (5s)',
+            colorShift: 'Changes Adjacent Colors',
+            multiplier: 'Double Points (15s)'
+          };
 
           // Draw info box above tile
-          ctx.fillStyle = 'rgba(0, 255, 159, 0.1)'
-          ctx.strokeStyle = 'rgba(0, 255, 159, 0.3)'
-          ctx.lineWidth = 1
-          const text = descriptions[tile.powerUp.type]
-          const padding = 10
-          const boxWidth = ctx.measureText(text).width + padding * 2
-          const boxHeight = 30
-          const boxX = x - boxWidth / 2
-          const boxY = y - size * 2
+          ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+          ctx.strokeStyle = tile.powerUp.type === 'freeze' ? '#00FFFF' :
+                           tile.powerUp.type === 'colorShift' ? '#FF00FF' :
+                           '#FFD700';
+          ctx.lineWidth = 2;
+          const text = descriptions[tile.powerUp.type];
+          const padding = 10;
+          const boxWidth = ctx.measureText(text).width + padding * 2;
+          const boxHeight = 30;
+          const boxX = x - boxWidth / 2;
+          const boxY = y - size * 2;
 
-          // Draw box with rounded corners
-          ctx.beginPath()
-          ctx.roundRect(boxX, boxY, boxWidth, boxHeight, 5)
-          ctx.fill()
-          ctx.stroke()
+          // Draw box with rounded corners and glow
+          ctx.shadowColor = ctx.strokeStyle;
+          ctx.shadowBlur = 10;
+          ctx.beginPath();
+          ctx.roundRect(boxX, boxY, boxWidth, boxHeight, 5);
+          ctx.fill();
+          ctx.stroke();
 
           // Draw description text
-          ctx.fillStyle = '#fff'
-          ctx.font = '14px Arial'
-          ctx.fillText(descriptions[tile.powerUp.type], x, boxY + boxHeight/2)
+          ctx.fillStyle = '#FFFFFF';
+          ctx.shadowBlur = 2;
+          ctx.font = '14px Arial';
+          ctx.fillText(descriptions[tile.powerUp.type], x, boxY + boxHeight/2);
         }
+        
+        // Reset shadow effects
+        ctx.shadowBlur = 0;
       }
 
       // Draw accessibility overlay
