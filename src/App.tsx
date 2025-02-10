@@ -6,6 +6,7 @@ import SoundManager from './utils/soundManager'
 import { AccessibilityProvider } from './contexts/AccessibilityContext'
 import { GameState } from './types'
 import { loadGameState } from './utils/gameStateUtils'
+import PageTransition from './components/PageTransition'
 
 function App() {
   const [gameStarted, setGameStarted] = useState(false)
@@ -13,6 +14,11 @@ function App() {
   const [timedMode, setTimedMode] = useState(false)
   const [savedGameState, setSavedGameState] = useState<GameState | null>(null)
   const soundManager = SoundManager.getInstance()
+  const [isExiting, setIsExiting] = useState(false)
+  const [nextGameState, setNextGameState] = useState<{
+    started: boolean
+    timed: boolean
+  } | null>(null)
 
   // Load saved game state on component mount
   useEffect(() => {
@@ -40,37 +46,13 @@ function App() {
   }, [soundEnabled])
 
   const handleStartGame = (timed: boolean) => {
-    const savedGame = loadGameState()
-    setTimedMode(timed)
-    setGameStarted(true)
-    setTutorialMode(false)
-    
-    // Only use saved game if it matches timed mode, but preserve current audio settings
-    if (savedGame && savedGame.timedMode === timed) {
-      setSavedGameState({
-        ...savedGame,
-        audioSettings: {
-          musicEnabled,
-          soundEnabled
-        }
-      })
-    } else {
-      setSavedGameState(null)
-    }
-    
-    if (soundEnabled) {
-      soundManager.playSound('buttonClick')
-    }
-    if (musicEnabled) {
-      soundManager.startBackgroundMusic()
-    }
+    setIsExiting(true)
+    setNextGameState({ started: true, timed })
   }
 
   const handleExitGame = () => {
-    setGameStarted(false)
-    setTutorialMode(false)
-    setSavedGameState(null)
-    soundManager.playSound('buttonClick')
+    setIsExiting(true)
+    setNextGameState({ started: false, timed: false })
   }
 
   const handleMusicToggle = (enabled: boolean) => {
@@ -83,32 +65,76 @@ function App() {
     if (enabled) soundManager.playSound('buttonClick')
   }
 
+  const handleTransitionComplete = () => {
+    if (nextGameState) {
+      setGameStarted(nextGameState.started)
+      setTimedMode(nextGameState.timed)
+      setTutorialMode(false)
+      
+      if (nextGameState.started) {
+        const savedGame = loadGameState()
+        // Only use saved game if it matches timed mode
+        if (savedGame && savedGame.timedMode === nextGameState.timed) {
+          setSavedGameState({
+            ...savedGame,
+            audioSettings: {
+              musicEnabled,
+              soundEnabled
+            }
+          })
+        } else {
+          setSavedGameState(null)
+        }
+        
+        if (soundEnabled) {
+          soundManager.playSound('buttonClick')
+        }
+        if (musicEnabled) {
+          soundManager.startBackgroundMusic()
+        }
+      }
+      
+      setIsExiting(false)
+      setNextGameState(null)
+    }
+  }
+
   if (!gameStarted) {
     return (
       <AccessibilityProvider>
-        <StartPage 
-          onStartGame={handleStartGame}
-          onMusicToggle={handleMusicToggle}
-          onSoundToggle={handleSoundToggle}
-          musicEnabled={musicEnabled}
-          soundEnabled={soundEnabled}
-        />
+        <PageTransition 
+          isExiting={isExiting}
+          onExitComplete={handleTransitionComplete}
+        >
+          <StartPage 
+            onStartGame={handleStartGame}
+            onMusicToggle={handleMusicToggle}
+            onSoundToggle={handleSoundToggle}
+            musicEnabled={musicEnabled}
+            soundEnabled={soundEnabled}
+          />
+        </PageTransition>
       </AccessibilityProvider>
     )
   }
 
   return (
     <AccessibilityProvider>
-      <Game 
-        musicEnabled={musicEnabled} 
-        soundEnabled={soundEnabled}
-        timedMode={timedMode}
-        tutorial={tutorialMode}
-        onGameOver={handleExitGame}
-        onSkipTutorial={handleExitGame}
-        onExit={handleExitGame}
-        savedGameState={savedGameState}
-      />
+      <PageTransition 
+        isExiting={isExiting}
+        onExitComplete={handleTransitionComplete}
+      >
+        <Game 
+          musicEnabled={musicEnabled} 
+          soundEnabled={soundEnabled}
+          timedMode={timedMode}
+          tutorial={tutorialMode}
+          onGameOver={handleExitGame}
+          onSkipTutorial={handleExitGame}
+          onExit={handleExitGame}
+          savedGameState={savedGameState}
+        />
+      </PageTransition>
     </AccessibilityProvider>
   )
 }
