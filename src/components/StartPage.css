@@ -121,6 +121,7 @@
 
 .mode-selection {
   display: flex;
+  flex-direction: column;
   gap: 1rem;
   animation: fadeIn 0.3s ease-out;
 }
@@ -319,4 +320,21 @@
 
 .modal-content::-webkit-scrollbar-thumb:hover {
   background: rgba(0, 255, 159, 0.5);
-} 
+}
+
+.mode-selection .back-button {
+  margin-top: 1rem;
+  padding: 1rem 2rem;
+  font-size: 1.2rem;
+  background: rgba(0, 255, 159, 0.15);
+  color: #00FF9F;
+  border: 2px solid #00FF9F;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.mode-selection .back-button:hover {
+  background: rgba(0, 255, 159, 0.25);
+  transform: scale(1.05);
+}

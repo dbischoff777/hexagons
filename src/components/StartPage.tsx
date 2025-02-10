@@ -155,6 +155,13 @@ const StartPage: React.FC<StartPageProps> = ({ onStartGame, onMusicToggle, onSou
                 <span className="mode-title">ZEN MODE</span>
                 <span className="mode-desc">Play at your own pace</span>
               </button>
+
+              <button 
+                className="back-button"
+                onClick={() => setShowGameModes(false)}
+              >
+                Back
+              </button>
             </div>
           )}
         </div>
