@@ -1,5 +1,5 @@
 import React from 'react';
-import { LEVEL_BLOCKS, getCurrentLevelInfo, BADGES, LevelBlock } from '../utils/progressionUtils';
+import { LEVEL_BLOCKS, getCurrentLevelInfo, BADGES, LevelBlock, getPlayerProgress } from '../utils/progressionUtils';
 import './LevelRoadmap.css';
 
 interface LevelRoadmapProps {
@@ -23,19 +23,27 @@ const LevelRoadmap: React.FC<LevelRoadmapProps> = ({ currentPoints, onStartGame 
   };
 
   const renderBlock = (block: LevelBlock, currentPoints: number) => {
-    const blockBadge = BADGES.find(b => b.levelBlock === block.blockNumber);
-    const isBlockComplete = currentPoints >= block.levels[block.levels.length - 1].pointsRequired;
+    const blockLevel = block.blockNumber * 10;  // Convert block number to level (1 -> 10, 2 -> 20, etc.)
+    const badge = BADGES.find(b => b.levelBlock === blockLevel);
+    const progress = getPlayerProgress();
+    const isEarned = badge && progress.badges?.some(b => b.id === badge.id);
+    const isNext = badge && !isEarned && progress.level >= (blockLevel - 10);
 
     return (
       <div key={block.blockNumber} className="level-block">
         <div className="block-header">
           <h3>Block {block.blockNumber}</h3>
-          {blockBadge && (
-            <div className={`block-badge ${isBlockComplete ? 'earned' : ''}`}>
-              <div className="badge-icon">{blockBadge.icon}</div>
+          {badge && (
+            <div className={`block-badge ${isEarned ? 'earned' : isNext ? 'next' : 'locked'}`}>
+              <div className="badge-icon">{badge.icon}</div>
               <div className="badge-tooltip">
-                <h4>{blockBadge.name}</h4>
-                <p>{blockBadge.description}</p>
+                <h4>{badge.name}</h4>
+                <p>{badge.description}</p>
+                {!isEarned && (
+                  <div className="unlock-requirement">
+                    Unlocks at Level {blockLevel}
+                  </div>
+                )}
               </div>
             </div>
           )}
