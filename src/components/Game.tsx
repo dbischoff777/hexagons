@@ -507,141 +507,99 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
             ctx.font = '14px Arial'
             ctx.fillText(text, x, boxY + boxHeight/2)
           }
-        } else {
-          // Regular tile number
-          if (tile.value > 0) {
-            // Add dark outline for better contrast
-            ctx.strokeStyle = '#000000'
-            ctx.lineWidth = 3
-            ctx.shadowColor = '#000000'
-            ctx.shadowBlur = 4
-            ctx.font = 'bold 24px Arial'
-            ctx.textAlign = 'center'
-            ctx.textBaseline = 'middle'
-            
-            // Draw text stroke first (outline)
-            ctx.strokeText(tile.value.toString(), x, y)
-            
-            // Then draw the bright text
-            ctx.fillStyle = '#FFFFFF' // Always use white for better visibility
-            ctx.shadowColor = '#00FFFF' // Cyan glow
-            ctx.shadowBlur = 8
-            ctx.fillText(tile.value.toString(), x, y)
-            
-            // Reset shadow
-            ctx.shadowBlur = 0
-          }
-        }
-      }
-
-      // Add enhanced power-up background effects
-      if (tile?.powerUp) {
-        // Create special background for power-up tiles
-        const powerUpGradient = ctx.createRadialGradient(x, y, 0, x, y, size);
-        
-        switch (tile.powerUp.type) {
-          case 'freeze':
-            powerUpGradient.addColorStop(0, 'rgba(100, 200, 255, 0.3)');
-            powerUpGradient.addColorStop(1, 'rgba(50, 150, 255, 0.1)');
-            break;
-          case 'colorShift':
-            powerUpGradient.addColorStop(0, 'rgba(255, 100, 255, 0.3)');
-            powerUpGradient.addColorStop(1, 'rgba(200, 50, 255, 0.1)');
-            break;
-          case 'multiplier':
-            powerUpGradient.addColorStop(0, 'rgba(255, 215, 0, 0.3)');
-            powerUpGradient.addColorStop(1, 'rgba(255, 180, 0, 0.1)');
-            break;
-        }
-        
-        ctx.fillStyle = powerUpGradient;
-        ctx.beginPath();
-        points.forEach((point, i) => {
-          if (i === 0) ctx.moveTo(point[0], point[1]);
-          else ctx.lineTo(point[0], point[1]);
-        });
-        ctx.closePath();
-        ctx.fill();
-
-        // Add pulsing glow effect for power-up tiles
-        const pulseIntensity = Math.sin(Date.now() / 500) * 0.2 + 0.4;
-        ctx.shadowColor = tile.powerUp.type === 'freeze' ? '#00FFFF' :
-                         tile.powerUp.type === 'colorShift' ? '#FF00FF' :
-                         '#FFD700';
-        ctx.shadowBlur = 15 * pulseIntensity;
-      }
-
-      // Draw power-up indicator with enhanced visuals
-      if (tile?.powerUp) {
-        const powerUpIcons = {
-          freeze: '❄️',
-          colorShift: '🎨',
-          multiplier: '✨'
-        };
-        
-        // Draw circular background for power-up icon
-        ctx.beginPath();
-        ctx.arc(x, y - 12, 15, 0, Math.PI * 2);
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
-        ctx.fill();
-        
-        // Draw icon with glow effect
-        ctx.font = 'bold 16px Arial';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillStyle = '#FFFFFF';
-        ctx.shadowColor = tile.powerUp.type === 'freeze' ? '#00FFFF' :
-                         tile.powerUp.type === 'colorShift' ? '#FF00FF' :
-                         '#FFD700';
-        ctx.shadowBlur = 10;
-        ctx.fillText(powerUpIcons[tile.powerUp.type], x, y - 12);
-        
-        // Draw duration indicator if applicable
-        if (tile.powerUp.duration) {
-          ctx.font = 'bold 14px Arial';
-          ctx.fillStyle = '#FFFFFF';
-          ctx.shadowBlur = 5;
-          ctx.fillText(`${tile.powerUp.duration}s`, x, y + 12);
-        }
-
-        // Show power-up info when selected
-        if (isSelected) {
-          const descriptions = {
-            freeze: 'Freezes Timer (5s)',
-            colorShift: 'Changes Adjacent Colors',
-            multiplier: 'Double Points (15s)'
+        } else if (tile.powerUp) {
+          // Define power-up specific colors and icons
+          const powerUpStyles = {
+            freeze: {
+              glow: '#00FFFF',
+              icon: '❄️'
+            },
+            colorShift: {
+              glow: '#FF00FF',
+              icon: '🎨'
+            },
+            multiplier: {
+              glow: '#FFD700',
+              icon: '✨'
+            }
           };
 
-          // Draw info box above tile
-          ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
-          ctx.strokeStyle = tile.powerUp.type === 'freeze' ? '#00FFFF' :
-                           tile.powerUp.type === 'colorShift' ? '#FF00FF' :
-                           '#FFD700';
-          ctx.lineWidth = 2;
-          const text = descriptions[tile.powerUp.type];
-          const padding = 10;
-          const boxWidth = ctx.measureText(text).width + padding * 2;
-          const boxHeight = 30;
-          const boxX = x - boxWidth / 2;
-          const boxY = y - size * 2;
-
-          // Draw box with rounded corners and glow
-          ctx.shadowColor = ctx.strokeStyle;
-          ctx.shadowBlur = 10;
-          ctx.beginPath();
-          ctx.roundRect(boxX, boxY, boxWidth, boxHeight, 5);
-          ctx.fill();
-          ctx.stroke();
-
-          // Draw description text
+          const style = powerUpStyles[tile.powerUp.type];
+          
+          // Draw power-up icon above the number
           ctx.fillStyle = '#FFFFFF';
+          ctx.shadowColor = style.glow;
+          ctx.shadowBlur = 15;
+          ctx.font = 'bold 20px Arial';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(style.icon, x, y - 12);  // Move icon up
+
+          // Draw number below the icon
+          ctx.shadowColor = 'rgba(0, 0, 0, 0.2)';
           ctx.shadowBlur = 2;
-          ctx.font = '14px Arial';
-          ctx.fillText(descriptions[tile.powerUp.type], x, boxY + boxHeight/2);
+          ctx.fillStyle = isSelected ? '#1a1a1a' : '#2d2d2d';
+          ctx.font = `bold ${isSelected ? 24 : 22}px Arial`;
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(tile.value.toString(), x, y + 12);  // Move number down
+
+          // Show power-up info when selected
+          if (isSelected) {
+            const descriptions = {
+              freeze: 'Freezes Timer (5s)',
+              colorShift: 'Changes Adjacent Colors',
+              multiplier: 'Double Points (15s)'
+            };
+
+            // Draw info box above tile
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+            ctx.strokeStyle = style.glow;
+            ctx.lineWidth = 2;
+            const text = descriptions[tile.powerUp.type];
+            const padding = 10;
+            const boxWidth = ctx.measureText(text).width + padding * 2;
+            const boxHeight = 30;
+            const boxX = x - boxWidth / 2;
+            const boxY = y - size * 2;
+
+            // Draw box with rounded corners and glow
+            ctx.shadowColor = style.glow;
+            ctx.shadowBlur = 10;
+            ctx.beginPath();
+            ctx.roundRect(boxX, boxY, boxWidth, boxHeight, 5);
+            ctx.fill();
+            ctx.stroke();
+
+            // Draw description text
+            ctx.fillStyle = '#FFFFFF';
+            ctx.shadowBlur = 2;
+            ctx.font = '14px Arial';
+            ctx.fillText(text, x, boxY + boxHeight/2);
+          }
+        } else if (tile.value > 0) {
+          // Regular tile number
+          // Add dark outline for better contrast
+          ctx.strokeStyle = '#000000'
+          ctx.lineWidth = 3
+          ctx.shadowColor = '#000000'
+          ctx.shadowBlur = 4
+          ctx.font = 'bold 24px Arial'
+          ctx.textAlign = 'center'
+          ctx.textBaseline = 'middle'
+          
+          // Draw text stroke first (outline)
+          ctx.strokeText(tile.value.toString(), x, y)
+          
+          // Then draw the bright text
+          ctx.fillStyle = '#FFFFFF' // Always use white for better visibility
+          ctx.shadowColor = '#00FFFF' // Cyan glow
+          ctx.shadowBlur = 8
+          ctx.fillText(tile.value.toString(), x, y)
+          
+          // Reset shadow
+          ctx.shadowBlur = 0
         }
-        
-        // Reset shadow effects
-        ctx.shadowBlur = 0;
       }
 
       // Draw accessibility overlay
