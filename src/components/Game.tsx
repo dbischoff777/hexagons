@@ -18,6 +18,7 @@ import ConfirmModal from './ConfirmModal'
 import { DailyChallenge } from '../types/dailyChallenge'
 import { getDailyChallenge, updateDailyChallengeProgress, isDailyChallengeCompleted } from '../utils/dailyChallengeUtils'
 import DailyChallengeHUD from './DailyChallengeHUD'
+import DailyChallengeComplete from './DailyChallengeComplete'
 
 interface GameProps {
   musicEnabled: boolean
@@ -181,6 +182,7 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
   const [showExitConfirm, setShowExitConfirm] = useState(false)
   const [isPopupAnimating, setIsPopupAnimating] = useState(false)
   const [dailyChallenge, setDailyChallenge] = useState<DailyChallenge | null>(null)
+  const [showDailyComplete, setShowDailyComplete] = useState(false)
 
   // Add a ref to track game start time
   const gameStartTimeRef = useRef<number>(savedGameState?.startTime ?? Date.now())
@@ -1425,10 +1427,9 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
 
     updateDailyChallengeProgress(updatedObjectives, newScore ?? score);
 
-    // Check for challenge completion
+    // Show completion screen instead of immediate exit
     if (isDailyChallengeCompleted(updatedObjectives)) {
-      setIsGameOver(true);
-      onGameOver();
+      setShowDailyComplete(true);
     }
   };
 
@@ -1629,6 +1630,12 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
       )}
       {dailyChallenge && (
         <DailyChallengeHUD objectives={dailyChallenge.objectives} />
+      )}
+      {showDailyComplete && (
+        <DailyChallengeComplete
+          score={score}
+          onExit={onExit}
+        />
       )}
     </div>
   )

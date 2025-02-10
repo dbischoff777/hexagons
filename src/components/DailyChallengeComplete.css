@@ -1,0 +1,73 @@
+.daily-complete-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.85);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.daily-complete-container {
+  background: rgba(26, 26, 46, 0.95);
+  border: 2px solid #00FF9F;
+  border-radius: 15px;
+  padding: 2rem;
+  text-align: center;
+  max-width: 500px;
+  width: 90%;
+  animation: slideIn 0.5s ease-out;
+}
+
+.daily-complete-container h2 {
+  color: #00FF9F;
+  font-size: 2rem;
+  margin-bottom: 1.5rem;
+  text-shadow: 0 0 10px rgba(0, 255, 159, 0.5);
+}
+
+.daily-complete-content {
+  margin: 2rem 0;
+}
+
+.daily-complete-score {
+  font-size: 1.5rem;
+  color: #fff;
+  margin-bottom: 1rem;
+}
+
+.daily-complete-message {
+  color: #00FF9F;
+  font-size: 1.2rem;
+  opacity: 0.8;
+}
+
+.daily-complete-button {
+  background: #00FF9F;
+  color: #1a1a2e;
+  border: none;
+  padding: 1rem 2rem;
+  font-size: 1.2rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.daily-complete-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 20px rgba(0, 255, 159, 0.4);
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateY(-20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+} 
