@@ -178,14 +178,12 @@ const StartPage: React.FC<StartPageProps> = ({ onStartGame, onMusicToggle, onSou
       )}
 
       {showAchievements && (
-        <div className="modal-overlay">
+        <div className="modal-overlay" onClick={(e) => {
+          if (e.target === e.currentTarget) {
+            setShowAchievements(false);
+          }
+        }}>
           <div className="modal-content">
-            <button 
-              className="close-button"
-              onClick={() => setShowAchievements(false)}
-            >
-              ×
-            </button>
             <AchievementsView />
           </div>
         </div>
