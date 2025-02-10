@@ -5,6 +5,7 @@ import Game from './Game'
 import { loadGameState, clearSavedGame } from '../utils/gameStateUtils'
 import StatisticsPage from './StatisticsPage'
 import ConfirmModal from './ConfirmModal'
+import AchievementsView from './AchievementsView'
 
 
 interface StartPageProps {
@@ -22,6 +23,7 @@ const StartPage: React.FC<StartPageProps> = ({ onStartGame, onMusicToggle, onSou
   const [hasSavedGame, setHasSavedGame] = useState(false)
   const [showConfirmModal, setShowConfirmModal] = useState(false)
   const [pendingGameMode, setPendingGameMode] = useState<boolean | null>(null)
+  const [showAchievements, setShowAchievements] = useState(false)
 
   useEffect(() => {
     // Check for saved game on mount
@@ -129,6 +131,12 @@ const StartPage: React.FC<StartPageProps> = ({ onStartGame, onMusicToggle, onSou
               >
                 Statistics
               </button>
+              <button 
+                className="achievements-button"
+                onClick={() => setShowAchievements(true)}
+              >
+                Achievements
+              </button>
             </>
           ) : (
             <div className="mode-selection">
@@ -167,6 +175,20 @@ const StartPage: React.FC<StartPageProps> = ({ onStartGame, onMusicToggle, onSou
             setPendingGameMode(null)
           }}
         />
+      )}
+
+      {showAchievements && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <button 
+              className="close-button"
+              onClick={() => setShowAchievements(false)}
+            >
+              ×
+            </button>
+            <AchievementsView />
+          </div>
+        </div>
       )}
     </div>
   )

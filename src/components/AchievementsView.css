@@ -1,0 +1,181 @@
+.achievements-view {
+  padding: 20px;
+  color: white;
+}
+
+.achievements-view h2 {
+  font-size: 3rem;
+  color: #00FF9F;
+  text-shadow: 0 0 20px rgba(0, 255, 159, 0.5);
+  text-align: center;
+  margin-bottom: 30px;
+  letter-spacing: 0.3rem;
+}
+
+.achievements-stats {
+  background: rgba(0, 0, 0, 0.3);
+  padding: 20px;
+  border-radius: 12px;
+  margin-bottom: 30px;
+  text-align: center;
+  border: 1px solid rgba(0, 255, 159, 0.2);
+  box-shadow: 0 0 20px rgba(0, 255, 159, 0.1);
+}
+
+.stat {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  align-items: center;
+}
+
+.stat-label {
+  color: #00FF9F;
+  font-size: 1.2rem;
+  letter-spacing: 0.1rem;
+  text-shadow: 0 0 10px rgba(0, 255, 159, 0.5);
+}
+
+.stat-value {
+  font-weight: bold;
+  color: white;
+  font-size: 1.4rem;
+  text-shadow: 0 0 10px rgba(0, 255, 159, 0.3);
+}
+
+.achievements-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 25px;
+  padding: 10px;
+}
+
+.achievement-card {
+  background: rgba(0, 0, 0, 0.3);
+  border: 2px solid rgba(51, 51, 51, 0.5);
+  border-radius: 12px;
+  padding: 20px;
+  display: flex;
+  gap: 20px;
+  transition: all 0.3s ease;
+  opacity: 0.7;
+  position: relative;
+  overflow: hidden;
+}
+
+.achievement-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(45deg, transparent, rgba(0, 255, 159, 0.05), transparent);
+  transform: translateX(-100%);
+  transition: transform 0.5s ease;
+}
+
+.achievement-card:hover::before {
+  transform: translateX(100%);
+}
+
+.achievement-card.achieved {
+  border-color: #00FF9F;
+  opacity: 1;
+  box-shadow: 0 0 30px rgba(0, 255, 159, 0.15);
+  background: linear-gradient(
+    135deg,
+    rgba(0, 255, 159, 0.1),
+    rgba(0, 0, 0, 0.3)
+  );
+}
+
+.achievement-card .achievement-icon {
+  font-size: 2.5em;
+  opacity: 0.5;
+  transition: all 0.3s ease;
+  text-shadow: 0 0 10px rgba(0, 255, 159, 0.3);
+}
+
+.achievement-card.achieved .achievement-icon {
+  opacity: 1;
+  transform: scale(1.1);
+}
+
+.achievement-info {
+  flex: 1;
+}
+
+.achievement-info h3 {
+  margin: 0 0 10px 0;
+  color: #00FF9F;
+  font-size: 1.2em;
+  letter-spacing: 0.1rem;
+  text-shadow: 0 0 10px rgba(0, 255, 159, 0.3);
+}
+
+.achievement-info p {
+  margin: 0 0 15px 0;
+  font-size: 1em;
+  opacity: 0.8;
+  color: #fff;
+  line-height: 1.4;
+}
+
+.achievement-progress {
+  position: relative;
+  background: rgba(0, 0, 0, 0.4);
+  height: 24px;
+  border-radius: 12px;
+  overflow: hidden;
+  margin: 15px 0;
+  border: 1px solid rgba(0, 255, 159, 0.2);
+}
+
+.progress-bar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  background: linear-gradient(90deg, 
+    rgba(0, 255, 159, 0.7),
+    rgba(0, 255, 255, 0.7)
+  );
+  transition: width 0.3s ease;
+  box-shadow: 0 0 15px rgba(0, 255, 159, 0.3);
+}
+
+.progress-text {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  font-size: 0.9em;
+  color: white;
+  text-shadow: 0 0 2px rgba(0, 0, 0, 0.8);
+  font-weight: bold;
+  letter-spacing: 0.05rem;
+  pointer-events: none;
+}
+
+.achievement-date {
+  font-size: 0.9em;
+  color: #00FF9F;
+  opacity: 0.8;
+  margin-top: 10px;
+  text-shadow: 0 0 5px rgba(0, 255, 159, 0.3);
+}
+
+/* Add animation for newly achieved achievements */
+@keyframes achievementGlow {
+  0% { box-shadow: 0 0 20px rgba(0, 255, 159, 0.2); }
+  50% { box-shadow: 0 0 40px rgba(0, 255, 159, 0.4); }
+  100% { box-shadow: 0 0 20px rgba(0, 255, 159, 0.2); }
+}
+
+.achievement-card.achieved {
+  animation: achievementGlow 2s infinite;
+} 

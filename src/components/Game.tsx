@@ -11,6 +11,9 @@ import { TUTORIAL_STEPS } from '../constants/tutorialSteps'
 import { TutorialMessage } from './TutorialMessage'
 import { saveGameState, loadGameState, updateStatistics, clearSavedGame, getStatistics } from '../utils/gameStateUtils'
 import Particles from './Particles'
+import { Achievement } from '../types/achievements'
+import { updateTilesPlaced } from '../utils/achievementUtils'
+import AchievementPopup from './AchievementPopup'
 
 interface GameProps {
   musicEnabled: boolean
@@ -170,6 +173,7 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
     nextTiles: PlacedTile[]
     score: number
   } | null>(null)
+  const [newAchievements, setNewAchievements] = useState<Achievement[]>([])
 
   // Add a ref to track game start time
   const gameStartTimeRef = useRef<number>(savedGameState?.startTime ?? Date.now())
@@ -920,6 +924,13 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
               nextTiles,
               score
             })
+
+            // Check for achievements
+            const achievedNew = updateTilesPlaced(1);
+            if (achievedNew.length > 0) {
+              setNewAchievements(prev => [...prev, ...achievedNew]);
+              soundManager.playSound('powerUp'); // Reuse power-up sound for achievements
+            }
           }
         }
       }
@@ -1457,6 +1468,12 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
           </div>
         </div>
       ))}
+      {newAchievements.length > 0 && (
+        <AchievementPopup
+          achievement={newAchievements[0]}
+          onComplete={() => setNewAchievements(prev => prev.slice(1))}
+        />
+      )}
       {tutorialState.active && (
         <TutorialMessage 
           step={TUTORIAL_STEPS[tutorialState.currentStep]}
