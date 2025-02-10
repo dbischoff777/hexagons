@@ -1,0 +1,222 @@
+.score-popup {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 20px;
+  font-weight: bold;
+  pointer-events: none;
+  animation: slideIn 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  z-index: 100;
+  transform-origin: center center;
+  transform: translate(-50%, -50%);
+  width: 240px;
+  height: 70px;
+  justify-content: center;
+  box-sizing: border-box;
+  background: rgba(26, 26, 46, 0.85);
+  border: 2px solid rgba(0, 255, 159, 0.3);
+  border-radius: 12px;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 0 20px rgba(0, 255, 159, 0.2);
+}
+
+.score-popup .emoji {
+  font-size: 2em;
+  line-height: 1;
+  text-shadow: 0 0 20px rgba(0, 255, 159, 0.9);
+  filter: brightness(1.2) drop-shadow(0 0 8px rgba(0, 255, 159, 0.5));
+  animation: bounceEmoji 1s cubic-bezier(0.36, 0, 0.66, -0.56) forwards,
+             spinEmoji 0.8s ease-out forwards;
+  transform-origin: center center;
+}
+
+.popup-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  animation: fadeIn 0.3s ease forwards;
+  flex: 1;
+  text-align: center;
+}
+
+.popup-text {
+  font-size: 1em;
+  opacity: 1;
+  text-shadow: 0 0 20px rgba(0, 255, 159, 0.9);
+  color: #00FF9F;
+  font-weight: 800;
+  letter-spacing: 1px;
+  animation: slideUp 0.4s ease forwards,
+             glowPulse 2s ease-in-out infinite;
+  text-transform: uppercase;
+}
+
+.popup-score {
+  font-size: 1.4em;
+  color: #00FFFF;
+  text-shadow: 0 0 25px rgba(0, 255, 255, 0.9);
+  font-weight: 900;
+  letter-spacing: 2px;
+  animation: slideUp 0.4s ease 0.1s forwards,
+             numberScale 0.6s cubic-bezier(0.17, 0.67, 0.83, 0.67) forwards,
+             pulseGlow 2s ease-in-out infinite;
+}
+
+.score-popup[data-type='high'] {
+  border-color: rgba(255, 17, 119, 0.3);
+  box-shadow: 0 0 30px rgba(255, 17, 119, 0.3);
+  animation: slideIn 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards,
+             shakeHigh 0.5s ease-in-out;
+}
+
+.score-popup[data-type='high'] .popup-text {
+  color: #FF1177;
+  text-shadow: 0 0 16px rgba(255, 17, 119, 0.9);
+}
+
+.score-popup[data-type='high'] .popup-score {
+  color: #FF1177;
+  text-shadow: 0 0 20px rgba(255, 17, 119, 0.9);
+}
+
+.score-popup[data-type='clear'] {
+  border-color: rgba(0, 255, 255, 0.3);
+  box-shadow: 0 0 30px rgba(0, 255, 255, 0.3);
+}
+
+.score-popup[data-type='clear'] .popup-text {
+  color: #00FFFF;
+  text-shadow: 0 0 16px rgba(0, 255, 255, 0.9);
+}
+
+.score-popup[data-type='clear'] .popup-score {
+  color: #00FFFF;
+  text-shadow: 0 0 20px rgba(0, 255, 255, 0.9);
+}
+
+@keyframes slideIn {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, 20px) scale(0.8);
+  }
+  15% {
+    opacity: 1;
+    transform: translate(-50%, -5px) scale(1.05);
+  }
+  30% {
+    transform: translate(-50%, 0) scale(0.98);
+  }
+  45% {
+    transform: translate(-50%, -2px) scale(1);
+  }
+  70% {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -30px) scale(0.9);
+  }
+}
+
+@keyframes bounceEmoji {
+  0% {
+    transform: scale(0) rotate(-180deg);
+  }
+  50% {
+    transform: scale(1.3) rotate(10deg);
+  }
+  75% {
+    transform: scale(0.9) rotate(-5deg);
+  }
+  100% {
+    transform: scale(1) rotate(0);
+  }
+}
+
+@keyframes spinEmoji {
+  0% {
+    transform: rotate(-180deg);
+  }
+  100% {
+    transform: rotate(0deg);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes slideUp {
+  0% {
+    opacity: 0;
+    transform: translateY(15px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulseGlow {
+  0% {
+    text-shadow: 0 0 25px rgba(0, 255, 255, 0.9);
+    filter: brightness(1);
+  }
+  50% {
+    text-shadow: 0 0 35px rgba(0, 255, 255, 1);
+    filter: brightness(1.3);
+  }
+  100% {
+    text-shadow: 0 0 25px rgba(0, 255, 255, 0.9);
+    filter: brightness(1);
+  }
+}
+
+@keyframes numberScale {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes glowPulse {
+  0% {
+    text-shadow: 0 0 15px currentColor;
+  }
+  50% {
+    text-shadow: 0 0 25px currentColor;
+  }
+  100% {
+    text-shadow: 0 0 15px currentColor;
+  }
+}
+
+@keyframes shakeHigh {
+  0%, 100% {
+    transform: translate(-50%, 0);
+  }
+  25% {
+    transform: translate(-52%, -2px);
+  }
+  50% {
+    transform: translate(-50%, 2px);
+  }
+  75% {
+    transform: translate(-48%, -2px);
+  }
+} 

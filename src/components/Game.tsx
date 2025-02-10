@@ -175,6 +175,7 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
   } | null>(null)
   const [newAchievements, setNewAchievements] = useState<Achievement[]>([])
   const [showExitConfirm, setShowExitConfirm] = useState(false)
+  const [isPopupAnimating, setIsPopupAnimating] = useState(false)
 
   // Add a ref to track game start time
   const gameStartTimeRef = useRef<number>(savedGameState?.startTime ?? Date.now())
@@ -789,15 +790,14 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
           const placedTileScore = calculateScore(updatedPlacedTile.value * 2)
           if (placedTileScore > 0) {
             const feedback = getFeedbackForScore(placedTileScore)
-            const popupY = findAvailableYPosition(canvas.height / 2 - 100, 'score')
-            setScorePopups(prev => [...prev, {
+            addScorePopup({
               score: placedTileScore,
               x: canvas.width / 2,
-              y: popupY,
-              id: Date.now(),
+              y: canvas.height / 2 - 100,
               emoji: feedback.emoji,
-              text: feedback.text
-            }])
+              text: feedback.text,
+              type: 'score'
+            })
           }
           setScore(prevScore => prevScore + placedTileScore)
 
@@ -813,15 +813,14 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
             const clearInfo = getFeedbackForClear(clearBonus)
 
             setTimeout(() => {
-              const popupY = findAvailableYPosition(canvas.height / 2 - 50, 'clear')
-              setScorePopups(prev => [...prev, {
+              addScorePopup({
                 score: clearBonus,
                 x: canvas.width / 2,
-                y: popupY,
-                id: Date.now() + 1,
+                y: canvas.height / 2 - 50,
                 emoji: clearInfo.emoji,
-                text: clearInfo.text
-              }])
+                text: clearInfo.text,
+                type: 'clear'
+              })
               setScore(prevScore => prevScore + clearBonus)
             }, 300)
 
@@ -854,16 +853,15 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
             // Handle quick placement bonus first
             if (quickPlacement) {
               const quickBonus = placedTileScore  // Double the base score
-              const quickY = findAvailableYPosition(canvas.height / 2, 'quick')
               const quickInfo = getRandomFeedback('QUICK')
-              setScorePopups(prev => [...prev, {
+              addScorePopup({
                 score: quickBonus,
                 x: canvas.width / 2,
-                y: quickY,
-                id: Date.now() + 3,
+                y: canvas.height / 2,
                 emoji: quickInfo.emoji,
-                text: quickInfo.text
-              }])
+                text: quickInfo.text,
+                type: 'quick'
+              })
               setScore(prevScore => prevScore + quickBonus)
             }
 
@@ -881,15 +879,14 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
             const comboBonus = Math.round(placedTileScore * newComboState.multiplier) - placedTileScore
             if (comboBonus > 0) {
               const comboInfo = getFeedbackForCombo(newComboState.count)
-              const comboY = findAvailableYPosition(canvas.height / 2 + 50, 'combo')
-              setScorePopups(prev => [...prev, {
+              addScorePopup({
                 score: comboBonus,
                 x: canvas.width / 2,
-                y: comboY,
-                id: Date.now() + 2,
+                y: canvas.height / 2 + 50,
                 emoji: comboInfo.emoji,
-                text: comboInfo.text
-              }])
+                text: comboInfo.text,
+                type: 'combo'
+              })
               setScore(prevScore => prevScore + comboBonus)
             }
           } else {
@@ -1111,71 +1108,48 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
     return Math.round(baseScore * powerUpMultiplier * combo.multiplier)
   }
 
-  // Update popup cleanup effect to also clean positions
+  // Modify the addScorePopup function
+  const addScorePopup = (popup: {
+    score: number,
+    x: number,
+    y: number,
+    emoji: string,
+    text: string,
+    type: 'score' | 'combo' | 'quick' | 'clear'
+  }) => {
+    if (isPopupAnimating) return // Don't add new popups while animating
+
+    setIsPopupAnimating(true)
+    
+    // Clear existing popups first
+    setScorePopups([])
+    setActivePopupPositions([])
+    
+    // Add new popup after a brief delay
+    setTimeout(() => {
+      const popupY = findAvailableYPosition(popup.y, popup.type)
+      setScorePopups([{
+        ...popup,
+        y: popupY,
+        id: Date.now()
+      }])
+      setIsPopupAnimating(false)
+    }, 50) // Small delay to ensure clean transition
+  }
+
+  // Update the cleanup effect
   useEffect(() => {
-    const POPUP_DURATION = 1000
+    const POPUP_DURATION = 800 // Slightly shorter than animation duration
 
     if (scorePopups.length > 0) {
       const timer = setTimeout(() => {
-        const now = Date.now()
-        setScorePopups(prev => prev.filter(popup => 
-          now - popup.id < POPUP_DURATION
-        ))
-        setActivePopupPositions(prev => 
-          prev.filter(pos => pos.expiresAt > now)
-        )
+        setScorePopups([])
+        setActivePopupPositions([])
       }, POPUP_DURATION)
 
       return () => clearTimeout(timer)
     }
   }, [scorePopups])
-
-  // Inside your Game component, modify the effect for potential matches
-  useEffect(() => {
-    if (selectedTileIndex !== null && (settings.showMatchHints || settings.isColorBlind)) {
-      const selectedTile = nextTiles[selectedTileIndex]
-      const hints = findPotentialMatches(selectedTile, placedTiles, settings.isColorBlind)
-      
-      // Create a map of potential matches for each tile
-      const matchMap = new Map<string, number[]>()
-      const tileKeys = new Set(placedTiles.map(tile => `${tile.q},${tile.r}`))
-      
-      // Initialize all positions with zeros
-      tileKeys.forEach(key => {
-        matchMap.set(key, Array(6).fill(0))
-      })
-
-      // Update only the positions that have matches
-      hints.forEach(hint => {
-        const key = `${hint.targetEdge.q},${hint.targetEdge.r}`
-        const strengths = matchMap.get(key)
-        if (strengths) {
-          strengths[hint.targetEdge.position] = Math.max(
-            strengths[hint.targetEdge.position],
-            hint.strength
-          )
-        }
-      })
-
-      // Update placed tiles with match potentials in a single operation
-      setPlacedTiles(prev => 
-        prev.map(tile => {
-          const key = `${tile.q},${tile.r}`
-          return {
-            ...tile,
-            matchPotential: matchMap.get(key) || Array(6).fill(0)
-          }
-        })
-      )
-    } else {
-      setPlacedTiles(prev => 
-        prev.map(tile => ({
-          ...tile,
-          matchPotential: undefined
-        }))
-      )
-    }
-  }, [selectedTileIndex, nextTiles, settings.showMatchHints, settings.isColorBlind])
 
   // Add tutorial progress function
   const progressTutorial = () => {
