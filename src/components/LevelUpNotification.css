@@ -1,0 +1,86 @@
+.level-up-notification {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(26, 26, 46, 0.95);
+  border: 2px solid #00FF9F;
+  border-radius: 15px;
+  padding: 2rem;
+  color: white;
+  text-align: center;
+  animation: slideIn 0.5s ease-out;
+  z-index: 1000;
+}
+
+.level-up-notification h2 {
+  color: #00FF9F;
+  font-size: 2rem;
+  margin-bottom: 1rem;
+}
+
+.level-number {
+  font-size: 3rem;
+  font-weight: bold;
+  margin: 1rem 0;
+  color: #00FF9F;
+  text-shadow: 0 0 10px rgba(0, 255, 159, 0.5);
+}
+
+.unlocked-items {
+  margin-top: 1.5rem;
+}
+
+.unlocked-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin: 1rem 0;
+  padding: 1rem;
+  background: rgba(0, 255, 159, 0.1);
+  border-radius: 8px;
+}
+
+.item-icon {
+  font-size: 2rem;
+}
+
+.item-info {
+  text-align: left;
+}
+
+.item-name {
+  font-weight: bold;
+  color: #00FF9F;
+}
+
+.item-desc {
+  font-size: 0.9rem;
+  opacity: 0.8;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translate(-50%, -40%);
+    opacity: 0;
+  }
+  to {
+    transform: translate(-50%, -50%);
+    opacity: 1;
+  }
+}
+
+.level-up-notification.hiding {
+  animation: slideOut 0.5s ease-out forwards;
+}
+
+@keyframes slideOut {
+  from {
+    transform: translate(-50%, -50%);
+    opacity: 1;
+  }
+  to {
+    transform: translate(-50%, -60%);
+    opacity: 0;
+  }
+} 

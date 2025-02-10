@@ -6,6 +6,8 @@ import { loadGameState, clearSavedGame } from '../utils/gameStateUtils'
 import StatisticsPage from './StatisticsPage'
 import ConfirmModal from './ConfirmModal'
 import AchievementsView from './AchievementsView'
+import UnlockablesMenu from './UnlockablesMenu'
+import { setTheme } from '../utils/progressionUtils'
 
 
 interface StartPageProps {
@@ -24,6 +26,7 @@ const StartPage: React.FC<StartPageProps> = ({ onStartGame, onMusicToggle, onSou
   const [showConfirmModal, setShowConfirmModal] = useState(false)
   const [pendingGameMode, setPendingGameMode] = useState<boolean | null>(null)
   const [showAchievements, setShowAchievements] = useState(false)
+  const [showUnlockables, setShowUnlockables] = useState(false)
 
   useEffect(() => {
     // Check for saved game on mount
@@ -137,6 +140,12 @@ const StartPage: React.FC<StartPageProps> = ({ onStartGame, onMusicToggle, onSou
               >
                 Achievements
               </button>
+              <button 
+                className="unlockables-button"
+                onClick={() => setShowUnlockables(true)}
+              >
+                Unlockables
+              </button>
             </>
           ) : (
             <div className="mode-selection">
@@ -202,6 +211,16 @@ const StartPage: React.FC<StartPageProps> = ({ onStartGame, onMusicToggle, onSou
             <AchievementsView />
           </div>
         </div>
+      )}
+
+      {showUnlockables && (
+        <UnlockablesMenu
+          onSelectTheme={(themeId) => {
+            setTheme(themeId);
+            setShowUnlockables(false);
+          }}
+          onClose={() => setShowUnlockables(false)}
+        />
       )}
     </div>
   )

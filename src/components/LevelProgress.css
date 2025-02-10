@@ -1,0 +1,40 @@
+.level-progress {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  background: rgba(26, 26, 46, 0.9);
+  border: 2px solid rgba(0, 255, 159, 0.3);
+  border-radius: 10px;
+  padding: 15px;
+  color: white;
+  min-width: 200px;
+}
+
+.level-info {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.level-number {
+  font-weight: bold;
+  color: #00FF9F;
+}
+
+.xp-info {
+  font-size: 0.9em;
+  opacity: 0.8;
+}
+
+.progress-bar-container {
+  height: 8px;
+  background: rgba(0, 255, 159, 0.1);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background: #00FF9F;
+  transition: width 0.3s ease;
+} 

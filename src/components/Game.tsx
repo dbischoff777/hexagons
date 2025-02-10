@@ -19,6 +19,8 @@ import { DailyChallenge } from '../types/dailyChallenge'
 import { getDailyChallenge, updateDailyChallengeProgress, isDailyChallengeCompleted } from '../utils/dailyChallengeUtils'
 import DailyChallengeHUD from './DailyChallengeHUD'
 import DailyChallengeComplete from './DailyChallengeComplete'
+import { addExperience, EXPERIENCE_VALUES, getPlayerProgress, getTheme } from '../utils/progressionUtils'
+import LevelProgress from './LevelProgress'
 
 interface GameProps {
   musicEnabled: boolean
@@ -183,6 +185,8 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
   const [isPopupAnimating, setIsPopupAnimating] = useState(false)
   const [dailyChallenge, setDailyChallenge] = useState<DailyChallenge | null>(null)
   const [showDailyComplete, setShowDailyComplete] = useState(false)
+  const [playerProgress, setPlayerProgress] = useState(getPlayerProgress())
+  const theme = getTheme(playerProgress.selectedTheme || 'default')
 
   // Add a ref to track game start time
   const gameStartTimeRef = useRef<number>(savedGameState?.startTime ?? Date.now())
@@ -372,50 +376,29 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
       ctx.shadowBlur = 8
       ctx.shadowOffsetY = 2
 
-      // Enhanced background colors
+      // Apply theme colors
       if (tile?.isPlaced) {
         if (isMatched) {
-          // Create gradient based on tile value (1-12 range)
-          const maxValue = 12
-          const valueRatio = Math.min(tile.value / maxValue, 1)
-          
-          // Create color based on value ranges
-          let glowColor
-          let fillColor
-          if (valueRatio <= 0.25) {         // 1-3: Green
-            glowColor = '#00FF9F'
-            fillColor = 'rgba(0, 255, 159, 0.2)'
-          } else if (valueRatio <= 0.5) {   // 4-6: Blue
-            glowColor = '#00FFFF'
-            fillColor = 'rgba(0, 255, 255, 0.2)'
-          } else if (valueRatio <= 0.75) {  // 7-9: Purple
-            glowColor = '#B14FFF'
-            fillColor = 'rgba(177, 79, 255, 0.2)'
-          } else {                          // 10-12: Pink
-            glowColor = '#FF1177'
-            fillColor = 'rgba(255, 17, 119, 0.2)'
-          }
-          
-          const gradient = ctx.createRadialGradient(x, y, 0, x, y, size)
-          gradient.addColorStop(0, fillColor)
-          gradient.addColorStop(1, 'rgba(26, 26, 46, 0.95)')
-          ctx.fillStyle = gradient
-          
-          ctx.shadowColor = glowColor
-          ctx.shadowBlur = 20
+          ctx.fillStyle = theme.colors.accent;
         } else {
-          ctx.fillStyle = 'rgba(26, 26, 46, 0.9)'
-          ctx.shadowColor = 'rgba(0, 255, 159, 0.4)'
-          ctx.shadowBlur = 10
+          ctx.fillStyle = theme.colors.secondary;
         }
-      } else if (tile) {
-        ctx.fillStyle = isSelected 
-          ? 'rgba(26, 26, 46, 0.95)'
-          : 'rgba(26, 26, 46, 0.8)'
-      } else {
-        ctx.fillStyle = 'rgba(26, 26, 46, 0.3)'
       }
-      
+
+      // For rainbow tiles
+      if (tile?.isJoker) {
+        // Create rainbow gradient
+        const gradient = ctx.createLinearGradient(x - size, y - size, x + size, y + size);
+        gradient.addColorStop(0, '#ff0000');
+        gradient.addColorStop(0.2, '#ffff00');
+        gradient.addColorStop(0.4, '#00ff00');
+        gradient.addColorStop(0.6, '#00ffff');
+        gradient.addColorStop(0.8, '#0000ff');
+        gradient.addColorStop(1, '#ff00ff');
+        ctx.strokeStyle = gradient;
+        ctx.lineWidth = 6;
+      }
+
       // Draw hexagon with rounded corners
       ctx.beginPath()
       points.forEach((point, i) => {
@@ -952,6 +935,20 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
             // Add this line to update daily challenge objectives
             updateObjectives(matchingTiles.length, combo.count);
           }
+
+          // Inside handleClick where matches are handled
+          if (matchingTiles.length >= 3) {
+            awardExperience('match', matchingTiles.length * EXPERIENCE_VALUES.match);
+          }
+          // Where combos are handled
+          if (combo.count > 1) {
+            awardExperience('combo', combo.count * EXPERIENCE_VALUES.combo);
+          }
+
+          // Where grid clears are handled
+          if (matchingTiles.length >= 3 && isGridFull(newPlacedTiles, cols)) {
+            awardExperience('clear', EXPERIENCE_VALUES.clear);
+          }
         }
       }
 
@@ -1040,6 +1037,7 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
               ...t,
               edges: t.edges.map(() => ({ color: randomColor }))
             }
+            return t
           }
           return t
         })
@@ -1433,11 +1431,23 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
     }
   };
 
+  // Modify the awardExperience function
+  const awardExperience = (type: 'match' | 'combo' | 'clear' | 'challenge' | 'achievement', value: number) => {
+    const newProgress = addExperience({ type, value });
+    setPlayerProgress(newProgress);
+  };
+
   return (
-    <div className="game-container">
+    <div
+      className="game-container"
+      style={{
+        background: theme.colors.background
+      }}
+    >
+      <LevelProgress progress={playerProgress} />
       <Particles 
         intensity={0.3} 
-        color={isGridFull(placedTiles, cols) ? '#FFD700' : '#00FF9F'}
+        color={isGridFull(placedTiles, cols) ? theme.colors.accent : theme.colors.primary}
       />
       {tutorialState.active ? (
         <button 

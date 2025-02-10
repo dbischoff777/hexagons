@@ -1,40 +1,38 @@
 import { Tile, PlacedTile } from '../types'
-import { DIRECTIONS } from './hexUtils'
+import { DIRECTIONS, getAdjacentTiles } from './hexUtils'
 import { getEdgeValue } from './accessibilityUtils'
 
 export const INITIAL_TIME = 180 // 3 minutes in seconds
 
 export const hasMatchingEdges = (
   tile: PlacedTile, 
-  placedTiles: PlacedTile[], 
-  isColorBlind: boolean = false
+  allTiles: PlacedTile[], 
+  isColorBlind: boolean
 ): boolean => {
-  let hasMatch = false
-  DIRECTIONS.forEach((dir, i) => {
-    const neighbor = placedTiles.find(t => 
-      t.q === tile.q + dir.q && 
-      t.r === tile.r + dir.r
-    )
+  // Rainbow tiles always match
+  if (tile.isJoker) return true;
 
-    if (neighbor) {
-      const oppositeEdge = (i + 3) % 6
-      if (isColorBlind) {
-        // In colorblind mode, match by numbers only
-        const tileValue = getEdgeValue(tile.edges[i].color, true)
-        const neighborValue = getEdgeValue(neighbor.edges[oppositeEdge].color, true)
-        if (tileValue === neighborValue) {
-          hasMatch = true
-        }
-      } else {
-        // Regular color matching
-        if (tile.isJoker || neighbor.isJoker || 
-            tile.edges[i].color === neighbor.edges[oppositeEdge].color) {
-          hasMatch = true
-        }
-      }
+  const adjacentTiles = getAdjacentTiles(tile, allTiles);
+  return adjacentTiles.some(adjTile => {
+    // Adjacent rainbow tiles always match
+    if (adjTile.isJoker) return true;
+    
+    // Find the edge indices that connect these tiles
+    const edgeIndex = DIRECTIONS.findIndex(dir => 
+      dir.q === adjTile.q - tile.q && dir.r === adjTile.r - tile.r
+    );
+    if (edgeIndex === -1) return false;
+    
+    const oppositeEdge = (edgeIndex + 3) % 6;
+
+    if (isColorBlind) {
+      const tileValue = getEdgeValue(tile.edges[edgeIndex].color, true);
+      const neighborValue = getEdgeValue(adjTile.edges[oppositeEdge].color, true);
+      return tileValue === neighborValue;
     }
-  })
-  return hasMatch
+    
+    return tile.edges[edgeIndex].color === adjTile.edges[oppositeEdge].color;
+  });
 }
 
 export const formatTime = (seconds: number): string => {

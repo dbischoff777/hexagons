@@ -1,4 +1,5 @@
-import { Tile, PowerUp } from "../types"
+import { Tile, PlacedTile } from "../types"
+import { getPlayerProgress } from './progressionUtils';
 
 export const COLORS = [
   '#FF1177',  // Neon pink
@@ -18,36 +19,54 @@ export const getAdjacentTiles = (tile: Tile, allTiles: Tile[]): Tile[] => {
   )
 }
 
-export const createTileWithRandomEdges = (q: number, r: number): Tile => {
-  // Small chance to create a power-up tile (15%)
-  const powerUpChance = Math.random()
-  let powerUp: PowerUp | undefined
-
-  if (powerUpChance < 0.15) {
-    const powerUpTypes: PowerUp['type'][] = ['freeze', 'colorShift', 'multiplier']
-    const randomType = powerUpTypes[Math.floor(Math.random() * powerUpTypes.length)]
+export const createTileWithRandomEdges = (q: number, r: number): PlacedTile => {
+  const progress = getPlayerProgress();
+  const hasRainbowTile = progress.unlockedRewards.includes('rainbow_tile');
+  const unlockedPowerups = progress.unlockedRewards.filter(id => 
+    ['time_freeze', 'color_shift', 'multiplier'].includes(id)
+  );
+  
+  // Small chance for power-up (10% if any are unlocked)
+  if (unlockedPowerups.length > 0 && Math.random() < 0.1) {
+    const powerUpId = unlockedPowerups[Math.floor(Math.random() * unlockedPowerups.length)];
     
-    powerUp = {
-      type: randomType,
-      duration: randomType === 'freeze' ? 5 : 
-               randomType === 'multiplier' ? 15 : undefined,
-      multiplier: randomType === 'multiplier' ? 2 : undefined,
-      active: false
-    }
+    return {
+      q, r,
+      edges: Array(6).fill(null).map(() => ({
+        color: COLORS[Math.floor(Math.random() * COLORS.length)]
+      })),
+      isPlaced: false,
+      value: 0,
+      powerUp: {
+        type: powerUpId === 'time_freeze' ? 'freeze' :
+              powerUpId === 'color_shift' ? 'colorShift' : 'multiplier',
+        duration: powerUpId === 'time_freeze' ? 10 :
+                 powerUpId === 'multiplier' ? 15 : undefined,
+        multiplier: powerUpId === 'multiplier' ? 2 : undefined,
+        active: false
+      }
+    };
+  }
+  
+  // Small chance for rainbow tile (10% if unlocked)
+  if (hasRainbowTile && Math.random() < 0.1) {
+    return {
+      q, r,
+      edges: Array(6).fill({ color: 'rainbow' }),
+      isPlaced: false,
+      value: 0,
+      isJoker: true
+    };
   }
 
-  // Small chance to create a joker tile (10%)
-  const isJoker = !powerUp && Math.random() < 0.1
-
-  return isJoker ? {
-    edges: Array(6).fill({ color: 'rainbow' }),
-    q, r, value: 0, isJoker: true
-  } : {
-    edges: Array(6).fill(0).map(() => ({
+  return {
+    q, r,
+    edges: Array(6).fill(null).map(() => ({
       color: COLORS[Math.floor(Math.random() * COLORS.length)]
     })),
-    q, r, value: 0, powerUp
-  }
+    isPlaced: false,
+    value: 0
+  };
 }
 
 export const hexToPixel = (q: number, r: number, centerX: number, centerY: number, size: number) => {
