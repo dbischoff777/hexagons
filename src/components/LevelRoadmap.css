@@ -1,72 +1,152 @@
 .level-roadmap {
   display: flex;
   flex-direction: column;
-  gap: 20px;
-  padding: 20px;
+  gap: 40px;
+  padding: 30px;
   background: rgba(0, 0, 0, 0.8);
-  border-radius: 10px;
-  max-width: 800px;
+  border-radius: 15px;
+  max-width: 900px;
   margin: 0 auto;
+  position: relative;
 }
 
 .level-block {
-  background: rgba(26, 26, 46, 0.9);
-  border-radius: 8px;
+  background: rgba(26, 26, 46, 0.95);
+  border-radius: 12px;
+  padding: 20px;
+  border: 1px solid rgba(0, 255, 159, 0.2);
+  box-shadow: 0 0 20px rgba(0, 255, 159, 0.1);
+  position: relative;
+}
+
+.level-block::after {
+  content: '';
+  position: absolute;
+  bottom: -30px;
+  left: 50%;
+  width: 4px;
+  height: 30px;
+  background: linear-gradient(to bottom, #00FF9F, transparent);
+  transform: translateX(-50%);
+}
+
+.level-block:last-child::after {
+  display: none;
+}
+
+.level-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 15px;
+  position: relative;
+}
+
+/* Add connecting lines between cells */
+.level-grid::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 10%;
+  right: 10%;
+  height: 2px;
+  background: linear-gradient(to right, transparent, #00FF9F, transparent);
+  transform: translateY(-50%);
+  z-index: 0;
+}
+
+.level-cell {
+  background: rgba(0, 0, 0, 0.5);
+  border: 2px solid #333;
+  border-radius: 10px;
   padding: 15px;
+  text-align: center;
+  position: relative;
+  min-height: 80px;
+  transition: all 0.3s ease;
+  z-index: 1;
+}
+
+.level-cell.completed {
+  border-color: #00FF9F;
+  background: rgba(0, 255, 159, 0.15);
+  box-shadow: 0 0 15px rgba(0, 255, 159, 0.3);
+}
+
+.level-cell.completed:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 5px 20px rgba(0, 255, 159, 0.4);
+}
+
+.level-cell.current {
+  border-color: #00FFFF;
+  background: rgba(0, 255, 255, 0.15);
+  box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
+  animation: pulse-border 2s infinite;
+}
+
+.level-number {
+  font-weight: bold;
+  color: #fff;
+  font-size: 1.2em;
+  text-shadow: 0 0 10px rgba(0, 255, 159, 0.5);
+}
+
+.points-required {
+  font-size: 0.9em;
+  color: #888;
+  margin: 8px 0;
+  background: rgba(0, 0, 0, 0.3);
+  padding: 4px 8px;
+  border-radius: 12px;
+  display: inline-block;
 }
 
 .block-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 1rem;
+  margin-bottom: 1.5rem;
+  padding: 0 10px;
 }
 
-.level-grid {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 10px;
+.block-header h3 {
+  color: #00FF9F;
+  font-size: 1.4em;
+  text-shadow: 0 0 10px rgba(0, 255, 159, 0.5);
 }
 
-.level-cell {
-  background: rgba(0, 0, 0, 0.3);
-  border: 1px solid #333;
-  border-radius: 6px;
+@keyframes pulse-border {
+  0% { box-shadow: 0 0 20px rgba(0, 255, 255, 0.3); }
+  50% { box-shadow: 0 0 30px rgba(0, 255, 255, 0.5); }
+  100% { box-shadow: 0 0 20px rgba(0, 255, 255, 0.3); }
+}
+
+/* Keep existing badge styles and add these enhancements */
+.block-badge {
+  background: rgba(0, 0, 0, 0.4);
   padding: 10px;
-  text-align: center;
-  position: relative;
-  min-height: 60px;
-  transition: all 0.3s ease;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.1);
 }
 
-.level-cell.completed {
+.block-badge.earned {
   border-color: #00FF9F;
-  background: rgba(0, 255, 159, 0.1);
-  cursor: pointer;
-  transform: scale(1);
+  box-shadow: 0 0 20px rgba(0, 255, 159, 0.3);
 }
 
-.level-cell.completed:hover {
-  transform: scale(1.05);
-  box-shadow: 0 0 20px rgba(0, 255, 159, 0.4);
-  background: rgba(0, 255, 159, 0.2);
+.rewards {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 8px;
 }
 
-.level-cell:not(.completed) {
-  cursor: not-allowed;
-  opacity: 0.7;
-}
-
-.level-cell.current {
-  cursor: default;
-  opacity: 1;
-  border-color: #00FFFF;
-  box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
-}
-
-.level-number {
-  font-weight: bold;
-  color: #fff;
+.reward-icon {
+  background: rgba(0, 0, 0, 0.3);
+  padding: 4px;
+  border-radius: 50%;
+  font-size: 1em;
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .progress-bar {
@@ -83,40 +163,12 @@
   transition: width 0.3s ease;
 }
 
-.rewards {
-  display: flex;
-  justify-content: center;
-  gap: 5px;
-  margin-top: 5px;
-}
-
-.reward-icon {
-  font-size: 1.2em;
-  cursor: help;
-}
-
-.points-required {
-  font-size: 0.8em;
-  color: #888;
-  margin: 4px 0;
-}
-
 .level-cell.completed .points-required {
   color: #00FF9F;
 }
 
 .level-cell.current .points-required {
   color: #00FFFF;
-}
-
-.block-badge {
-  position: relative;
-  cursor: help;
-  transition: all 0.3s ease;
-}
-
-.block-badge.earned {
-  opacity: 1;
 }
 
 .block-badge.next {

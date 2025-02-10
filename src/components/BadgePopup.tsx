@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import ReactDOM from 'react-dom';
 import './BadgePopup.css';
 import { Badge } from '../types/progression';
 
@@ -18,7 +19,8 @@ const BadgePopup: React.FC<BadgePopupProps> = ({ badge, onComplete }) => {
     }, 3000);
   }, [onComplete]);
 
-  return (
+  // Create portal to render badge popup at root level
+  return ReactDOM.createPortal(
     <div className={`badge-popup ${isVisible ? 'visible' : ''}`}>
       <div className="badge-content">
         <div className="badge-icon">{badge.icon}</div>
@@ -27,7 +29,8 @@ const BadgePopup: React.FC<BadgePopupProps> = ({ badge, onComplete }) => {
           <p>{badge.description}</p>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body // Render directly to body
   );
 };
 

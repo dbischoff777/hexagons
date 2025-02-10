@@ -3,13 +3,17 @@
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%) scale(0.8);
-  background: rgba(0, 0, 0, 0.9);
+  background: linear-gradient(145deg, rgba(0, 0, 0, 0.95), rgba(26, 26, 46, 0.98));
   border: 2px solid #00FF9F;
-  border-radius: 15px;
-  padding: 20px;
-  z-index: 1100;
+  border-radius: 12px;
+  padding: 15px 20px;
+  z-index: 9999;
   opacity: 0;
-  transition: all 0.3s ease;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  max-width: 300px;
+  box-shadow: 0 0 30px rgba(0, 255, 159, 0.2),
+              inset 0 0 20px rgba(0, 255, 159, 0.1);
+  backdrop-filter: blur(10px);
 }
 
 .badge-popup.visible {
@@ -20,27 +24,84 @@
 .badge-content {
   display: flex;
   align-items: center;
-  gap: 20px;
+  gap: 15px;
   color: white;
+  position: relative;
+}
+
+.badge-content::before {
+  content: '';
+  position: absolute;
+  top: -10px;
+  left: -15px;
+  right: -15px;
+  bottom: -10px;
+  background: radial-gradient(circle at center, rgba(0, 255, 159, 0.1) 0%, transparent 70%);
+  pointer-events: none;
 }
 
 .badge-icon {
-  font-size: 48px;
-  animation: pulse 2s infinite;
+  font-size: 36px;
+  animation: float 3s ease-in-out infinite;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 50%;
+  padding: 10px;
+  box-shadow: 0 0 20px rgba(0, 255, 159, 0.3);
+}
+
+.badge-info {
+  flex: 1;
 }
 
 .badge-info h3 {
   color: #00FF9F;
-  margin: 0 0 10px 0;
+  margin: 0 0 5px 0;
+  font-size: 16px;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  text-shadow: 0 0 10px rgba(0, 255, 159, 0.5);
 }
 
 .badge-info p {
   margin: 0;
-  opacity: 0.8;
+  opacity: 0.9;
+  font-size: 14px;
+  line-height: 1.4;
+  color: #e0e0e0;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
 }
 
-@keyframes pulse {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.1); }
-  100% { transform: scale(1); }
+@keyframes float {
+  0%, 100% { transform: translateY(0) rotate(0); }
+  50% { transform: translateY(-5px) rotate(5deg); }
+}
+
+@keyframes glow {
+  0%, 100% { filter: brightness(1); }
+  50% { filter: brightness(1.2); }
+}
+
+/* Add shine effect */
+.badge-popup::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    45deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.1) 50%,
+    transparent 100%
+  );
+  transform: rotate(45deg);
+  animation: shine 3s infinite;
+  pointer-events: none;
+}
+
+@keyframes shine {
+  0% { transform: translateX(-100%) rotate(45deg); }
+  50%, 100% { transform: translateX(100%) rotate(45deg); }
 } 
