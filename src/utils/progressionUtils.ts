@@ -17,9 +17,9 @@ export const THEMES: ThemeConfig[] = [
     id: 'default',
     name: 'Default',
     colors: {
-      background: '#1a1a2e',
+      background: '#0A0A1E',
       primary: '#00FF9F',
-      secondary: '#00FFFF',
+      secondary: '#1A1A3E',
       accent: '#FF1177',
       text: '#FFFFFF'
     },
@@ -29,9 +29,9 @@ export const THEMES: ThemeConfig[] = [
     id: 'neon_sunset',
     name: 'Neon Sunset',
     colors: {
-      background: '#2D1B2E',
+      background: '#1A0F1F',
       primary: '#FF6B6B',
-      secondary: '#FFE66D',
+      secondary: '#2D1B2E',
       accent: '#4ECDC4',
       text: '#FFFFFF'
     },
@@ -43,8 +43,8 @@ export const THEMES: ThemeConfig[] = [
     colors: {
       background: '#0D0221',
       primary: '#FF00FF',
-      secondary: '#00FFFF',
-      accent: '#FFD700',
+      secondary: '#1E0442',
+      accent: '#00FFFF',
       text: '#FFFFFF'
     },
     particleColor: '#FF00FF'
@@ -53,9 +53,9 @@ export const THEMES: ThemeConfig[] = [
     id: 'forest',
     name: 'Forest',
     colors: {
-      background: '#1A2F1A',
+      background: '#0A1F0A',
       primary: '#90EE90',
-      secondary: '#98FB98',
+      secondary: '#1A2F1A',
       accent: '#FFB6C1',
       text: '#FFFFFF'
     },
@@ -67,7 +67,7 @@ export const THEMES: ThemeConfig[] = [
     colors: {
       background: '#000D1A',
       primary: '#00BFFF',
-      secondary: '#87CEEB',
+      secondary: '#001F3F',
       accent: '#FF69B4',
       text: '#FFFFFF'
     },
@@ -79,7 +79,7 @@ export const THEMES: ThemeConfig[] = [
     colors: {
       background: '#1A0F0F',
       primary: '#FF4500',
-      secondary: '#FF8C00',
+      secondary: '#2D1414',
       accent: '#FFD700',
       text: '#FFFFFF'
     },

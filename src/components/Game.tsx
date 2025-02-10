@@ -338,50 +338,57 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
 
       // Draw selection highlight first (if selected)
       if (isSelected) {
-        // Outer glow effect
-        ctx.beginPath()
+        ctx.beginPath();
         points.forEach((point, i) => {
-          if (i === 0) ctx.moveTo(point[0], point[1])
-          else ctx.lineTo(point[0], point[1])
-        })
-        ctx.closePath()
+          if (i === 0) ctx.moveTo(point[0], point[1]);
+          else ctx.lineTo(point[0], point[1]);
+        });
+        ctx.closePath();
         
-        // Create gradient for glow effect
-        const gradient = ctx.createRadialGradient(x, y, size * 0.5, x, y, size * 1.2)
-        gradient.addColorStop(0, 'rgba(0, 255, 159, 0.3)')  // Neon green core
-        gradient.addColorStop(1, 'rgba(0, 255, 159, 0)')    // Fade out
-        ctx.fillStyle = gradient
-        ctx.fill()
+        // Enhanced cyberpunk glow effect
+        const glowGradient = ctx.createRadialGradient(x, y, size * 0.5, x, y, size * 1.5);
+        glowGradient.addColorStop(0, 'rgba(0, 255, 255, 0.4)');  // Cyan core
+        glowGradient.addColorStop(0.5, 'rgba(255, 0, 255, 0.2)'); // Magenta mid
+        glowGradient.addColorStop(1, 'rgba(0, 255, 255, 0)');    // Fade out
+        ctx.fillStyle = glowGradient;
+        ctx.fill();
         
-        // Pulsing border with double stroke for intensity
-        ctx.strokeStyle = '#00FF9F'
-        ctx.lineWidth = 4
-        ctx.stroke()
-        ctx.lineWidth = 2
-        ctx.strokeStyle = 'rgba(0, 255, 159, 0.5)'
-        ctx.stroke()
+        // Neon border effect
+        ctx.strokeStyle = '#00FFFF';
+        ctx.lineWidth = 4;
+        ctx.stroke();
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = '#FF00FF';
+        ctx.stroke();
         
-        // Selection indicator with glow
-        ctx.fillStyle = '#00FF9F'
-        ctx.shadowColor = '#00FF9F'
-        ctx.shadowBlur = 15
-        ctx.font = 'bold 24px Arial'
-        ctx.textAlign = 'center'
-        ctx.fillText('▼', x, y - size - 10)
-        ctx.shadowBlur = 0
+        // Selection indicator with enhanced glow
+        ctx.fillStyle = '#00FFFF';
+        ctx.shadowColor = '#00FFFF';
+        ctx.shadowBlur = 20;
+        ctx.font = 'bold 24px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText('▼', x, y - size - 10);
       }
 
-      // Add shadow for depth
-      ctx.shadowColor = 'rgba(0, 255, 159, 0.3)'
-      ctx.shadowBlur = 8
-      ctx.shadowOffsetY = 2
+      // Add enhanced shadow for depth
+      ctx.shadowColor = 'rgba(0, 255, 255, 0.3)';
+      ctx.shadowBlur = 12;
+      ctx.shadowOffsetY = 2;
 
-      // Apply theme colors
+      // Apply theme colors with enhanced contrast
       if (tile?.isPlaced) {
         if (isMatched) {
-          ctx.fillStyle = theme.colors.accent;
+          // Create gradient for matched tiles
+          const matchGradient = ctx.createRadialGradient(x, y, 0, x, y, size);
+          matchGradient.addColorStop(0, theme.colors.accent);
+          matchGradient.addColorStop(1, theme.colors.secondary);
+          ctx.fillStyle = matchGradient;
         } else {
-          ctx.fillStyle = theme.colors.secondary;
+          // Create gradient for normal tiles
+          const normalGradient = ctx.createRadialGradient(x, y, 0, x, y, size);
+          normalGradient.addColorStop(0, theme.colors.secondary);
+          normalGradient.addColorStop(1, theme.colors.background);
+          ctx.fillStyle = normalGradient;
         }
       }
 
@@ -1398,7 +1405,20 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
         edges,
         isPlaced: false
       })));
+
+      // Ensure objectives are initialized
+      updateDailyChallengeProgress(challenge.objectives, 0);
+    } else {
+      // Clear daily challenge state when not in daily challenge mode
+      setDailyChallenge(null);
     }
+
+    // Cleanup function
+    return () => {
+      if (!isDailyChallenge) {
+        setDailyChallenge(null);
+      }
+    };
   }, [isDailyChallenge]);
 
   // Modify the tile placement logic to update objectives
@@ -1638,8 +1658,8 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
           onCancel={() => setShowExitConfirm(false)}
         />
       )}
-      {dailyChallenge && (
-        <DailyChallengeHUD objectives={dailyChallenge.objectives} />
+      {isDailyChallenge && (
+        <DailyChallengeHUD objectives={dailyChallenge?.objectives || []} />
       )}
       {showDailyComplete && (
         <DailyChallengeComplete

@@ -14,7 +14,17 @@ const UnlockablesMenu: React.FC<UnlockablesMenuProps> = ({ onSelectTheme, onClos
   const currentTheme = getTheme(progress.selectedTheme || 'default');
 
   const powerUps = rewards.filter(r => r.type === 'powerup');
-  const themes = rewards.filter(r => r.type === 'theme');
+  const themes = [
+    {
+      type: 'theme' as const,
+      id: 'default',
+      name: 'Default',
+      description: 'The classic neon theme',
+      levelRequired: 1,
+      unlocked: true
+    },
+    ...rewards.filter(r => r.type === 'theme')
+  ];
   const tiles = rewards.filter(r => r.type === 'tile');
 
   // Add click handler for the overlay
