@@ -345,3 +345,13 @@
   background: rgba(0, 255, 159, 0.25);
   transform: scale(1.05);
 }
+
+.mode-button.daily {
+  background: linear-gradient(45deg, #FF6B6B, #4ECDC4);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.mode-button.daily:hover {
+  background: linear-gradient(45deg, #FF8787, #6EE7E0);
+  transform: translateY(-2px);
+}

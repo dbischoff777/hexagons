@@ -9,7 +9,7 @@ import AchievementsView from './AchievementsView'
 
 
 interface StartPageProps {
-  onStartGame: (withTimer: boolean) => void
+  onStartGame: (withTimer: boolean, isDailyChallenge?: boolean) => void
   onMusicToggle: (enabled: boolean) => void
   onSoundToggle: (enabled: boolean) => void
   musicEnabled: boolean
@@ -31,12 +31,12 @@ const StartPage: React.FC<StartPageProps> = ({ onStartGame, onMusicToggle, onSou
     setHasSavedGame(!!savedGame)
   }, [])
 
-  const handleNewGame = (timedMode: boolean) => {
+  const handleNewGame = (timedMode: boolean, isDailyChallenge?: boolean) => {
     if (hasSavedGame) {
       setShowConfirmModal(true)
       setPendingGameMode(timedMode)
     } else {
-      onStartGame(timedMode)
+      onStartGame(timedMode, isDailyChallenge)
     }
   }
 
@@ -154,6 +154,14 @@ const StartPage: React.FC<StartPageProps> = ({ onStartGame, onMusicToggle, onSou
               >
                 <span className="mode-title">ZEN MODE</span>
                 <span className="mode-desc">Play at your own pace</span>
+              </button>
+
+              <button 
+                className="mode-button daily" 
+                onClick={() => handleNewGame(false, true)}
+              >
+                <span className="mode-title">DAILY CHALLENGE</span>
+                <span className="mode-desc">New puzzles every day!</span>
               </button>
 
               <button 

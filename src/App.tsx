@@ -19,6 +19,7 @@ function App() {
     started: boolean
     timed: boolean
   } | null>(null)
+  const [isDailyChallenge, setIsDailyChallenge] = useState(false)
 
   // Load saved game state on component mount
   useEffect(() => {
@@ -45,9 +46,10 @@ function App() {
     soundManager.setSoundEnabled(soundEnabled)
   }, [soundEnabled])
 
-  const handleStartGame = (timed: boolean) => {
+  const handleStartGame = (timed: boolean, isDaily?: boolean) => {
     setIsExiting(true)
     setNextGameState({ started: true, timed })
+    setIsDailyChallenge(!!isDaily)
   }
 
   const handleExitGame = () => {
@@ -133,6 +135,7 @@ function App() {
           onSkipTutorial={handleExitGame}
           onExit={handleExitGame}
           savedGameState={savedGameState}
+          isDailyChallenge={isDailyChallenge}
         />
       </PageTransition>
     </AccessibilityProvider>

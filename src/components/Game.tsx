@@ -15,6 +15,9 @@ import { Achievement } from '../types/achievements'
 import { updateTilesPlaced, updateScore, updateCombo, updateAchievements, updateGridClears } from '../utils/achievementUtils'
 import AchievementPopup from './AchievementPopup'
 import ConfirmModal from './ConfirmModal'
+import { DailyChallenge } from '../types/dailyChallenge'
+import { getDailyChallenge, updateDailyChallengeProgress, isDailyChallengeCompleted } from '../utils/dailyChallengeUtils'
+import DailyChallengeHUD from './DailyChallengeHUD'
 
 interface GameProps {
   musicEnabled: boolean
@@ -25,6 +28,7 @@ interface GameProps {
   onSkipTutorial?: () => void
   onExit: () => void
   savedGameState?: GameState | null
+  isDailyChallenge?: boolean
 }
 
 interface PopupPosition {
@@ -115,7 +119,7 @@ const getFeedbackForClear = (clearScore: number) => {
   return SCORE_FEEDBACK.CLEAR[0]
 }
 
-const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = false, onSkipTutorial, onExit, savedGameState }: GameProps) => {
+const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = false, onSkipTutorial, onExit, savedGameState, isDailyChallenge }: GameProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const cols = 7
   
@@ -176,6 +180,7 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
   const [newAchievements, setNewAchievements] = useState<Achievement[]>([])
   const [showExitConfirm, setShowExitConfirm] = useState(false)
   const [isPopupAnimating, setIsPopupAnimating] = useState(false)
+  const [dailyChallenge, setDailyChallenge] = useState<DailyChallenge | null>(null)
 
   // Add a ref to track game start time
   const gameStartTimeRef = useRef<number>(savedGameState?.startTime ?? Date.now())
@@ -821,7 +826,12 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
                 text: clearInfo.text,
                 type: 'clear'
               })
-              setScore(prevScore => prevScore + clearBonus)
+              setScore(prevScore => {
+                const newScore = prevScore + clearBonus;
+                // Update objectives with the new score after clear bonus
+                updateObjectives(matchingTiles.length, combo.count, newScore);
+                return newScore;
+              })
             }, 300)
 
             // Remove matching tiles
@@ -936,6 +946,9 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
 
             // Update the score
             setScore(newTotalScore);
+
+            // Add this line to update daily challenge objectives
+            updateObjectives(matchingTiles.length, combo.count);
           }
         }
       }
@@ -1368,6 +1381,57 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
     }
   };
 
+  // Modify the daily challenge initialization effect
+  useEffect(() => {
+    if (isDailyChallenge) {
+      const challenge = getDailyChallenge();
+      setDailyChallenge(challenge);
+      
+      // Set up initial board state with complete PlacedTile properties
+      setPlacedTiles(challenge.initialTiles.map(tile => ({
+        ...tile,
+        isPlaced: true,
+        value: 0
+      })));
+      setNextTiles(challenge.nextTilesSequence[0].map(edges => ({
+        ...createTileWithRandomEdges(0, 0),
+        edges,
+        isPlaced: false
+      })));
+    }
+  }, [isDailyChallenge]);
+
+  // Modify the tile placement logic to update objectives
+  const updateObjectives = (matchCount: number, comboCount: number, newScore?: number) => {
+    if (!dailyChallenge) return;
+
+    const updatedObjectives = dailyChallenge.objectives.map(obj => {
+      switch (obj.type) {
+        case 'score':
+          return { ...obj, current: Math.min(newScore ?? score, obj.target) };
+        case 'matches':
+          return { ...obj, current: Math.min(obj.current + matchCount, obj.target) };
+        case 'combos':
+          return { ...obj, current: Math.min(Math.max(obj.current, comboCount), obj.target) };
+        default:
+          return obj;
+      }
+    });
+
+    setDailyChallenge(prev => prev ? {
+      ...prev,
+      objectives: updatedObjectives
+    } : null);
+
+    updateDailyChallengeProgress(updatedObjectives, newScore ?? score);
+
+    // Check for challenge completion
+    if (isDailyChallengeCompleted(updatedObjectives)) {
+      setIsGameOver(true);
+      onGameOver();
+    }
+  };
+
   return (
     <div className="game-container">
       <Particles 
@@ -1562,6 +1626,9 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
           onConfirm={handleConfirmExit}
           onCancel={() => setShowExitConfirm(false)}
         />
+      )}
+      {dailyChallenge && (
+        <DailyChallengeHUD objectives={dailyChallenge.objectives} />
       )}
     </div>
   )

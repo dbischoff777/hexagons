@@ -1,0 +1,68 @@
+.daily-challenge-hud {
+  position: absolute;
+  top: 80px;
+  right: 20px;
+  background: rgba(26, 26, 46, 0.9);
+  border: 2px solid rgba(0, 255, 159, 0.3);
+  border-radius: 10px;
+  padding: 15px;
+  color: white;
+  min-width: 250px;
+  z-index: 10;
+}
+
+.daily-challenge-hud h3 {
+  margin: 0 0 15px 0;
+  text-align: center;
+  color: #00FF9F;
+}
+
+.objectives-container {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.objective {
+  position: relative;
+  display: flex;
+  align-items: center;
+  padding: 10px;
+  background: rgba(0, 255, 159, 0.1);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.objective.completed {
+  background: rgba(0, 255, 159, 0.2);
+}
+
+.objective-icon {
+  font-size: 1.2em;
+  margin-right: 10px;
+}
+
+.objective-progress {
+  flex: 1;
+  z-index: 1;
+}
+
+.objective-text {
+  font-size: 0.9em;
+  color: #00FF9F;
+}
+
+.objective-numbers {
+  font-size: 1.1em;
+  font-weight: bold;
+}
+
+.progress-bar {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  background: rgba(0, 255, 159, 0.1);
+  transition: width 0.3s ease;
+  z-index: 0;
+} 
