@@ -1297,7 +1297,7 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
       const playTime = (gameEndTime - gameStartTimeRef.current) / 1000
 
       updateStatistics({
-        totalPlayTime: playTime,
+        totalPlayTime: playTime + (getStatistics().totalPlayTime || 0),
         lastPlayed: new Date().toISOString()
       });
 
@@ -1336,7 +1336,7 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
       gamesPlayed: 1,
       totalScore: score,
       highScore: Math.max(score, getStatistics().highScore),
-      totalPlayTime: playTime,
+      totalPlayTime: playTime + (getStatistics().totalPlayTime || 0),
       longestCombo: Math.max(combo.count, getStatistics().longestCombo),
       lastPlayed: new Date().toISOString()
     });
