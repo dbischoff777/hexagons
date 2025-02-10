@@ -159,7 +159,6 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
       lastPlacementTime: 0
     }
   )
-  const [isQuickPlacement, setIsQuickPlacement] = useState(false)
   const [activePopupPositions, setActivePopupPositions] = useState<PopupPosition[]>([])
   const { settings } = useAccessibility()
   const [tutorialState, setTutorialState] = useState<TutorialState>({
@@ -849,46 +848,47 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
             const now = Date.now()
             const timeSinceLastPlacement = now - combo.lastPlacementTime
             const quickPlacement = timeSinceLastPlacement < 2000
-            setIsQuickPlacement(quickPlacement)
 
-            setCombo(prev => ({
-              count: quickPlacement ? prev.count + 1 : 1,
+            // Handle quick placement bonus first
+            if (quickPlacement) {
+              const quickBonus = placedTileScore  // Double the base score
+              const quickY = findAvailableYPosition(canvas.height / 2, 'quick')
+              const quickInfo = getRandomFeedback('QUICK')
+              setScorePopups(prev => [...prev, {
+                score: quickBonus,
+                x: canvas.width / 2,
+                y: quickY,
+                id: Date.now() + 3,
+                emoji: quickInfo.emoji,
+                text: quickInfo.text
+              }])
+              setScore(prevScore => prevScore + quickBonus)
+            }
+
+            // Handle combo separately
+            const newComboState = {
+              count: quickPlacement ? combo.count + 1 : 1,
               timer: 3,
-              multiplier: 1 + (quickPlacement ? prev.count + 1 : 1) * 0.5, // Each combo level adds 50% more
+              multiplier: quickPlacement ? (1 + (combo.count + 1) * 0.5) : 1,
               lastPlacementTime: now
-            }))
+            }
+            
+            setCombo(newComboState)
 
-            // Add combo popup if streak exists
-            if (combo.count > 1) {
-              const comboBonus = Math.round(placedTileScore * combo.multiplier) - placedTileScore // Calculate actual bonus
-              if (comboBonus > 0) {
-                const comboInfo = getFeedbackForCombo(combo.count + 1)
-                
-                // Add quick placement bonus feedback
-                if (isQuickPlacement) {
-                  const quickY = findAvailableYPosition(canvas.height / 2, 'quick')
-                  const quickInfo = getRandomFeedback('QUICK')
-                  setScorePopups(prev => [...prev, {
-                    score: 0,
-                    x: canvas.width / 2,
-                    y: quickY,
-                    id: Date.now() + 3,
-                    emoji: quickInfo.emoji,
-                    text: quickInfo.text
-                  }])
-                }
-                
-                const comboY = findAvailableYPosition(canvas.height / 2 + 50, 'combo')
-                setScorePopups(prev => [...prev, {
-                  score: comboBonus,
-                  x: canvas.width / 2,
-                  y: comboY,
-                  id: Date.now() + 2,
-                  emoji: comboInfo.emoji,
-                  text: comboInfo.text
-                }])
-                setScore(prevScore => prevScore + comboBonus)
-              }
+            // Calculate combo bonus
+            const comboBonus = Math.round(placedTileScore * newComboState.multiplier) - placedTileScore
+            if (comboBonus > 0) {
+              const comboInfo = getFeedbackForCombo(newComboState.count)
+              const comboY = findAvailableYPosition(canvas.height / 2 + 50, 'combo')
+              setScorePopups(prev => [...prev, {
+                score: comboBonus,
+                x: canvas.width / 2,
+                y: comboY,
+                id: Date.now() + 2,
+                emoji: comboInfo.emoji,
+                text: comboInfo.text
+              }])
+              setScore(prevScore => prevScore + comboBonus)
             }
           } else {
             // Reset combo if no match
@@ -898,7 +898,6 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
               multiplier: 1,
               lastPlacementTime: 0
             })
-            setIsQuickPlacement(false)
           }
 
           // When selecting a tile, calculate potential matches
