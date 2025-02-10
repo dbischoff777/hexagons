@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from 'react';
-import './AchievementPopup.css';
+import React, { useEffect } from 'react';
 import { Achievement } from '../types/achievements';
+import './AchievementsView.css';
+import SoundManager from '../utils/soundManager';
 
 interface AchievementPopupProps {
   achievement: Achievement;
@@ -8,26 +9,23 @@ interface AchievementPopupProps {
 }
 
 const AchievementPopup: React.FC<AchievementPopupProps> = ({ achievement, onComplete }) => {
-  const [isVisible, setIsVisible] = useState(false);
-
   useEffect(() => {
-    setIsVisible(true);
-    const timer = setTimeout(() => {
-      setIsVisible(false);
-      setTimeout(onComplete, 300); // Wait for fade out animation
-    }, 3000);
-
+    // Play sound when achievement appears
+    SoundManager.getInstance().playSound('powerUp');
+    console.log('Achievement popup shown:', achievement.name);
+    
+    const timer = setTimeout(onComplete, 3000);
     return () => clearTimeout(timer);
-  }, [onComplete]);
+  }, [onComplete, achievement]);
 
   return (
-    <div className={`achievement-popup ${isVisible ? 'visible' : ''}`}>
-      <div className="achievement-icon">{achievement.icon}</div>
-      <div className="achievement-content">
-        <h3>Achievement Unlocked!</h3>
-        <h4>{achievement.name}</h4>
-        <p>{achievement.description}</p>
+    <div className="achievement-popup">
+      <div className="achievement-popup-header">
+        <span className="achievement-popup-icon">{achievement.icon}</span>
+        <h3 className="achievement-popup-title">Achievement Unlocked!</h3>
       </div>
+      <p className="achievement-popup-desc">{achievement.name}</p>
+      <p className="achievement-popup-subdesc">{achievement.description}</p>
     </div>
   );
 };

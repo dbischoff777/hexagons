@@ -291,15 +291,15 @@
 }
 
 .modal-content {
-  background: rgba(26, 26, 46, 0.95);
-  border: 2px solid #00FF9F;
+  position: relative;
+  background: rgba(0, 0, 0, 0.9);
   border-radius: 12px;
-  padding: 20px;
+  border: 1px solid rgba(0, 255, 159, 0.2);
   width: 90%;
-  max-width: 1000px;
+  max-width: 1200px;
   max-height: 90vh;
   overflow-y: auto;
-  position: relative;
+  padding: 20px;
 }
 
 .close-button {
@@ -311,11 +311,35 @@
   color: #00FF9F;
   font-size: 24px;
   cursor: pointer;
-  padding: 5px 10px;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   border-radius: 50%;
   transition: all 0.3s ease;
 }
 
 .close-button:hover {
   background: rgba(0, 255, 159, 0.1);
+  transform: scale(1.1);
+}
+
+/* Custom scrollbar for the modal */
+.modal-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.modal-content::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 4px;
+}
+
+.modal-content::-webkit-scrollbar-thumb {
+  background: rgba(0, 255, 159, 0.3);
+  border-radius: 4px;
+}
+
+.modal-content::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 255, 159, 0.5);
 } 

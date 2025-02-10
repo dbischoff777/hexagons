@@ -1,5 +1,4 @@
 import React from 'react'
-import { GameStatistics } from '../types'
 import { getStatistics } from '../utils/gameStateUtils'
 import './StatisticsPage.css'
 
@@ -9,6 +8,9 @@ interface StatisticsPageProps {
 
 const StatisticsPage: React.FC<StatisticsPageProps> = ({ onBack }) => {
   const stats = getStatistics()
+  const averageScore = stats.gamesPlayed > 0 
+    ? Math.round(stats.totalScore / stats.gamesPlayed) 
+    : 0;
 
   return (
     <div className="statistics-page">
@@ -26,7 +28,7 @@ const StatisticsPage: React.FC<StatisticsPageProps> = ({ onBack }) => {
           </div>
           <div className="stat-item">
             <label>Average Score</label>
-            <span>{stats.averageScore}</span>
+            <span>{averageScore}</span>
           </div>
           <div className="stat-item">
             <label>Longest Combo</label>

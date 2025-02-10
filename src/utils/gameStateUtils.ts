@@ -1,8 +1,20 @@
-import { GameState, GameStatistics } from '../types'
+import { GameState } from '../types'
+import { GameStatistics } from '../types/index'
 
 const STORAGE_KEYS = {
   SAVED_GAME: 'hexmatch_saved_game',
   STATISTICS: 'hexmatch_statistics'
+}
+
+
+const DEFAULT_STATISTICS: GameStatistics = {
+  gamesPlayed: 0,
+  totalScore: 0,
+  highScore: 0,
+  totalPlayTime: 0,
+  longestCombo: 0,
+  lastPlayed: new Date().toISOString(),
+  fastestGameTime: Infinity
 }
 
 export const saveGameState = (state: GameState) => {
@@ -18,39 +30,19 @@ export const clearSavedGame = () => {
   localStorage.removeItem(STORAGE_KEYS.SAVED_GAME)
 }
 
-export const updateStatistics = (stats: Partial<GameStatistics>) => {
-  const currentStats = getStatistics()
-  
-  // Calculate new total score for average calculation
-  const newTotalScore = (currentStats.totalScore || 0) + (stats.totalScore || 0)
-  const newGamesPlayed = (currentStats.gamesPlayed || 0) + (stats.gamesPlayed || 0)
-  
-  const updatedStats = {
-    ...currentStats,
-    ...stats,
-    gamesPlayed: newGamesPlayed,
-    totalScore: newTotalScore,
-    averageScore: newGamesPlayed > 0 ? Math.round(newTotalScore / newGamesPlayed) : 0,
-    totalPlayTime: (currentStats.totalPlayTime || 0) + (stats.totalPlayTime || 0),
-    highScore: Math.max(currentStats.highScore || 0, stats.highScore || 0),
-    longestCombo: Math.max(currentStats.longestCombo || 0, stats.longestCombo || 0),
-    lastPlayed: stats.lastPlayed || currentStats.lastPlayed
+export const getStatistics = (): GameStatistics => {
+  const stored = localStorage.getItem(STORAGE_KEYS.STATISTICS)
+  if (!stored) {
+    return DEFAULT_STATISTICS
   }
-  
-  localStorage.setItem(STORAGE_KEYS.STATISTICS, JSON.stringify(updatedStats))
-  return updatedStats
+  return JSON.parse(stored)
 }
 
-export const getStatistics = (): GameStatistics => {
-  const saved = localStorage.getItem(STORAGE_KEYS.STATISTICS)
-  return saved ? JSON.parse(saved) : {
-    gamesPlayed: 0,
-    highScore: 0,
-    totalScore: 0,
-    totalMatches: 0,
-    averageScore: 0,
-    longestCombo: 0,
-    totalPlayTime: 0,
-    lastPlayed: new Date().toISOString()
+export const updateStatistics = (update: Partial<GameStatistics>) => {
+  const current = getStatistics()
+  const newStats = {
+    ...current,
+    ...update
   }
-} 
+  localStorage.setItem(STORAGE_KEYS.STATISTICS, JSON.stringify(newStats))
+}

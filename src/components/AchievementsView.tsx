@@ -1,9 +1,16 @@
 import React from 'react';
-import { getAchievements } from '../utils/achievementUtils';
+import { getAchievements, resetAchievements } from '../utils/achievementUtils';
 import './AchievementsView.css';
 
 const AchievementsView: React.FC = () => {
   const { achievements, totalTilesPlaced } = getAchievements();
+
+  const handleReset = () => {
+    if (window.confirm('Are you sure you want to reset all achievements? This cannot be undone.')) {
+      resetAchievements();
+      window.location.reload(); // Refresh to show updated state
+    }
+  };
 
   return (
     <div className="achievements-view">
@@ -13,6 +20,9 @@ const AchievementsView: React.FC = () => {
           <span className="stat-label">Total Tiles Placed:</span>
           <span className="stat-value">{totalTilesPlaced}</span>
         </div>
+        <button className="reset-achievements-button" onClick={handleReset}>
+          Reset Achievements
+        </button>
       </div>
       <div className="achievements-grid">
         {achievements.map(achievement => (

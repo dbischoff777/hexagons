@@ -178,4 +178,79 @@
 
 .achievement-card.achieved {
   animation: achievementGlow 2s infinite;
+}
+
+.achievement-popup {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background: rgba(0, 0, 0, 0.95);
+  border: 2px solid #00FF9F;
+  border-radius: 12px;
+  padding: 20px;
+  color: white;
+  z-index: 9999;
+  animation: slideIn 0.5s ease-out;
+  box-shadow: 0 0 30px rgba(0, 255, 159, 0.2);
+  max-width: 300px;
+  pointer-events: none;
+}
+
+.achievement-popup-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.achievement-popup-icon {
+  font-size: 2em;
+}
+
+.achievement-popup-title {
+  color: #00FF9F;
+  font-size: 1.2em;
+  margin: 0;
+}
+
+.achievement-popup-desc {
+  color: #ffffff;
+  opacity: 0.8;
+  margin: 0;
+}
+
+.achievement-popup-subdesc {
+  color: #ffffff;
+  opacity: 0.7;
+  margin: 5px 0 0 0;
+  font-size: 0.9em;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.reset-achievements-button {
+  margin-top: 15px;
+  padding: 8px 16px;
+  background: rgba(255, 59, 59, 0.2);
+  color: #ff3b3b;
+  border: 2px solid #ff3b3b;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 0.9em;
+}
+
+.reset-achievements-button:hover {
+  background: rgba(255, 59, 59, 0.3);
+  transform: scale(1.05);
+  box-shadow: 0 0 15px rgba(255, 59, 59, 0.3);
 } 

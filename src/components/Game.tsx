@@ -12,7 +12,7 @@ import { TutorialMessage } from './TutorialMessage'
 import { saveGameState, loadGameState, updateStatistics, clearSavedGame, getStatistics } from '../utils/gameStateUtils'
 import Particles from './Particles'
 import { Achievement } from '../types/achievements'
-import { updateTilesPlaced } from '../utils/achievementUtils'
+import { updateTilesPlaced, updateAchievements } from '../utils/achievementUtils'
 import AchievementPopup from './AchievementPopup'
 
 interface GameProps {
@@ -926,11 +926,14 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
             })
 
             // Check for achievements
-            const achievedNew = updateTilesPlaced(1);
-            if (achievedNew.length > 0) {
-              setNewAchievements(prev => [...prev, ...achievedNew]);
-              soundManager.playSound('powerUp'); // Reuse power-up sound for achievements
-            }
+            const achievedFromTiles = updateTilesPlaced(1);
+            updateAchievements({
+              highestScore: Math.max(score, getStatistics().highScore),
+              highestCombo: Math.max(combo.count, getStatistics().longestCombo)
+            });
+
+            // Add any new achievements to the popup queue
+            setNewAchievements(prev => [...prev, ...achievedFromTiles]);
           }
         }
       }
@@ -1198,6 +1201,14 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
       const gameStartTime = tutorialState.active ? gameEndTime : loadGameState()?.startTime ?? gameEndTime
       const playTime = (gameEndTime - gameStartTime) / 1000
       
+      // Update achievements with time
+      updateAchievements({
+        highestScore: Math.max(score, getStatistics().highScore),
+        highestCombo: Math.max(combo.count, getStatistics().longestCombo),
+        fastestGameTime: Math.min(playTime, getStatistics().fastestGameTime || Infinity)
+      });
+
+      // Update statistics
       updateStatistics({
         gamesPlayed: 1,
         totalScore: score,
@@ -1205,10 +1216,10 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
         totalPlayTime: playTime,
         longestCombo: Math.max(combo.count, getStatistics().longestCombo),
         lastPlayed: new Date().toISOString()
-      })
-      clearSavedGame()
+      });
+      clearSavedGame();
     }
-  }, [isGameOver])
+  }, [isGameOver, score, combo.count]);
 
   // Modify the auto-save effect
   useEffect(() => {
@@ -1264,17 +1275,14 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
 
   // Modify the exit handler
   const handleExit = () => {
-    // Calculate game duration
     const gameEndTime = Date.now()
-    const playTime = (gameEndTime - gameStartTimeRef.current) / 1000 // Convert to seconds
+    const playTime = (gameEndTime - gameStartTimeRef.current) / 1000
 
-    // Update statistics before exiting
+    // Update statistics with playTime
     updateStatistics({
-      gamesPlayed: 0, // Don't count as completed game since we're saving it
-      totalScore: 0,  // Don't update score since game isn't finished
       totalPlayTime: playTime,
       lastPlayed: new Date().toISOString()
-    })
+    });
 
     // Save current game state with audio settings
     const gameState: GameState = {
@@ -1294,8 +1302,6 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
       }
     }
     saveGameState(gameState)
-
-    // Call the original onExit handler
     onExit()
   }
 
