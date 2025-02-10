@@ -213,25 +213,19 @@
 .board-container {
   position: relative;
   display: flex;
-  justify-content: center;
+  flex-direction: column;
   align-items: center;
-  width: 1000px;
-  height: 800px;
-  z-index: 1;
+  gap: 20px;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
 .game-board {
-  position: absolute;
-  transform-origin: center center;
-  will-change: transform;
-  background-color: rgba(26, 26, 46, 0.8);
-  border-radius: 15px;
-  box-shadow: 0 0 30px rgba(0, 255, 159, 0.2);
-  transition: box-shadow 0.3s ease;
-}
-
-.game-board:hover {
-  box-shadow: 0 0 40px rgba(0, 255, 159, 0.3);
+  position: relative;
+  width: 100%;
+  max-width: 1000px;
+  height: 800px;
 }
 
 /* Animation classes */
@@ -432,9 +426,9 @@
 
 /* Adjust power-up indicator position */
 .power-up-indicator {
-  position: absolute;
-  top: 100px;
-  right: 20px;
+  position: static;
+  top: auto;
+  right: auto;
   display: flex;
   gap: 10px;
   z-index: 2;
@@ -449,6 +443,7 @@
   display: flex;
   align-items: center;
   gap: 5px;
+  backdrop-filter: blur(8px);
 }
 
 .power-up-timer.active {
@@ -619,14 +614,13 @@
 /* Update next tiles container styling */
 .next-tiles-container {
   position: absolute;
-  right: 50px;
+  right: 20px;
   top: 50%;
   transform: translateY(-50%);
   display: flex;
   flex-direction: column;
+  gap: 10px;
   align-items: center;
-  gap: 20px;
-  z-index: 3;
 }
 
 .next-tiles {
@@ -725,4 +719,18 @@
 
 .exit-button::before {
   font-size: 16px;
+}
+
+.board-controls {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  z-index: 10;
+}
+
+.timer-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
 }

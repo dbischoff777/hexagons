@@ -1310,50 +1310,53 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
         intensity={0.3} 
         color={isGridFull(placedTiles, cols) ? '#FFD700' : '#00FF9F'}
       />
-      <div className="game-controls">
-        {tutorialState.active ? (
-          <button 
-            className="skip-tutorial-button"
-            onClick={onSkipTutorial}
-          >
-            Skip Tutorial
-          </button>
-        ) : (
-          <button 
-            className="exit-button"
-            onClick={handleExit}
-          >
-            Exit Game
-          </button>
-        )}
-      </div>
       <div className="game-hud">
         <div className="score">
           {'Score: ' + score}
         </div>
-        {timedMode && (
-          <div className={`timer ${
-            timeLeft > INITIAL_TIME * 0.5 ? 'safe' : 
-            timeLeft > INITIAL_TIME * 0.25 ? 'warning' : 
-            'danger'
-          }`}>
-            Time: {formatTime(timeLeft)}
+        <div className="timer-container">
+          {timedMode && (
+            <div className={`timer ${
+              timeLeft > INITIAL_TIME * 0.5 ? 'safe' : 
+              timeLeft > INITIAL_TIME * 0.25 ? 'warning' : 
+              'danger'
+            }`}>
+              Time: {formatTime(timeLeft)}
+            </div>
+          )}
+          <div className="power-up-indicator">
+            {powerUps.freeze.active && (
+              <div className="power-up-timer active">
+                ❄️ {powerUps.freeze.remainingTime}s
+              </div>
+            )}
+            {powerUps.multiplier.active && (
+              <div className="power-up-timer active">
+                ✨ {powerUps.multiplier.remainingTime}s
+              </div>
+            )}
           </div>
-        )}
-        <div className="power-up-indicator">
-          {powerUps.freeze.active && (
-            <div className="power-up-timer active">
-              ❄️ {powerUps.freeze.remainingTime}s
-            </div>
-          )}
-          {powerUps.multiplier.active && (
-            <div className="power-up-timer active">
-              ✨ {powerUps.multiplier.remainingTime}s
-            </div>
-          )}
         </div>
       </div>
       <div className="board-container">
+        <div className="board-controls">
+          {tutorialState.active ? (
+            <button 
+              className="skip-tutorial-button"
+              onClick={onSkipTutorial}
+            >
+              Skip Tutorial
+            </button>
+          ) : (
+            <button 
+              className="exit-button"
+              onClick={handleExit}
+            >
+              Exit Game
+            </button>
+          )}
+        </div>
+
         <canvas 
           ref={canvasRef} 
           className={`
@@ -1367,95 +1370,97 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
             Rotation Incoming!
           </div>
         )}
-      </div>
-      <div className="next-tiles-container">
-        <div className="next-tiles">
-          {nextTiles.map((tile, index) => (
-            <div 
-              key={index} 
-              className={`next-tile ${selectedTileIndex === index ? 'selected' : ''}`}
-              onClick={() => setSelectedTileIndex(selectedTileIndex === index ? null : index)}
-            >
-              <canvas
-                ref={el => {
-                  if (el) {
-                    const ctx = el.getContext('2d')
-                    if (ctx) {
-                      el.width = 100
-                      el.height = 100
-                      
-                      // Draw tile background
-                      ctx.fillStyle = 'rgba(26, 26, 46, 0.9)'
-                      ctx.beginPath()
-                      ctx.arc(50, 50, 40, 0, Math.PI * 2)
-                      ctx.fill()
 
-                      // Draw tile edges
-                      tile.edges.forEach((edge, i) => {
-                        const angle = (i * Math.PI) / 3
-                        const startX = 50 + 35 * Math.cos(angle)
-                        const startY = 50 + 35 * Math.sin(angle)
-                        const endX = 50 + 35 * Math.cos(angle + Math.PI / 3)
-                        const endY = 50 + 35 * Math.sin(angle + Math.PI / 3)
-
+        <div className="next-tiles-container">
+          <div className="next-tiles">
+            {nextTiles.map((tile, index) => (
+              <div 
+                key={index} 
+                className={`next-tile ${selectedTileIndex === index ? 'selected' : ''}`}
+                onClick={() => setSelectedTileIndex(selectedTileIndex === index ? null : index)}
+              >
+                <canvas
+                  ref={el => {
+                    if (el) {
+                      const ctx = el.getContext('2d')
+                      if (ctx) {
+                        el.width = 100
+                        el.height = 100
+                        
+                        // Draw tile background
+                        ctx.fillStyle = 'rgba(26, 26, 46, 0.9)'
                         ctx.beginPath()
-                        ctx.moveTo(startX, startY)
-                        ctx.lineTo(endX, endY)
-                        ctx.strokeStyle = edge.color
-                        ctx.lineWidth = selectedTileIndex === index ? 5 : 3
-                        ctx.stroke()
-                      })
+                        ctx.arc(50, 50, 40, 0, Math.PI * 2)
+                        ctx.fill()
 
-                      // Draw selection indicator
-                      if (selectedTileIndex === index) {
-                        ctx.strokeStyle = '#00FF9F'
-                        ctx.lineWidth = 3
-                        ctx.setLineDash([5, 5])
-                        ctx.beginPath()
-                        ctx.arc(50, 50, 45, 0, Math.PI * 2)
-                        ctx.stroke()
-                        ctx.setLineDash([])
-                      }
+                        // Draw tile edges
+                        tile.edges.forEach((edge, i) => {
+                          const angle = (i * Math.PI) / 3
+                          const startX = 50 + 35 * Math.cos(angle)
+                          const startY = 50 + 35 * Math.sin(angle)
+                          const endX = 50 + 35 * Math.cos(angle + Math.PI / 3)
+                          const endY = 50 + 35 * Math.sin(angle + Math.PI / 3)
 
-                      // Draw tile value if it exists
-                      if (tile.value > 0) {
-                        ctx.fillStyle = '#00FFFF'
-                        ctx.font = 'bold 24px Arial'
-                        ctx.textAlign = 'center'
-                        ctx.textBaseline = 'middle'
-                        ctx.fillText(tile.value.toString(), 50, 50)
-                      }
+                          ctx.beginPath()
+                          ctx.moveTo(startX, startY)
+                          ctx.lineTo(endX, endY)
+                          ctx.strokeStyle = edge.color
+                          ctx.lineWidth = selectedTileIndex === index ? 5 : 3
+                          ctx.stroke()
+                        })
 
-                      // Draw power-up indicator if present
-                      if (tile.powerUp) {
-                        const powerUpIcons = {
-                          freeze: '❄️',
-                          colorShift: '🎨',
-                          multiplier: '✨'
+                        // Draw selection indicator
+                        if (selectedTileIndex === index) {
+                          ctx.strokeStyle = '#00FF9F'
+                          ctx.lineWidth = 3
+                          ctx.setLineDash([5, 5])
+                          ctx.beginPath()
+                          ctx.arc(50, 50, 45, 0, Math.PI * 2)
+                          ctx.stroke()
+                          ctx.setLineDash([])
                         }
-                        ctx.font = '16px Arial'
-                        ctx.fillText(powerUpIcons[tile.powerUp.type], 50, 20)
+
+                        // Draw tile value if it exists
+                        if (tile.value > 0) {
+                          ctx.fillStyle = '#00FFFF'
+                          ctx.font = 'bold 24px Arial'
+                          ctx.textAlign = 'center'
+                          ctx.textBaseline = 'middle'
+                          ctx.fillText(tile.value.toString(), 50, 50)
+                        }
+
+                        // Draw power-up indicator if present
+                        if (tile.powerUp) {
+                          const powerUpIcons = {
+                            freeze: '❄️',
+                            colorShift: '🎨',
+                            multiplier: '✨'
+                          }
+                          ctx.font = '16px Arial'
+                          ctx.fillText(powerUpIcons[tile.powerUp.type], 50, 20)
+                        }
                       }
                     }
-                  }
-                }}
-                style={{
-                  cursor: 'pointer',
-                  transition: 'transform 0.2s ease',
-                  transform: selectedTileIndex === index ? 'scale(1.1)' : 'scale(1)'
-                }}
-              />
-            </div>
-          ))}
+                  }}
+                  style={{
+                    cursor: 'pointer',
+                    transition: 'transform 0.2s ease',
+                    transform: selectedTileIndex === index ? 'scale(1.1)' : 'scale(1)'
+                  }}
+                />
+              </div>
+            ))}
+          </div>
+          <button 
+            className="undo-button"
+            onClick={handleUndo}
+            disabled={!previousState}
+          >
+            Undo Last Move
+          </button>
         </div>
-        <button 
-          className="undo-button"
-          onClick={handleUndo}
-          disabled={!previousState}
-        >
-          Undo Last Move
-        </button>
       </div>
+
       {scorePopups.map(popup => (
         <div
           key={popup.id}
