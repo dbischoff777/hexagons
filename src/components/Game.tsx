@@ -14,6 +14,7 @@ import Particles from './Particles'
 import { Achievement } from '../types/achievements'
 import { updateTilesPlaced, updateScore, updateCombo, updateAchievements } from '../utils/achievementUtils'
 import AchievementPopup from './AchievementPopup'
+import ConfirmModal from './ConfirmModal'
 
 interface GameProps {
   musicEnabled: boolean
@@ -173,6 +174,7 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
     score: number
   } | null>(null)
   const [newAchievements, setNewAchievements] = useState<Achievement[]>([])
+  const [showExitConfirm, setShowExitConfirm] = useState(false)
 
   // Add a ref to track game start time
   const gameStartTimeRef = useRef<number>(savedGameState?.startTime ?? Date.now())
@@ -1286,34 +1288,61 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
 
   // Modify the exit handler
   const handleExit = () => {
+    if (!timedMode && !isGameOver) {
+      // For zen mode, show confirmation and save stats
+      setShowExitConfirm(true)
+    } else {
+      // Normal exit for timed mode or tutorial
+      const gameEndTime = Date.now()
+      const playTime = (gameEndTime - gameStartTimeRef.current) / 1000
+
+      updateStatistics({
+        totalPlayTime: playTime,
+        lastPlayed: new Date().toISOString()
+      });
+
+      saveGameState({
+        placedTiles,
+        nextTiles,
+        score,
+        timeLeft,
+        moveHistory: previousState ? [previousState] : [],
+        startTime: gameStartTimeRef.current,
+        timedMode,
+        boardRotation,
+        powerUps,
+        combo,
+        audioSettings: {
+          musicEnabled,
+          soundEnabled
+        }
+      });
+      onExit()
+    }
+  }
+
+  const handleConfirmExit = () => {
     const gameEndTime = Date.now()
     const playTime = (gameEndTime - gameStartTimeRef.current) / 1000
+    
+    // Update achievements and statistics
+    updateAchievements({
+      highestScore: Math.max(score, getStatistics().highScore),
+      highestCombo: Math.max(combo.count, getStatistics().longestCombo),
+      fastestGameTime: Math.min(playTime, getStatistics().fastestGameTime || Infinity)
+    });
 
-    // Update statistics with playTime
     updateStatistics({
+      gamesPlayed: 1,
+      totalScore: score,
+      highScore: Math.max(score, getStatistics().highScore),
       totalPlayTime: playTime,
+      longestCombo: Math.max(combo.count, getStatistics().longestCombo),
       lastPlayed: new Date().toISOString()
     });
 
-    // Save current game state with audio settings
-    const gameState: GameState = {
-      placedTiles,
-      nextTiles,
-      score,
-      timeLeft,
-      moveHistory: previousState ? [previousState] : [],
-      startTime: gameStartTimeRef.current,
-      timedMode,
-      boardRotation,
-      powerUps,
-      combo,
-      audioSettings: {
-        musicEnabled,
-        soundEnabled
-      }
-    }
-    saveGameState(gameState)
-    onExit()
+    clearSavedGame();
+    onExit();
   }
 
   // Keep this effect for handling achievement popups
@@ -1525,6 +1554,13 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
             (TUTORIAL_STEPS[tutorialState.currentStep].requiresAction === 'place' && tutorialState.hasPlaced)
           }
           onNext={progressTutorial}
+        />
+      )}
+      {showExitConfirm && (
+        <ConfirmModal
+          message="Exiting will end your zen mode game and save your statistics. Continue?"
+          onConfirm={handleConfirmExit}
+          onCancel={() => setShowExitConfirm(false)}
         />
       )}
     </div>
