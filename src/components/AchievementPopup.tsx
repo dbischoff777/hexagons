@@ -15,7 +15,6 @@ const AchievementPopup: React.FC<AchievementPopupProps> = ({ achievement, onComp
     // Play sound and show popup
     SoundManager.getInstance().playSound('powerUp');
     setIsVisible(true);
-    console.log('Achievement popup shown:', achievement.name);
     
     // Start hiding after 2.7s (matches CSS animation timing)
     const timer = setTimeout(() => {

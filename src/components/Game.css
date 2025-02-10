@@ -694,9 +694,10 @@
   box-shadow: 0 0 25px rgba(0, 255, 159, 0.4);
 }
 
+/* Update exit button positioning */
 .exit-button {
   position: fixed;
-  top: 95px;
+  top: 20px;  /* Changed from 95px to 20px */
   right: 20px;
   padding: 8px 16px;
   border: 2px solid #FF4D6D;
@@ -721,11 +722,9 @@
   font-size: 16px;
 }
 
+/* Remove board-controls class since we're not using it for the exit button anymore */
 .board-controls {
-  position: absolute;
-  top: 20px;
-  right: 20px;
-  z-index: 10;
+  display: none;  /* Hide the container since we're not using it */
 }
 
 .timer-container {

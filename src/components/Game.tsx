@@ -1310,6 +1310,21 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
         intensity={0.3} 
         color={isGridFull(placedTiles, cols) ? '#FFD700' : '#00FF9F'}
       />
+      {tutorialState.active ? (
+        <button 
+          className="skip-tutorial-button"
+          onClick={onSkipTutorial}
+        >
+          Skip Tutorial
+        </button>
+      ) : (
+        <button 
+          className="exit-button"
+          onClick={handleExit}
+        >
+          Exit Game
+        </button>
+      )}
       <div className="game-hud">
         <div className="score">
           {'Score: ' + score}
@@ -1339,24 +1354,6 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
         </div>
       </div>
       <div className="board-container">
-        <div className="board-controls">
-          {tutorialState.active ? (
-            <button 
-              className="skip-tutorial-button"
-              onClick={onSkipTutorial}
-            >
-              Skip Tutorial
-            </button>
-          ) : (
-            <button 
-              className="exit-button"
-              onClick={handleExit}
-            >
-              Exit Game
-            </button>
-          )}
-        </div>
-
         <canvas 
           ref={canvasRef} 
           className={`

@@ -101,11 +101,6 @@ export const updateTilesPlaced = (count: number): Achievement[] => {
     !prevAchievements.find(a => a.id === achievement.id)?.achieved
   );
 
-  console.log('Achievement check:', {
-    totalTiles: newState.totalTilesPlaced,
-    newlyAchieved
-  });
-  
   return newlyAchieved;
 };
 
