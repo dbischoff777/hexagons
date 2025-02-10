@@ -36,12 +36,12 @@ const generateDailySequence = (seed: string): DailyChallenge => {
   const objectives: DailyObjective[] = [
     {
       type: 'score',
-      target: 1000 + seededRandom(2000),
+      target: 10000 + seededRandom(20000),
       current: 0
     },
     {
       type: 'matches',
-      target: 5 + seededRandom(10),
+      target: 10 + seededRandom(30),
       current: 0
     },
     {
