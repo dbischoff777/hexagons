@@ -1646,6 +1646,17 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
                           ctx.font = '16px Arial'
                           ctx.fillText(powerUpIcons[tile.powerUp.type], 50, 20)
                         }
+
+                        // Draw mirror symbol
+                        if (tile.type === 'mirror') {
+                          ctx.fillStyle = '#FFFFFF'
+                          ctx.shadowColor = '#FFFFFF'
+                          ctx.shadowBlur = 15
+                          ctx.font = 'bold 20px Arial'
+                          ctx.textAlign = 'center'
+                          ctx.textBaseline = 'middle'
+                          ctx.fillText('↔', 50, 50)
+                        }
                       }
                     }
                   }}
