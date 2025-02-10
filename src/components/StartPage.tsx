@@ -7,7 +7,8 @@ import StatisticsPage from './StatisticsPage'
 import ConfirmModal from './ConfirmModal'
 import AchievementsView from './AchievementsView'
 import UnlockablesMenu from './UnlockablesMenu'
-import { setTheme } from '../utils/progressionUtils'
+import { setTheme, getPlayerProgress } from '../utils/progressionUtils'
+import LevelRoadmap from './LevelRoadmap'
 
 
 interface StartPageProps {
@@ -27,6 +28,8 @@ const StartPage: React.FC<StartPageProps> = ({ onStartGame, onMusicToggle, onSou
   const [pendingGameMode, setPendingGameMode] = useState<boolean | null>(null)
   const [showAchievements, setShowAchievements] = useState(false)
   const [showUnlockables, setShowUnlockables] = useState(false)
+  const [showLevelRoadmap, setShowLevelRoadmap] = useState(false)
+  const playerProgress = getPlayerProgress()
 
   useEffect(() => {
     // Check for saved game on mount
@@ -65,6 +68,7 @@ const StartPage: React.FC<StartPageProps> = ({ onStartGame, onMusicToggle, onSou
           tutorial={true}
           onExit={() => setShowTutorial(false)}
           onSkipTutorial={() => setShowTutorial(false)}
+          onStartGame={onStartGame}
         />
       </div>
     )
@@ -166,6 +170,14 @@ const StartPage: React.FC<StartPageProps> = ({ onStartGame, onMusicToggle, onSou
               </button>
 
               <button 
+                className="mode-button roadmap" 
+                onClick={() => setShowLevelRoadmap(true)}
+              >
+                <span className="mode-title">LEVEL ROADMAP</span>
+                <span className="mode-desc">Progress through levels</span>
+              </button>
+
+              <button 
                 className="mode-button daily" 
                 onClick={() => handleNewGame(false, true)}
               >
@@ -221,6 +233,28 @@ const StartPage: React.FC<StartPageProps> = ({ onStartGame, onMusicToggle, onSou
           }}
           onClose={() => setShowUnlockables(false)}
         />
+      )}
+
+      {showLevelRoadmap && (
+        <div className="modal-overlay" onClick={(e) => {
+          if (e.target === e.currentTarget) {
+            setShowLevelRoadmap(false);
+          }
+        }}>
+          <div className="modal-content roadmap-modal">
+            <div className="modal-header">
+              <h2>Level Roadmap</h2>
+            </div>
+            <LevelRoadmap 
+              currentPoints={playerProgress.points || 0} 
+              onStartGame={(withTimer) => {
+                clearSavedGame();
+                setShowLevelRoadmap(false);
+                onStartGame(withTimer);
+              }}
+            />
+          </div>
+        </div>
       )}
     </div>
   )

@@ -19,6 +19,7 @@ export interface PlayerProgress {
   experienceToNext: number;
   unlockedRewards: string[];
   selectedTheme?: string;
+  points: number;
 }
 
 export interface ThemeConfig {

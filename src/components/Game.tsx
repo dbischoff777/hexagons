@@ -19,8 +19,15 @@ import { DailyChallenge } from '../types/dailyChallenge'
 import { getDailyChallenge, updateDailyChallengeProgress, isDailyChallengeCompleted } from '../utils/dailyChallengeUtils'
 import DailyChallengeHUD from './DailyChallengeHUD'
 import DailyChallengeComplete from './DailyChallengeComplete'
-import { addExperience, EXPERIENCE_VALUES, getPlayerProgress, getTheme } from '../utils/progressionUtils'
+import { 
+  addExperience, 
+  EXPERIENCE_VALUES, 
+  getPlayerProgress, 
+  getTheme,
+  PROGRESSION_KEY
+} from '../utils/progressionUtils'
 import LevelProgress from './LevelProgress'
+import LevelRoadmap from './LevelRoadmap'
 
 interface GameProps {
   musicEnabled: boolean
@@ -30,6 +37,7 @@ interface GameProps {
   tutorial?: boolean
   onSkipTutorial?: () => void
   onExit: () => void
+  onStartGame: (withTimer: boolean) => void
   savedGameState?: GameState | null
   isDailyChallenge?: boolean
 }
@@ -122,7 +130,7 @@ const getFeedbackForClear = (clearScore: number) => {
   return SCORE_FEEDBACK.CLEAR[0]
 }
 
-const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = false, onSkipTutorial, onExit, savedGameState, isDailyChallenge }: GameProps) => {
+const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = false, onSkipTutorial, onExit, onStartGame, savedGameState, isDailyChallenge }: GameProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const cols = 7
   
@@ -187,6 +195,7 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
   const [showDailyComplete, setShowDailyComplete] = useState(false)
   const [playerProgress, setPlayerProgress] = useState(getPlayerProgress())
   const theme = getTheme(playerProgress.selectedTheme || 'default')
+  const [showLevelRoadmap, setShowLevelRoadmap] = useState(false)
 
   // Add a ref to track game start time
   const gameStartTimeRef = useRef<number>(savedGameState?.startTime ?? Date.now())
@@ -1261,6 +1270,9 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
       const gameStartTime = tutorialState.active ? gameEndTime : loadGameState()?.startTime ?? gameEndTime
       const playTime = (gameEndTime - gameStartTime) / 1000
       
+      // Update player's points with their score
+      updatePlayerPoints(score)
+
       // Update achievements with time
       updateAchievements({
         highestScore: Math.max(score, getStatistics().highScore),
@@ -1372,6 +1384,9 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
     const gameEndTime = Date.now()
     const playTime = (gameEndTime - gameStartTimeRef.current) / 1000
     
+    // Update player's points with their score
+    updatePlayerPoints(score)
+
     // Update achievements and statistics
     updateAchievements({
       highestScore: Math.max(score, getStatistics().highScore),
@@ -1517,6 +1532,13 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
   const awardExperience = (type: 'match' | 'combo' | 'clear' | 'challenge' | 'achievement', value: number) => {
     const newProgress = addExperience({ type, value });
     setPlayerProgress(newProgress);
+  };
+
+  // Add this function near other state updates
+  const updatePlayerPoints = (newScore: number) => {
+    const progress = getPlayerProgress();
+    progress.points = Math.max(progress.points || 0, newScore);
+    localStorage.setItem(PROGRESSION_KEY, JSON.stringify(progress));
   };
 
   return (
@@ -1754,6 +1776,22 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
           score={score}
           onExit={onExit}
         />
+      )}
+      {showLevelRoadmap && (
+        <div className="roadmap-overlay">
+          <LevelRoadmap 
+            currentPoints={score} 
+            onStartGame={(withTimer) => {
+              setShowLevelRoadmap(false);
+              onGameOver();
+              onExit();
+              onStartGame(withTimer);
+            }}
+          />
+          <button className="close-roadmap" onClick={() => setShowLevelRoadmap(false)}>
+            Close
+          </button>
+        </div>
       )}
     </div>
   )

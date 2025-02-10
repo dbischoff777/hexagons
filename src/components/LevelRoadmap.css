@@ -1,0 +1,110 @@
+.level-roadmap {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 20px;
+  background: rgba(0, 0, 0, 0.8);
+  border-radius: 10px;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.level-block {
+  background: rgba(26, 26, 46, 0.9);
+  border-radius: 8px;
+  padding: 15px;
+}
+
+.block-header {
+  color: #00FF9F;
+  font-size: 1.2em;
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+.level-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 10px;
+}
+
+.level-cell {
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid #333;
+  border-radius: 6px;
+  padding: 10px;
+  text-align: center;
+  position: relative;
+  min-height: 60px;
+  transition: all 0.3s ease;
+}
+
+.level-cell.completed {
+  border-color: #00FF9F;
+  background: rgba(0, 255, 159, 0.1);
+  cursor: pointer;
+  transform: scale(1);
+}
+
+.level-cell.completed:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 20px rgba(0, 255, 159, 0.4);
+  background: rgba(0, 255, 159, 0.2);
+}
+
+.level-cell:not(.completed) {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.level-cell.current {
+  cursor: default;
+  opacity: 1;
+  border-color: #00FFFF;
+  box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
+}
+
+.level-number {
+  font-weight: bold;
+  color: #fff;
+}
+
+.progress-bar {
+  height: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  margin: 5px 0;
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: #00FFFF;
+  transition: width 0.3s ease;
+}
+
+.rewards {
+  display: flex;
+  justify-content: center;
+  gap: 5px;
+  margin-top: 5px;
+}
+
+.reward-icon {
+  font-size: 1.2em;
+  cursor: help;
+}
+
+.points-required {
+  font-size: 0.8em;
+  color: #888;
+  margin: 4px 0;
+}
+
+.level-cell.completed .points-required {
+  color: #00FF9F;
+}
+
+.level-cell.current .points-required {
+  color: #00FFFF;
+} 

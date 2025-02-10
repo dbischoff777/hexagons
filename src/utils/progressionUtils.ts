@@ -1,6 +1,6 @@
 import { ExperienceAction, PlayerProgress, UnlockableReward, ThemeConfig } from '../types/progression';
 
-const PROGRESSION_KEY = 'hexagon_progression';
+export const PROGRESSION_KEY = 'hexagon_progression';
 const BASE_XP_TO_LEVEL = 1000;
 const XP_INCREASE_PER_LEVEL = 500;
 
@@ -190,7 +190,8 @@ export const getPlayerProgress = (): PlayerProgress => {
     experience: 0,
     experienceToNext: calculateExperienceForLevel(1),
     unlockedRewards: [],
-    selectedTheme: 'default'
+    selectedTheme: 'default',
+    points: 0
   };
 };
 
@@ -237,4 +238,91 @@ export const setTheme = (themeId: string): void => {
   const progress = getPlayerProgress();
   progress.selectedTheme = themeId;
   localStorage.setItem(PROGRESSION_KEY, JSON.stringify(progress));
+};
+
+export interface LevelBlock {
+  blockNumber: number;
+  levels: {
+    level: number;
+    pointsRequired: number;
+    rewards?: {
+      type: 'theme' | 'powerup' | 'achievement';
+      id: string;
+    }[];
+  }[];
+}
+
+// Define the level progression blocks based on points
+export const LEVEL_BLOCKS: LevelBlock[] = [
+  {
+    blockNumber: 1,
+    levels: [
+      { level: 1, pointsRequired: 0 },
+      { level: 2, pointsRequired: 25000 },
+      { level: 3, pointsRequired: 45000 },
+      { level: 4, pointsRequired: 70000 },
+      { level: 5, pointsRequired: 100000 },
+      { level: 6, pointsRequired: 135000 },
+      { level: 7, pointsRequired: 175000 },
+      { level: 8, pointsRequired: 220000 },
+      { level: 9, pointsRequired: 270000 },
+      { level: 10, pointsRequired: 330000 },
+    ]
+  },
+  {
+    blockNumber: 2,
+    levels: [
+      { level: 1, pointsRequired: 400000 },
+      { level: 2, pointsRequired: 480000 },
+      { level: 3, pointsRequired: 570000 },
+      { level: 4, pointsRequired: 670000 },
+      { level: 5, pointsRequired: 780000 },
+      { level: 6, pointsRequired: 900000 },
+      { level: 7, pointsRequired: 1030000 },
+      { level: 8, pointsRequired: 1170000 },
+      { level: 9, pointsRequired: 1320000 },
+      { level: 10, pointsRequired: 1500000 },
+    ]
+  },
+  // Add more blocks as needed...
+];
+
+// Helper function to get current level info based on points
+export const getCurrentLevelInfo = (points: number) => {
+  let currentBlock = 1;
+  let currentLevel = 1;
+  let pointsForNextLevel = 1000;
+  let pointsInCurrentLevel = 0;
+  let totalLevelsCompleted = 0;
+
+  for (const block of LEVEL_BLOCKS) {
+    for (const levelInfo of block.levels) {
+      if (points >= levelInfo.pointsRequired) {
+        currentBlock = block.blockNumber;
+        currentLevel = levelInfo.level;
+        totalLevelsCompleted++;
+      } else {
+        pointsForNextLevel = levelInfo.pointsRequired;
+        pointsInCurrentLevel = points - (block.levels[currentLevel - 2]?.pointsRequired || 0);
+        return {
+          currentBlock,
+          currentLevel,
+          pointsForNextLevel,
+          pointsInCurrentLevel,
+          totalLevelsCompleted,
+          levelInfo
+        };
+      }
+    }
+  }
+
+  // Max level reached
+  return {
+    currentBlock: LEVEL_BLOCKS.length,
+    currentLevel: 10,
+    pointsForNextLevel: Infinity,
+    pointsInCurrentLevel: points,
+    totalLevelsCompleted,
+    levelInfo: LEVEL_BLOCKS[LEVEL_BLOCKS.length - 1].levels[9]
+  };
 }; 

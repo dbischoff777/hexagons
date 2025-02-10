@@ -355,3 +355,89 @@
   background: linear-gradient(45deg, #FF8787, #6EE7E0);
   transform: translateY(-2px);
 }
+
+.roadmap-button {
+  margin-top: 1rem;
+  padding: 1rem 2rem;
+  font-size: 1.2rem;
+  background: rgba(0, 255, 159, 0.15);
+  color: #00FF9F;
+  border: 2px solid #00FF9F;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.roadmap-button:hover {
+  background: rgba(0, 255, 159, 0.25);
+  transform: scale(1.05);
+}
+
+.roadmap-modal {
+  width: 90%;
+  max-width: 900px;
+  max-height: 80vh;
+  overflow-y: auto;
+  background: rgba(26, 26, 46, 0.95);
+  border: 2px solid #00FF9F;
+  border-radius: 12px;
+  padding: 0;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 20px;
+  background: rgba(0, 0, 0, 0.3);
+  border-bottom: 1px solid #00FF9F;
+}
+
+.modal-header h2 {
+  color: #00FF9F;
+  margin: 0;
+  font-size: 1.5em;
+}
+
+.close-button {
+  background: none;
+  border: none;
+  color: #00FF9F;
+  font-size: 24px;
+  cursor: pointer;
+  padding: 0 8px;
+  transition: color 0.3s ease;
+}
+
+.close-button:hover {
+  color: #FF1177;
+}
+
+/* Add scrollbar styling */
+.roadmap-modal::-webkit-scrollbar {
+  width: 8px;
+}
+
+.roadmap-modal::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+}
+
+.roadmap-modal::-webkit-scrollbar-thumb {
+  background: #00FF9F;
+  border-radius: 4px;
+}
+
+.roadmap-modal::-webkit-scrollbar-thumb:hover {
+  background: #00CC7F;
+}
+
+.mode-button.roadmap {
+  background: linear-gradient(45deg, #00FF9F, #00FFFF);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.mode-button.roadmap:hover {
+  background: linear-gradient(45deg, #33FFA3, #33FFFF);
+  transform: translateY(-2px);
+}
