@@ -79,33 +79,7 @@ export const ACHIEVEMENTS: Omit<Achievement, 'currentProgress' | 'achieved' | 't
     requirement: 10,
   },
 
-  // Time achievements
-  {
-    id: 'time_60',
-    name: 'Speed Runner',
-    description: 'Complete a game in under 60 seconds',
-    icon: '⚡',
-    type: 'time',
-    requirement: 60,
-  },
-  {
-    id: 'time_30',
-    name: 'Lightning Fast',
-    description: 'Complete a game in under 30 seconds',
-    icon: '⚡',
-    type: 'time',
-    requirement: 30,
-  },
-
   // Special achievements
-  {
-    id: 'special_perfect',
-    name: 'Perfect Game',
-    description: 'Complete a game without any mistakes',
-    icon: '👑',
-    type: 'special',
-    requirement: 1,
-  },
   {
     id: 'special_daily',
     name: 'Daily Player',

@@ -64,8 +64,6 @@ const getAchievementProgress = (
       return state.highestScore;
     case 'combo':
       return state.highestCombo;
-    case 'time':
-      return state.fastestGameTime || 0;
     case 'special':
       // Special achievements need custom logic
       return 0;
