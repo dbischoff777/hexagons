@@ -65,8 +65,17 @@ const getAchievementProgress = (
     case 'combo':
       return state.highestCombo;
     case 'special':
-      // Special achievements need custom logic
-      return 0;
+      if (!achievement.timestamp) return 0;
+      
+      // Check if the achievement was completed today
+      const achievementDate = new Date(achievement.timestamp);
+      const today = new Date();
+      
+      return (
+        achievementDate.getDate() === today.getDate() &&
+        achievementDate.getMonth() === today.getMonth() &&
+        achievementDate.getFullYear() === today.getFullYear()
+      ) ? achievement.requirement : 0;
     default:
       return 0;
   }

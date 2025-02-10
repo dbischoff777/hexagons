@@ -29,29 +29,31 @@ export const ACHIEVEMENTS: Omit<Achievement, 'currentProgress' | 'achieved' | 't
   
   // Score achievements
   {
-    id: 'score_100',
+    id: 'score_5000',
     name: 'Point Collector',
     description: 'Reach a score of 100 points',
     icon: '⭐',
     type: 'score',
-    requirement: 100,
+    requirement: 5000,
   },
   {
-    id: 'score_500',
+    id: 'score_10000',
     name: 'Score Champion',
     description: 'Reach a score of 500 points',
     icon: '🌟',
     type: 'score',
-    requirement: 500,
+    requirement: 10000,
   },
+
   {
-    id: 'score_1000',
+    id: 'score_100000',
     name: 'Score Legend',
     description: 'Reach a score of 1,000 points',
     icon: '💫',
     type: 'score',
-    requirement: 1000,
+    requirement: 100000,
   },
+
 
   // Combo achievements
   {
@@ -60,7 +62,7 @@ export const ACHIEVEMENTS: Omit<Achievement, 'currentProgress' | 'achieved' | 't
     description: 'Get a 3x combo',
     icon: '🔥',
     type: 'combo',
-    requirement: 3,
+    requirement: 10,
   },
   {
     id: 'combo_5',
@@ -68,7 +70,7 @@ export const ACHIEVEMENTS: Omit<Achievement, 'currentProgress' | 'achieved' | 't
     description: 'Get a 5x combo',
     icon: '🔥',
     type: 'combo',
-    requirement: 5,
+    requirement: 30,
   },
   {
     id: 'combo_10',
@@ -76,16 +78,16 @@ export const ACHIEVEMENTS: Omit<Achievement, 'currentProgress' | 'achieved' | 't
     description: 'Get a 10x combo',
     icon: '🌋',
     type: 'combo',
-    requirement: 10,
+    requirement: 50,
   },
 
   // Special achievements
   {
     id: 'special_daily',
     name: 'Daily Player',
-    description: 'Play the game for 7 consecutive days',
+    description: 'Play the game for 2 consecutive days',
     icon: '📅',
     type: 'special',
-    requirement: 7,
+    requirement: 2,
   },
 ]; 
