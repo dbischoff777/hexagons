@@ -125,4 +125,21 @@ export const ACHIEVEMENTS: Omit<Achievement, 'currentProgress' | 'achieved' | 't
     type: 'special',
     requirement: 3,
   },
+  // Grid clear achievements
+  {
+    id: 'first_clear',
+    name: 'First Clear!',
+    description: 'Clear the grid for the first time',
+    icon: '🎪',
+    type: 'grid_clear',
+    requirement: 1,
+  },
+  {
+    id: 'clear_master',
+    name: 'Clear Master',
+    description: 'Clear the grid 10 times',
+    icon: '🏆',
+    type: 'grid_clear',
+    requirement: 10,
+  }
 ]; 

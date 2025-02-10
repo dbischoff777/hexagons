@@ -1,4 +1,4 @@
-export type AchievementType = 'tiles' | 'score' | 'time' | 'combo' | 'special';
+export type AchievementType = 'tiles' | 'score' | 'time' | 'combo' | 'special' | 'grid_clear';
 
 export interface Achievement {
   id: string;
@@ -18,4 +18,5 @@ export interface AchievementState {
   highestCombo: number;
   fastestGameTime?: number;
   highestScore: number;
+  totalGridClears: number;
 } 

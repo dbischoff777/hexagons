@@ -12,7 +12,7 @@ import { TutorialMessage } from './TutorialMessage'
 import { saveGameState, loadGameState, updateStatistics, clearSavedGame, getStatistics } from '../utils/gameStateUtils'
 import Particles from './Particles'
 import { Achievement } from '../types/achievements'
-import { updateTilesPlaced, updateScore, updateCombo, updateAchievements } from '../utils/achievementUtils'
+import { updateTilesPlaced, updateScore, updateCombo, updateAchievements, updateGridClears } from '../utils/achievementUtils'
 import AchievementPopup from './AchievementPopup'
 import ConfirmModal from './ConfirmModal'
 
@@ -929,24 +929,16 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
             // Calculate new total score including the current placement score
             const newTotalScore = score + placedTileScore;
 
-            // Check for all types of achievements
-            const achievedFromTiles = updateTilesPlaced(1);
-            const achievedFromCombo = updateCombo(combo.count);
+            // Check for achievements separately
+            checkAchievements({
+              tilesPlaced: 1,
+              comboCount: combo.count,
+              score: newTotalScore,
+              clearBonus: placedTileScore > 0 && isGridFull(newPlacedTiles, cols)
+            });
 
-            // Combine all new achievements
-            const newlyAchieved = [
-              ...achievedFromTiles,
-              ...achievedFromCombo
-            ];
-
-            // Add any new achievements to the popup queue
-            setNewAchievements(prev => [...prev, ...newlyAchieved]);
-
-            // Update the score after checking achievements
+            // Update the score
             setScore(newTotalScore);
-
-            // Check score achievements
-            checkScoreAchievements(newTotalScore);
           }
         }
       }
@@ -1360,11 +1352,45 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
     }
   }, [newAchievements, score, combo.count, placedTiles.length]);
 
-  // First, create a function to check score achievements
-  const checkScoreAchievements = (newScore: number) => {
-    const achievedFromScore = updateScore(newScore);
-    if (achievedFromScore.length > 0) {
-      setNewAchievements(prev => [...prev, ...achievedFromScore]);
+  // Add this new function in the Game component
+  const checkAchievements = ({
+    tilesPlaced,
+    comboCount,
+    score,
+    clearBonus
+  }: {
+    tilesPlaced: number;
+    comboCount: number;
+    score: number;
+    clearBonus: boolean;
+  }) => {
+    const newAchievements: Achievement[] = [];
+
+    // Check tiles placed achievements
+    if (tilesPlaced > 0) {
+      const tilesAchievements = updateTilesPlaced(tilesPlaced);
+      newAchievements.push(...tilesAchievements);
+    }
+
+    // Check combo achievements
+    if (comboCount > 0) {
+      const comboAchievements = updateCombo(comboCount);
+      newAchievements.push(...comboAchievements);
+    }
+
+    // Check score achievements
+    const scoreAchievements = updateScore(score);
+    newAchievements.push(...scoreAchievements);
+
+    // Check for grid clear achievements if applicable
+    if (clearBonus) {
+      const clearAchievements = updateGridClears(1);
+      newAchievements.push(...clearAchievements);
+    }
+
+    // Add any new achievements to the popup queue
+    if (newAchievements.length > 0) {
+      setNewAchievements(prev => [...prev, ...newAchievements]);
     }
   };
 

@@ -15,7 +15,9 @@ const getInitialAchievementState = (): AchievementState => {
     totalTilesPlaced: 0,
     highestCombo: 0,
     highestScore: 0,
+    totalGridClears: 0,
   };
+
 };
 
 export const getAchievements = (): AchievementState => {
@@ -65,6 +67,8 @@ const getAchievementProgress = (
       return state.highestScore;
     case 'combo':
       return state.highestCombo;
+    case 'grid_clear':
+      return state.totalGridClears;
     case 'special':
       if (!achievement.timestamp) return 0;
       
@@ -142,6 +146,28 @@ export const updateCombo = (combo: number): Achievement[] => {
   
   // Find newly achieved achievements
   return updatedState.achievements.filter(achievement => 
+    achievement.achieved && 
+    !prevAchievements.find(a => a.id === achievement.id)?.achieved
+  );
+};
+
+export const updateGridClears = (count: number): Achievement[] => {
+  const currentState = getAchievements();
+  const prevAchievements = [...currentState.achievements];
+  
+  // Update the state with new total
+  const newState = {
+    ...currentState,
+    totalGridClears: (currentState.totalGridClears || 0) + count
+  };
+  
+  // Update achievements and get the updated state
+  updateAchievements(newState);
+  const updatedState = getAchievements();
+  
+  // Find newly achieved grid clear achievements
+  return updatedState.achievements.filter(achievement => 
+    achievement.type === 'grid_clear' &&
     achievement.achieved && 
     !prevAchievements.find(a => a.id === achievement.id)?.achieved
   );
