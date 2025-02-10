@@ -28,6 +28,8 @@ import {
 } from '../utils/progressionUtils'
 import LevelProgress from './LevelProgress'
 import LevelRoadmap from './LevelRoadmap'
+import BadgePopup from './BadgePopup'
+import { Badge } from '../types/progression'
 
 interface GameProps {
   musicEnabled: boolean
@@ -196,9 +198,8 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
   const [playerProgress, setPlayerProgress] = useState(getPlayerProgress())
   const theme = getTheme(playerProgress.selectedTheme || 'default')
   const [showLevelRoadmap, setShowLevelRoadmap] = useState(false)
-
-  // Add a ref to track game start time
-  const gameStartTimeRef = useRef<number>(savedGameState?.startTime ?? Date.now())
+  const [newBadges, setNewBadges] = useState<Badge[]>([])
+  const [confirmMessage, setConfirmMessage] = useState<string>("")
 
   // Modify the findAvailableYPosition function
   const findAvailableYPosition = (baseY: number, type: 'score' | 'combo' | 'quick' | 'clear'): number => {
@@ -1037,11 +1038,11 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
 
           // Inside handleClick where matches are handled
           if (matchingTiles.length >= 3) {
-            awardExperience('match', matchingTiles.length * EXPERIENCE_VALUES.match);
+            awardExperience('match', EXPERIENCE_VALUES.match * matchingTiles.length);
           }
           // Where combos are handled
           if (combo.count > 1) {
-            awardExperience('combo', combo.count * EXPERIENCE_VALUES.combo);
+            awardExperience('combo', EXPERIENCE_VALUES.combo * combo.count);
           }
 
           // Where grid clears are handled
@@ -1369,64 +1370,12 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
 
   // Modify the exit handler
   const handleExit = () => {
-    if (!timedMode && !isGameOver) {
-      // For zen mode, show confirmation and save stats
-      setShowExitConfirm(true)
-    } else {
-      // Normal exit for timed mode or tutorial
-      const gameEndTime = Date.now()
-      const playTime = (gameEndTime - gameStartTimeRef.current) / 1000
-
-      updateStatistics({
-        totalPlayTime: playTime + (getStatistics().totalPlayTime || 0),
-        lastPlayed: new Date().toISOString()
-      });
-
-      saveGameState({
-        placedTiles,
-        nextTiles,
-        score,
-        timeLeft,
-        moveHistory: previousState ? [previousState] : [],
-        startTime: gameStartTimeRef.current,
-        timedMode,
-        boardRotation,
-        powerUps,
-        combo,
-        audioSettings: {
-          musicEnabled,
-          soundEnabled
-        }
-      });
-      onExit()
-    }
-  }
-
-  const handleConfirmExit = () => {
-    const gameEndTime = Date.now()
-    const playTime = (gameEndTime - gameStartTimeRef.current) / 1000
+    const confirmMessage = tutorialState.active
+      ? "Are you sure you want to exit the tutorial? Your progress won't be saved."
+      : "Are you sure you want to exit? Your progress will be lost.";
     
-    // Update player's points with their score
-    updatePlayerPoints(score)
-
-    // Update achievements and statistics
-    updateAchievements({
-      highestScore: Math.max(score, getStatistics().highScore),
-      highestCombo: Math.max(combo.count, getStatistics().longestCombo),
-      fastestGameTime: Math.min(playTime, getStatistics().fastestGameTime || Infinity)
-    });
-
-    updateStatistics({
-      gamesPlayed: 1,
-      totalScore: score,
-      highScore: Math.max(score, getStatistics().highScore),
-      totalPlayTime: playTime + (getStatistics().totalPlayTime || 0),
-      longestCombo: Math.max(combo.count, getStatistics().longestCombo),
-      lastPlayed: new Date().toISOString()
-    });
-
-    clearSavedGame();
-    onExit();
+    setShowExitConfirm(true);
+    setConfirmMessage(confirmMessage);
   }
 
   // Keep this effect for handling achievement popups
@@ -1552,8 +1501,11 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
 
   // Modify the awardExperience function
   const awardExperience = (type: 'match' | 'combo' | 'clear' | 'challenge' | 'achievement', value: number) => {
-    const newProgress = addExperience({ type, value });
-    setPlayerProgress(newProgress);
+    const { progress, newBadges } = addExperience({ type, value });
+    setPlayerProgress(progress);
+    if (newBadges.length > 0) {
+      setNewBadges(prev => [...prev, ...newBadges]);
+    }
   };
 
   // Add this function near other state updates
@@ -1576,12 +1528,14 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
         color={isGridFull(placedTiles, cols) ? theme.colors.accent : theme.colors.primary}
       />
       {tutorialState.active ? (
-        <button 
-          className="skip-tutorial-button"
-          onClick={onSkipTutorial}
-        >
-          Skip Tutorial
-        </button>
+        <div className="tutorial-buttons">
+          <button 
+            className="skip-tutorial-button"
+            onClick={onSkipTutorial}
+          >
+            Skip Tutorial
+          </button>
+        </div>
       ) : (
         <button 
           className="exit-button"
@@ -1785,8 +1739,11 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
       )}
       {showExitConfirm && (
         <ConfirmModal
-          message="Exiting will end your zen mode game and save your statistics. Continue?"
-          onConfirm={handleConfirmExit}
+          message={confirmMessage}
+          onConfirm={() => {
+            setShowExitConfirm(false);
+            onExit();
+          }}
           onCancel={() => setShowExitConfirm(false)}
         />
       )}
@@ -1814,6 +1771,12 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
             Close
           </button>
         </div>
+      )}
+      {newBadges.length > 0 && (
+        <BadgePopup
+          badge={newBadges[0]}
+          onComplete={() => setNewBadges(prev => prev.slice(1))}
+        />
       )}
     </div>
   )

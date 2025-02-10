@@ -13,6 +13,15 @@ export interface UnlockableReward {
   levelRequired: number;
 }
 
+export interface Badge {
+  id: string;
+  name: string;
+  description: string;
+  icon: string;
+  levelBlock: number; // The level block this badge is awarded for (e.g., 1 for levels 1-5, 2 for 6-10, etc.)
+  dateAwarded?: string;
+}
+
 export interface PlayerProgress {
   level: number;
   experience: number;
@@ -20,6 +29,7 @@ export interface PlayerProgress {
   unlockedRewards: string[];
   selectedTheme?: string;
   points: number;
+  badges: Badge[];
 }
 
 export interface ThemeConfig {

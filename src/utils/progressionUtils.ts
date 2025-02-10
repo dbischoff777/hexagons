@@ -1,4 +1,4 @@
-import { ExperienceAction, PlayerProgress, UnlockableReward, ThemeConfig } from '../types/progression';
+import { PlayerProgress, UnlockableReward, ThemeConfig, Badge, ExperienceAction } from '../types/progression';
 
 export const PROGRESSION_KEY = 'hexagon_progression';
 const BASE_XP_TO_LEVEL = 1000;
@@ -191,13 +191,20 @@ export const getPlayerProgress = (): PlayerProgress => {
     experienceToNext: calculateExperienceForLevel(1),
     unlockedRewards: [],
     selectedTheme: 'default',
-    points: 0
+    points: 0,
+    badges: []
   };
 };
 
-export const addExperience = (action: ExperienceAction): PlayerProgress => {
+export const addExperience = ({ type, value }: ExperienceAction): { progress: PlayerProgress; newBadges: Badge[] } => {
   const progress = getPlayerProgress();
-  progress.experience += action.value;
+  // Apply type-specific multipliers
+  const multiplier = type === 'combo' ? 1.2 : 
+                    type === 'clear' ? 1.5 : 
+                    type === 'challenge' ? 2 : 1;
+  progress.experience += value * multiplier;
+
+  const newBadges: Badge[] = [];
 
   while (progress.experience >= progress.experienceToNext) {
     progress.experience -= progress.experienceToNext;
@@ -210,10 +217,26 @@ export const addExperience = (action: ExperienceAction): PlayerProgress => {
         progress.unlockedRewards.push(reward.id);
       }
     });
+
+    // Check for badges when leveling up
+    if (progress.level % 5 === 0) {
+      const currentBlock = Math.ceil(progress.level / 5);
+      const badge = BADGES.find(b => b.levelBlock === currentBlock);
+      if (badge && !progress.badges?.some(b => b.id === badge.id)) {
+        const newBadge = {
+          ...badge,
+          dateAwarded: new Date().toISOString()
+        };
+        
+        // Add the badge to player progress
+        progress.badges = [...(progress.badges || []), newBadge];
+        newBadges.push(newBadge);
+      }
+    }
   }
 
   localStorage.setItem(PROGRESSION_KEY, JSON.stringify(progress));
-  return progress;
+  return { progress, newBadges };
 };
 
 export const getUnlockedRewards = (): UnlockableReward[] => {
@@ -325,4 +348,43 @@ export const getCurrentLevelInfo = (points: number) => {
     totalLevelsCompleted,
     levelInfo: LEVEL_BLOCKS[LEVEL_BLOCKS.length - 1].levels[9]
   };
-}; 
+};
+
+// Add badge definitions
+export const BADGES: Badge[] = [
+  {
+    id: 'novice',
+    name: 'Novice Explorer',
+    description: 'Completed the first steps of your journey',
+    icon: '🌟',
+    levelBlock: 1
+  },
+  {
+    id: 'apprentice',
+    name: 'Apprentice Matcher',
+    description: 'Mastered the basics of tile matching',
+    icon: '🎯',
+    levelBlock: 2
+  },
+  {
+    id: 'adept',
+    name: 'Color Adept',
+    description: 'Demonstrated advanced color matching skills',
+    icon: '🎨',
+    levelBlock: 3
+  },
+  {
+    id: 'expert',
+    name: 'Pattern Expert',
+    description: 'Achieved mastery of complex patterns',
+    icon: '⭐',
+    levelBlock: 4
+  },
+  {
+    id: 'master',
+    name: 'Hex Master',
+    description: 'Reached the pinnacle of hex matching',
+    icon: '👑',
+    levelBlock: 5
+  }
+]; 
