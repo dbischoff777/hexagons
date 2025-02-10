@@ -1,5 +1,6 @@
 export interface Edge {
   color: string
+  pattern?: string
 }
 
 export interface Tile {
@@ -20,7 +21,51 @@ export interface DragState {
 }
 
 export interface PlacedTile extends Tile {
-  isPlaced: boolean  // Add flag to track if tile is properly placed
+  isPlaced: boolean
+  isJoker?: boolean  // Rainbow tile
+  isMirror?: boolean // Mirror tile
+  matchPotential?: number[]
+  type: 'normal' | 'mirror' | 'rainbow'
+  powerUp?: {
+    type: 'freeze' | 'colorShift' | 'multiplier'
+    duration?: number
+    multiplier?: number
+    active: boolean
+  }
+}
+
+export interface PowerUpState {
+  freeze: { active: boolean, remainingTime: number }
+  colorShift: { active: boolean }
+  multiplier: { active: boolean, value: number, remainingTime: number }
+}
+
+export interface ComboState {
+  count: number
+  timer: number
+  multiplier: number
+  lastPlacementTime: number
+}
+
+export interface GameState {
+  placedTiles: PlacedTile[]
+  nextTiles: PlacedTile[]
+  score: number
+  timeLeft: number
+  moveHistory: {
+    placedTiles: PlacedTile[]
+    nextTiles: PlacedTile[]
+    score: number
+  }[] | null
+  startTime: number
+  timedMode: boolean
+  boardRotation: number
+  powerUps: PowerUpState
+  combo: ComboState
+  audioSettings: {
+    musicEnabled: boolean
+    soundEnabled: boolean
+  }
 }
 
 export interface GameStatistics {

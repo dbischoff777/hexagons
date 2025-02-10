@@ -1,4 +1,4 @@
-export interface Tile {
+/* export interface Tile {
   edges: { 
     color: string
     pattern?: string 
@@ -74,4 +74,4 @@ export interface GameStatistics {
   longestCombo: number
   totalPlayTime: number
   lastPlayed: string
-}
+} */

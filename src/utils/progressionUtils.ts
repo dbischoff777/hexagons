@@ -9,7 +9,8 @@ export const EXPERIENCE_VALUES = {
   combo: 100,
   clear: 200,
   challenge: 500,
-  achievement: 300
+  achievement: 300,
+  mirror_match: 15
 };
 
 export const THEMES: ThemeConfig[] = [
@@ -163,6 +164,15 @@ export const UNLOCKABLE_REWARDS: UnlockableReward[] = [
     levelRequired: 6,
     unlocked: false,
     preview: '✨'
+  },
+  {
+    type: 'special_tile',
+    id: 'mirror_tile',
+    name: 'Mirror Tile',
+    description: 'Special tile that mirrors colors of adjacent tiles',
+    levelRequired: 5,
+    unlocked: false,
+    preview: '↔️'
   }
 ];
 

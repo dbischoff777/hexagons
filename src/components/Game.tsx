@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
-import { PlacedTile, PowerUpState, ComboState, GameState } from '../types'
-import { createTileWithRandomEdges, hexToPixel, getAdjacentTiles, COLORS } from '../utils/hexUtils'
+import { PowerUpState, ComboState, GameState, PlacedTile } from '../types/index'
+import { createTileWithRandomEdges, hexToPixel, getAdjacentTiles, COLORS, updateMirrorTileEdges } from '../utils/hexUtils'
 import { INITIAL_TIME, hasMatchingEdges, formatTime, updateTileValues, isGridFull } from '../utils/gameUtils'
 import SoundManager from '../utils/soundManager'
 import './Game.css'
@@ -564,6 +564,49 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
       if (tile && (settings.isColorBlind || settings.showEdgeNumbers)) {
         drawAccessibilityOverlay(ctx, tile, x, y, size, settings)
       }
+      // Add mirror tile indicator and visual effects
+      if (tile?.type === 'mirror') {
+        // Add reflective gradient effect
+        const gradient = ctx.createLinearGradient(x - size, y - size, x + size, y + size);
+        gradient.addColorStop(0, 'rgba(200, 200, 200, 0.8)');  // Light silver
+        gradient.addColorStop(0.5, 'rgba(150, 150, 150, 0.5)'); // Mid silver
+        gradient.addColorStop(1, 'rgba(180, 180, 180, 0.8)');   // Light silver
+        ctx.fillStyle = gradient;
+        
+        // Draw mirror symbol
+        ctx.fillStyle = '#FFFFFF';
+        ctx.shadowColor = '#FFFFFF';
+        ctx.shadowBlur = 15;
+        ctx.font = 'bold 20px Arial';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('↔', x, y);
+
+        // Show mirror info when selected
+        if (isSelected) {
+          const text = 'Mirrors adjacent colors';
+          // Draw info box above tile
+          ctx.fillStyle = 'rgba(0, 255, 159, 0.1)';
+          ctx.strokeStyle = 'rgba(0, 255, 159, 0.3)';
+          ctx.lineWidth = 1;
+          const padding = 10;
+          const boxWidth = ctx.measureText(text).width + padding * 2;
+          const boxHeight = 30;
+          const boxX = x - boxWidth / 2;
+          const boxY = y - size * 2;
+
+          // Draw box with rounded corners
+          ctx.beginPath();
+          ctx.roundRect(boxX, boxY, boxWidth, boxHeight, 5);
+          ctx.fill();
+          ctx.stroke();
+
+          // Draw description text
+          ctx.fillStyle = '#fff';
+          ctx.font = '14px Arial';
+          ctx.fillText(text, x, boxY + boxHeight/2);
+        }
+      }
     }
 
     const centerX = canvas.width / 2 - 100
@@ -768,13 +811,20 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
         if (isValidPosition && !isOccupied) {
           const selectedTile = nextTiles[selectedTileIndex]
           
-          // Place the new tile
-          const newTile: PlacedTile = { 
+          // Create the new tile
+          let newTile: PlacedTile = { 
             ...selectedTile, 
             q, 
             r,
             value: 0,
-            isPlaced: true 
+            isPlaced: true,
+            type: 'normal'
+          }
+
+          // If it's a mirror tile, update its edges based on adjacent tiles
+          if (newTile.type === 'mirror') {
+            newTile = updateMirrorTileEdges(newTile, placedTiles)
+            soundManager.playSound('mirror')
           }
           
           // Update all tiles' values after placement
@@ -1398,7 +1448,8 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
       setPlacedTiles(challenge.initialTiles.map(tile => ({
         ...tile,
         isPlaced: true,
-        value: 0
+        value: 0,
+        type: 'normal'
       })));
       setNextTiles(challenge.nextTilesSequence[0].map(edges => ({
         ...createTileWithRandomEdges(0, 0),

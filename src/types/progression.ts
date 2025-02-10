@@ -4,7 +4,7 @@ export interface ExperienceAction {
 }
 
 export interface UnlockableReward {
-  type: 'tile' | 'theme' | 'powerup';
+  type: 'tile' | 'theme' | 'powerup' | 'special_tile';
   id: string;
   name: string;
   description: string;

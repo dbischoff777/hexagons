@@ -1,4 +1,4 @@
-import { Tile, PlacedTile } from "../types"
+import { Tile, PlacedTile } from "../types/index"
 import { getPlayerProgress } from './progressionUtils';
 
 export const COLORS = [
@@ -12,7 +12,7 @@ export const COLORS = [
 
 export const getRandomColor = () => COLORS[Math.floor(Math.random() * COLORS.length)]
 
-export const getAdjacentTiles = (tile: Tile, allTiles: Tile[]): Tile[] => {
+export const getAdjacentTiles = (tile: Tile, allTiles: PlacedTile[]): PlacedTile[] => {
   return allTiles.filter(t => 
     (Math.abs(t.q - tile.q) <= 1 && Math.abs(t.r - tile.r) <= 1) && // Adjacent coordinates
     !(t.q === tile.q && t.r === tile.r) // Not the same tile
@@ -22,6 +22,7 @@ export const getAdjacentTiles = (tile: Tile, allTiles: Tile[]): Tile[] => {
 export const createTileWithRandomEdges = (q: number, r: number): PlacedTile => {
   const progress = getPlayerProgress();
   const hasRainbowTile = progress.unlockedRewards.includes('rainbow_tile');
+  const hasMirrorTile = progress.unlockedRewards.includes('mirror_tile');
   const unlockedPowerups = progress.unlockedRewards.filter(id => 
     ['time_freeze', 'color_shift', 'multiplier'].includes(id)
   );
@@ -37,6 +38,7 @@ export const createTileWithRandomEdges = (q: number, r: number): PlacedTile => {
       })),
       isPlaced: false,
       value: 0,
+      type: 'normal',
       powerUp: {
         type: powerUpId === 'time_freeze' ? 'freeze' :
               powerUpId === 'color_shift' ? 'colorShift' : 'multiplier',
@@ -48,14 +50,25 @@ export const createTileWithRandomEdges = (q: number, r: number): PlacedTile => {
     };
   }
   
-  // Small chance for rainbow tile (10% if unlocked)
+  // Small chance for special tiles (10% each if unlocked)
   if (hasRainbowTile && Math.random() < 0.1) {
     return {
       q, r,
       edges: Array(6).fill({ color: 'rainbow' }),
       isPlaced: false,
       value: 0,
+      type: 'rainbow',
       isJoker: true
+    };
+  }
+  
+  if (hasMirrorTile && Math.random() < 0.1) {
+    return {
+      q, r,
+      edges: Array(6).fill({ color: '#CCCCCC' }),
+      isPlaced: false,
+      value: 0,
+      type: 'mirror'
     };
   }
 
@@ -65,7 +78,8 @@ export const createTileWithRandomEdges = (q: number, r: number): PlacedTile => {
       color: COLORS[Math.floor(Math.random() * COLORS.length)]
     })),
     isPlaced: false,
-    value: 0
+    value: 0,
+    type: 'normal'
   };
 }
 
@@ -82,4 +96,34 @@ export const DIRECTIONS = [
   { q: -1, r: 0 },  // left
   { q: 0, r: -1 },  // top left
   { q: 1, r: -1 }   // top right
-] 
+]
+
+export const updateMirrorTileEdges = (tile: PlacedTile, allTiles: PlacedTile[]): PlacedTile => {
+  if (tile.type !== 'mirror') return tile;
+
+  const adjacentTiles = getAdjacentTiles(tile, allTiles);
+  const newEdges = [...tile.edges];
+
+  // For each edge, look for an adjacent tile that would connect to that edge
+  for (let i = 0; i < 6; i++) {
+    const direction = DIRECTIONS[i];
+    const adjacentTile = adjacentTiles.find(t => 
+      t.q === tile.q + direction.q && 
+      t.r === tile.r + direction.r
+    );
+
+    if (adjacentTile) {
+      // The opposite edge of the adjacent tile becomes this edge's color
+      const oppositeIndex = (i + 3) % 6;
+      newEdges[i] = { color: adjacentTile.edges[oppositeIndex].color };
+    } else {
+      // If no adjacent tile, use a default color
+      newEdges[i] = { color: '#888888' };
+    }
+  }
+
+  return {
+    ...tile,
+    edges: newEdges
+  };
+} 

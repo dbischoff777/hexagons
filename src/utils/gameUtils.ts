@@ -1,4 +1,4 @@
-import { Tile, PlacedTile } from '../types'
+import { Tile, PlacedTile } from '../types/index'
 import { DIRECTIONS, getAdjacentTiles } from './hexUtils'
 import { getEdgeValue } from './accessibilityUtils'
 

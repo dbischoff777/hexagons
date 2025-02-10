@@ -25,7 +25,7 @@ const UnlockablesMenu: React.FC<UnlockablesMenuProps> = ({ onSelectTheme, onClos
     },
     ...rewards.filter(r => r.type === 'theme')
   ];
-  const tiles = rewards.filter(r => r.type === 'tile');
+  const tiles = rewards.filter(r => r.type === 'tile' || r.type === 'special_tile');
 
   // Add click handler for the overlay
   const handleOverlayClick = (e: React.MouseEvent) => {
