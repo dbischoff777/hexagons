@@ -38,11 +38,11 @@ const AchievementsView: React.FC = () => {
                 <div 
                   className="progress-bar"
                   style={{ 
-                    width: `${Math.min(100, (achievement.currentProgress / achievement.requirement) * 100)}%`
+                    width: `${Math.min(100, ((Math.min(achievement.currentProgress, achievement.requirement)) / achievement.requirement) * 100)}%`
                   }}
                 />
                 <span className="progress-text">
-                  {achievement.currentProgress} / {achievement.requirement}
+                  {Math.min(achievement.currentProgress, achievement.requirement)} / {achievement.requirement}
                 </span>
               </div>
               {achievement.achieved && achievement.timestamp && (
