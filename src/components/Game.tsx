@@ -501,14 +501,25 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
         } else {
           // Regular tile number
           if (tile.value > 0) {
-            // Draw number with better visibility
-            ctx.fillStyle = '#00FFFF'  // Bright cyan
-            ctx.shadowColor = '#00FFFF'
-            ctx.shadowBlur = 8
-            ctx.font = `bold ${isSelected ? 24 : 22}px Arial`
+            // Add dark outline for better contrast
+            ctx.strokeStyle = '#000000'
+            ctx.lineWidth = 3
+            ctx.shadowColor = '#000000'
+            ctx.shadowBlur = 4
+            ctx.font = 'bold 24px Arial'
             ctx.textAlign = 'center'
             ctx.textBaseline = 'middle'
+            
+            // Draw text stroke first (outline)
+            ctx.strokeText(tile.value.toString(), x, y)
+            
+            // Then draw the bright text
+            ctx.fillStyle = '#FFFFFF' // Always use white for better visibility
+            ctx.shadowColor = '#00FFFF' // Cyan glow
+            ctx.shadowBlur = 8
             ctx.fillText(tile.value.toString(), x, y)
+            
+            // Reset shadow
             ctx.shadowBlur = 0
           }
         }
@@ -1629,11 +1640,26 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
 
                         // Draw tile value if it exists
                         if (tile.value > 0) {
-                          ctx.fillStyle = '#00FFFF'
+                          // Add dark outline for better contrast
+                          ctx.strokeStyle = '#000000'
+                          ctx.lineWidth = 3
+                          ctx.shadowColor = '#000000'
+                          ctx.shadowBlur = 4
                           ctx.font = 'bold 24px Arial'
                           ctx.textAlign = 'center'
                           ctx.textBaseline = 'middle'
+                          
+                          // Draw text stroke first (outline)
+                          ctx.strokeText(tile.value.toString(), 50, 50)
+                          
+                          // Then draw the bright text
+                          ctx.fillStyle = '#FFFFFF' // Always use white for better visibility
+                          ctx.shadowColor = '#00FFFF' // Cyan glow
+                          ctx.shadowBlur = 8
                           ctx.fillText(tile.value.toString(), 50, 50)
+                          
+                          // Reset shadow
+                          ctx.shadowBlur = 0
                         }
 
                         // Draw power-up indicator if present
