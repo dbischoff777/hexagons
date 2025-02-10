@@ -12,7 +12,7 @@ import { TutorialMessage } from './TutorialMessage'
 import { saveGameState, loadGameState, updateStatistics, clearSavedGame, getStatistics } from '../utils/gameStateUtils'
 import Particles from './Particles'
 import { Achievement } from '../types/achievements'
-import { updateTilesPlaced, updateAchievements } from '../utils/achievementUtils'
+import { updateTilesPlaced, updateScore, updateCombo, updateAchievements } from '../utils/achievementUtils'
 import AchievementPopup from './AchievementPopup'
 
 interface GameProps {
@@ -924,15 +924,27 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
               score
             })
 
-            // Check for achievements
+            // Calculate new total score including the current placement score
+            const newTotalScore = score + placedTileScore;
+
+            // Check for all types of achievements
             const achievedFromTiles = updateTilesPlaced(1);
-            updateAchievements({
-              highestScore: Math.max(score, getStatistics().highScore),
-              highestCombo: Math.max(combo.count, getStatistics().longestCombo)
-            });
+            const achievedFromCombo = updateCombo(combo.count);
+
+            // Combine all new achievements
+            const newlyAchieved = [
+              ...achievedFromTiles,
+              ...achievedFromCombo
+            ];
 
             // Add any new achievements to the popup queue
-            setNewAchievements(prev => [...prev, ...achievedFromTiles]);
+            setNewAchievements(prev => [...prev, ...newlyAchieved]);
+
+            // Update the score after checking achievements
+            setScore(newTotalScore);
+
+            // Check score achievements
+            checkScoreAchievements(newTotalScore);
           }
         }
       }
@@ -1303,6 +1315,29 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
     saveGameState(gameState)
     onExit()
   }
+
+  // Keep this effect for handling achievement popups
+  useEffect(() => {
+    if (newAchievements.length > 0) {
+      // Play achievement sound
+      soundManager.playSound('powerUp');
+      
+      // Save achievement state with current values
+      updateAchievements({
+        highestScore: Math.max(score, getStatistics().highScore),
+        highestCombo: Math.max(combo.count, getStatistics().longestCombo),
+        totalTilesPlaced: placedTiles.length
+      });
+    }
+  }, [newAchievements, score, combo.count, placedTiles.length]);
+
+  // First, create a function to check score achievements
+  const checkScoreAchievements = (newScore: number) => {
+    const achievedFromScore = updateScore(newScore);
+    if (achievedFromScore.length > 0) {
+      setNewAchievements(prev => [...prev, ...achievedFromScore]);
+    }
+  };
 
   return (
     <div className="game-container">

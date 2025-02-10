@@ -42,10 +42,11 @@ export const updateAchievements = (
     const progress = getAchievementProgress(achievement, newState);
     const achieved = progress >= achievement.requirement;
     
+    // Keep achievement unlocked if it was previously achieved
     return {
       ...achievement,
       currentProgress: progress,
-      achieved,
+      achieved: achieved || achievement.achieved,
       timestamp: achieved && !achievement.achieved ? new Date().toISOString() : achievement.timestamp,
     };
   });
@@ -85,7 +86,7 @@ export const updateTilesPlaced = (count: number): Achievement[] => {
   const currentState = getAchievements();
   const prevAchievements = [...currentState.achievements];
   
-  // Update the state
+  // Update the state with new total
   const newState = {
     ...currentState,
     totalTilesPlaced: currentState.totalTilesPlaced + count
@@ -95,13 +96,55 @@ export const updateTilesPlaced = (count: number): Achievement[] => {
   updateAchievements(newState);
   const updatedState = getAchievements();
   
-  // Find newly achieved achievements
-  const newlyAchieved = updatedState.achievements.filter(achievement => 
+  // Find newly achieved tile achievements
+  return updatedState.achievements.filter(achievement => 
+    achievement.type === 'tiles' &&
     achievement.achieved && 
     !prevAchievements.find(a => a.id === achievement.id)?.achieved
   );
+};
 
-  return newlyAchieved;
+export const updateScore = (score: number): Achievement[] => {
+  const currentState = getAchievements();
+  const prevAchievements = [...currentState.achievements];
+  
+  // Update the state with highest score
+  const newState = {
+    ...currentState,
+    highestScore: Math.max(currentState.highestScore, score)
+  };
+  
+  // Update achievements and get the updated state
+  updateAchievements(newState);
+  const updatedState = getAchievements();
+  
+  // Find newly achieved score achievements
+  return updatedState.achievements.filter(achievement => 
+    achievement.type === 'score' &&
+    achievement.achieved && 
+    !prevAchievements.find(a => a.id === achievement.id)?.achieved
+  );
+};
+
+export const updateCombo = (combo: number): Achievement[] => {
+  const currentState = getAchievements();
+  const prevAchievements = [...currentState.achievements];
+  
+  // Update the state with highest combo
+  const newState = {
+    ...currentState,
+    highestCombo: Math.max(currentState.highestCombo, combo)
+  };
+  
+  // Update achievements and get the updated state
+  updateAchievements(newState);
+  const updatedState = getAchievements();
+  
+  // Find newly achieved achievements
+  return updatedState.achievements.filter(achievement => 
+    achievement.achieved && 
+    !prevAchievements.find(a => a.id === achievement.id)?.achieved
+  );
 };
 
 export const resetAchievements = (): void => {

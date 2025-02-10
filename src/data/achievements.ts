@@ -38,7 +38,6 @@ export const ACHIEVEMENTS: Omit<Achievement, 'currentProgress' | 'achieved' | 't
   // Score achievements
   {
     id: 'score_5000',
-
     name: 'Point Collector',
     description: 'Reach a score of 5,000 points',
     icon: '⭐',
@@ -119,7 +118,7 @@ export const ACHIEVEMENTS: Omit<Achievement, 'currentProgress' | 'achieved' | 't
     requirement: 2,
   },
    {
-    id: 'special_daily',
+    id: 'special_daily_2',
     name: 'Loyal Player',
     description: 'Play the game for 7 consecutive days',
     icon: '📅',
