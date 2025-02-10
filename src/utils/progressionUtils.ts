@@ -36,6 +36,54 @@ export const THEMES: ThemeConfig[] = [
       text: '#FFFFFF'
     },
     particleColor: '#FF6B6B'
+  },
+  {
+    id: 'cyber_punk',
+    name: 'Cyber Punk',
+    colors: {
+      background: '#0D0221',
+      primary: '#FF00FF',
+      secondary: '#00FFFF',
+      accent: '#FFD700',
+      text: '#FFFFFF'
+    },
+    particleColor: '#FF00FF'
+  },
+  {
+    id: 'forest',
+    name: 'Forest',
+    colors: {
+      background: '#1A2F1A',
+      primary: '#90EE90',
+      secondary: '#98FB98',
+      accent: '#FFB6C1',
+      text: '#FFFFFF'
+    },
+    particleColor: '#90EE90'
+  },
+  {
+    id: 'ocean',
+    name: 'Ocean',
+    colors: {
+      background: '#000D1A',
+      primary: '#00BFFF',
+      secondary: '#87CEEB',
+      accent: '#FF69B4',
+      text: '#FFFFFF'
+    },
+    particleColor: '#00BFFF'
+  },
+  {
+    id: 'volcanic',
+    name: 'Volcanic',
+    colors: {
+      background: '#1A0F0F',
+      primary: '#FF4500',
+      secondary: '#FF8C00',
+      accent: '#FFD700',
+      text: '#FFFFFF'
+    },
+    particleColor: '#FF4500'
   }
 ];
 
@@ -55,6 +103,38 @@ export const UNLOCKABLE_REWARDS: UnlockableReward[] = [
     name: 'Neon Sunset',
     description: 'A vibrant sunset-inspired theme',
     levelRequired: 2,
+    unlocked: false
+  },
+  {
+    type: 'theme',
+    id: 'cyber_punk',
+    name: 'Cyber Punk',
+    description: 'High-tech cyberpunk aesthetics',
+    levelRequired: 4,
+    unlocked: false
+  },
+  {
+    type: 'theme',
+    id: 'forest',
+    name: 'Forest',
+    description: 'Calming forest colors',
+    levelRequired: 6,
+    unlocked: false
+  },
+  {
+    type: 'theme',
+    id: 'ocean',
+    name: 'Ocean',
+    description: 'Deep sea vibes',
+    levelRequired: 8,
+    unlocked: false
+  },
+  {
+    type: 'theme',
+    id: 'volcanic',
+    name: 'Volcanic',
+    description: 'Hot and fiery theme',
+    levelRequired: 10,
     unlocked: false
   },
   {
