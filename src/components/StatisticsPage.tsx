@@ -12,42 +12,47 @@ const StatisticsPage: React.FC<StatisticsPageProps> = ({ onBack }) => {
     ? Math.round(stats.totalScore / stats.gamesPlayed) 
     : 0;
 
+  const handleBackgroundClick = (e: React.MouseEvent) => {
+    // Only close if clicking the background, not the content
+    if (e.target === e.currentTarget) {
+      onBack()
+    }
+  }
+
   return (
-    <div className="statistics-page">
-      <h1>Statistics</h1>
-      
-      <div className="stats-container">
-        <div className="stats-grid">
-          <div className="stat-item">
-            <label>High Score</label>
-            <span>{stats.highScore}</span>
-          </div>
-          <div className="stat-item">
-            <label>Games Played</label>
-            <span>{stats.gamesPlayed}</span>
-          </div>
-          <div className="stat-item">
-            <label>Average Score</label>
-            <span>{averageScore}</span>
-          </div>
-          <div className="stat-item">
-            <label>Longest Combo</label>
-            <span>{stats.longestCombo}</span>
-          </div>
-          <div className="stat-item">
-            <label>Total Play Time</label>
-            <span>{Math.round(stats.totalPlayTime / 60)} mins</span>
-          </div>
-          <div className="stat-item">
-            <label>Last Played</label>
-            <span>{new Date(stats.lastPlayed).toLocaleDateString()}</span>
+    <div className="statistics-page" onClick={handleBackgroundClick}>
+      <div className="stats-content">
+        <h1>Statistics</h1>
+        
+        <div className="stats-container">
+          <div className="stats-grid">
+            <div className="stat-item">
+              <label>High Score</label>
+              <span>{stats.highScore}</span>
+            </div>
+            <div className="stat-item">
+              <label>Games Played</label>
+              <span>{stats.gamesPlayed}</span>
+            </div>
+            <div className="stat-item">
+              <label>Average Score</label>
+              <span>{averageScore}</span>
+            </div>
+            <div className="stat-item">
+              <label>Longest Combo</label>
+              <span>{stats.longestCombo}</span>
+            </div>
+            <div className="stat-item">
+              <label>Total Play Time</label>
+              <span>{Math.round(stats.totalPlayTime / 60)} mins</span>
+            </div>
+            <div className="stat-item">
+              <label>Last Played</label>
+              <span>{new Date(stats.lastPlayed).toLocaleDateString()}</span>
+            </div>
           </div>
         </div>
       </div>
-
-      <button className="back-button" onClick={onBack}>
-        Back to Menu
-      </button>
     </div>
   )
 }
