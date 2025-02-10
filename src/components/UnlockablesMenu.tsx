@@ -2,6 +2,7 @@ import React from 'react';
 import { getUnlockedRewards, getTheme, THEMES } from '../utils/progressionUtils';
 import { getPlayerProgress } from '../utils/progressionUtils';
 import './UnlockablesMenu.css';
+import { UnlockableReward } from '../types/progression';
 
 interface UnlockablesMenuProps {
   onSelectTheme: (themeId: string) => void;
@@ -34,6 +35,14 @@ const UnlockablesMenu: React.FC<UnlockablesMenuProps> = ({ onSelectTheme, onClos
     }
   };
 
+  const renderUnlockLevel = (item: UnlockableReward) => (
+    !item.unlocked && (
+      <span className="unlock-level">
+        Unlocks at Level {item.levelRequired}
+      </span>
+    )
+  );
+
   return (
     <div className="unlockables-overlay" onClick={handleOverlayClick}>
       <div className="unlockables-container">
@@ -64,11 +73,7 @@ const UnlockablesMenu: React.FC<UnlockablesMenuProps> = ({ onSelectTheme, onClos
                   </div>
                   <div className="theme-info">
                     <span className="theme-name">{theme.name}</span>
-                    {!isUnlocked && (
-                      <span className="unlock-level">
-                        Unlocks at Level {rewards.find(r => r.id === theme.id)?.levelRequired}
-                      </span>
-                    )}
+                    {renderUnlockLevel(theme)}
                   </div>
                 </div>
               );
@@ -82,29 +87,15 @@ const UnlockablesMenu: React.FC<UnlockablesMenuProps> = ({ onSelectTheme, onClos
             {tiles.map(tile => (
               <div 
                 key={tile.id}
-                className={`tile-item ${tile.unlocked ? 'unlocked' : 'locked'}`}
+                className={`theme-item ${tile.unlocked ? 'unlocked' : 'locked'}`}
               >
-                <div className="tile-preview">
+                <div className="theme-preview">
                   {tile.preview || '🎲'}
                 </div>
-                <div className="tile-info">
-                  <span className="tile-name">{tile.name}</span>
-                  <span className="tile-description">{tile.description}</span>
-                  {!tile.unlocked && (
-                    <div className="unlock-progress">
-                      <div className="progress-text">
-                        Level {progress.level} / {tile.levelRequired}
-                      </div>
-                      <div className="progress-bar">
-                        <div 
-                          className="progress-fill"
-                          style={{ 
-                            width: `${Math.min(100, (progress.level / tile.levelRequired) * 100)}%`
-                          }}
-                        />
-                      </div>
-                    </div>
-                  )}
+                <div className="theme-info">
+                  <span className="theme-name">{tile.name}</span>
+                  <span className="theme-description">{tile.description}</span>
+                  {renderUnlockLevel(tile)}
                 </div>
               </div>
             ))}
@@ -113,33 +104,19 @@ const UnlockablesMenu: React.FC<UnlockablesMenuProps> = ({ onSelectTheme, onClos
 
         <div className="unlockables-section">
           <h3>Power-ups</h3>
-          <div className="powerups-grid">
+          <div className="themes-grid">
             {powerUps.map(powerup => (
               <div 
                 key={powerup.id}
-                className={`powerup-item ${powerup.unlocked ? 'unlocked' : 'locked'}`}
+                className={`theme-item ${powerup.unlocked ? 'unlocked' : 'locked'}`}
               >
-                <div className="powerup-preview">
+                <div className="theme-preview">
                   {powerup.preview || '⚡'}
                 </div>
-                <div className="powerup-info">
-                  <span className="powerup-name">{powerup.name}</span>
-                  <span className="powerup-description">{powerup.description}</span>
-                  {!powerup.unlocked && (
-                    <div className="unlock-progress">
-                      <div className="progress-text">
-                        Level {progress.level} / {powerup.levelRequired}
-                      </div>
-                      <div className="progress-bar">
-                        <div 
-                          className="progress-fill"
-                          style={{ 
-                            width: `${Math.min(100, (progress.level / powerup.levelRequired) * 100)}%`
-                          }}
-                        />
-                      </div>
-                    </div>
-                  )}
+                <div className="theme-info">
+                  <span className="theme-name">{powerup.name}</span>
+                  <span className="theme-description">{powerup.description}</span>
+                  {renderUnlockLevel(powerup)}
                 </div>
               </div>
             ))}

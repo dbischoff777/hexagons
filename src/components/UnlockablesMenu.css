@@ -15,7 +15,7 @@
   background: rgba(26, 26, 46, 0.95);
   border: 2px solid #00FF9F;
   border-radius: 15px;
-  padding: 2rem;
+  padding: 30px;
   width: 90%;
   max-width: 800px;
   max-height: 90vh;
@@ -29,7 +29,7 @@
 }
 
 .unlockables-section {
-  margin-bottom: 2rem;
+  margin-bottom: 40px;
 }
 
 .unlockables-section h3 {
@@ -37,26 +37,20 @@
   margin-bottom: 1rem;
 }
 
-.themes-grid, .tiles-grid {
+.themes-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 1rem;
+  gap: 20px;
 }
 
-.theme-item, .tile-item {
+.theme-item {
   background: rgba(0, 0, 0, 0.3);
   border-radius: 8px;
-  padding: 1rem;
+  padding: 15px;
   transition: all 0.3s ease;
-}
-
-.theme-item.unlocked:hover {
-  transform: translateY(-2px);
-  cursor: pointer;
-}
-
-.theme-item.selected {
-  border: 2px solid #00FF9F;
+  min-height: 150px;
+  display: flex;
+  flex-direction: column;
 }
 
 .theme-preview {
@@ -66,23 +60,25 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 0.5rem;
+  background: rgba(0, 255, 159, 0.1);
+  font-size: 2rem;
 }
 
-.preview-element {
-  width: 30px;
-  height: 30px;
-  border-radius: 4px;
-}
-
-.theme-info, .tile-info {
+.theme-info {
   color: #fff;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
-.theme-name, .tile-name {
-  display: block;
+.theme-name {
   font-weight: bold;
-  margin-bottom: 0.5rem;
+  color: #00FF9F;
+}
+
+.theme-description {
+  font-size: 0.9em;
+  opacity: 0.8;
 }
 
 .unlock-level {
@@ -93,6 +89,15 @@
 .locked {
   opacity: 0.5;
   filter: grayscale(1);
+}
+
+.theme-item.unlocked:hover {
+  transform: translateY(-2px);
+  cursor: pointer;
+}
+
+.theme-item.selected {
+  border: 2px solid #00FF9F;
 }
 
 .close-button {
@@ -112,46 +117,18 @@
   box-shadow: 0 0 20px rgba(0, 255, 159, 0.4);
 }
 
-.powerups-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 1rem;
-}
-
-.powerup-item {
-  background: rgba(0, 0, 0, 0.3);
-  border-radius: 8px;
-  padding: 1rem;
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
-
-.powerup-preview {
-  font-size: 2rem;
-  width: 50px;
-  height: 50px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(0, 255, 159, 0.1);
-  border-radius: 8px;
-}
-
-.powerup-info {
-  flex: 1;
-}
-
-.powerup-name {
-  display: block;
-  font-weight: bold;
-  color: #00FF9F;
-  margin-bottom: 0.5rem;
-}
-
-.powerup-description {
-  display: block;
+.tile-description, .powerup-description {
   font-size: 0.9em;
+  line-height: 1.4;
   opacity: 0.8;
-  margin-bottom: 0.5rem;
+}
+
+.unlock-progress {
+  margin-top: auto;
+  padding-top: 8px;
+}
+
+.progress-text {
+  font-size: 0.9em;
+  margin-bottom: 4px;
 } 
