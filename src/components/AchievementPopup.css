@@ -6,15 +6,47 @@
   background: rgba(26, 26, 46, 0.95);
   border: 2px solid #00FF9F;
   border-radius: 8px;
-  padding: 15px;
-  display: flex;
-  align-items: center;
-  gap: 15px;
+  padding: 20px;
+  min-width: 300px;
+  max-width: 400px;
   box-shadow: 0 0 20px rgba(0, 255, 159, 0.3);
   transition: all 0.3s ease-in-out;
   z-index: 1000;
   opacity: 0;
   pointer-events: none;
+}
+
+.achievement-popup-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.achievement-popup-icon {
+  font-size: 24px;
+  animation: bounce 0.5s ease-out;
+}
+
+.achievement-popup-title {
+  color: #00FF9F;
+  margin: 0;
+  font-size: 1.2em;
+  text-shadow: 0 0 10px rgba(0, 255, 159, 0.5);
+}
+
+.achievement-popup-desc {
+  color: white;
+  margin: 8px 0;
+  font-size: 1.1em;
+  font-weight: bold;
+}
+
+.achievement-popup-subdesc {
+  color: #cccccc;
+  margin: 4px 0;
+  font-size: 0.9em;
+  line-height: 1.4;
 }
 
 .achievement-popup.visible {
@@ -23,33 +55,6 @@
   pointer-events: auto;
   animation: slideUp 0.3s ease-out forwards, 
              fadeOut 0.3s ease-in forwards 2.7s;
-}
-
-.achievement-icon {
-  font-size: 2em;
-  animation: bounce 0.5s ease-out;
-}
-
-.achievement-content {
-  color: white;
-}
-
-.achievement-content h3 {
-  color: #00FF9F;
-  margin: 0;
-  font-size: 1em;
-  text-shadow: 0 0 10px rgba(0, 255, 159, 0.5);
-}
-
-.achievement-content h4 {
-  margin: 5px 0;
-  font-size: 0.9em;
-}
-
-.achievement-content p {
-  margin: 0;
-  font-size: 0.8em;
-  opacity: 0.8;
 }
 
 @keyframes slideUp {
