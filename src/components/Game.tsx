@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { PowerUpState, ComboState, GameState, PlacedTile } from '../types/index'
-import { createTileWithRandomEdges, hexToPixel, getAdjacentTiles, getAdjacentPositions, COLORS, updateMirrorTileEdges } from '../utils/hexUtils'
+import { createTileWithRandomEdges, hexToPixel, getAdjacentTiles, getAdjacentPositions, getAdjacentDirection, COLORS, updateMirrorTileEdges } from '../utils/hexUtils'
 import { INITIAL_TIME, hasMatchingEdges, formatTime, updateTileValues, isGridFull } from '../utils/gameUtils'
 import SoundManager from '../utils/soundManager'
 import './Game.css'
@@ -1029,20 +1029,41 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
           // Get the updated tile with its correct value
           const updatedPlacedTile = newPlacedTiles.find(tile => tile.q === q && tile.r === r)!
           
-          // Show score popup for immediate matches with the placed tile
-          const placedTileScore = calculateScore(updatedPlacedTile.value * 2)
-          if (placedTileScore > 0) {
-            const feedback = getFeedbackForScore(placedTileScore)
+          // Count matching edges
+          const adjacentTiles = getAdjacentTiles(updatedPlacedTile, newPlacedTiles);
+          let matchCount = 0;
+          
+          // Check each edge for matches
+          updatedPlacedTile.edges.forEach((edge, index) => {
+            const adjacentTile = adjacentTiles.find(t => 
+              getAdjacentDirection(updatedPlacedTile.q, updatedPlacedTile.r, t.q, t.r) === index
+            );
+            
+            if (adjacentTile) {
+              const adjacentEdgeIndex = (getAdjacentDirection(adjacentTile.q, adjacentTile.r, updatedPlacedTile.q, updatedPlacedTile.r) + 3) % 6;
+              if (edge.color === adjacentTile.edges[adjacentEdgeIndex].color) {
+                matchCount++;
+              }
+            }
+          });
+
+          // Award points for any matches
+          if (matchCount > 0) {
+            const basePoints = matchCount * 5;  // 5 points per matching edge
+            const feedback = getFeedbackForScore(basePoints);
+            
             addScorePopup({
-              score: placedTileScore,
+              score: basePoints,
               x: canvas.width / 2,
               y: canvas.height / 2 - 100,
               emoji: feedback.emoji,
-              text: feedback.text,
+              text: matchCount === 1 ? 'Edge Match!' : 'Multiple Matches!',
               type: 'score'
-            })
+            });
+            
+            setScore(prevScore => prevScore + basePoints);
+            addTileAnimation(q, r, 'match');
           }
-          setScore(prevScore => prevScore + placedTileScore)
 
           // Check for matches for grid-full bonus
           const matchingTiles = newPlacedTiles.filter(tile => hasMatchingEdges(tile, newPlacedTiles, settings.isColorBlind))
@@ -1093,14 +1114,14 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
           setSelectedTileIndex(null)
 
           // Update combo only if there's a match
-          if (placedTileScore > 0) {
+          if (matchCount > 0) {
             const now = Date.now()
             const timeSinceLastPlacement = now - combo.lastPlacementTime
             const quickPlacement = timeSinceLastPlacement < 2000
 
             // Handle quick placement bonus first
             if (quickPlacement) {
-              const quickBonus = placedTileScore  // Double the base score
+              const quickBonus = matchCount * 5;  // 5 points per matching edge
               const quickInfo = getRandomFeedback('QUICK')
               addScorePopup({
                 score: quickBonus,
@@ -1124,7 +1145,7 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
             setCombo(newComboState)
 
             // Calculate combo bonus
-            const comboBonus = Math.round(placedTileScore * newComboState.multiplier) - placedTileScore
+            const comboBonus = Math.round(matchCount * newComboState.multiplier) - matchCount
             if (comboBonus > 0) {
               const comboInfo = getFeedbackForCombo(newComboState.count)
               addScorePopup({
@@ -1172,14 +1193,14 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
             })
 
             // Calculate new total score including the current placement score
-            const newTotalScore = score + placedTileScore;
+            const newTotalScore = score + matchCount * 5;
 
             // Check for achievements separately
             checkAchievements({
               tilesPlaced: 1,
               comboCount: combo.count,
               score: newTotalScore,
-              clearBonus: placedTileScore > 0 && isGridFull(newPlacedTiles, cols)
+              clearBonus: matchCount > 0 && isGridFull(newPlacedTiles, cols)
             });
 
             // Update the score

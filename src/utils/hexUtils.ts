@@ -123,4 +123,21 @@ export const getAdjacentPositions = (q: number, r: number): { q: number, r: numb
     { q: q + 1, r: r - 1 }, // top right
     { q: q - 1, r: r + 1 }  // bottom left
   ];
+};
+
+// Add this function to get the direction index between two hexes
+export const getAdjacentDirection = (fromQ: number, fromR: number, toQ: number, toR: number): number => {
+  // Calculate the difference vector
+  const dq = toQ - fromQ;
+  const dr = toR - fromR;
+  
+  // Check each direction
+  for (let i = 0; i < DIRECTIONS.length; i++) {
+    if (DIRECTIONS[i].q === dq && DIRECTIONS[i].r === dr) {
+      return i;
+    }
+  }
+  
+  // Return -1 if not adjacent
+  return -1;
 }; 
