@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useCallback } from 'react'
 import { PowerUpState, ComboState, GameState, PlacedTile } from '../types/index'
 import { createTileWithRandomEdges, hexToPixel, getAdjacentTiles, COLORS, updateMirrorTileEdges } from '../utils/hexUtils'
 import { INITIAL_TIME, hasMatchingEdges, formatTime, updateTileValues, isGridFull } from '../utils/gameUtils'
@@ -200,6 +200,22 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
   const [showLevelRoadmap, setShowLevelRoadmap] = useState(false)
   const [newBadges, setNewBadges] = useState<Badge[]>([])
   const [confirmMessage, setConfirmMessage] = useState<string>("")
+  const [particleIntensity, setParticleIntensity] = useState(0.3)
+  const [particleColor, setParticleColor] = useState(theme.colors.primary)
+  const [backgroundGlow, setBackgroundGlow] = useState('');
+  const [animatingTiles, setAnimatingTiles] = useState<{ q: number, r: number, type: 'place' | 'match' }[]>([]);
+
+  // Move addTileAnimation outside useEffect and memoize it
+  const addTileAnimation = useCallback((q: number, r: number, type: 'place' | 'match') => {
+    setAnimatingTiles(prev => [...prev, { q, r, type }]);
+    
+    // Remove animation after duration
+    setTimeout(() => {
+      setAnimatingTiles(prev => prev.filter(tile => 
+        !(tile.q === q && tile.r === r && tile.type === type)
+      ));
+    }, type === 'place' ? 500 : 800);
+  }, []);
 
   // Modify the findAvailableYPosition function
   const findAvailableYPosition = (baseY: number, type: 'score' | 'combo' | 'quick' | 'clear'): number => {
@@ -649,6 +665,47 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
           ctx.font = '14px Arial';
           ctx.fillText(text, x, boxY + boxHeight/2);
         }
+      }
+
+      // Add scale animation for newly placed tiles
+      const animation = animatingTiles.find(
+        animTile => tile && animTile.q === tile.q && animTile.r === tile.r
+      );
+      
+      if (animation) {
+        ctx.save();
+        
+        if (animation.type === 'place') {
+          // Placement animation - scale effect
+          const progress = (Date.now() % 500) / 500;
+          const scale = 1 + Math.sin(progress * Math.PI) * 0.1;
+          ctx.translate(x, y);
+          ctx.scale(scale, scale);
+          ctx.translate(-x, -y);
+        } else if (animation.type === 'match') {
+          // Match animation - glow pulse
+          const progress = (Date.now() % 800) / 800;
+          const glowIntensity = Math.sin(progress * Math.PI * 2) * 10 + 15;
+          ctx.shadowColor = theme.colors.accent;
+          ctx.shadowBlur = glowIntensity;
+        }
+      }
+
+      if (animation) {
+        ctx.restore();
+      }
+
+      // Add glow effect for matches
+      if (isMatched) {
+        ctx.shadowColor = theme.colors.accent;
+        ctx.shadowBlur = 20;
+        ctx.beginPath();
+        points.forEach((point, i) => {
+          if (i === 0) ctx.moveTo(point[0], point[1]);
+          else ctx.lineTo(point[0], point[1]);
+        });
+        ctx.closePath();
+        ctx.stroke();
       }
     }
 
@@ -1561,17 +1618,67 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
     }
   }, [savedGameState]);
 
+  // Add this effect to handle dynamic particle changes
+  useEffect(() => {
+    // Increase intensity based on score milestones
+    const baseIntensity = 0.3;
+    const scoreMultiplier = Math.min(score / 1000, 1);
+    setParticleIntensity(baseIntensity + scoreMultiplier * 0.7);
+
+    // Change particle color based on score and matches
+    if (score > 1000) {
+      setParticleColor(theme.colors.accent);
+    } else if (score > 500) {
+      setParticleColor(theme.colors.secondary);
+    } else {
+      setParticleColor(theme.colors.primary);
+    }
+  }, [score, theme]);
+
+  // Add this effect to handle background changes
+  useEffect(() => {
+    const getBackgroundGlow = () => {
+      if (score > 1500) return `radial-gradient(circle, ${theme.colors.accent}22 0%, ${theme.colors.background} 70%)`;
+      if (score > 1000) return `radial-gradient(circle, ${theme.colors.secondary}22 0%, ${theme.colors.background} 60%)`;
+      if (score > 500) return `radial-gradient(circle, ${theme.colors.primary}22 0%, ${theme.colors.background} 50%)`;
+      return `radial-gradient(circle, ${theme.colors.background} 0%, ${theme.colors.background} 100%)`;
+    };
+
+    setBackgroundGlow(getBackgroundGlow());
+  }, [score, theme]);
+
+  // Add match animation effect
+  useEffect(() => {
+    const matchedTiles = placedTiles.filter(tile => 
+      hasMatchingEdges(tile, placedTiles, settings.isColorBlind)
+    );
+
+    if (matchedTiles.length > 0) {
+      // Add matched tiles to animation
+      matchedTiles.forEach(tile => {
+        addTileAnimation(tile.q, tile.r, 'match');
+      });
+      
+      // Increase particle effects for matches
+      setParticleIntensity(1);
+      setTimeout(() => {
+        setParticleIntensity(0.3);
+      }, 1000);
+    }
+  }, [placedTiles]);
+
   return (
     <div
       className="game-container"
       style={{
-        background: theme.colors.background
+        background: backgroundGlow,
+        transition: 'background 1s ease-in-out'
       }}
     >
       <LevelProgress progress={playerProgress} />
       <Particles 
-        intensity={0.3} 
-        color={isGridFull(placedTiles, cols) ? theme.colors.accent : theme.colors.primary}
+        intensity={particleIntensity} 
+        color={particleColor}
       />
       {tutorialState.active ? (
         <div className="tutorial-buttons">
@@ -1824,6 +1931,36 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
           onComplete={() => setNewBadges(prev => prev.slice(1))}
         />
       )}
+      <style>
+        {`
+          @keyframes placeTile {
+            0% { transform: scale(1.1); opacity: 0.8; }
+            50% { transform: scale(0.95); }
+            100% { transform: scale(1); opacity: 1; }
+          }
+
+          @keyframes matchGlow {
+            0% { filter: drop-shadow(0 0 5px ${theme.colors.accent}66); }
+            50% { filter: drop-shadow(0 0 15px ${theme.colors.accent}); }
+            100% { filter: drop-shadow(0 0 5px ${theme.colors.accent}66); }
+          }
+
+          .game-board {
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            will-change: transform;
+          }
+
+          .tile-placed {
+            animation: placeTile 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            will-change: transform, opacity;
+          }
+
+          .tile-matched {
+            animation: matchGlow 0.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+            will-change: filter;
+          }
+        `}
+      </style>
     </div>
   )
 }
