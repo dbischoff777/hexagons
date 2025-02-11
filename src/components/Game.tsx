@@ -307,16 +307,33 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
             
             if (progress < 1) {
               requestAnimationFrame(animate)
+            } else {
+              // Update tile positions after animation completes
+              setPlacedTiles(tiles => tiles.map(tile => ({
+                ...tile,
+                edges: rotateTileEdges(tile.edges)
+              })))
             }
           }
           
           requestAnimationFrame(animate)
         }, 1500)
-      }, 15000)
+      }, 30000) // Increased to 30 seconds
       
       return () => clearInterval(warningTimer)
     }
   }, [isGameOver, boardRotation])
+
+  // Remove the grid-full rotation effect since rotation should only happen on timer
+  useEffect(() => {
+    if (isGridFull(placedTiles, cols) && !isGameOver && !tutorialState.active) {
+      // Only show warning, don't rotate
+      setShowWarning(true)
+      setTimeout(() => {
+        setShowWarning(false)
+      }, 2000)
+    }
+  }, [placedTiles, cols, isGameOver, tutorialState.active])
 
   // Main game effect
   useEffect(() => {
@@ -1408,7 +1425,7 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
         moveHistory: previousState ? [previousState] : [],
         startTime: loadGameState()?.startTime ?? Date.now(),
         timedMode,
-        boardRotation,
+        boardRotation: boardRotation === 0 || boardRotation === 180 ? boardRotation : 0, // Ensure only valid rotations are saved
         powerUps,
         combo,
         audioSettings: {
@@ -1431,24 +1448,6 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
       soundManager.playSound('undo')
     }
   }
-
-  // Update the rotation effect
-  useEffect(() => {
-    if (isGridFull(placedTiles, cols) && !isGameOver && !tutorialState.active) {
-      setShowRotationText(true)
-      setTimeout(() => {
-        // Always rotate to either 0 or 180 degrees
-        setBoardRotation(prev => prev === 0 ? 180 : 0)
-        setShowRotationText(false)
-        
-        // Update tile positions after rotation
-        setPlacedTiles(tiles => tiles.map(tile => ({
-          ...tile,
-          edges: rotateTileEdges(tile.edges)
-        })))
-      }, 2000)
-    }
-  }, [placedTiles, cols, isGameOver, tutorialState.active])
 
   // Modify the exit handler
   const handleExit = () => {
@@ -1599,32 +1598,37 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
 
   // Inside the Game component, update the initialization code
   useEffect(() => {
-    if (savedGameState) {
-      // ... existing saved state loading ...
-      
-      // Normalize board rotation to either 0 or 180 degrees
-      const normalizedRotation = savedGameState.boardRotation >= 90 ? 180 : 0;
-      setBoardRotation(normalizedRotation);
-      
-      // If the rotation changed, update tile edges accordingly
-      if (normalizedRotation !== savedGameState.boardRotation) {
-        const rotationDiff = normalizedRotation - savedGameState.boardRotation;
-        const rotations = Math.round(rotationDiff / 60); // Number of 60-degree rotations needed
+    if (savedGameState && !isGameOver) {
+      // Only normalize rotation when first loading a saved game
+      if (savedGameState.boardRotation !== undefined && savedGameState.boardRotation !== 0 && savedGameState.boardRotation !== 180) {
+        // Normalize to either 0 or 180 degrees
+        const normalizedRotation = savedGameState.boardRotation >= 90 ? 180 : 0;
+        setBoardRotation(normalizedRotation);
         
-        setPlacedTiles(savedGameState.placedTiles.map(tile => ({
-          ...tile,
-          edges: Array(Math.abs(rotations)).fill(null).reduce(
-            (edges) => rotateTileEdges(edges),
-            tile.edges
-          )
-        })));
+        // If the rotation changed, update tile edges accordingly
+        if (normalizedRotation !== savedGameState.boardRotation) {
+          const rotationDiff = normalizedRotation - savedGameState.boardRotation;
+          const rotations = Math.round(rotationDiff / 60); // Number of 60-degree rotations needed
+          
+          setPlacedTiles(savedGameState.placedTiles.map(tile => ({
+            ...tile,
+            edges: Array(Math.abs(rotations)).fill(null).reduce(
+              (edges) => rotateTileEdges(edges),
+              tile.edges
+            )
+          })));
+        } else {
+          setPlacedTiles(savedGameState.placedTiles);
+        }
       } else {
+        // If rotation is already normalized, just set the values directly
+        setBoardRotation(savedGameState.boardRotation ?? 0);
         setPlacedTiles(savedGameState.placedTiles);
       }
       
       // ... rest of saved state loading ...
     }
-  }, [savedGameState]);
+  }, [savedGameState, isGameOver]);
 
   // Add this effect to handle dynamic particle changes
   useEffect(() => {
