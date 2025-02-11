@@ -30,6 +30,8 @@ import LevelProgress from './LevelProgress'
 import LevelRoadmap from './LevelRoadmap'
 import BadgePopup from './BadgePopup'
 import { Badge } from '../types/progression'
+import { Companion, INITIAL_COMPANION } from '../types/companion'
+import CompanionHUD from './CompanionHUD'
 
 interface GameProps {
   musicEnabled: boolean
@@ -203,10 +205,13 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
   const [particleIntensity, setParticleIntensity] = useState(0.3)
   const [particleColor, setParticleColor] = useState(theme.colors.primary)
   const [backgroundGlow, setBackgroundGlow] = useState('');
-  const [animatingTiles, setAnimatingTiles] = useState<{ q: number, r: number, type: 'place' | 'match' }[]>([]);
+  const [animatingTiles, setAnimatingTiles] = useState<{ q: number, r: number, type: 'place' | 'match' | 'hint' }[]>([]);
+  const [companion, setCompanion] = useState<Companion>(
+    savedGameState?.companion ?? INITIAL_COMPANION
+  );
 
   // Move addTileAnimation outside useEffect and memoize it
-  const addTileAnimation = useCallback((q: number, r: number, type: 'place' | 'match') => {
+  const addTileAnimation = useCallback((q: number, r: number, type: 'place' | 'match' | 'hint') => {
     setAnimatingTiles(prev => [...prev, { q, r, type }]);
     
     // Remove animation after duration
@@ -214,7 +219,7 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
       setAnimatingTiles(prev => prev.filter(tile => 
         !(tile.q === q && tile.r === r && tile.type === type)
       ));
-    }, type === 'place' ? 500 : 800);
+    }, type === 'place' ? 500 : type === 'match' ? 800 : 600);
   }, []);
 
   // Modify the findAvailableYPosition function
@@ -1407,11 +1412,12 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
         audioSettings: {
           musicEnabled,
           soundEnabled
-        }
+        },
+        companion: companion
       }
       saveGameState(gameState)
     }
-  }, [placedTiles, nextTiles, score, timeLeft, previousState, isGameOver, tutorialState.active, boardRotation, powerUps, combo, musicEnabled, soundEnabled])
+  }, [placedTiles, nextTiles, score, timeLeft, previousState, isGameOver, tutorialState.active, boardRotation, powerUps, combo, musicEnabled, soundEnabled, companion])
 
   // Add this function to handle undoing moves
   const handleUndo = () => {
@@ -1667,6 +1673,110 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
     }
   }, [placedTiles]);
 
+  // Add companion ability handler
+  const handleActivateAbility = useCallback((abilityId: string) => {
+    const ability = companion.abilities.find(a => a.id === abilityId);
+    if (!ability || ability.currentCooldown > 0 || ability.isActive) return;
+
+    setCompanion(prev => ({
+      ...prev,
+      abilities: prev.abilities.map(a => 
+        a.id === abilityId 
+          ? { ...a, isActive: true, currentCooldown: a.cooldown }
+          : a
+      )
+    }));
+
+    // Handle ability effects - simplified to only include time and score effects
+    switch (ability.effect) {
+      case 'timeBonus':
+        // Slow down time
+        setPowerUps(prev => ({
+          ...prev,
+          freeze: { active: true, remainingTime: ability.duration ?? 10 }
+        }));
+        break;
+        
+      case 'scoreBoost':
+        // Increase score multiplier
+        setPowerUps(prev => ({
+          ...prev,
+          multiplier: { 
+            active: true, 
+            value: 2, 
+            remainingTime: ability.duration ?? 15 
+          }
+        }));
+        break;
+    }
+  }, [companion]);
+
+  // Add companion experience gain on matches
+  useEffect(() => {
+    const matchedTiles = placedTiles.filter(tile => 
+      hasMatchingEdges(tile, placedTiles, settings.isColorBlind)
+    );
+
+    if (matchedTiles.length > 0) {
+      setCompanion(prev => {
+        const expGain = matchedTiles.length * 10;
+        const newExp = prev.experience + expGain;
+        
+        if (newExp >= prev.experienceToNext) {
+          // Level up
+          return {
+            ...prev,
+            level: prev.level + 1,
+            experience: newExp - prev.experienceToNext,
+            experienceToNext: Math.floor(prev.experienceToNext * 1.5)
+          };
+        }
+        
+        return {
+          ...prev,
+          experience: newExp
+        };
+      });
+    }
+  }, [placedTiles]);
+
+  // Add companion cooldown effect
+  useEffect(() => {
+    if (!isGameOver) {
+      const timer = setInterval(() => {
+        setCompanion(prev => ({
+          ...prev,
+          abilities: prev.abilities.map(ability => ({
+            ...ability,
+            currentCooldown: Math.max(0, ability.currentCooldown - 1),
+            isActive: ability.currentCooldown > 0 && ability.isActive
+          }))
+        }));
+      }, 1000);
+      
+      return () => clearInterval(timer);
+    }
+  }, [isGameOver]);
+
+  // Add this new effect to automatically activate abilities
+  useEffect(() => {
+    if (!isGameOver) {
+      const timer = setInterval(() => {
+        companion.abilities.forEach(ability => {
+          if (ability.currentCooldown === 0 && !ability.isActive) {
+            // Automatically activate the ability
+            handleActivateAbility(ability.id);
+            
+            // Play a sound effect
+            soundManager.playSound('powerUp');
+          }
+        });
+      }, 1000); // Check every second
+      
+      return () => clearInterval(timer);
+    }
+  }, [isGameOver, companion.abilities, handleActivateAbility]);
+
   return (
     <div
       className="game-container"
@@ -1725,6 +1835,9 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
           </div>
         </div>
       </div>
+      <CompanionHUD 
+        companion={companion}
+      />
       <div className="board-container">
         <canvas 
           ref={canvasRef} 

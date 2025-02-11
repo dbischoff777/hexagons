@@ -1,3 +1,5 @@
+import { Companion } from "./companion"
+
 export interface Edge {
   color: string
   pattern?: string
@@ -66,6 +68,7 @@ export interface GameState {
     musicEnabled: boolean
     soundEnabled: boolean
   }
+  companion: Companion
 }
 
 export interface GameStatistics {
