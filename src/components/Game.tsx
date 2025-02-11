@@ -171,6 +171,34 @@ const createNewTile = (): PlacedTile => {
   }
 }
 
+// Add these scoring constants near the top of the file
+const SCORING_CONFIG = {
+  baseMatch: 5, // Base points per matching edge
+  quickPlacement: {
+    baseMultiplier: 1.2,
+    levelScaling: 0.1, // Increases by 10% per level
+    maxMultiplier: 3.0
+  },
+  combo: {
+    baseMultiplier: 1.5,
+    levelScaling: 0.15, // Increases by 15% per level
+    maxMultiplier: 4.0
+  }
+};
+
+// Add this helper function to calculate dynamic multipliers
+const calculateDynamicMultiplier = (
+  base: number,
+  scaling: number,
+  max: number,
+  level: number,
+  streakCount: number = 1
+) => {
+  const levelBonus = 1 + (level - 1) * scaling;
+  const streakBonus = 1 + (streakCount - 1) * 0.2; // 20% increase per streak
+  return Math.min(base * levelBonus * streakBonus, max);
+};
+
 const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = false, onSkipTutorial, onExit, onStartGame, savedGameState, isDailyChallenge }: GameProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const cols = 7
@@ -1089,54 +1117,67 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
             const timeSinceLastPlacement = now - combo.lastPlacementTime;
             const quickPlacement = timeSinceLastPlacement < 2000;
 
-            // Handle quick placement bonus first
+            // Handle quick placement bonus with dynamic multiplier
             if (quickPlacement) {
-              const quickBonus = matchCount * 5;
+              const quickMultiplier = calculateDynamicMultiplier(
+                SCORING_CONFIG.quickPlacement.baseMultiplier,
+                SCORING_CONFIG.quickPlacement.levelScaling,
+                SCORING_CONFIG.quickPlacement.maxMultiplier,
+                playerProgress.level,
+                combo.count // Use combo count to increase quick bonus
+              );
+              
+              const quickBonus = Math.round(matchCount * SCORING_CONFIG.baseMatch * quickMultiplier);
               const quickInfo = getRandomFeedback('QUICK');
               
-              // Add a slight delay to ensure it doesn't overlap with other popups
               setTimeout(() => {
                 addScorePopup({
                   score: quickBonus,
                   x: canvas.width / 2,
-                  y: canvas.height / 2 + 25, // Adjust position to avoid overlap
+                  y: canvas.height / 2 + 25,
                   emoji: quickInfo.emoji,
-                  text: quickInfo.text,
+                  text: `${quickInfo.text}`,
                   type: 'quick'
                 });
 
-                // Update score with animation
                 setPreviousScore(score);
                 setTimeout(() => {
                   setScore(prevScore => prevScore + quickBonus);
                 }, 50);
-
-              }, 200); // Small delay after match popup
+              }, 200);
             }
 
-            // Update the combo handling separately
+            // Update the combo handling with dynamic multiplier
             const newComboState = {
               count: quickPlacement ? combo.count + 1 : 1,
               timer: 3,
-              multiplier: quickPlacement ? (1 + (combo.count + 1) * 0.5) : 1,
+              multiplier: calculateDynamicMultiplier(
+                SCORING_CONFIG.combo.baseMultiplier,
+                SCORING_CONFIG.combo.levelScaling,
+                SCORING_CONFIG.combo.maxMultiplier,
+                playerProgress.level,
+                quickPlacement ? combo.count + 1 : 1
+              ),
               lastPlacementTime: now
             };
 
             setCombo(newComboState);
 
-            // Calculate combo bonus
-            const comboBonus = Math.round(matchCount * newComboState.multiplier) - matchCount
+            // Calculate base match score with combo multiplier
+            const baseMatchScore = matchCount * SCORING_CONFIG.baseMatch;
+            const comboBonus = Math.round(baseMatchScore * (newComboState.multiplier - 1));
+            
             if (comboBonus > 0) {
-              const comboInfo = getFeedbackForCombo(newComboState.count)
+              const comboInfo = getFeedbackForCombo(newComboState.count);
               addScorePopup({
                 score: comboBonus,
                 x: canvas.width / 2,
                 y: canvas.height / 2 + 50,
                 emoji: comboInfo.emoji,
-                text: comboInfo.text,
+                text: `${comboInfo.text}`,
                 type: 'combo'
-              })
-              setScore(prevScore => prevScore + comboBonus)
+              });
+              setScore(prevScore => prevScore + comboBonus);
             }
           } else {
             // Reset combo if no match
@@ -1145,7 +1186,7 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
               timer: 0,
               multiplier: 1,
               lastPlacementTime: 0
-            })
+            });
           }
 
           // When selecting a tile, calculate potential matches
