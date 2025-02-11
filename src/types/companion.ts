@@ -24,6 +24,7 @@ export interface Companion {
   experience: number;
   experienceToNext: number;
   abilities: CompanionAbility[];
+  personality: CompanionPersonality;
 }
 
 // Define default abilities first
@@ -74,6 +75,45 @@ const DEFAULT_ABILITIES: CompanionAbility[] = [
   }
 ];
 
+// First, let's create default personalities that we can reuse
+const DEFAULT_PERSONALITY: CompanionPersonality = {
+  greetings: [
+    "Hello! Ready to play some Hex?",
+    "Systems online! Let's make some matches!",
+    "Beep boop! Game time! 🤖"
+  ],
+  smallMatch: [
+    "Nice match! Keep it up!",
+    "That's the way! 👍",
+    "Every match counts!"
+  ],
+  bigMatch: [
+    "INCREDIBLE MATCH! 🎯",
+    "You're on fire! 🔥",
+    "Now that's what I call a match! ⚡"
+  ],
+  smallCombo: [
+    "Combo started! Let's build it!",
+    "Good rhythm! Keep going!",
+    "That's the combo spirit!"
+  ],
+  bigCombo: [
+    "COMBO MASTER! 🌟",
+    "You're unstoppable! 💫",
+    "What a combo streak! 🎯"
+  ],
+  abilityUse: [
+    "Power-up time! 💪",
+    "Let me help you with that!",
+    "Special ability incoming! ✨"
+  ],
+  idle: [
+    "The grid is full of possibilities...",
+    "Remember to check for matching edges!",
+    "I'm analyzing optimal moves... 🤔"
+  ]
+};
+
 export const COMPANIONS = {
   default: {
     id: 'default',
@@ -83,7 +123,8 @@ export const COMPANIONS = {
     level: 1,
     experience: 0,
     experienceToNext: 200,
-    abilities: DEFAULT_ABILITIES
+    abilities: DEFAULT_ABILITIES,
+    personality: DEFAULT_PERSONALITY
   },
   cyber_cat: {
     id: 'cyber_cat',
@@ -93,7 +134,44 @@ export const COMPANIONS = {
     level: 1,
     experience: 0,
     experienceToNext: 200,
-    abilities: DEFAULT_ABILITIES
+    abilities: DEFAULT_ABILITIES,
+    personality: {
+      greetings: [
+        "Meow! Ready for some digital fun? 🐱",
+        "Purr-fect timing! Let's play!",
+        "The cyber-whiskers are tingling!"
+      ],
+      smallMatch: [
+        "Paw-some match! 🐾",
+        "Keep those matches coming! Meow!",
+        "That's the spirit! Purr..."
+      ],
+      bigMatch: [
+        "MEOW-VELOUS MATCH! 🐱✨",
+        "You're cat-tastic! 🐱🔥",
+        "Now that's what I call a purr-fect match!"
+      ],
+      smallCombo: [
+        "Purr-fect combo start!",
+        "Keep the rhythm going, meow!",
+        "That's the way to combo!"
+      ],
+      bigCombo: [
+        "ULTIMATE FELINE COMBO! 🐱⚡",
+        "You're absolutely claw-some! 🐾",
+        "Meow-gnificent combo streak!"
+      ],
+      abilityUse: [
+        "Time for some cat magic! ✨",
+        "Watch this feline power! 🐱",
+        "Meow-gical ability incoming!"
+      ],
+      idle: [
+        "Just cat-culating the next move... 🐱",
+        "These tiles are purr-fectly aligned...",
+        "My whiskers sense a match nearby!"
+      ]
+    }
   },
   ghost: {
     id: 'ghost',
@@ -103,7 +181,44 @@ export const COMPANIONS = {
     level: 1,
     experience: 0,
     experienceToNext: 200,
-    abilities: DEFAULT_ABILITIES
+    abilities: DEFAULT_ABILITIES,
+    personality: {
+      greetings: [
+        "BOO! Ready to haunt some hexagons? 👻",
+        "Spookily good to see you!",
+        "Let's make some ghostly matches!"
+      ],
+      smallMatch: [
+        "Spooktacular match!",
+        "Hauntingly good!",
+        "That's the spirit! 👻"
+      ],
+      bigMatch: [
+        "PARANORMAL MATCH! 👻✨",
+        "You're supernaturally good!",
+        "That match was to die for!"
+      ],
+      smallCombo: [
+        "A ghostly combo appears!",
+        "Keep the spirits high!",
+        "Haunting combo time!"
+      ],
+      bigCombo: [
+        "SPECTRAL COMBO MASTERY! 👻⚡",
+        "You're scarily good at this!",
+        "Otherworldly combo streak!"
+      ],
+      abilityUse: [
+        "Channeling spirit power! ✨",
+        "Ghostly ability activated!",
+        "Time for some paranormal help!"
+      ],
+      idle: [
+        "Floating through possibilities...",
+        "I sense a match in the spirit realm...",
+        "These hexagons are haunted with potential!"
+      ]
+    }
   },
   alien: {
     id: 'alien',
@@ -113,7 +228,8 @@ export const COMPANIONS = {
     level: 1,
     experience: 0,
     experienceToNext: 200,
-    abilities: DEFAULT_ABILITIES
+    abilities: DEFAULT_ABILITIES,
+    personality: DEFAULT_PERSONALITY
   },
   dragon: {
     id: 'dragon',
@@ -123,7 +239,8 @@ export const COMPANIONS = {
     level: 1,
     experience: 0,
     experienceToNext: 200,
-    abilities: DEFAULT_ABILITIES
+    abilities: DEFAULT_ABILITIES,
+    personality: DEFAULT_PERSONALITY
   },
   unicorn: {
     id: 'unicorn',
@@ -133,7 +250,8 @@ export const COMPANIONS = {
     level: 1,
     experience: 0,
     experienceToNext: 200,
-    abilities: DEFAULT_ABILITIES
+    abilities: DEFAULT_ABILITIES,
+    personality: DEFAULT_PERSONALITY
   },
   wizard: {
     id: 'wizard',
@@ -143,7 +261,8 @@ export const COMPANIONS = {
     level: 1,
     experience: 0,
     experienceToNext: 200,
-    abilities: DEFAULT_ABILITIES
+    abilities: DEFAULT_ABILITIES,
+    personality: DEFAULT_PERSONALITY
   },
   ninja: {
     id: 'ninja',
@@ -153,7 +272,8 @@ export const COMPANIONS = {
     level: 1,
     experience: 0,
     experienceToNext: 200,
-    abilities: DEFAULT_ABILITIES
+    abilities: DEFAULT_ABILITIES,
+    personality: DEFAULT_PERSONALITY
   },
   phoenix: {
     id: 'phoenix',
@@ -163,7 +283,8 @@ export const COMPANIONS = {
     level: 1,
     experience: 0,
     experienceToNext: 200,
-    abilities: DEFAULT_ABILITIES
+    abilities: DEFAULT_ABILITIES,
+    personality: DEFAULT_PERSONALITY
   },
   octopus: {
     id: 'octopus',
@@ -173,7 +294,8 @@ export const COMPANIONS = {
     level: 1,
     experience: 0,
     experienceToNext: 200,
-    abilities: DEFAULT_ABILITIES
+    abilities: DEFAULT_ABILITIES,
+    personality: DEFAULT_PERSONALITY
   },
   crystal: {
     id: 'crystal',
@@ -183,7 +305,8 @@ export const COMPANIONS = {
     level: 1,
     experience: 0,
     experienceToNext: 200,
-    abilities: DEFAULT_ABILITIES
+    abilities: DEFAULT_ABILITIES,
+    personality: DEFAULT_PERSONALITY
   },
   star: {
     id: 'star',
@@ -193,9 +316,10 @@ export const COMPANIONS = {
     level: 1,
     experience: 0,
     experienceToNext: 200,
-    abilities: DEFAULT_ABILITIES
+    abilities: DEFAULT_ABILITIES,
+    personality: DEFAULT_PERSONALITY
   }
-} as const;
+};
 
 export const INITIAL_COMPANION = COMPANIONS.default;
 
@@ -213,7 +337,18 @@ export const COMPANION_UNLOCKS = {
   octopus: { level: 45 },
   crystal: { level: 50 },
   star: { level: 55 }
-} as const;
+};
 
 // Helper type for companion IDs
-export type CompanionId = keyof typeof COMPANIONS; 
+export type CompanionId = keyof typeof COMPANIONS;
+
+// Add to the existing types
+interface CompanionPersonality {
+  greetings: ReadonlyArray<string>;
+  smallMatch: ReadonlyArray<string>;
+  bigMatch: ReadonlyArray<string>;
+  smallCombo: ReadonlyArray<string>;
+  bigCombo: ReadonlyArray<string>;
+  abilityUse: ReadonlyArray<string>;
+  idle: ReadonlyArray<string>;
+} 

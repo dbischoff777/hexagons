@@ -279,10 +279,29 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
   const [animatingTiles, setAnimatingTiles] = useState<{ q: number, r: number, type: 'place' | 'match' | 'hint' }[]>([]);
   const [companion, setCompanion] = useState<Companion>(() => {
     const progress = getPlayerProgress();
-    return COMPANIONS[progress.selectedCompanion as CompanionId] || COMPANIONS.default;
+    const selectedCompanion = COMPANIONS[progress.selectedCompanion as CompanionId] || COMPANIONS.default;
+    return {
+      ...selectedCompanion,
+      abilities: [...selectedCompanion.abilities],
+      personality: {
+        ...selectedCompanion.personality,
+        greetings: [...selectedCompanion.personality.greetings],
+        smallMatch: [...selectedCompanion.personality.smallMatch],
+        bigMatch: [...selectedCompanion.personality.bigMatch],
+        smallCombo: [...selectedCompanion.personality.smallCombo],
+        bigCombo: [...selectedCompanion.personality.bigCombo],
+        abilityUse: [...selectedCompanion.personality.abilityUse],
+        idle: [...selectedCompanion.personality.idle]
+      }
+    };
   });
   const [showCompanion, setShowCompanion] = useState(false);
   const [previousScore, setPreviousScore] = useState(0);
+  const [lastAction, setLastAction] = useState<{
+    type: 'match' | 'combo' | 'clear' | 'ability';
+    value?: number;
+    abilityName?: string;
+  } | undefined>();
 
   // Add this effect to update previousScore when score changes
   useEffect(() => {
@@ -1057,6 +1076,7 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
             
             setScore(prevScore => prevScore + basePoints);
             addTileAnimation(q, r, 'match');
+            setLastAction({ type: 'match', value: matchCount * 5 });
           }
 
           // Check for matches for grid-full bonus
@@ -1178,6 +1198,7 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
                 type: 'combo'
               });
               setScore(prevScore => prevScore + comboBonus);
+              setLastAction({ type: 'combo', value: combo.count });
             }
           } else {
             // Reset combo if no match
@@ -1881,6 +1902,7 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
         }));
         break;
     }
+    setLastAction({ type: 'ability', abilityName: ability.name });
   }, [companion, nextTiles, selectedTileIndex, placedTiles]);
 
   // Update the companion experience gain to scale with level
@@ -2072,6 +2094,9 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
       {showCompanion && (
         <CompanionHUD 
           companion={companion}
+          score={score}
+          combo={combo.count}
+          lastAction={lastAction}  // Add this state to track game events
         />
       )}
       <div className="board-container">

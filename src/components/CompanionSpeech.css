@@ -1,0 +1,50 @@
+.companion-speech {
+  position: absolute;
+  left: 100%;
+  top: 0;
+  margin-left: 20px;
+  animation: popIn 0.3s ease-out;
+}
+
+.speech-bubble {
+  background: rgba(0, 0, 0, 0.9);
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 12px;
+  color: white;
+  font-size: 14px;
+  max-width: 200px;
+  position: relative;
+  white-space: pre-wrap;
+}
+
+.speech-pointer {
+  position: absolute;
+  left: -10px;
+  top: 20px;
+  width: 0;
+  height: 0;
+  border-top: 8px solid transparent;
+  border-bottom: 8px solid transparent;
+  border-right: 10px solid rgba(255, 255, 255, 0.1);
+}
+
+.companion-speech.excited .speech-bubble {
+  border-color: #00ff9f;
+  box-shadow: 0 0 15px rgba(0, 255, 159, 0.3);
+}
+
+.companion-speech.ability .speech-bubble {
+  border-color: #00ffff;
+  box-shadow: 0 0 15px rgba(0, 255, 255, 0.3);
+}
+
+.companion-speech.achievement .speech-bubble {
+  border-color: #ff9f00;
+  box-shadow: 0 0 15px rgba(255, 159, 0, 0.3);
+}
+
+@keyframes popIn {
+  0% { transform: scale(0.8); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+} 
