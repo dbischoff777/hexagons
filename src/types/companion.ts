@@ -30,7 +30,7 @@ export const INITIAL_COMPANION: Companion = {
   avatar: '🤖',
   level: 1,
   experience: 0,
-  experienceToNext: 100,
+  experienceToNext: 200,
   abilities: [
     {
       id: 'timeBonus',

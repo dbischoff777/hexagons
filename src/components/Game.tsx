@@ -1680,6 +1680,10 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
     const ability = companion.abilities.find(a => a.id === abilityId);
     if (!ability || ability.currentCooldown > 0 || ability.isActive) return;
 
+    // Calculate level-based multipliers
+    const levelMultiplier = 1 + (companion.level - 1) * 0.1; // 10% increase per level
+    const durationMultiplier = 1 + (companion.level - 1) * 0.15; // 15% increase per level
+
     setCompanion(prev => ({
       ...prev,
       abilities: prev.abilities.map(a => 
@@ -1689,31 +1693,34 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
       )
     }));
 
-    // Handle ability effects - simplified to only include time and score effects
+    // Handle ability effects with scaled values
     switch (ability.effect) {
       case 'timeBonus':
-        // Slow down time
+        // Slow down time with increased duration
         setPowerUps(prev => ({
           ...prev,
-          freeze: { active: true, remainingTime: ability.duration ?? 10 }
+          freeze: { 
+            active: true, 
+            remainingTime: Math.floor((ability.duration ?? 10) * durationMultiplier)
+          }
         }));
         break;
         
       case 'scoreBoost':
-        // Increase score multiplier
+        // Increase score multiplier with both higher multiplier and duration
         setPowerUps(prev => ({
           ...prev,
           multiplier: { 
             active: true, 
-            value: 2, 
-            remainingTime: ability.duration ?? 15 
+            value: 1 + levelMultiplier, // Scales from 2x to 3x based on level
+            remainingTime: Math.floor((ability.duration ?? 15) * durationMultiplier)
           }
         }));
         break;
     }
   }, [companion]);
 
-  // Add companion experience gain on matches
+  // Update the companion experience gain to scale with level
   useEffect(() => {
     const matchedTiles = placedTiles.filter(tile => 
       hasMatchingEdges(tile, placedTiles, settings.isColorBlind)
@@ -1721,16 +1728,25 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
 
     if (matchedTiles.length > 0) {
       setCompanion(prev => {
-        const expGain = matchedTiles.length * 10;
+        // Reduced base experience and level bonus
+        const levelBonus = 1 + (prev.level - 1) * 0.1; // Reduced from 0.2 to 0.1 (10% more exp per level)
+        const expGain = Math.floor(matchedTiles.length * 5 * levelBonus); // Reduced base exp from 10 to 5
         const newExp = prev.experience + expGain;
         
         if (newExp >= prev.experienceToNext) {
-          // Level up
+          // Make leveling up harder with each level
+          const newExperienceToNext = Math.floor(prev.experienceToNext * 1.8); // Increased multiplier from 1.5 to 1.8
+          
           return {
             ...prev,
             level: prev.level + 1,
             experience: newExp - prev.experienceToNext,
-            experienceToNext: Math.floor(prev.experienceToNext * 1.5)
+            experienceToNext: newExperienceToNext,
+            // Reduce cooldowns more gradually
+            abilities: prev.abilities.map(ability => ({
+              ...ability,
+              cooldown: Math.max(15, ability.cooldown - Math.floor(prev.level / 2)) // Slower cooldown reduction
+            }))
           };
         }
         
