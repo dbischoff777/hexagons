@@ -7,6 +7,7 @@ import { SEASONAL_THEMES, getActiveSeasonalThemes } from '../utils/seasonalTheme
 
 interface UnlockablesMenuProps {
   onSelectTheme: (themeId: string) => void;
+  onSelectCompanion: (companionId: string) => void;
   onClose: () => void;
 }
 
@@ -25,7 +26,7 @@ const DEFAULT_THEME: SeasonalTheme = {
   icon: '🎮'
 };
 
-const UnlockablesMenu: React.FC<UnlockablesMenuProps> = ({ onSelectTheme, onClose }) => {
+const UnlockablesMenu: React.FC<UnlockablesMenuProps> = ({ onSelectTheme, onSelectCompanion, onClose }) => {
   const rewards = getUnlockedRewards();
   const progress = getPlayerProgress();
   const currentTheme = getTheme(progress.selectedTheme || 'default');
@@ -161,6 +162,12 @@ const UnlockablesMenu: React.FC<UnlockablesMenuProps> = ({ onSelectTheme, onClos
     return null;
   };
 
+  const handleCompanionSelect = (companionId: string) => {
+    if (isUnlocked) {
+      onSelectCompanion(companionId);
+    }
+  };
+
   return (
     <div className="unlockables-overlay" onClick={handleOverlayClick}>
       <div className="unlockables-container">
@@ -260,14 +267,19 @@ const UnlockablesMenu: React.FC<UnlockablesMenuProps> = ({ onSelectTheme, onClos
           <div className="companions-grid">
             {rewards.filter(r => r.type === 'companion').map(companionReward => {
               const isUnlocked = companionReward.unlocked;
+              const isSelected = progress.selectedCompanion === companionReward.id;
+              
               return (
                 <div 
                   key={companionReward.id}
-                  className={`theme-item ${isUnlocked ? 'unlocked' : 'locked'}`}
+                  className={`theme-item ${isUnlocked ? 'unlocked' : 'locked'} ${
+                    isSelected ? 'selected' : ''
+                  }`}
+                  onClick={() => isUnlocked && handleCompanionSelect(companionReward.id)}
                 >
                   <div className="companion-preview">
                     <span className="companion-avatar">
-                      {(companionReward as CompanionUnlockReward).companion.avatar}
+                      {companionReward.preview}
                     </span>
                   </div>
                   <div className="theme-info">

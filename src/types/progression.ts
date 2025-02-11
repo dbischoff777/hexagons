@@ -34,6 +34,7 @@ export interface PlayerProgress {
   selectedTheme?: string;
   points: number;
   badges: Badge[];
+  selectedCompanion: string;
 }
 
 export interface ThemeConfig {
@@ -68,5 +69,4 @@ export interface SeasonalTheme {
 export interface CompanionUnlockReward extends UnlockableReward {
   type: 'companion';
   companion: Companion;
-  levelRequired: number;
 } 

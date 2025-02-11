@@ -1,6 +1,7 @@
 import { INITIAL_COMPANION } from '../types/companion';
 import { PlayerProgress, UnlockableReward, ThemeConfig, Badge, ExperienceAction, CompanionUnlockReward } from '../types/progression';
 import { SEASONAL_THEMES } from './seasonalThemes';
+import { COMPANIONS, COMPANION_UNLOCKS, CompanionId } from '../types/companion';
 
 export const PROGRESSION_KEY = 'hexagon_progression';
 const BASE_XP_TO_LEVEL = 1000;
@@ -184,6 +185,116 @@ export const UNLOCKABLE_REWARDS: (UnlockableReward | CompanionUnlockReward)[] = 
     levelRequired: 5,
     unlocked: false,
     companion: INITIAL_COMPANION
+  },
+  {
+    id: 'cyber_cat',
+    type: 'companion',
+    name: COMPANIONS.cyber_cat.name,
+    description: COMPANIONS.cyber_cat.description,
+    levelRequired: COMPANION_UNLOCKS.cyber_cat.level,
+    preview: COMPANIONS.cyber_cat.avatar,
+    companion: COMPANIONS.cyber_cat,
+    unlocked: false
+  },
+  {
+    id: 'ghost',
+    type: 'companion',
+    name: COMPANIONS.ghost.name,
+    description: COMPANIONS.ghost.description,
+    levelRequired: COMPANION_UNLOCKS.ghost.level,
+    preview: COMPANIONS.ghost.avatar,
+    companion: COMPANIONS.ghost,
+    unlocked: false
+  },
+  {
+    id: 'alien',
+    type: 'companion',
+    name: COMPANIONS.alien.name,
+    description: COMPANIONS.alien.description,
+    levelRequired: COMPANION_UNLOCKS.alien.level,
+    preview: COMPANIONS.alien.avatar,
+    companion: COMPANIONS.alien,
+    unlocked: false
+  },
+  {
+    id: 'dragon',
+    type: 'companion',
+    name: COMPANIONS.dragon.name,
+    description: COMPANIONS.dragon.description,
+    levelRequired: COMPANION_UNLOCKS.dragon.level,
+    preview: COMPANIONS.dragon.avatar,
+    companion: COMPANIONS.dragon,
+    unlocked: false
+  },
+  {
+    id: 'unicorn',
+    type: 'companion',
+    name: COMPANIONS.unicorn.name,
+    description: COMPANIONS.unicorn.description,
+    levelRequired: COMPANION_UNLOCKS.unicorn.level,
+    preview: COMPANIONS.unicorn.avatar,
+    companion: COMPANIONS.unicorn,
+    unlocked: false
+  },
+  {
+    id: 'wizard',
+    type: 'companion',
+    name: COMPANIONS.wizard.name,
+    description: COMPANIONS.wizard.description,
+    levelRequired: COMPANION_UNLOCKS.wizard.level,
+    preview: COMPANIONS.wizard.avatar,
+    companion: COMPANIONS.wizard,
+    unlocked: false
+  },
+  {
+    id: 'ninja',
+    type: 'companion',
+    name: COMPANIONS.ninja.name,
+    description: COMPANIONS.ninja.description,
+    levelRequired: COMPANION_UNLOCKS.ninja.level,
+    preview: COMPANIONS.ninja.avatar,
+    companion: COMPANIONS.ninja,
+    unlocked: false
+  },
+  {
+    id: 'phoenix',
+    type: 'companion',
+    name: COMPANIONS.phoenix.name,
+    description: COMPANIONS.phoenix.description,
+    levelRequired: COMPANION_UNLOCKS.phoenix.level,
+    preview: COMPANIONS.phoenix.avatar,
+    companion: COMPANIONS.phoenix,
+    unlocked: false
+  },
+  {
+    id: 'octopus',
+    type: 'companion',
+    name: COMPANIONS.octopus.name,
+    description: COMPANIONS.octopus.description,
+    levelRequired: COMPANION_UNLOCKS.octopus.level,
+    preview: COMPANIONS.octopus.avatar,
+    companion: COMPANIONS.octopus,
+    unlocked: false
+  },
+  {
+    id: 'crystal',
+    type: 'companion',
+    name: COMPANIONS.crystal.name,
+    description: COMPANIONS.crystal.description,
+    levelRequired: COMPANION_UNLOCKS.crystal.level,
+    preview: COMPANIONS.crystal.avatar,
+    companion: COMPANIONS.crystal,
+    unlocked: false
+  },
+  {
+    id: 'star',
+    type: 'companion',
+    name: COMPANIONS.star.name,
+    description: COMPANIONS.star.description,
+    levelRequired: COMPANION_UNLOCKS.star.level,
+    preview: COMPANIONS.star.avatar,
+    companion: COMPANIONS.star,
+    unlocked: false
   }
 ];
 
@@ -203,7 +314,8 @@ export const getPlayerProgress = (): PlayerProgress => {
     unlockedRewards: [],
     selectedTheme: 'default',
     points: 0,
-    badges: []
+    badges: [],
+    selectedCompanion: 'default'
   };
 };
 
@@ -416,4 +528,17 @@ export const BADGES: Badge[] = [
     icon: '👑',
     levelBlock: 30
   }
-]; 
+];
+
+// Add helper function to get current companion
+export const getCurrentCompanion = () => {
+  const progress = getPlayerProgress();
+  return COMPANIONS[progress.selectedCompanion as CompanionId] || COMPANIONS.default;
+};
+
+// Add function to select companion
+export const selectCompanion = (companionId: CompanionId) => {
+  const progress = getPlayerProgress();
+  progress.selectedCompanion = companionId;
+  localStorage.setItem(PROGRESSION_KEY, JSON.stringify(progress));
+}; 
