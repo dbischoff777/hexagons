@@ -48,12 +48,6 @@ interface GameProps {
   isDailyChallenge?: boolean
 }
 
-interface PopupPosition {
-  y: number
-  expiresAt: number
-  type: 'score' | 'combo' | 'quick' | 'clear'
-}
-
 const rotateTileEdges = (edges: { color: string }[]) => {
   return [...edges.slice(-1), ...edges.slice(0, -1)]
 }
@@ -84,7 +78,7 @@ const SCORE_FEEDBACK = {
   
   // Combos
   COMBO: [
-    { emoji: '🎯💫', text: '2x COMBO!' },
+    { emoji: '👍💫', text: '2x COMBO!' },
     { emoji: '🔥💫', text: '3x COMBO!' },
     { emoji: '⚡💫', text: '4x COMBO!' },
     { emoji: '💫✨', text: '5x COMBO!' },
@@ -230,7 +224,6 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
       lastPlacementTime: 0
     }
   )
-  const [activePopupPositions, setActivePopupPositions] = useState<PopupPosition[]>([])
   const { settings } = useAccessibility()
   const [tutorialState, setTutorialState] = useState<TutorialState>({
     active: tutorial,
@@ -245,7 +238,6 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
   } | null>(null)
   const [newAchievements, setNewAchievements] = useState<Achievement[]>([])
   const [showExitConfirm, setShowExitConfirm] = useState(false)
-  const [isPopupAnimating, setIsPopupAnimating] = useState(false)
   const [dailyChallenge, setDailyChallenge] = useState<DailyChallenge | null>(null)
   const [showDailyComplete, setShowDailyComplete] = useState(false)
   const [playerProgress, setPlayerProgress] = useState(getPlayerProgress())
@@ -280,57 +272,6 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
       ));
     }, type === 'place' ? 500 : type === 'match' ? 800 : 600);
   }, []);
-
-  // Modify the findAvailableYPosition function
-  const findAvailableYPosition = (baseY: number, type: 'score' | 'combo' | 'quick' | 'clear'): number => {
-    const POPUP_HEIGHTS = {
-      score: 100,  // Regular score popups
-      combo: 90,   // Combo popups
-      quick: 80,   // Quick placement popups
-      clear: 120   // Clear bonus popups
-    }
-    
-    const now = Date.now()
-    
-    // Clean expired positions
-    const currentPositions = activePopupPositions.filter(pos => pos.expiresAt > now)
-    
-    // Define game area boundaries
-    const minY = 100  // Minimum distance from top of game area
-    const maxY = canvasRef.current?.height ?? 800 - 100  // Maximum distance from bottom
-    
-    // Find first available Y position that doesn't overlap
-    let testY = Math.min(Math.max(baseY, minY), maxY)  // Clamp initial position
-    let attempts = 0
-    const MAX_ATTEMPTS = 10  // Prevent infinite loops
-    
-    while (currentPositions.some(pos => {
-      const minSpacing = Math.max(POPUP_HEIGHTS[type], POPUP_HEIGHTS[pos.type])
-      return Math.abs(pos.y - testY) < minSpacing
-    })) {
-      testY -= 40  // Move up by smaller increments
-      
-      // If we hit the top, start from bottom and work up
-      if (testY < minY) {
-        testY = maxY
-      }
-      
-      attempts++
-      if (attempts > MAX_ATTEMPTS) {
-        // If we can't find a spot, use the original position
-        testY = baseY
-        break
-      }
-    }
-    
-    // Update active positions
-    setActivePopupPositions([
-      ...currentPositions,
-      { y: testY, expiresAt: now + 1000, type }
-    ])
-    
-    return testY
-  }
 
   // Update rotation timer effect
   useEffect(() => {
@@ -1025,15 +966,14 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
             if (mirrorPoints > 0) {
               // Add score popup for mirror matches
               const feedback = getFeedbackForScore(mirrorPoints);
-              setScorePopups(prev => [...prev, {
+              addScorePopup({
                 score: mirrorPoints,
                 x: q * tileSize + tileSize / 2,
                 y: r * tileSize + tileSize / 2 - 40,
-                id: Date.now(),
                 emoji: feedback.emoji,
                 text: 'Mirror Match!',
                 type: 'score'
-              }]);
+              });
               
               // Update score
               setScore(prev => prev + mirrorPoints);
@@ -1435,7 +1375,7 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
     return Math.round(baseScore * powerUpMultiplier * combo.multiplier)
   }
 
-  // Modify the addScorePopup function
+  // Modify the addScorePopup function to handle popup clearing and positioning better
   const addScorePopup = useCallback(({ score, x, y, emoji, text, type }: {
     score: number;
     x: number;
@@ -1444,44 +1384,63 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
     text: string;
     type: 'score' | 'combo' | 'quick' | 'clear';
   }) => {
-    if (isPopupAnimating) return;
-
-    setIsPopupAnimating(true);
+    const position = getPopupPosition(type, x, y);
+    const newPopupId = Date.now() + Math.random(); // Make ID more unique
     
-    // Clear existing popups first
-    setScorePopups([]);
-    setActivePopupPositions([]);
-    
-    // Add new popup after a brief delay
-    setTimeout(() => {
-      const popupY = findAvailableYPosition(y, type);
-      setScorePopups([{
+    // First, clear any existing popup of the same type
+    setScorePopups(prev => {
+      // Remove existing popups of the same type
+      const filtered = prev.filter(p => p.type !== type);
+      
+      // Add the new popup
+      return [...filtered, {
         score,
-        x,
-        y: popupY,
-        id: Date.now(),
+        x: position.x,
+        y: position.y,
+        id: newPopupId,
         emoji,
         text,
         type
-      }]);
-      setIsPopupAnimating(false);
+      }];
+    });
 
-      // Play appropriate sound based on type
-      switch (type) {
-        case 'combo':
-          soundManager.playSound('combo');
-          break;
-        case 'clear':
-          soundManager.playSound('clear');
-          break;
-        case 'quick':
-          soundManager.playSound('quick');
-          break;
-        default:
-          soundManager.playSound('score');
-      }
-    }, 50);
-  }, [isPopupAnimating, findAvailableYPosition]);
+    // Play appropriate sound based on type
+    switch (type) {
+      case 'combo':
+        soundManager.playSound('combo');
+        break;
+      case 'clear':
+        soundManager.playSound('clear');
+        break;
+      case 'quick':
+        soundManager.playSound('quick');
+        break;
+      default:
+        soundManager.playSound('score');
+    }
+
+    // Remove this specific popup after animation
+    setTimeout(() => {
+      setScorePopups(prev => prev.filter(p => p.id !== newPopupId));
+    }, 800);
+  }, []);
+
+  // Update the getPopupPosition function to better space out popups
+  const getPopupPosition = (type: 'score' | 'combo' | 'quick' | 'clear', baseX: number, baseY: number) => {
+    const spacing = 100; // Base spacing between popups
+    switch (type) {
+      case 'score':
+        return { x: baseX, y: baseY - spacing };
+      case 'quick':
+        return { x: baseX - spacing * 1.5, y: baseY }; // Further left
+      case 'combo':
+        return { x: baseX + spacing * 1.5, y: baseY }; // Further right
+      case 'clear':
+        return { x: baseX, y: baseY + spacing }; // Lower
+      default:
+        return { x: baseX, y: baseY };
+    }
+  };
 
   // Update the cleanup effect
   useEffect(() => {
@@ -1490,7 +1449,6 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
     if (scorePopups.length > 0) {
       const timer = setTimeout(() => {
         setScorePopups([])
-        setActivePopupPositions([])
       }, POPUP_DURATION)
 
       return () => clearTimeout(timer)

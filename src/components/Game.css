@@ -259,22 +259,41 @@
 .score-popup {
   position: absolute;
   z-index: 4;
-  color: #00FF9F;
-  font-size: 48px;
-  font-weight: bold;
-  text-shadow: 0 0 15px #00FF9F;
   pointer-events: none;
-  animation: popup-appear 1s ease-out forwards;
   transform: translate(-50%, -50%);
-  text-align: center;
-  min-width: 120px;
-  max-width: 90%;
-  white-space: nowrap;
   display: flex;
   align-items: center;
   gap: 10px;
   transition: transform 0.3s ease-out;
-  left: 50%;
+}
+
+/* Different styles for each popup type */
+.score-popup[data-type='score'] {
+  color: #00FF9F;
+  text-shadow: 0 0 15px #00FF9F;
+  font-size: 1.0em;
+  z-index: 5;
+}
+
+.score-popup[data-type='quick'] {
+  color: #00FFFF;
+  text-shadow: 0 0 15px #00FFFF;
+  font-size: 1.1em;
+  z-index: 6;
+}
+
+.score-popup[data-type='combo'] {
+  color: #FFD700;
+  text-shadow: 0 0 15px #FFD700;
+  font-size: 1.2em;
+  z-index: 7;
+}
+
+.score-popup[data-type='clear'] {
+  color: #FF69B4;
+  text-shadow: 0 0 15px #FF69B4;
+  font-size: 1.3em;
+  z-index: 8;
 }
 
 /* Adjust vertical spacing based on popup type */
@@ -303,7 +322,6 @@
     0 0 15px #00FFFF,
     0 0 25px #00FFFF;
   font-size: 1.2em;
-  z-index: 6; /* Ensure it appears above other popups */
   animation: quickPopup 0.8s ease-out forwards;
 }
 
@@ -968,28 +986,4 @@
     0 0 10px rgba(0, 255, 159, 0.5),
     0 0 20px rgba(0, 255, 159, 0.3);
   letter-spacing: 2px;
-}
-
-/* Update score popup styles for different types */
-.score-popup[data-type='score'] {
-  color: #00FF9F;
-  text-shadow: 0 0 15px #00FF9F;
-}
-
-.score-popup[data-type='combo'] {
-  color: #FFD700;
-  text-shadow: 0 0 15px #FFD700;
-  font-size: 1.2em;
-}
-
-.score-popup[data-type='quick'] {
-  color: #00FFFF;
-  text-shadow: 0 0 15px #00FFFF;
-  font-size: 1.1em;
-}
-
-.score-popup[data-type='clear'] {
-  color: #FF69B4;
-  text-shadow: 0 0 15px #FF69B4;
-  font-size: 1.3em;
 }
