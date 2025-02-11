@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { PowerUpState, ComboState, GameState, PlacedTile } from '../types/index'
-import { createTileWithRandomEdges, hexToPixel, getAdjacentTiles, COLORS, updateMirrorTileEdges } from '../utils/hexUtils'
+import { createTileWithRandomEdges, hexToPixel, getAdjacentTiles, getAdjacentPositions, COLORS, updateMirrorTileEdges } from '../utils/hexUtils'
 import { INITIAL_TIME, hasMatchingEdges, formatTime, updateTileValues, isGridFull } from '../utils/gameUtils'
 import SoundManager from '../utils/soundManager'
 import './Game.css'
@@ -1717,8 +1717,33 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
           }
         }));
         break;
+
+      case 'colorSync':
+        // Temporarily make adjacent tiles match colors
+        setPlacedTiles(prev => {
+          const newTiles = [...prev];
+          newTiles.forEach(tile => {
+            const adjacentPositions = getAdjacentPositions(tile.q, tile.r);
+            const hasAdjacentTiles = adjacentPositions.some(pos => 
+              newTiles.some(t => t.q === pos.q && t.r === pos.r)
+            );
+            if (hasAdjacentTiles) {
+              tile.temporaryColorMatch = true;
+            }
+          });
+          return newTiles;
+        });
+        break;
+
+      case 'comboExtend':
+        // Extend the current combo timer
+        setCombo(prev => ({
+          ...prev,
+          timer: prev.timer + 5, // Add 5 seconds to combo timer
+        }));
+        break;
     }
-  }, [companion]);
+  }, [companion, nextTiles, selectedTileIndex, placedTiles]);
 
   // Update the companion experience gain to scale with level
   useEffect(() => {
@@ -1801,6 +1826,27 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
     const companionReward = rewards.find(r => r.type === 'companion');
     setShowCompanion(!!companionReward?.unlocked);
   }, [playerProgress.level]); // Depend on player level
+
+  // Add this effect to handle temporary color matches
+  useEffect(() => {
+    const clearColorMatches = () => {
+      setPlacedTiles(prev => 
+        prev.map(tile => ({
+          ...tile,
+          temporaryColorMatch: false
+        }))
+      );
+    };
+
+    const colorSyncAbility = companion.abilities.find(a => a.id === 'colorSync');
+    if (colorSyncAbility?.isActive) {
+      const timer = setTimeout(() => {
+        clearColorMatches();
+      }, (colorSyncAbility.duration ?? 5) * 1000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [companion.abilities]);
 
   return (
     <div

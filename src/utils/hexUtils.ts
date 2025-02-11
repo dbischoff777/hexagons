@@ -124,4 +124,16 @@ export const updateMirrorTileEdges = (mirrorTile: PlacedTile, placedTiles: Place
     tile: { ...mirrorTile, edges: newEdges },
     points
   };
+};
+
+// Add this new function to get adjacent positions
+export const getAdjacentPositions = (q: number, r: number): { q: number, r: number }[] => {
+  return [
+    { q: q + 1, r: r },     // right
+    { q: q - 1, r: r },     // left
+    { q: q, r: r + 1 },     // bottom right
+    { q: q, r: r - 1 },     // top left
+    { q: q + 1, r: r - 1 }, // top right
+    { q: q - 1, r: r + 1 }  // bottom left
+  ];
 }; 

@@ -1,6 +1,8 @@
 export type CompanionAbilityEffect = 
   | 'timeBonus'
-  | 'scoreBoost';
+  | 'scoreBoost'
+  | 'colorSync'
+  | 'comboExtend';
 
 export interface CompanionAbility {
   id: string;
@@ -54,5 +56,27 @@ export const INITIAL_COMPANION: Companion = {
       duration: 15,
       isActive: false
     },
+    {
+      id: 'colorSync',
+      name: 'Color Sync',
+      description: 'Makes adjacent tiles match colors temporarily',
+      icon: '🎨',
+      effect: 'colorSync',
+      cooldown: 60,
+      currentCooldown: 0,
+      duration: 5,
+      isActive: false
+    },
+    {
+      id: 'comboExtend',
+      name: 'Combo Sustain',
+      description: 'Extends the current combo timer',
+      icon: '⚡',
+      effect: 'comboExtend',
+      cooldown: 40,
+      currentCooldown: 0,
+      duration: 5,
+      isActive: false
+    }
   ]
 }; 

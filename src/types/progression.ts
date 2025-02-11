@@ -1,3 +1,5 @@
+import { Companion } from "./companion";
+
 export interface ExperienceAction {
   type: 'match' | 'combo' | 'clear' | 'challenge' | 'achievement';
   value: number;

@@ -34,6 +34,7 @@ export interface PlacedTile extends Tile {
     multiplier?: number
     active: boolean
   }
+  temporaryColorMatch?: boolean
 }
 
 export interface PowerUpState {
