@@ -44,4 +44,19 @@ export interface ThemeConfig {
   };
   particleColor: string;
   previewImage?: string;
+}
+
+export interface SeasonalTheme {
+  id: string;
+  name: string;
+  description: string;
+  startDate: string;  // ISO date string
+  endDate: string;    // ISO date string
+  colors: {
+    background: string;
+    primary: string;
+    secondary: string;
+    accent: string;
+  };
+  icon: string;
 } 

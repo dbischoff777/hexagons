@@ -1,4 +1,5 @@
 import { PlayerProgress, UnlockableReward, ThemeConfig, Badge, ExperienceAction } from '../types/progression';
+import { SEASONAL_THEMES } from './seasonalThemes';
 
 export const PROGRESSION_KEY = 'hexagon_progression';
 const BASE_XP_TO_LEVEL = 1000;
@@ -196,7 +197,7 @@ export const getPlayerProgress = (): PlayerProgress => {
   };
 };
 
-export const addExperience = ({ type, value }: ExperienceAction): { progress: PlayerProgress; newBadges: Badge[] } => {
+export const addExperience = ({ value }: ExperienceAction): { progress: PlayerProgress; newBadges: Badge[] } => {
   const progress = getPlayerProgress();
   const newBadges: Badge[] = [];
   progress.experience += value;
@@ -244,14 +245,36 @@ export const getUnlockedRewards = (): UnlockableReward[] => {
   }));
 };
 
-export const getTheme = (themeId: string): ThemeConfig => {
-  const progress = getPlayerProgress();
-  const isThemeUnlocked = progress.unlockedRewards.includes(themeId) || themeId === 'default';
-  if (!isThemeUnlocked) {
-    return THEMES[0]; // Return default theme if selected theme isn't unlocked
+export const getTheme = (themeId: string) => {
+  // First check seasonal themes
+  const seasonalTheme = SEASONAL_THEMES.find(theme => theme.id === themeId);
+  if (seasonalTheme) {
+    return {
+      id: seasonalTheme.id,
+      name: seasonalTheme.name,
+      colors: {
+        ...seasonalTheme.colors,
+        text: '#FFFFFF' // Add text color for compatibility
+      },
+      particleColor: seasonalTheme.colors.accent,
+      type: 'seasonal' as const  // Add type to distinguish seasonal themes
+    };
   }
-  const selectedTheme = THEMES.find(theme => theme.id === themeId);
-  return selectedTheme || THEMES[0];
+
+  // If not a seasonal theme, check regular themes
+  const theme = THEMES.find(t => t.id === themeId);
+  if (theme) {
+    return {
+      ...theme,
+      type: 'regular' as const  // Add type to distinguish regular themes
+    };
+  }
+
+  // Return default theme
+  return {
+    ...THEMES[0],
+    type: 'regular' as const
+  };
 };
 
 export const setTheme = (themeId: string): void => {
@@ -266,7 +289,6 @@ export interface LevelBlock {
     level: number;
     pointsRequired: number;
     rewards?: {
-      type: 'theme' | 'powerup' | 'achievement';
       id: string;
     }[];
   }[];

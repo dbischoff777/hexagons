@@ -2,17 +2,41 @@ import React from 'react';
 import { getUnlockedRewards, getTheme, THEMES } from '../utils/progressionUtils';
 import { getPlayerProgress } from '../utils/progressionUtils';
 import './UnlockablesMenu.css';
-import { UnlockableReward } from '../types/progression';
+import { SeasonalTheme, UnlockableReward } from '../types/progression';
+import { SEASONAL_THEMES, getActiveSeasonalThemes } from '../utils/seasonalThemes';
 
 interface UnlockablesMenuProps {
   onSelectTheme: (themeId: string) => void;
   onClose: () => void;
 }
 
+const DEFAULT_THEME: SeasonalTheme = {
+  id: 'default',
+  name: 'Default Theme',
+  description: 'The classic neon theme',
+  startDate: '',
+  endDate: '',
+  colors: {
+    background: '#1a1a2e',
+    primary: '#00FF9F',
+    secondary: '#2d2d4d',
+    accent: '#00FFFF'
+  },
+  icon: '🎮'
+};
+
 const UnlockablesMenu: React.FC<UnlockablesMenuProps> = ({ onSelectTheme, onClose }) => {
   const rewards = getUnlockedRewards();
   const progress = getPlayerProgress();
   const currentTheme = getTheme(progress.selectedTheme || 'default');
+  const activeSeasonalThemes = getActiveSeasonalThemes();
+  
+  console.log('Debug theme selection:', {
+    rewards,
+    progress,
+    currentTheme,
+    activeSeasonalThemes
+  });
 
   const powerUps = rewards.filter(r => r.type === 'powerup');
   const themes = [
@@ -24,8 +48,21 @@ const UnlockablesMenu: React.FC<UnlockablesMenuProps> = ({ onSelectTheme, onClos
       levelRequired: 1,
       unlocked: true
     },
-    ...rewards.filter(r => r.type === 'theme')
+    ...rewards
+      .filter(r => r.type === 'theme')
+      .filter(theme => !activeSeasonalThemes.some(seasonal => seasonal.id === theme.id)),
+    ...activeSeasonalThemes.map(seasonal => ({
+      type: 'theme' as const,
+      id: seasonal.id,
+      name: seasonal.name,
+      description: `${seasonal.description} (Available until ${new Date(seasonal.endDate).toLocaleDateString()})`,
+      levelRequired: 1,
+      unlocked: true,
+      seasonal: true,
+      icon: seasonal.icon
+    }))
   ];
+  console.log('Combined themes:', themes);
   const tiles = rewards.filter(r => r.type === 'tile' || r.type === 'special_tile');
 
   // Add click handler for the overlay
@@ -111,6 +148,19 @@ const UnlockablesMenu: React.FC<UnlockablesMenuProps> = ({ onSelectTheme, onClos
     ctx.fillText('+100', popupX + popupWidth/2, popupY + popupHeight/2);
   };
 
+  const getThemeTimeRemaining = (theme: typeof themes[0]) => {
+    if ('seasonal' in theme) {
+      const seasonal = SEASONAL_THEMES.find(s => s.id === theme.id);
+      if (seasonal) {
+        const end = new Date(seasonal.endDate);
+        const now = new Date();
+        const days = Math.ceil((end.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+        return `${days} days remaining`;
+      }
+    }
+    return null;
+  };
+
   return (
     <div className="unlockables-overlay" onClick={handleOverlayClick}>
       <div className="unlockables-container">
@@ -121,12 +171,17 @@ const UnlockablesMenu: React.FC<UnlockablesMenuProps> = ({ onSelectTheme, onClos
           <div className="themes-grid">
             {themes.map(theme => {
               const isUnlocked = theme.unlocked || theme.id === 'default';
-              const themeConfig = THEMES.find(t => t.id === theme.id) || THEMES[0];
+              const themeConfig = ('seasonal' in theme ? 
+                SEASONAL_THEMES.find(t => t.id === theme.id) : 
+                THEMES.find(t => t.id === theme.id)) || DEFAULT_THEME;
+              const timeRemaining = getThemeTimeRemaining(theme);
               
               return (
                 <div 
                   key={theme.id}
-                  className={`theme-item ${isUnlocked ? 'unlocked' : 'locked'} ${currentTheme.id === theme.id ? 'selected' : ''}`}
+                  className={`theme-item ${isUnlocked ? 'unlocked' : 'locked'} ${
+                    currentTheme.id === theme.id ? 'selected' : ''
+                  } ${timeRemaining ? 'seasonal' : ''}`}
                   onClick={() => isUnlocked && onSelectTheme(theme.id)}
                 >
                   <canvas 
@@ -143,7 +198,13 @@ const UnlockablesMenu: React.FC<UnlockablesMenuProps> = ({ onSelectTheme, onClos
                     }}
                   />
                   <div className="theme-info">
-                    <span className="theme-name">{theme.name}</span>
+                    <span className="theme-name">
+                      {theme.name}
+                      {'seasonal' in theme && <span className="seasonal-icon">{theme.icon}</span>}
+                    </span>
+                    {timeRemaining && (
+                      <span className="time-remaining">{timeRemaining}</span>
+                    )}
                     {renderUnlockLevel(theme)}
                   </div>
                 </div>
