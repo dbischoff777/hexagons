@@ -1,4 +1,3 @@
-import { INITIAL_COMPANION } from '../types/companion';
 import { PlayerProgress, UnlockableReward, ThemeConfig, Badge, ExperienceAction, CompanionUnlockReward } from '../types/progression';
 import { SEASONAL_THEMES } from './seasonalThemes';
 import { COMPANIONS, COMPANION_UNLOCKS, CompanionId } from '../types/companion';
@@ -178,13 +177,14 @@ export const UNLOCKABLE_REWARDS: (UnlockableReward | CompanionUnlockReward)[] = 
     preview: '↔️'
   },
   {
-    id: 'companion_pixel',
-    type: 'companion' as const,
-    name: 'Pixel',
-    description: 'A helpful AI companion that automatically activates abilities to assist you',
-    levelRequired: 5,
-    unlocked: false,
-    companion: INITIAL_COMPANION
+    id: 'default',
+    type: 'companion',
+    name: COMPANIONS.default.name,
+    description: COMPANIONS.default.description,
+    levelRequired: COMPANION_UNLOCKS.default.level,
+    preview: COMPANIONS.default.avatar,
+    companion: COMPANIONS.default,
+    unlocked: false
   },
   {
     id: 'cyber_cat',
@@ -541,4 +541,17 @@ export const selectCompanion = (companionId: CompanionId) => {
   const progress = getPlayerProgress();
   progress.selectedCompanion = companionId;
   localStorage.setItem(PROGRESSION_KEY, JSON.stringify(progress));
-}; 
+};
+
+export function setCompanion(companionId: CompanionId) {
+  const progress = getPlayerProgress();
+  progress.selectedCompanion = companionId;
+  
+  // Save the updated progress
+  localStorage.setItem(PROGRESSION_KEY, JSON.stringify(progress));
+  
+  // Dispatch an event with the companionId
+  window.dispatchEvent(new CustomEvent('companionChanged', { 
+    detail: { companionId } 
+  }));
+} 

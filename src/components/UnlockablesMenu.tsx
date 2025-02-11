@@ -2,12 +2,13 @@ import React from 'react';
 import { getUnlockedRewards, getTheme, THEMES } from '../utils/progressionUtils';
 import { getPlayerProgress } from '../utils/progressionUtils';
 import './UnlockablesMenu.css';
-import { SeasonalTheme, UnlockableReward, CompanionUnlockReward } from '../types/progression';
+import { SeasonalTheme, UnlockableReward } from '../types/progression';
 import { SEASONAL_THEMES, getActiveSeasonalThemes } from '../utils/seasonalThemes';
+import { CompanionId } from '../types/companion';
 
 interface UnlockablesMenuProps {
   onSelectTheme: (themeId: string) => void;
-  onSelectCompanion: (companionId: string) => void;
+  onSelectCompanion: (companionId: CompanionId) => void;
   onClose: () => void;
 }
 
@@ -162,12 +163,6 @@ const UnlockablesMenu: React.FC<UnlockablesMenuProps> = ({ onSelectTheme, onSele
     return null;
   };
 
-  const handleCompanionSelect = (companionId: string) => {
-    if (isUnlocked) {
-      onSelectCompanion(companionId);
-    }
-  };
-
   return (
     <div className="unlockables-overlay" onClick={handleOverlayClick}>
       <div className="unlockables-container">
@@ -275,7 +270,7 @@ const UnlockablesMenu: React.FC<UnlockablesMenuProps> = ({ onSelectTheme, onSele
                   className={`theme-item ${isUnlocked ? 'unlocked' : 'locked'} ${
                     isSelected ? 'selected' : ''
                   }`}
-                  onClick={() => isUnlocked && handleCompanionSelect(companionReward.id)}
+                  onClick={() => isUnlocked && onSelectCompanion(companionReward.id as CompanionId)}
                 >
                   <div className="companion-preview">
                     <span className="companion-avatar">

@@ -25,7 +25,7 @@ import {
   getPlayerProgress, 
   getTheme,
   getUnlockedRewards,
-  PROGRESSION_KEY
+  PROGRESSION_KEY,
 } from '../utils/progressionUtils'
 import LevelProgress from './LevelProgress'
 import LevelRoadmap from './LevelRoadmap'
@@ -33,6 +33,8 @@ import BadgePopup from './BadgePopup'
 import { Badge } from '../types/progression'
 import { Companion, INITIAL_COMPANION } from '../types/companion'
 import CompanionHUD from './CompanionHUD'
+import { COMPANIONS } from '../types/companion'
+import type { CompanionId } from '../types/companion'
 
 interface GameProps {
   musicEnabled: boolean
@@ -1916,12 +1918,15 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
     }
   }, [isGameOver, companion.abilities, handleActivateAbility]);
 
-  // Add this effect to check if companion should be shown
+  // Update the companion visibility effect
   useEffect(() => {
+    const progress = getPlayerProgress();
     const rewards = getUnlockedRewards();
-    const companionReward = rewards.find(r => r.type === 'companion');
-    setShowCompanion(!!companionReward?.unlocked);
-  }, [playerProgress.level]); // Depend on player level
+    const defaultCompanionUnlocked = rewards.find(r => r.type === 'companion' && r.id === 'default')?.unlocked;
+    
+    // Show companion if either default is unlocked or any companion is selected
+    setShowCompanion(!!defaultCompanionUnlocked || !!progress.selectedCompanion);
+  }, [playerProgress.level]); // Keep the dependency on player level
 
   // Add this effect to handle temporary color matches
   useEffect(() => {
@@ -1943,6 +1948,19 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
       return () => clearTimeout(timer);
     }
   }, [companion.abilities]);
+
+  // Update the companion change event listener effect
+  useEffect(() => {
+    const handleCompanionChange = (e: CustomEvent<{ companionId: CompanionId }>) => {
+      const newCompanion = COMPANIONS[e.detail.companionId];
+      setCompanion(newCompanion);
+    };
+
+    window.addEventListener('companionChanged', handleCompanionChange as EventListener);
+    return () => {
+      window.removeEventListener('companionChanged', handleCompanionChange as EventListener);
+    };
+  }, []);
 
   return (
     <div

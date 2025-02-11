@@ -201,15 +201,15 @@ export const INITIAL_COMPANION = COMPANIONS.default;
 
 // Add unlock requirements for companions
 export const COMPANION_UNLOCKS = {
-  default: { level: 1 },
-  cyber_cat: { level: 5 },
-  ghost: { level: 10 },
-  alien: { level: 15 },
-  dragon: { level: 20 },
-  unicorn: { level: 25 },
-  wizard: { level: 30 },
-  ninja: { level: 35 },
-  phoenix: { level: 40 },
+  default: { level: 5 },
+  cyber_cat: { level: 10 },
+  ghost: { level: 15 },
+  alien: { level: 20 },
+  dragon: { level: 25 },
+  unicorn: { level: 30 },
+  wizard: { level: 35 },
+  ninja: { level: 40 },
+  phoenix: { level: 45 },
   octopus: { level: 45 },
   crystal: { level: 50 },
   star: { level: 55 }

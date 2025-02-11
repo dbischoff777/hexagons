@@ -1,4 +1,5 @@
 import { Companion } from "./companion";
+import { CompanionId } from '../types/companion';
 
 export interface ExperienceAction {
   type: 'match' | 'combo' | 'clear' | 'challenge' | 'achievement';
@@ -34,7 +35,7 @@ export interface PlayerProgress {
   selectedTheme?: string;
   points: number;
   badges: Badge[];
-  selectedCompanion: string;
+  selectedCompanion: CompanionId;
 }
 
 export interface ThemeConfig {

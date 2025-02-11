@@ -7,7 +7,7 @@ import StatisticsPage from './StatisticsPage'
 import ConfirmModal from './ConfirmModal'
 import AchievementsView from './AchievementsView'
 import UnlockablesMenu from './UnlockablesMenu'
-import { setTheme, getPlayerProgress } from '../utils/progressionUtils'
+import { setTheme, getPlayerProgress, setCompanion } from '../utils/progressionUtils'
 import LevelRoadmap from './LevelRoadmap'
 
 
@@ -229,6 +229,10 @@ const StartPage: React.FC<StartPageProps> = ({ onStartGame, onMusicToggle, onSou
         <UnlockablesMenu
           onSelectTheme={(themeId) => {
             setTheme(themeId);
+            setShowUnlockables(false);
+          }}
+          onSelectCompanion={(companionId: "default" | "cyber_cat" | "ghost" | "alien" | "dragon" | "unicorn" | "wizard" | "ninja" | "phoenix" | "octopus" | "crystal" | "star") => {
+            setCompanion(companionId);
             setShowUnlockables(false);
           }}
           onClose={() => setShowUnlockables(false)}
