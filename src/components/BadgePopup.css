@@ -104,4 +104,29 @@
 @keyframes shine {
   0% { transform: translateX(-100%) rotate(45deg); }
   50%, 100% { transform: translateX(100%) rotate(45deg); }
+}
+
+.badge-tooltip {
+  position: absolute;
+  top: 50%;
+  right: 100%;
+  transform: translateY(-50%);
+  background: rgba(0, 0, 0, 0.9);
+  border: 1px solid #00FF9F;
+  border-radius: 8px;
+  padding: 10px;
+  width: 200px;
+  opacity: 0;
+  pointer-events: none;
+  transition: all 0.3s ease;
+  z-index: 100;
+  margin-right: 10px;
+}
+
+.block-badge {
+  position: relative;
+}
+
+.block-badge:hover .badge-tooltip {
+  opacity: 1;
 } 
