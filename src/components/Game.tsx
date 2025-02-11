@@ -24,6 +24,7 @@ import {
   EXPERIENCE_VALUES, 
   getPlayerProgress, 
   getTheme,
+  getUnlockedRewards,
   PROGRESSION_KEY
 } from '../utils/progressionUtils'
 import LevelProgress from './LevelProgress'
@@ -209,6 +210,7 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
   const [companion, setCompanion] = useState<Companion>(
     savedGameState?.companion ?? INITIAL_COMPANION
   );
+  const [showCompanion, setShowCompanion] = useState(false);
 
   // Move addTileAnimation outside useEffect and memoize it
   const addTileAnimation = useCallback((q: number, r: number, type: 'place' | 'match' | 'hint') => {
@@ -1777,6 +1779,13 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
     }
   }, [isGameOver, companion.abilities, handleActivateAbility]);
 
+  // Add this effect to check if companion should be shown
+  useEffect(() => {
+    const rewards = getUnlockedRewards();
+    const companionReward = rewards.find(r => r.type === 'companion');
+    setShowCompanion(!!companionReward?.unlocked);
+  }, [playerProgress.level]); // Depend on player level
+
   return (
     <div
       className="game-container"
@@ -1835,9 +1844,11 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
           </div>
         </div>
       </div>
-      <CompanionHUD 
-        companion={companion}
-      />
+      {showCompanion && (
+        <CompanionHUD 
+          companion={companion}
+        />
+      )}
       <div className="board-container">
         <canvas 
           ref={canvasRef} 

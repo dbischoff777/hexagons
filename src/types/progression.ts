@@ -3,8 +3,10 @@ export interface ExperienceAction {
   value: number;
 }
 
+export type UnlockableRewardType = 'theme' | 'powerup' | 'tile' | 'special_tile' | 'companion';
+
 export interface UnlockableReward {
-  type: 'tile' | 'theme' | 'powerup' | 'special_tile';
+  type: UnlockableRewardType;
   id: string;
   name: string;
   description: string;
@@ -59,4 +61,10 @@ export interface SeasonalTheme {
     accent: string;
   };
   icon: string;
+}
+
+export interface CompanionUnlockReward extends UnlockableReward {
+  type: 'companion';
+  companion: Companion;
+  levelRequired: number;
 } 

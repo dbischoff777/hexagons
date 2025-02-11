@@ -1,4 +1,5 @@
-import { PlayerProgress, UnlockableReward, ThemeConfig, Badge, ExperienceAction } from '../types/progression';
+import { INITIAL_COMPANION } from '../types/companion';
+import { PlayerProgress, UnlockableReward, ThemeConfig, Badge, ExperienceAction, CompanionUnlockReward } from '../types/progression';
 import { SEASONAL_THEMES } from './seasonalThemes';
 
 export const PROGRESSION_KEY = 'hexagon_progression';
@@ -89,7 +90,7 @@ export const THEMES: ThemeConfig[] = [
   }
 ];
 
-export const UNLOCKABLE_REWARDS: UnlockableReward[] = [
+export const UNLOCKABLE_REWARDS: (UnlockableReward | CompanionUnlockReward)[] = [
   {
     type: 'tile',
     id: 'rainbow_tile',
@@ -174,6 +175,15 @@ export const UNLOCKABLE_REWARDS: UnlockableReward[] = [
     levelRequired: 5,
     unlocked: false,
     preview: '↔️'
+  },
+  {
+    id: 'companion_pixel',
+    type: 'companion' as const,
+    name: 'Pixel',
+    description: 'A helpful AI companion that automatically activates abilities to assist you',
+    levelRequired: 5,
+    unlocked: false,
+    companion: INITIAL_COMPANION
   }
 ];
 
@@ -237,7 +247,7 @@ export const addExperience = ({ value }: ExperienceAction): { progress: PlayerPr
   return { progress, newBadges };
 };
 
-export const getUnlockedRewards = (): UnlockableReward[] => {
+export const getUnlockedRewards = (): (UnlockableReward | CompanionUnlockReward)[] => {
   const progress = getPlayerProgress();
   return UNLOCKABLE_REWARDS.map(reward => ({
     ...reward,

@@ -2,7 +2,7 @@ import React from 'react';
 import { getUnlockedRewards, getTheme, THEMES } from '../utils/progressionUtils';
 import { getPlayerProgress } from '../utils/progressionUtils';
 import './UnlockablesMenu.css';
-import { SeasonalTheme, UnlockableReward } from '../types/progression';
+import { SeasonalTheme, UnlockableReward, CompanionUnlockReward } from '../types/progression';
 import { SEASONAL_THEMES, getActiveSeasonalThemes } from '../utils/seasonalThemes';
 
 interface UnlockablesMenuProps {
@@ -252,6 +252,40 @@ const UnlockablesMenu: React.FC<UnlockablesMenuProps> = ({ onSelectTheme, onClos
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+
+        <div className="unlockables-section">
+          <h3>Companions</h3>
+          <div className="companions-grid">
+            {rewards.filter(r => r.type === 'companion').map(companionReward => {
+              const isUnlocked = companionReward.unlocked;
+              return (
+                <div 
+                  key={companionReward.id}
+                  className={`theme-item ${isUnlocked ? 'unlocked' : 'locked'}`}
+                >
+                  <div className="companion-preview">
+                    <span className="companion-avatar">
+                      {(companionReward as CompanionUnlockReward).companion.avatar}
+                    </span>
+                  </div>
+                  <div className="theme-info">
+                    <span className="theme-name">
+                      {companionReward.name}
+                    </span>
+                    <span className="theme-description">
+                      {companionReward.description}
+                    </span>
+                    {!isUnlocked && (
+                      <span className="unlock-level">
+                        Unlocks at Level {companionReward.levelRequired}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
       </div>
