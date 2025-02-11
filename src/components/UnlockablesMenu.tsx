@@ -5,6 +5,7 @@ import './UnlockablesMenu.css';
 import { SeasonalTheme, UnlockableReward } from '../types/progression';
 import { SEASONAL_THEMES, getActiveSeasonalThemes } from '../utils/seasonalThemes';
 import { CompanionId } from '../types/companion';
+import { PROGRESSION_KEY } from '../utils/progressionUtils';
 
 interface UnlockablesMenuProps {
   onSelectTheme: (themeId: string) => void;
@@ -270,7 +271,14 @@ const UnlockablesMenu: React.FC<UnlockablesMenuProps> = ({ onSelectTheme, onSele
                   className={`theme-item ${isUnlocked ? 'unlocked' : 'locked'} ${
                     isSelected ? 'selected' : ''
                   }`}
-                  onClick={() => isUnlocked && onSelectCompanion(companionReward.id as CompanionId)}
+                  onClick={() => {
+                    if (isUnlocked) {
+                      onSelectCompanion(companionReward.id as CompanionId);
+                      const progress = getPlayerProgress();
+                      progress.selectedCompanion = companionReward.id as CompanionId;
+                      localStorage.setItem(PROGRESSION_KEY, JSON.stringify(progress));
+                    }
+                  }}
                 >
                   <div className="companion-preview">
                     <span className="companion-avatar">

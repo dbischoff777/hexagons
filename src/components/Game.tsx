@@ -24,14 +24,13 @@ import {
   EXPERIENCE_VALUES, 
   getPlayerProgress, 
   getTheme,
-  getUnlockedRewards,
   PROGRESSION_KEY,
 } from '../utils/progressionUtils'
 import LevelProgress from './LevelProgress'
 import LevelRoadmap from './LevelRoadmap'
 import BadgePopup from './BadgePopup'
 import { Badge } from '../types/progression'
-import { Companion, INITIAL_COMPANION } from '../types/companion'
+import { Companion } from '../types/companion'
 import CompanionHUD from './CompanionHUD'
 import { COMPANIONS } from '../types/companion'
 import type { CompanionId } from '../types/companion'
@@ -250,9 +249,10 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
   const [particleColor, setParticleColor] = useState(theme.colors.primary)
   const [backgroundGlow, setBackgroundGlow] = useState('');
   const [animatingTiles, setAnimatingTiles] = useState<{ q: number, r: number, type: 'place' | 'match' | 'hint' }[]>([]);
-  const [companion, setCompanion] = useState<Companion>(
-    savedGameState?.companion ?? INITIAL_COMPANION
-  );
+  const [companion, setCompanion] = useState<Companion>(() => {
+    const progress = getPlayerProgress();
+    return COMPANIONS[progress.selectedCompanion as CompanionId] || COMPANIONS.default;
+  });
   const [showCompanion, setShowCompanion] = useState(false);
 
   // Move addTileAnimation outside useEffect and memoize it
@@ -1921,12 +1921,8 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
   // Update the companion visibility effect
   useEffect(() => {
     const progress = getPlayerProgress();
-    const rewards = getUnlockedRewards();
-    const defaultCompanionUnlocked = rewards.find(r => r.type === 'companion' && r.id === 'default')?.unlocked;
-    
-    // Show companion if either default is unlocked or any companion is selected
-    setShowCompanion(!!defaultCompanionUnlocked || !!progress.selectedCompanion);
-  }, [playerProgress.level]); // Keep the dependency on player level
+    setShowCompanion(!!progress.selectedCompanion);
+  }, []);
 
   // Add this effect to handle temporary color matches
   useEffect(() => {

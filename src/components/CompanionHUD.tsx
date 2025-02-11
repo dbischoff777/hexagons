@@ -1,5 +1,5 @@
 import React from 'react';
-import { Companion } from '../types/companion';
+import { Companion, COMPANIONS, CompanionId } from '../types/companion';
 import './CompanionHUD.css';
 
 interface CompanionHUDProps {
@@ -11,7 +11,7 @@ const CompanionHUD: React.FC<CompanionHUDProps> = ({ companion }) => {
     <div className="companion-hud">
       <div className="companion-info">
         <div className="companion-avatar">
-          {companion.avatar}
+          {COMPANIONS[companion.id as CompanionId].avatar}
           <div className="companion-level">Lvl {companion.level}</div>
         </div>
         <div className="companion-progress">
