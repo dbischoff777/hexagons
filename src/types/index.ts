@@ -35,6 +35,7 @@ export interface PlacedTile extends Tile {
     active: boolean
   }
   temporaryColorMatch?: boolean
+  hasBeenMatched?: boolean
 }
 
 export interface PowerUpState {

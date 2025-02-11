@@ -997,7 +997,8 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
             r,
             value: 0,
             isPlaced: true,
-            type: 'normal'
+            type: 'normal',
+            hasBeenMatched: false  // Initialize as not matched
           }
 
           // If it's a mirror tile, update its edges based on adjacent tiles
@@ -1023,19 +1024,27 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
             }
           }
           
-          // Update all tiles' values after placement
-          const newPlacedTiles = updateTileValues([...placedTiles, newTile])
-          
+          // Inside handleClick where we create newPlacedTiles:
+
+          // First, create initial tiles with updated values
+          const initialPlacedTiles: PlacedTile[] = updateTileValues([...placedTiles, newTile]);
+
+          // Then, in a separate step, mark matched tiles
+          const newPlacedTiles: PlacedTile[] = initialPlacedTiles.map((tile: PlacedTile): PlacedTile => ({
+            ...tile,
+            hasBeenMatched: tile.hasBeenMatched || hasMatchingEdges(tile, initialPlacedTiles, settings.isColorBlind)
+          }));
+
           // Get the updated tile with its correct value
-          const updatedPlacedTile = newPlacedTiles.find(tile => tile.q === q && tile.r === r)!
+          const updatedPlacedTile = newPlacedTiles.find(tile => tile.q === q && tile.r === r)!;
           
           // Count matching edges
           const adjacentTiles = getAdjacentTiles(updatedPlacedTile, newPlacedTiles);
           let matchCount = 0;
           
           // Check each edge for matches
-          updatedPlacedTile.edges.forEach((edge, index) => {
-            const adjacentTile = adjacentTiles.find(t => 
+          updatedPlacedTile.edges.forEach((edge: { color: string }, index: number) => {
+            const adjacentTile = adjacentTiles.find((t: PlacedTile) => 
               getAdjacentDirection(updatedPlacedTile.q, updatedPlacedTile.r, t.q, t.r) === index
             );
             
@@ -1066,11 +1075,13 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
           }
 
           // Check for matches for grid-full bonus
-          const matchingTiles = newPlacedTiles.filter(tile => hasMatchingEdges(tile, newPlacedTiles, settings.isColorBlind))
+          const matchingTiles = newPlacedTiles.filter((tile: PlacedTile) => 
+            hasMatchingEdges(tile, newPlacedTiles, settings.isColorBlind)
+          );
           
           // Additional bonus for clearing tiles when grid is full
           if (matchingTiles.length >= 3 && isGridFull(newPlacedTiles, cols)) {
-            const totalMatchScore = matchingTiles.reduce((sum, tile) => sum + tile.value, 0)
+            const totalMatchScore = matchingTiles.reduce((sum: number, tile: PlacedTile) => sum + tile.value, 0);
             const multiplier = matchingTiles.length
             const clearBonus = calculateScore(totalMatchScore * multiplier * 2)
             
@@ -1095,7 +1106,9 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
 
             // Remove matching tiles
             setTimeout(() => {
-              setPlacedTiles(newPlacedTiles.filter(tile => !hasMatchingEdges(tile, newPlacedTiles, settings.isColorBlind)))
+              setPlacedTiles(newPlacedTiles.filter((tile: PlacedTile) => 
+                !hasMatchingEdges(tile, newPlacedTiles, settings.isColorBlind)
+              ))
             }, 500)
           }
           
