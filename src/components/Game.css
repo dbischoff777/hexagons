@@ -195,16 +195,24 @@
   min-width: 200px;
   padding: 15px 30px;
   border-radius: 15px;
-  background: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(8px);
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(10px);
+  border: 2px solid rgba(0, 255, 159, 0.3);
   display: flex;
-  justify-content: center;
+  flex-direction: column;
   align-items: center;
+  gap: 5px;
+  position: relative;
+  overflow: hidden;
 }
 
 .score:hover, .timer:hover {
-  transform: scale(1.05);
-  background: rgba(0, 0, 0, 0.4);
+  transform: scale(1.02);
+  border-color: rgba(0, 255, 159, 0.5);
+  box-shadow: 
+    0 0 20px rgba(0, 255, 159, 0.2),
+    inset 0 0 10px rgba(0, 255, 159, 0.1);
+  transition: all 0.3s ease;
 }
 
 .timer.safe {
@@ -358,31 +366,24 @@
 }
 
 /* Update score container to be flex column */
-.score {
-  min-width: 200px;
-  padding: 15px 30px;
-  border-radius: 15px;
-  background: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(8px);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 10px;
-  color: #00FF9F;
-  font-size: 48px;
-  text-shadow: 0 0 20px #00FF9F;
+.score:hover {
+  transform: scale(1.02);
+  border-color: rgba(0, 255, 159, 0.5);
+  box-shadow: 
+    0 0 20px rgba(0, 255, 159, 0.2),
+    inset 0 0 10px rgba(0, 255, 159, 0.1);
   transition: all 0.3s ease;
 }
 
-.score:hover {
-  transform: scale(1.05);
-  background: rgba(0, 0, 0, 0.4);
-}
-
 .score-increment {
-  right: -60px;
-  top: -10px;
-  font-size: 0.8em;
+  position: absolute;
+  top: -20px;
+  right: 10px;
+  color: #00FF9F;
+  font-size: 24px;
+  font-weight: bold;
+  animation: scoreIncrement 0.5s ease-out forwards;
+  text-shadow: 0 0 10px rgba(0, 255, 159, 0.5);
 }
 
 /* Update rotation hint text */
@@ -910,4 +911,31 @@
   border-radius: inherit;
   background: radial-gradient(circle at center, rgba(0, 255, 159, 0.2), transparent 70%);
   pointer-events: none;
+}
+
+/* Score text styling */
+.score {
+  color: #00FF9F;
+  font-size: 32px;
+  font-weight: bold;
+  text-shadow: 
+    0 0 10px rgba(0, 255, 159, 0.5),
+    0 0 20px rgba(0, 255, 159, 0.3);
+  letter-spacing: 2px;
+}
+
+/* Score increment animation */
+@keyframes scoreIncrement {
+  0% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: translateY(-10px) scale(1.2);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-20px) scale(1);
+    opacity: 0;
+  }
 }

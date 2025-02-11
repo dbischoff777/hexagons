@@ -254,6 +254,13 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
     return COMPANIONS[progress.selectedCompanion as CompanionId] || COMPANIONS.default;
   });
   const [showCompanion, setShowCompanion] = useState(false);
+  // Add this with other state declarations at the top of the component
+  const [previousScore, setPreviousScore] = useState(0);
+
+  // Add this effect to update previousScore when score changes
+  useEffect(() => {
+    setPreviousScore(score);
+  }, [score]);
 
   // Move addTileAnimation outside useEffect and memoize it
   const addTileAnimation = useCallback((q: number, r: number, type: 'place' | 'match' | 'hint') => {
@@ -1990,7 +1997,15 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
       )}
       <div className="game-hud">
         <div className="score">
-          {'Score: ' + score}
+          Score
+          <span className="score-value">
+            {score.toLocaleString()}
+          </span>
+          {score > previousScore && (
+            <span className="score-increment">
+              +{(score - previousScore).toLocaleString()}
+            </span>
+          )}
         </div>
         <div className="timer-container">
           {timedMode && (
@@ -2028,6 +2043,7 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
             game-board 
             ${isGridFull(placedTiles, cols) ? 'grid-full' : ''}
             ${showWarning ? 'rotation-warning' : ''}
+            ${animatingTiles.length > 0 ? 'has-animations' : ''}
           `}
         />
         {showRotationText && (
