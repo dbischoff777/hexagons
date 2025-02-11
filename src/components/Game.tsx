@@ -62,7 +62,7 @@ const SCORE_FEEDBACK = {
   // Regular matches
   LOW: [
     { emoji: '✨💫', text: 'Nice!' },
-    { emoji: '🎯✨', text: 'Good!' },
+    { emoji: '💎✨', text: 'Good!' },
     { emoji: '👍💫', text: 'Cool!' },
   ],
   MEDIUM: [
