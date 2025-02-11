@@ -135,6 +135,47 @@ const getFeedbackForClear = (clearScore: number) => {
   return SCORE_FEEDBACK.CLEAR[0]
 }
 
+// Add this helper function at the top of the component, before any state declarations
+const createNewTile = (): PlacedTile => {
+  // First decide if this will be a mirror tile (10% chance)
+  const isMirror = Math.random() < 0.1
+  
+  if (isMirror) {
+    return {
+      ...createTileWithRandomEdges(0, 0),
+      isPlaced: false,
+      type: 'mirror' as const
+    }
+  }
+  
+  // If not mirror, maybe create a power-up tile (15% chance)
+  const hasPowerUp = Math.random() < 0.15
+  
+  if (hasPowerUp) {
+    const powerUpTypes = ['freeze', 'colorShift', 'multiplier'] as const
+    const randomPowerUp = powerUpTypes[Math.floor(Math.random() * powerUpTypes.length)]
+    
+    return {
+      ...createTileWithRandomEdges(0, 0),
+      isPlaced: false,
+      type: 'normal' as const,
+      powerUp: {
+        type: randomPowerUp,
+        duration: randomPowerUp === 'freeze' ? 5 : 15,
+        multiplier: randomPowerUp === 'multiplier' ? 2 : undefined,
+        active: false  // Add the missing 'active' property
+      }
+    }
+  }
+  
+  // Otherwise create a normal tile
+  return {
+    ...createTileWithRandomEdges(0, 0),
+    isPlaced: false,
+    type: 'normal' as const
+  }
+}
+
 const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = false, onSkipTutorial, onExit, onStartGame, savedGameState, isDailyChallenge }: GameProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const cols = 7
@@ -153,9 +194,9 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
   const [isGameOver, setIsGameOver] = useState<boolean>(false)
   const [nextTiles, setNextTiles] = useState<PlacedTile[]>(
     savedGameState?.nextTiles ?? [
-      { ...createTileWithRandomEdges(0, 0), isPlaced: false },
-      { ...createTileWithRandomEdges(0, 0), isPlaced: false },
-      { ...createTileWithRandomEdges(0, 0), isPlaced: false }
+      createNewTile(),
+      createNewTile(),
+      createNewTile()
     ]
   )
   const [selectedTileIndex, setSelectedTileIndex] = useState<number | null>(null)
@@ -661,11 +702,48 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
         // Draw number below the symbol
         ctx.shadowColor = 'rgba(0, 0, 0, 0.2)'
         ctx.shadowBlur = 2
-        ctx.fillStyle = isSelected ? '#1a1a1a' : '#2d2d2d'
+        ctx.fillStyle = isSelected ? '#1a1a1a' : '#2d2d2d'  // Use isSelected parameter
         ctx.font = `bold ${isSelected ? 24 : 22}px Arial`
         ctx.textAlign = 'center'
         ctx.textBaseline = 'middle'
         ctx.fillText(tile.value.toString(), x, y + 12)  // Use x,y coordinates for main board
+
+        // Show mirror info when selected (matching power-up info style)
+        if (isSelected) {  // Use isSelected parameter instead of selectedTileIndex
+          // Draw info box above tile
+          ctx.fillStyle = 'rgba(0, 0, 0, 0.8)'
+          ctx.strokeStyle = '#00FFFF'
+          ctx.lineWidth = 2
+          const text = 'Mirrors Adjacent Colors'
+          const padding = 10
+          const boxWidth = ctx.measureText(text).width + padding * 2
+          const boxHeight = 30
+          const boxX = x - boxWidth / 2
+          const boxY = y - size * 2  // Position relative to tile size
+
+          // Draw box with rounded corners and glow
+          ctx.shadowColor = '#00FFFF'
+          ctx.shadowBlur = 10
+          ctx.beginPath()
+          ctx.roundRect(boxX, boxY, boxWidth, boxHeight, 5)
+          ctx.fill()
+          ctx.stroke()
+
+          // Draw description text
+          ctx.fillStyle = '#FFFFFF'
+          ctx.shadowBlur = 2
+          ctx.font = '14px Arial'
+          ctx.fillText(text, x, boxY + boxHeight/2)
+
+          // Add arrow pointer like power-ups
+          ctx.beginPath()
+          ctx.moveTo(x - 8, boxY + boxHeight)
+          ctx.lineTo(x + 8, boxY + boxHeight)
+          ctx.lineTo(x, boxY + boxHeight + 8)
+          ctx.closePath()
+          ctx.fillStyle = '#00FFFF'
+          ctx.fill()
+        }
       }
 
       // Add scale animation for newly placed tiles
@@ -868,9 +946,9 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
           setTimeLeft(timedMode ? INITIAL_TIME : Infinity)
           setIsGameOver(false)
           setNextTiles([
-            { ...createTileWithRandomEdges(0, 0), isPlaced: false },
-            { ...createTileWithRandomEdges(0, 0), isPlaced: false },
-            { ...createTileWithRandomEdges(0, 0), isPlaced: false }
+            createNewTile(),
+            createNewTile(),
+            createNewTile()
           ])
           setSelectedTileIndex(null)
           return
@@ -1010,7 +1088,7 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
           
           // Generate new tile for the used slot
           const newTiles = [...nextTiles]
-          newTiles[selectedTileIndex] = { ...createTileWithRandomEdges(0, 0), isPlaced: false }
+          newTiles[selectedTileIndex] = createNewTile()  // Replace direct creation with a function call
           setNextTiles(newTiles)
           setSelectedTileIndex(null)
 
@@ -2004,16 +2082,53 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
                           ctx.font = 'bold 20px Arial'
                           ctx.textAlign = 'center'
                           ctx.textBaseline = 'middle'
-                          ctx.fillText('↔', 50, 38)  // Move symbol up like joker star
+                          ctx.fillText('↔', 50, 38)  // Use fixed coordinates for preview
 
                           // Draw number below the symbol
                           ctx.shadowColor = 'rgba(0, 0, 0, 0.2)'
                           ctx.shadowBlur = 2
-                          ctx.fillStyle = selectedTileIndex === index ? '#1a1a1a' : '#2d2d2d'  // Use i instead of index
-                          ctx.font = `bold ${selectedTileIndex === index ? 24 : 22}px Arial`  // Use i instead of index
+                          ctx.fillStyle = selectedTileIndex === index ? '#1a1a1a' : '#2d2d2d'
+                          ctx.font = `bold ${selectedTileIndex === index ? 24 : 22}px Arial`
                           ctx.textAlign = 'center'
                           ctx.textBaseline = 'middle'
-                          ctx.fillText(tile.value.toString(), 50, 62)  // Move number down like joker number
+                          ctx.fillText(tile.value.toString(), 50, 62)
+
+                          // Show mirror info when selected (matching power-up info style)
+                          if (selectedTileIndex === index) {
+                            // Draw info box above tile
+                            ctx.fillStyle = 'rgba(0, 0, 0, 0.8)'
+                            ctx.strokeStyle = '#00FFFF'
+                            ctx.lineWidth = 2
+                            const text = 'Mirrors Adjacent Colors'
+                            const padding = 10
+                            const boxWidth = ctx.measureText(text).width + padding * 2
+                            const boxHeight = 30
+                            const boxX = 50 - boxWidth / 2
+                            const boxY = -40  // Position at top of preview tile
+
+                            // Draw box with rounded corners and glow
+                            ctx.shadowColor = '#00FFFF'
+                            ctx.shadowBlur = 10
+                            ctx.beginPath()
+                            ctx.roundRect(boxX, boxY, boxWidth, boxHeight, 5)
+                            ctx.fill()
+                            ctx.stroke()
+
+                            // Draw description text
+                            ctx.fillStyle = '#FFFFFF'
+                            ctx.shadowBlur = 2
+                            ctx.font = '14px Arial'
+                            ctx.fillText(text, 50, boxY + boxHeight/2)
+
+                            // Add arrow pointer like power-ups
+                            ctx.beginPath()
+                            ctx.moveTo(50 - 8, boxY + boxHeight)
+                            ctx.lineTo(50 + 8, boxY + boxHeight)
+                            ctx.lineTo(50, boxY + boxHeight + 8)
+                            ctx.closePath()
+                            ctx.fillStyle = '#00FFFF'
+                            ctx.fill()
+                          }
                         }
                       }
                     }
