@@ -198,38 +198,37 @@ export const getPlayerProgress = (): PlayerProgress => {
 
 export const addExperience = ({ type, value }: ExperienceAction): { progress: PlayerProgress; newBadges: Badge[] } => {
   const progress = getPlayerProgress();
-  // Apply type-specific multipliers
-  const multiplier = type === 'combo' ? 1.2 : 
-                    type === 'clear' ? 1.5 : 
-                    type === 'challenge' ? 2 : 1;
-  progress.experience += value * multiplier;
-
   const newBadges: Badge[] = [];
+  progress.experience += value;
 
   while (progress.experience >= progress.experienceToNext) {
     progress.experience -= progress.experienceToNext;
     progress.level += 1;
     progress.experienceToNext = calculateExperienceForLevel(progress.level);
 
-    // Check for new unlocks
+    // Check for unlocks
     UNLOCKABLE_REWARDS.forEach(reward => {
       if (reward.levelRequired === progress.level) {
         progress.unlockedRewards.push(reward.id);
       }
     });
+  }
 
-    // Check for badges when reaching level 10, 20, 30, etc.
-    if (progress.level % 10 === 0) {
-      const badge = BADGES.find(b => b.levelBlock === progress.level);
-      if (badge && !progress.badges?.some(b => b.id === badge.id)) {
-        const newBadge = {
-          ...badge,
-          dateAwarded: new Date().toISOString()
-        };
-        
-        progress.badges = [...(progress.badges || []), newBadge];
-        newBadges.push(newBadge);
-      }
+  // Check for badges based on roadmap level/points
+  const { currentBlock, currentLevel } = getCurrentLevelInfo(progress.points);
+  const currentRoadmapLevel = ((currentBlock - 1) * 10) + currentLevel;
+  
+  // Check if we've reached a multiple of 10 in roadmap levels
+  if (currentRoadmapLevel % 10 === 0) {
+    const badge = BADGES.find(b => b.levelBlock === currentRoadmapLevel);
+    if (badge && !progress.badges?.some(b => b.id === badge.id)) {
+      const newBadge = {
+        ...badge,
+        dateAwarded: new Date().toISOString()
+      };
+      
+      progress.badges = [...(progress.badges || []), newBadge];
+      newBadges.push(newBadge);
     }
   }
 

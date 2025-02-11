@@ -866,8 +866,25 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
 
           // If it's a mirror tile, update its edges based on adjacent tiles
           if (newTile.type === 'mirror') {
-            newTile = updateMirrorTileEdges(newTile, placedTiles)
-            soundManager.playSound('mirror')
+            const { tile: updatedTile, points: mirrorPoints } = updateMirrorTileEdges(newTile, placedTiles);
+            newTile = updatedTile;
+            
+            if (mirrorPoints > 0) {
+              // Add score popup for mirror matches
+              const feedback = getFeedbackForScore(mirrorPoints);
+              setScorePopups(prev => [...prev, {
+                score: mirrorPoints,
+                x: q * tileSize + tileSize / 2,
+                y: r * tileSize + tileSize / 2 - 40,
+                id: Date.now(),
+                emoji: feedback.emoji,
+                text: 'Mirror Match!'
+              }]);
+              
+              // Update score
+              setScore(prev => prev + mirrorPoints);
+              soundManager.playSound('mirror');
+            }
           }
           
           // Update all tiles' values after placement

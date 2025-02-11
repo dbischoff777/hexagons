@@ -98,32 +98,30 @@ export const DIRECTIONS = [
   { q: 1, r: -1 }   // top right
 ]
 
-export const updateMirrorTileEdges = (tile: PlacedTile, allTiles: PlacedTile[]): PlacedTile => {
-  if (tile.type !== 'mirror') return tile;
+export const updateMirrorTileEdges = (mirrorTile: PlacedTile, placedTiles: PlacedTile[]): { tile: PlacedTile; points: number } => {
+  const adjacentTiles = getAdjacentTiles(mirrorTile, placedTiles);
+  let points = 0;
+  
+  // Create new edges array
+  const newEdges = mirrorTile.edges.map((edge, index) => {
+    const oppositeIndex = (index + 3) % 6;
+    const adjacentTile = adjacentTiles[index];
+    const oppositeAdjacentTile = adjacentTiles[oppositeIndex];
 
-  const adjacentTiles = getAdjacentTiles(tile, allTiles);
-  const newEdges = [...tile.edges];
-
-  // For each edge, look for an adjacent tile that would connect to that edge
-  for (let i = 0; i < 6; i++) {
-    const direction = DIRECTIONS[i];
-    const adjacentTile = adjacentTiles.find(t => 
-      t.q === tile.q + direction.q && 
-      t.r === tile.r + direction.r
-    );
-
-    if (adjacentTile) {
-      // The opposite edge of the adjacent tile becomes this edge's color
-      const oppositeIndex = (i + 3) % 6;
-      newEdges[i] = { color: adjacentTile.edges[oppositeIndex].color };
-    } else {
-      // If no adjacent tile, use a default color
-      newEdges[i] = { color: '#888888' };
+    // If there's a tile on either side, mirror its color
+    if (adjacentTile?.edges[(index + 3) % 6]?.color) {
+      points += 5; // Award points for each match
+      return { color: adjacentTile.edges[(index + 3) % 6].color };
+    } else if (oppositeAdjacentTile?.edges[index]?.color) {
+      points += 5; // Award points for each match
+      return { color: oppositeAdjacentTile.edges[index].color };
     }
-  }
+    
+    return edge; // Keep existing edge if no adjacent tiles
+  });
 
   return {
-    ...tile,
-    edges: newEdges
+    tile: { ...mirrorTile, edges: newEdges },
+    points
   };
-} 
+}; 
