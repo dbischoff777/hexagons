@@ -1,5 +1,4 @@
 import { Tile, PlacedTile } from "../types/index"
-import { getPlayerProgress } from './progressionUtils';
 
 export const COLORS = [
   '#FF1177',  // Neon pink
@@ -20,66 +19,54 @@ export const getAdjacentTiles = (tile: Tile, allTiles: PlacedTile[]): PlacedTile
 }
 
 export const createTileWithRandomEdges = (q: number, r: number): PlacedTile => {
-  const progress = getPlayerProgress();
-  const hasRainbowTile = progress.unlockedRewards.includes('rainbow_tile');
-  const hasMirrorTile = progress.unlockedRewards.includes('mirror_tile');
-  const unlockedPowerups = progress.unlockedRewards.filter(id => 
-    ['time_freeze', 'color_shift', 'multiplier'].includes(id)
-  );
-  
-  // Small chance for power-up (10% if any are unlocked)
-  if (unlockedPowerups.length > 0 && Math.random() < 0.1) {
-    const powerUpId = unlockedPowerups[Math.floor(Math.random() * unlockedPowerups.length)];
-    
-    return {
-      q, r,
-      edges: Array(6).fill(null).map(() => ({
-        color: COLORS[Math.floor(Math.random() * COLORS.length)]
-      })),
-      isPlaced: false,
-      value: 0,
-      type: 'normal',
-      powerUp: {
-        type: powerUpId === 'time_freeze' ? 'freeze' :
-              powerUpId === 'color_shift' ? 'colorShift' : 'multiplier',
-        duration: powerUpId === 'time_freeze' ? 10 :
-                 powerUpId === 'multiplier' ? 15 : undefined,
-        multiplier: powerUpId === 'multiplier' ? 2 : undefined,
-        active: false
-      }
+  // Power-up spawn chances (in percentage)
+  const POWER_UP_CHANCES = {
+    freeze: 5,     // 5% chance
+    colorShift: 5, // 5% chance
+    multiplier: 5  // 5% chance
+  };
+
+  // Roll for power-up
+  const powerUpRoll = Math.random() * 100;
+  let powerUp: PlacedTile['powerUp'] = undefined;
+
+  if (powerUpRoll < POWER_UP_CHANCES.freeze) {
+    powerUp = {
+      type: 'freeze' as const,
+      duration: 5,
+      active: false
     };
-  }
-  
-  // Small chance for special tiles (10% each if unlocked)
-  if (hasRainbowTile && Math.random() < 0.1) {
-    return {
-      q, r,
-      edges: Array(6).fill({ color: 'rainbow' }),
-      isPlaced: false,
-      value: 0,
-      type: 'rainbow',
-      isJoker: true
+  } else if (powerUpRoll < POWER_UP_CHANCES.freeze + POWER_UP_CHANCES.colorShift) {
+    powerUp = {
+      type: 'colorShift' as const,
+      active: false
     };
-  }
-  
-  if (hasMirrorTile && Math.random() < 0.1) {
-    return {
-      q, r,
-      edges: Array(6).fill({ color: '#CCCCCC' }),
-      isPlaced: false,
-      value: 0,
-      type: 'mirror'
+  } else if (powerUpRoll < POWER_UP_CHANCES.freeze + POWER_UP_CHANCES.colorShift + POWER_UP_CHANCES.multiplier) {
+    powerUp = {
+      type: 'multiplier' as const,
+      multiplier: 2,
+      duration: 15,
+      active: false
     };
   }
 
+  // Determine if this should be a mirror tile (5% chance)
+  const isMirror = Math.random() < 0.05;
+
+  // Determine if this should be a joker tile (5% chance)
+  const isJoker = !isMirror && Math.random() < 0.05; // Don't make both mirror and joker
+
   return {
-    q, r,
+    q,
+    r,
     edges: Array(6).fill(null).map(() => ({
       color: COLORS[Math.floor(Math.random() * COLORS.length)]
     })),
     isPlaced: false,
     value: 0,
-    type: 'normal'
+    type: isMirror ? 'mirror' : 'normal',
+    isJoker,
+    powerUp
   };
 }
 

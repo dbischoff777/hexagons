@@ -618,7 +618,7 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
             ctx.font = '14px Arial';
             ctx.fillText(text, x, boxY + boxHeight/2);
           }
-        } else if (tile.value > 0) {
+        } else if (tile.value > 0 && tile.type !== 'mirror') {  // Add check for non-mirror tiles
           // Regular tile number
           // Add dark outline for better contrast
           ctx.strokeStyle = '#000000'
@@ -649,46 +649,23 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
       }
       // Add mirror tile indicator and visual effects
       if (tile?.type === 'mirror') {
-        // Add reflective gradient effect
-        const gradient = ctx.createLinearGradient(x - size, y - size, x + size, y + size);
-        gradient.addColorStop(0, 'rgba(200, 200, 200, 0.8)');  // Light silver
-        gradient.addColorStop(0.5, 'rgba(150, 150, 150, 0.5)'); // Mid silver
-        gradient.addColorStop(1, 'rgba(180, 180, 180, 0.8)');   // Light silver
-        ctx.fillStyle = gradient;
-        
-        // Draw mirror symbol
-        ctx.fillStyle = '#FFFFFF';
-        ctx.shadowColor = '#FFFFFF';
-        ctx.shadowBlur = 15;
-        ctx.font = 'bold 20px Arial';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText('↔', x, y);
+        // Draw mirror symbol above the number
+        ctx.fillStyle = '#FFFFFF'
+        ctx.shadowColor = '#FFFFFF'
+        ctx.shadowBlur = 15
+        ctx.font = 'bold 20px Arial'
+        ctx.textAlign = 'center'
+        ctx.textBaseline = 'middle'
+        ctx.fillText('↔', x, y - 12)  // Use x,y coordinates for main board
 
-        // Show mirror info when selected
-        if (isSelected) {
-          const text = 'Mirrors adjacent colors';
-          // Draw info box above tile
-          ctx.fillStyle = 'rgba(0, 255, 159, 0.1)';
-          ctx.strokeStyle = 'rgba(0, 255, 159, 0.3)';
-          ctx.lineWidth = 1;
-          const padding = 10;
-          const boxWidth = ctx.measureText(text).width + padding * 2;
-          const boxHeight = 30;
-          const boxX = x - boxWidth / 2;
-          const boxY = y - size * 2;
-
-          // Draw box with rounded corners
-          ctx.beginPath();
-          ctx.roundRect(boxX, boxY, boxWidth, boxHeight, 5);
-          ctx.fill();
-          ctx.stroke();
-
-          // Draw description text
-          ctx.fillStyle = '#fff';
-          ctx.font = '14px Arial';
-          ctx.fillText(text, x, boxY + boxHeight/2);
-        }
+        // Draw number below the symbol
+        ctx.shadowColor = 'rgba(0, 0, 0, 0.2)'
+        ctx.shadowBlur = 2
+        ctx.fillStyle = isSelected ? '#1a1a1a' : '#2d2d2d'
+        ctx.font = `bold ${isSelected ? 24 : 22}px Arial`
+        ctx.textAlign = 'center'
+        ctx.textBaseline = 'middle'
+        ctx.fillText(tile.value.toString(), x, y + 12)  // Use x,y coordinates for main board
       }
 
       // Add scale animation for newly placed tiles
@@ -1980,7 +1957,8 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
                         }
 
                         // Draw tile value if it exists
-                        if (tile.value > 0) {
+                        if (tile.value > 0 && tile.type !== 'mirror') {  // Add check for non-mirror tiles
+                          // Regular tile number
                           // Add dark outline for better contrast
                           ctx.strokeStyle = '#000000'
                           ctx.lineWidth = 3
@@ -1991,13 +1969,13 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
                           ctx.textBaseline = 'middle'
                           
                           // Draw text stroke first (outline)
-                          ctx.strokeText(tile.value.toString(), 50, 50)
+                          ctx.strokeText(tile.value.toString(), 50, 50)  // Use fixed coordinates for preview
                           
                           // Then draw the bright text
                           ctx.fillStyle = '#FFFFFF' // Always use white for better visibility
                           ctx.shadowColor = '#00FFFF' // Cyan glow
                           ctx.shadowBlur = 8
-                          ctx.fillText(tile.value.toString(), 50, 50)
+                          ctx.fillText(tile.value.toString(), 50, 50)  // Use fixed coordinates for preview
                           
                           // Reset shadow
                           ctx.shadowBlur = 0
@@ -2016,13 +1994,23 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
 
                         // Draw mirror symbol
                         if (tile.type === 'mirror') {
+                          // Draw mirror symbol above the number
                           ctx.fillStyle = '#FFFFFF'
                           ctx.shadowColor = '#FFFFFF'
                           ctx.shadowBlur = 15
                           ctx.font = 'bold 20px Arial'
                           ctx.textAlign = 'center'
                           ctx.textBaseline = 'middle'
-                          ctx.fillText('↔', 50, 50)
+                          ctx.fillText('↔', 50, 38)  // Move symbol up like joker star
+
+                          // Draw number below the symbol
+                          ctx.shadowColor = 'rgba(0, 0, 0, 0.2)'
+                          ctx.shadowBlur = 2
+                          ctx.fillStyle = selectedTileIndex === index ? '#1a1a1a' : '#2d2d2d'  // Use i instead of index
+                          ctx.font = `bold ${selectedTileIndex === index ? 24 : 22}px Arial`  // Use i instead of index
+                          ctx.textAlign = 'center'
+                          ctx.textBaseline = 'middle'
+                          ctx.fillText(tile.value.toString(), 50, 62)  // Move number down like joker number
                         }
                       }
                     }
