@@ -202,7 +202,15 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
   )
   const [selectedTileIndex, setSelectedTileIndex] = useState<number | null>(null)
   const [mousePosition, setMousePosition] = useState<{ x: number, y: number } | null>(null)
-  const [scorePopups, setScorePopups] = useState<{ score: number, x: number, y: number, id: number, emoji: string, text: string }[]>([])
+  const [scorePopups, setScorePopups] = useState<{
+    score: number;
+    x: number;
+    y: number;
+    id: number;
+    emoji: string;
+    text: string;
+    type: 'score' | 'combo' | 'quick' | 'clear';
+  }[]>([])
   const [boardRotation, setBoardRotation] = useState<number>(savedGameState?.boardRotation ?? 0)
   const [showWarning, setShowWarning] = useState(false)
   const [showRotationText, setShowRotationText] = useState(false)
@@ -254,7 +262,6 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
     return COMPANIONS[progress.selectedCompanion as CompanionId] || COMPANIONS.default;
   });
   const [showCompanion, setShowCompanion] = useState(false);
-  // Add this with other state declarations at the top of the component
   const [previousScore, setPreviousScore] = useState(0);
 
   // Add this effect to update previousScore when score changes
@@ -1024,7 +1031,8 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
                 y: r * tileSize + tileSize / 2 - 40,
                 id: Date.now(),
                 emoji: feedback.emoji,
-                text: 'Mirror Match!'
+                text: 'Mirror Match!',
+                type: 'score'
               }]);
               
               // Update score
@@ -1137,34 +1145,44 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
 
           // Update combo only if there's a match
           if (matchCount > 0) {
-            const now = Date.now()
-            const timeSinceLastPlacement = now - combo.lastPlacementTime
-            const quickPlacement = timeSinceLastPlacement < 2000
+            const now = Date.now();
+            const timeSinceLastPlacement = now - combo.lastPlacementTime;
+            const quickPlacement = timeSinceLastPlacement < 2000;
 
             // Handle quick placement bonus first
             if (quickPlacement) {
-              const quickBonus = matchCount * 5;  // 5 points per matching edge
-              const quickInfo = getRandomFeedback('QUICK')
-              addScorePopup({
-                score: quickBonus,
-                x: canvas.width / 2,
-                y: canvas.height / 2,
-                emoji: quickInfo.emoji,
-                text: quickInfo.text,
-                type: 'quick'
-              })
-              setScore(prevScore => prevScore + quickBonus)
+              const quickBonus = matchCount * 5;
+              const quickInfo = getRandomFeedback('QUICK');
+              
+              // Add a slight delay to ensure it doesn't overlap with other popups
+              setTimeout(() => {
+                addScorePopup({
+                  score: quickBonus,
+                  x: canvas.width / 2,
+                  y: canvas.height / 2 + 25, // Adjust position to avoid overlap
+                  emoji: quickInfo.emoji,
+                  text: quickInfo.text,
+                  type: 'quick'
+                });
+
+                // Update score with animation
+                setPreviousScore(score);
+                setTimeout(() => {
+                  setScore(prevScore => prevScore + quickBonus);
+                }, 50);
+
+              }, 200); // Small delay after match popup
             }
 
-            // Handle combo separately
+            // Update the combo handling separately
             const newComboState = {
               count: quickPlacement ? combo.count + 1 : 1,
               timer: 3,
               multiplier: quickPlacement ? (1 + (combo.count + 1) * 0.5) : 1,
               lastPlacementTime: now
-            }
-            
-            setCombo(newComboState)
+            };
+
+            setCombo(newComboState);
 
             // Calculate combo bonus
             const comboBonus = Math.round(matchCount * newComboState.multiplier) - matchCount
@@ -1418,33 +1436,52 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
   }
 
   // Modify the addScorePopup function
-  const addScorePopup = (popup: {
-    score: number,
-    x: number,
-    y: number,
-    emoji: string,
-    text: string,
-    type: 'score' | 'combo' | 'quick' | 'clear'
+  const addScorePopup = useCallback(({ score, x, y, emoji, text, type }: {
+    score: number;
+    x: number;
+    y: number;
+    emoji: string;
+    text: string;
+    type: 'score' | 'combo' | 'quick' | 'clear';
   }) => {
-    if (isPopupAnimating) return // Don't add new popups while animating
+    if (isPopupAnimating) return;
 
-    setIsPopupAnimating(true)
+    setIsPopupAnimating(true);
     
     // Clear existing popups first
-    setScorePopups([])
-    setActivePopupPositions([])
+    setScorePopups([]);
+    setActivePopupPositions([]);
     
     // Add new popup after a brief delay
     setTimeout(() => {
-      const popupY = findAvailableYPosition(popup.y, popup.type)
+      const popupY = findAvailableYPosition(y, type);
       setScorePopups([{
-        ...popup,
+        score,
+        x,
         y: popupY,
-        id: Date.now()
-      }])
-      setIsPopupAnimating(false)
-    }, 50) // Small delay to ensure clean transition
-  }
+        id: Date.now(),
+        emoji,
+        text,
+        type
+      }]);
+      setIsPopupAnimating(false);
+
+      // Play appropriate sound based on type
+      switch (type) {
+        case 'combo':
+          soundManager.playSound('combo');
+          break;
+        case 'clear':
+          soundManager.playSound('clear');
+          break;
+        case 'quick':
+          soundManager.playSound('quick');
+          break;
+        default:
+          soundManager.playSound('score');
+      }
+    }, 50);
+  }, [isPopupAnimating, findAvailableYPosition]);
 
   // Update the cleanup effect
   useEffect(() => {
@@ -2002,9 +2039,11 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
             {score.toLocaleString()}
           </span>
           {score > previousScore && (
-            <span className="score-increment">
-              +{(score - previousScore).toLocaleString()}
-            </span>
+            <div className="score-increment-container">
+              <span className="score-increment">
+                +{(score - previousScore).toLocaleString()}
+              </span>
+            </div>
           )}
         </div>
         <div className="timer-container">
@@ -2220,7 +2259,7 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
         <div
           key={popup.id}
           className="score-popup"
-          data-type={popup.score >= 10 ? 'high' : popup.emoji.includes('🎪') ? 'clear' : 'normal'}
+          data-type={popup.type}
           style={{
             left: `${popup.x}px`,
             top: `${popup.y}px`

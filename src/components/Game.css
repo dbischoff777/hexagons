@@ -203,7 +203,7 @@
   align-items: center;
   gap: 5px;
   position: relative;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .score:hover, .timer:hover {
@@ -298,10 +298,32 @@
 }
 
 .score-popup[data-type='quick'] {
-  font-size: 1.1em;
   color: #00FFFF;
-  text-shadow: 0 0 8px rgba(0, 255, 255, 0.6);
-  margin-bottom: 15px;
+  text-shadow: 
+    0 0 15px #00FFFF,
+    0 0 25px #00FFFF;
+  font-size: 1.2em;
+  z-index: 6; /* Ensure it appears above other popups */
+  animation: quickPopup 0.8s ease-out forwards;
+}
+
+@keyframes quickPopup {
+  0% {
+    transform: translate(-50%, 0) scale(0.8);
+    opacity: 0;
+  }
+  30% {
+    transform: translate(-50%, -30px) scale(1.2);
+    opacity: 1;
+  }
+  80% {
+    transform: translate(-50%, -50px) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, -70px) scale(0.8);
+    opacity: 0;
+  }
 }
 
 /* Update the popup animation to stay within bounds */
@@ -366,24 +388,48 @@
 }
 
 /* Update score container to be flex column */
-.score:hover {
-  transform: scale(1.02);
-  border-color: rgba(0, 255, 159, 0.5);
-  box-shadow: 
-    0 0 20px rgba(0, 255, 159, 0.2),
-    inset 0 0 10px rgba(0, 255, 159, 0.1);
-  transition: all 0.3s ease;
+.score-increment-container {
+  position: absolute;
+  top: 0;
+  right: 10px;
+  width: 100px;
+  height: 60px;
+  pointer-events: none;
+  overflow: visible;
 }
 
 .score-increment {
   position: absolute;
-  top: -20px;
-  right: 10px;
+  top: 0;
+  right: 0;
   color: #00FF9F;
-  font-size: 24px;
+  font-size: 28px;
   font-weight: bold;
-  animation: scoreIncrement 0.5s ease-out forwards;
-  text-shadow: 0 0 10px rgba(0, 255, 159, 0.5);
+  text-shadow: 
+    0 0 10px rgba(0, 255, 159, 1),
+    0 0 20px rgba(0, 255, 159, 0.8);
+  animation: scoreIncrement 1s ease-out forwards;
+  white-space: nowrap;
+  z-index: 100;
+}
+
+@keyframes scoreIncrement {
+  0% {
+    transform: translate(0, 0) scale(0.8);
+    opacity: 0;
+  }
+  20% {
+    transform: translate(0, -20px) scale(1.2);
+    opacity: 1;
+  }
+  80% {
+    transform: translate(0, -40px) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(0, -60px) scale(0.8);
+    opacity: 0;
+  }
 }
 
 /* Update rotation hint text */
@@ -924,18 +970,26 @@
   letter-spacing: 2px;
 }
 
-/* Score increment animation */
-@keyframes scoreIncrement {
-  0% {
-    transform: translateY(0) scale(1);
-    opacity: 1;
-  }
-  50% {
-    transform: translateY(-10px) scale(1.2);
-    opacity: 1;
-  }
-  100% {
-    transform: translateY(-20px) scale(1);
-    opacity: 0;
-  }
+/* Update score popup styles for different types */
+.score-popup[data-type='score'] {
+  color: #00FF9F;
+  text-shadow: 0 0 15px #00FF9F;
+}
+
+.score-popup[data-type='combo'] {
+  color: #FFD700;
+  text-shadow: 0 0 15px #FFD700;
+  font-size: 1.2em;
+}
+
+.score-popup[data-type='quick'] {
+  color: #00FFFF;
+  text-shadow: 0 0 15px #00FFFF;
+  font-size: 1.1em;
+}
+
+.score-popup[data-type='clear'] {
+  color: #FF69B4;
+  text-shadow: 0 0 15px #FF69B4;
+  font-size: 1.3em;
 }
