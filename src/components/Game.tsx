@@ -1515,6 +1515,35 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
     localStorage.setItem(PROGRESSION_KEY, JSON.stringify(progress));
   };
 
+  // Inside the Game component, update the initialization code
+  useEffect(() => {
+    if (savedGameState) {
+      // ... existing saved state loading ...
+      
+      // Normalize board rotation to either 0 or 180 degrees
+      const normalizedRotation = savedGameState.boardRotation >= 90 ? 180 : 0;
+      setBoardRotation(normalizedRotation);
+      
+      // If the rotation changed, update tile edges accordingly
+      if (normalizedRotation !== savedGameState.boardRotation) {
+        const rotationDiff = normalizedRotation - savedGameState.boardRotation;
+        const rotations = Math.round(rotationDiff / 60); // Number of 60-degree rotations needed
+        
+        setPlacedTiles(savedGameState.placedTiles.map(tile => ({
+          ...tile,
+          edges: Array(Math.abs(rotations)).fill(null).reduce(
+            (edges) => rotateTileEdges(edges),
+            tile.edges
+          )
+        })));
+      } else {
+        setPlacedTiles(savedGameState.placedTiles);
+      }
+      
+      // ... rest of saved state loading ...
+    }
+  }, [savedGameState]);
+
   return (
     <div
       className="game-container"
