@@ -1782,11 +1782,11 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
     }
   }, [isGameOver]);
 
-  // Add this new effect to automatically activate abilities
+  // Update the companion ability auto-activation effect
   useEffect(() => {
     if (!isGameOver) {
-      const timer = setInterval(() => {
-        companion.abilities.forEach(ability => {
+      const abilityTimers = companion.abilities.map((ability) => {
+        return setInterval(() => {
           if (ability.currentCooldown === 0 && !ability.isActive) {
             // Automatically activate the ability
             handleActivateAbility(ability.id);
@@ -1794,10 +1794,13 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
             // Play a sound effect
             soundManager.playSound('powerUp');
           }
-        });
-      }, 1000); // Check every second
+        }, 100); // Check more frequently for better responsiveness
+      });
       
-      return () => clearInterval(timer);
+      // Clean up all timers
+      return () => {
+        abilityTimers.forEach(timer => clearInterval(timer));
+      };
     }
   }, [isGameOver, companion.abilities, handleActivateAbility]);
 
