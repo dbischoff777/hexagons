@@ -48,7 +48,7 @@ interface GameProps {
   tutorial?: boolean
   onSkipTutorial?: () => void
   onExit: () => void
-  onStartGame: (withTimer: boolean) => void
+  onStartGame: (withTimer: boolean, targetScore?: number) => void
   savedGameState?: GameState | null
   isDailyChallenge?: boolean
   isLevelMode?: boolean
@@ -2201,9 +2201,9 @@ const Game: React.FC<GameProps> = ({
     }
   }, [combo.count]);
 
-  // Modify the grid clear handling code
+  // Modify handleGridClear to use the helper function
   const handleGridClear = () => {
-    if (isGameOver) return; // Add early return if game is over
+    if (isGameOver) return;
 
     const matchingTiles = placedTiles.filter(tile => 
       hasMatchingEdges(tile, placedTiles, settings.isColorBlind)
@@ -2219,7 +2219,7 @@ const Game: React.FC<GameProps> = ({
     // Award upgrade points
     awardUpgradePoints(UPGRADE_POINT_REWARDS.clear.points);
     
-    // Show clear bonus popup with safe access to emoji and text
+    // Show clear bonus popup
     addScorePopup({
       score: clearBonus,
       x: canvasRef.current?.width ?? 0 / 2,
@@ -2229,12 +2229,49 @@ const Game: React.FC<GameProps> = ({
       type: 'clear'
     });
     
-    // Update score immediately
-    setScore(prev => prev + clearBonus);
+    // Calculate new total score
+    const newScore = score + clearBonus;
     
-    // Update objectives with the new score after clear bonus
+    // Update score first
+    setScore(newScore);
+    
+    // Update objectives if in daily challenge
     if (isDailyChallenge) {
-      updateObjectives(matchingTiles.length, combo.count, score + clearBonus);
+      updateObjectives(matchingTiles.length, combo.count, newScore);
+    }
+
+    // Check for level completion
+    if (isLevelMode && !isGameOver) {
+      const { currentBlock, currentLevel } = getCurrentLevelInfo(newScore);
+      const nextLevel = getNextLevelInfo(currentBlock, currentLevel, LEVEL_BLOCKS);
+
+      if (nextLevel && newScore >= nextLevel.pointsRequired) {
+        setIsGameOver(true);
+        
+        setShowLevelComplete({
+          show: true,
+          level: `${currentBlock}-${currentLevel}`,
+          score: newScore,
+          targetScore: nextLevel.pointsRequired,
+          nextLevel: `${nextLevel.block}-${nextLevel.level}`,
+          bonusPoints: Math.floor((newScore - nextLevel.pointsRequired) / 100),
+          isNextLevelUnlock: true
+        });
+        
+        // Update player progress
+        const progress = getPlayerProgress();
+        progress.points = Math.max(progress.points || 0, newScore);
+        progress.unlockedLevels = progress.unlockedLevels || {};
+        
+        // Unlock the next level
+        const nextLevelKey = `${nextLevel.block}-${nextLevel.level}`;
+        progress.unlockedLevels[nextLevelKey] = true;
+        
+        // Save the updated progress
+        localStorage.setItem(PROGRESSION_KEY, JSON.stringify(progress));
+        
+        onGameOver();
+      }
     }
     
     // Remove matching tiles after a delay
