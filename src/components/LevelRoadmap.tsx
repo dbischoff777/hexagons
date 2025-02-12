@@ -18,7 +18,7 @@ const LevelRoadmap: React.FC<LevelRoadmapProps> = ({ currentPoints, onStartGame 
   const handleLevelClick = (isCompleted: boolean) => {
     console.log('Level clicked, completed:', isCompleted);
     if (isCompleted) {
-      onStartGame(true); // Start timed mode
+      onStartGame(false); // Changed to false to start without timer
     }
   };
 

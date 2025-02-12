@@ -187,7 +187,7 @@ const UPGRADE_POINT_REWARDS = {
   }
 };
 
-const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = false, onSkipTutorial, onExit, onStartGame, savedGameState, isDailyChallenge }: GameProps) => {
+const Game: React.FC<GameProps> = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = false, onSkipTutorial, onExit, onStartGame, savedGameState, isDailyChallenge }: GameProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const cols = 7
   const [upgradeState, setUpgradeState] = useState<UpgradeState>(getInitialUpgradeState());
@@ -1398,20 +1398,20 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
     }
   }, [isGameOver])
 
-  // Keep only this modified timer effect
+  // Modify the timer effect to only show timer in timed mode
   useEffect(() => {
     if (timedMode && timeLeft > 0 && !isGameOver) {
       const timer = setInterval(() => {
         if (!powerUps.freeze.active) {
-          setTimeLeft(prev => prev - 1)
+          setTimeLeft(prev => prev - 1);
         }
-      }, 1000)
-      return () => clearInterval(timer)
+      }, 1000);
+      return () => clearInterval(timer);
     } else if (timedMode && timeLeft === 0) {
-      setIsGameOver(true)
-      onGameOver()
+      setIsGameOver(true);
+      onGameOver();
     }
-  }, [timeLeft, isGameOver, timedMode, powerUps.freeze.active, onGameOver])
+  }, [timeLeft, isGameOver, timedMode, powerUps.freeze.active, onGameOver]);
 
   // Add combo timer effect
   useEffect(() => {
