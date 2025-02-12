@@ -1880,11 +1880,11 @@ const Game: React.FC<GameProps> = ({
         // If the rotation changed, update tile edges accordingly
         if (normalizedRotation !== savedGameState.boardRotation) {
           const rotationDiff = normalizedRotation - savedGameState.boardRotation;
-          const rotations = Math.round(rotationDiff / 60); // Number of 60-degree rotations needed
+          const rotations = Math.abs(Math.round(rotationDiff / 60)); // Number of 60-degree rotations needed
           
           setPlacedTiles(savedGameState.placedTiles.map(tile => ({
             ...tile,
-            edges: Array(Math.abs(rotations)).fill(null).reduce(
+            edges: Array(rotations).fill(null).reduce(
               (edges) => rotateTileEdges(edges),
               tile.edges
             )
@@ -1898,7 +1898,15 @@ const Game: React.FC<GameProps> = ({
         setPlacedTiles(savedGameState.placedTiles);
       }
       
-      // ... rest of saved state loading ...
+      // Load the rest of the saved state
+      setNextTiles(savedGameState.nextTiles);
+      setScore(savedGameState.score);
+      setTimeLeft(savedGameState.timeLeft);
+      setPowerUps(savedGameState.powerUps);
+      setCombo(savedGameState.combo);
+      if (savedGameState.companion) {
+        setCompanion(savedGameState.companion);
+      }
     }
   }, [savedGameState, isGameOver]);
 
