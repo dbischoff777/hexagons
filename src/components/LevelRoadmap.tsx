@@ -1,5 +1,11 @@
 import React from 'react';
-import { LEVEL_BLOCKS, getCurrentLevelInfo, BADGES, LevelBlock, getPlayerProgress } from '../utils/progressionUtils';
+import { 
+  LEVEL_BLOCKS, 
+  getCurrentLevelInfo, 
+  BADGES, 
+  LevelBlock, 
+  getPlayerProgress 
+} from '../utils/progressionUtils';
 import './LevelRoadmap.css';
 
 // Add this interface for the reward type
@@ -10,7 +16,7 @@ interface Reward {
 
 interface LevelRoadmapProps {
   currentPoints: number;
-  onStartGame: (withTimer: boolean, targetScore?: number) => void;
+  onStartGame: (withTimer: boolean, targetScore: number, isLevelMode: boolean) => void;
 }
 
 const LevelRoadmap: React.FC<LevelRoadmapProps> = ({ currentPoints, onStartGame }) => {
@@ -21,10 +27,24 @@ const LevelRoadmap: React.FC<LevelRoadmapProps> = ({ currentPoints, onStartGame 
     pointsForNextLevel 
   } = getCurrentLevelInfo(currentPoints);
 
-  const handleLevelClick = (isCompleted: boolean, targetScore: number) => {
-    console.log('Level clicked, completed:', isCompleted);
-    if (isCompleted) {
-      onStartGame(false, targetScore); // Pass the target score for the next level
+  const handleLevelClick = (isCompleted: boolean, targetScore: number, blockNumber: number, levelNumber: number) => {
+    // For level 1-1, set a minimum target score
+    const actualTargetScore = (blockNumber === 1 && levelNumber === 1) ? 10000 : targetScore;
+    
+    console.log('Starting level game from roadmap:', {
+      isCompleted,
+      targetScore: actualTargetScore,
+      blockNumber,
+      levelNumber,
+      isLevelMode: true,
+      source: 'LevelRoadmap click'
+    });
+    
+    // Level 1-1 is always playable
+    if (isCompleted || (blockNumber === 1 && levelNumber === 1)) {
+      // Force isLevelMode to true
+      const isLevelMode = true;
+      onStartGame(false, actualTargetScore, isLevelMode);
     }
   };
 
@@ -73,8 +93,13 @@ const LevelRoadmap: React.FC<LevelRoadmapProps> = ({ currentPoints, onStartGame 
               <div 
                 key={levelInfo.level}
                 className={`level-cell ${isCurrentLevel ? 'current' : ''} ${isCompleted ? 'completed' : ''}`}
-                onClick={() => handleLevelClick(isCompleted, levelInfo.pointsRequired)}
-                style={{ cursor: isCompleted ? 'pointer' : 'default' }}
+                onClick={() => handleLevelClick(
+                  isCompleted, 
+                  levelInfo.pointsRequired, 
+                  block.blockNumber, 
+                  levelInfo.level
+                )}
+                style={{ cursor: isCompleted || (block.blockNumber === 1 && levelInfo.level === 1) ? 'pointer' : 'default' }}
               >
                 <div className="level-number">{block.blockNumber}-{levelInfo.level}</div>
                 <div className="points-required">

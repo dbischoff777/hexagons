@@ -7,10 +7,13 @@ import { AccessibilityProvider } from './contexts/AccessibilityContext'
 import { GameState } from './types'
 import { loadGameState } from './utils/gameStateUtils'
 import PageTransition from './components/PageTransition'
+import { getCurrentLevelInfo, getPlayerProgress } from './utils/progressionUtils'
 
 interface CurrentGame {
   isLevelMode: boolean;
   targetScore?: number;
+  currentBlock?: number;
+  currentLevel?: number;
 }
 
 function App() {
@@ -26,15 +29,14 @@ function App() {
   } | null>(null)
   const [isDailyChallenge, setIsDailyChallenge] = useState(false)
   const [currentGame, setCurrentGame] = useState<CurrentGame | null>(null)
+  const [musicEnabled, setMusicEnabled] = useState<boolean>(false)
+  const [soundEnabled, setSoundEnabled] = useState<boolean>(false)
 
   // Load saved game state on component mount
   useEffect(() => {
     const savedGame = loadGameState()
     setSavedGameState(savedGame)
   }, [])
-
-  const [musicEnabled, setMusicEnabled] = useState<boolean>(false) // Default to false
-  const [soundEnabled, setSoundEnabled] = useState<boolean>(false) // Default to false
 
   // Update audio settings when savedGameState changes
   useEffect(() => {
@@ -52,29 +54,48 @@ function App() {
     soundManager.setSoundEnabled(soundEnabled)
   }, [soundEnabled])
 
-  const handleStartGame = (withTimer: boolean, targetScore?: number) => {
+  const handleStartGame = (withTimer: boolean, targetScore?: number, isLevelMode: boolean = false) => {
+    // Debug logging
+    console.log('Starting game in App:', {
+      withTimer,
+      targetScore,
+      isLevelMode,
+      source: 'handleStartGame'
+    });
+
+    // Get current level info based on player progress
+    const progress = getPlayerProgress();
+    const { currentBlock, currentLevel } = getCurrentLevelInfo(progress.points);
+    
+    // Create new game state with explicit values
+    const newGameState: CurrentGame = {
+      isLevelMode: true,
+      targetScore: targetScore ?? 10000,
+      currentBlock: currentBlock,
+      currentLevel: currentLevel
+    };
+    
+    console.log('Setting new game state:', newGameState);
+    
+    // Set states in the correct order
+    setCurrentGame(newGameState);
     setGameStarted(true);
     setTimedMode(withTimer);
-    if (targetScore) {
-      setCurrentGame({
-        isLevelMode: true,
-        targetScore
-      });
-    } else {
-      setCurrentGame({
-        isLevelMode: false,
-        targetScore: undefined
-      });
-    }
+    setIsDailyChallenge(false);
+    setSavedGameState(null);
   };
 
   const handleStartPageGame = (withTimer: boolean, isDailyChallenge?: boolean) => {
     setGameStarted(true);
     setTimedMode(withTimer);
     setIsDailyChallenge(!!isDailyChallenge);
+    
+    // Reset game state for non-level games
     setCurrentGame({
       isLevelMode: false,
-      targetScore: undefined
+      targetScore: undefined,
+      currentBlock: undefined,
+      currentLevel: undefined
     });
   };
 
@@ -136,13 +157,30 @@ function App() {
     }
   };
 
-  if (!gameStarted) {
-    return (
-      <AccessibilityProvider>
-        <PageTransition 
-          isExiting={isExiting}
-          onExitComplete={handleTransitionComplete}
-        >
+  return (
+    <AccessibilityProvider>
+      <PageTransition 
+        isExiting={isExiting}
+        onExitComplete={handleTransitionComplete}
+      >
+        {gameStarted ? (
+          <Game 
+            musicEnabled={musicEnabled} 
+            soundEnabled={soundEnabled}
+            timedMode={timedMode}
+            tutorial={tutorialMode}
+            onGameOver={handleExitGame}
+            onSkipTutorial={handleExitGame}
+            onExit={handleExitGame}
+            onStartGame={handleStartGame}
+            savedGameState={savedGameState}
+            isDailyChallenge={isDailyChallenge}
+            isLevelMode={true}
+            targetScore={currentGame?.targetScore}
+            currentBlock={currentGame?.currentBlock}
+            currentLevel={currentGame?.currentLevel}
+          />
+        ) : (
           <StartPage 
             onStartGame={handleStartPageGame}
             onMusicToggle={handleMusicToggle}
@@ -150,31 +188,7 @@ function App() {
             musicEnabled={musicEnabled}
             soundEnabled={soundEnabled}
           />
-        </PageTransition>
-      </AccessibilityProvider>
-    )
-  }
-
-  return (
-    <AccessibilityProvider>
-      <PageTransition 
-        isExiting={isExiting}
-        onExitComplete={handleTransitionComplete}
-      >
-        <Game 
-          musicEnabled={musicEnabled} 
-          soundEnabled={soundEnabled}
-          timedMode={timedMode}
-          tutorial={tutorialMode}
-          onGameOver={handleExitGame}
-          onSkipTutorial={handleExitGame}
-          onExit={handleExitGame}
-          onStartGame={handleStartGame}
-          savedGameState={savedGameState}
-          isDailyChallenge={isDailyChallenge}
-          isLevelMode={currentGame?.isLevelMode}
-          targetScore={currentGame?.targetScore}
-        />
+        )}
       </PageTransition>
     </AccessibilityProvider>
   )

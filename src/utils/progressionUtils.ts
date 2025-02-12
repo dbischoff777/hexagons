@@ -555,4 +555,114 @@ export function setCompanion(companionId: CompanionId) {
   window.dispatchEvent(new CustomEvent('companionChanged', { 
     detail: { companionId } 
   }));
-} 
+}
+
+// Add this function near the other level-related functions
+export const checkLevelUnlock = (score: number, currentBlock: number, currentLevel: number) => {
+  // Get the next level in the hierarchy
+  const block = LEVEL_BLOCKS.find(b => b.blockNumber === currentBlock);
+  if (!block) return null;
+
+  // Get the next level in the current block
+  const nextLevelInBlock = block.levels[currentLevel];
+  if (!nextLevelInBlock) {
+    // If no next level in current block, check first level of next block
+    const nextBlock = LEVEL_BLOCKS.find(b => b.blockNumber === currentBlock + 1);
+    if (!nextBlock || !nextBlock.levels[0]) return null;
+
+    // Check if score meets requirement for first level of next block
+    if (score >= nextBlock.levels[0].pointsRequired) {
+      const progress = getPlayerProgress();
+      const nextLevelKey = `${nextBlock.blockNumber}-1`;
+
+      // Check if already unlocked
+      if (progress.unlockedLevels?.[nextLevelKey]) return null;
+
+      // Update progress
+      progress.points = Math.max(progress.points || 0, score);
+      progress.unlockedLevels = progress.unlockedLevels || {};
+      progress.unlockedLevels[nextLevelKey] = true;
+      
+      // Save progress
+      localStorage.setItem(PROGRESSION_KEY, JSON.stringify(progress));
+
+      return {
+        show: true,
+        level: `${currentBlock}-${currentLevel}`,
+        score,
+        targetScore: nextBlock.levels[0].pointsRequired,
+        nextLevel: nextLevelKey,
+        bonusPoints: Math.floor((score - nextBlock.levels[0].pointsRequired) / 100),
+        isNextLevelUnlock: true,
+        message: `Block ${currentBlock} Complete! Level ${nextLevelKey} Unlocked!`
+      };
+    }
+  } else {
+    // Check if score meets requirement for next level in current block
+    if (score >= nextLevelInBlock.pointsRequired) {
+      const progress = getPlayerProgress();
+      const nextLevelKey = `${currentBlock}-${currentLevel + 1}`;
+
+      // Check if already unlocked
+      if (progress.unlockedLevels?.[nextLevelKey]) return null;
+
+      // Update progress
+      progress.points = Math.max(progress.points || 0, score);
+      progress.unlockedLevels = progress.unlockedLevels || {};
+      progress.unlockedLevels[nextLevelKey] = true;
+      
+      // Save progress
+      localStorage.setItem(PROGRESSION_KEY, JSON.stringify(progress));
+
+      return {
+        show: true,
+        level: `${currentBlock}-${currentLevel}`,
+        score,
+        targetScore: nextLevelInBlock.pointsRequired,
+        nextLevel: nextLevelKey,
+        bonusPoints: Math.floor((score - nextLevelInBlock.pointsRequired) / 100),
+        isNextLevelUnlock: true,
+        message: `Level ${currentBlock}-${currentLevel} Complete!`
+      };
+    }
+  }
+
+  return null;
+};
+
+// Update getNextLevelInfo to handle level 1-1 case
+export const getNextLevelInfo = (currentBlock: number, currentLevel: number, blocks: typeof LEVEL_BLOCKS) => {
+  // Special case for level 1-1
+  if (currentBlock === 1 && currentLevel === 1) {
+    return {
+      block: 1,
+      level: 2,
+      pointsRequired: blocks[0].levels[1].pointsRequired
+    };
+  }
+
+  // Find current block
+  const block = blocks.find(b => b.blockNumber === currentBlock);
+  if (!block) return null;
+
+  // If there are more levels in current block
+  if (currentLevel < block.levels.length) {
+    return {
+      block: currentBlock,
+      level: currentLevel + 1,
+      pointsRequired: block.levels[currentLevel].pointsRequired
+    };
+  }
+
+  // If we need to move to next block
+  const nextBlock = blocks.find(b => b.blockNumber === currentBlock + 1);
+  if (nextBlock && nextBlock.levels.length > 0) {
+    return {
+      block: nextBlock.blockNumber,
+      level: 1,
+      pointsRequired: nextBlock.levels[0].pointsRequired
+    };
+  }
+
+  return null;
+}; 
