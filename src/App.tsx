@@ -100,17 +100,18 @@ function App() {
     setShowLevelComplete(isComplete);
   };
 
-  const handleExitGame = () => {
+  const handleExitGame = (forcedExit = false) => {
     console.log('handleExitGame called', {
       currentGame,
       showLevelComplete: levelCompleteRef.current,
       isExiting,
-      nextGameState
+      nextGameState,
+      forcedExit
     });
 
-    // Check level complete using ref
-    if (levelCompleteRef.current) {
-      console.log('Exiting from level complete');
+    // Allow exit if forced, level complete, or not in level mode
+    if (forcedExit || levelCompleteRef.current || !currentGame?.isLevelMode) {
+      console.log('Exiting game - forced or level complete');
       setIsExiting(true);
       setNextGameState({ started: false, timed: false });
       setCurrentGame(null);
@@ -125,13 +126,6 @@ function App() {
       console.log('Blocking exit - active level mode');
       return;
     }
-
-    // Handle normal exit
-    setIsExiting(true);
-    setNextGameState({ started: false, timed: false });
-    setCurrentGame(null);
-    setIsDailyChallenge(false);
-    setSavedGameState(null);
   };
 
   const handleMusicToggle = (enabled: boolean) => {

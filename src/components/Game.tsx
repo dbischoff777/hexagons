@@ -14,11 +14,8 @@ import Particles from './Particles'
 import { Achievement } from '../types/achievements'
 import { updateTilesPlaced, updateScore, updateCombo, updateAchievements, updateGridClears } from '../utils/achievementUtils'
 import AchievementPopup from './AchievementPopup'
-import ConfirmModal from './ConfirmModal'
 import { DailyChallenge } from '../types/dailyChallenge'
 import { getDailyChallenge, updateDailyChallengeProgress, isDailyChallengeCompleted } from '../utils/dailyChallengeUtils'
-import DailyChallengeHUD from './DailyChallengeHUD'
-import DailyChallengeComplete from './DailyChallengeComplete'
 import { 
   addExperience, 
   EXPERIENCE_VALUES, 
@@ -58,7 +55,7 @@ interface GameProps {
   onGameOver: () => void
   tutorial?: boolean
   onSkipTutorial?: () => void
-  onExit: () => void
+  onExit: (forced?: boolean) => void
   onStartGame: (withTimer: boolean, targetScore?: number) => void
   savedGameState?: GameState | null
   isDailyChallenge?: boolean
@@ -329,14 +326,12 @@ const Game: React.FC<GameProps> = ({
     score: number
   } | null>(null)
   const [newAchievements, setNewAchievements] = useState<Achievement[]>([])
-  const [showExitConfirm, setShowExitConfirm] = useState(false)
   const [dailyChallenge, setDailyChallenge] = useState<DailyChallenge | null>(null)
   const [showDailyComplete, setShowDailyComplete] = useState(false)
   const [playerProgress, setPlayerProgress] = useState(getPlayerProgress())
   const theme = getTheme(playerProgress.selectedTheme || 'default')
   const [showLevelRoadmap, setShowLevelRoadmap] = useState(false)
   const [newBadges, setNewBadges] = useState<Badge[]>([])
-  const [confirmMessage, setConfirmMessage] = useState<string>("")
   const [particleIntensity, setParticleIntensity] = useState(0.3)
   const [particleColor, setParticleColor] = useState(theme.colors.primary)
   const [backgroundGlow, setBackgroundGlow] = useState('');
@@ -1784,22 +1779,11 @@ const Game: React.FC<GameProps> = ({
 
   // Modify the exit handler to handle both normal exits and level complete exits
   const handleExit = useCallback(() => {
-    if (isLevelComplete) {
-      // Direct exit if level is complete
-      clearSavedGame();
-      onLevelComplete(false);
-      onExit();
-      return;
-    }
-
-    // Show confirmation dialog for normal exits
-    const confirmMessage = tutorialState.active
-      ? "Are you sure you want to exit the tutorial? Your progress won't be saved."
-      : "Are you sure you want to exit? Your progress will be lost.";
-    
-    setShowExitConfirm(true);
-    setConfirmMessage(confirmMessage);
-  }, [isLevelComplete, tutorialState.active, onExit, onLevelComplete]);
+    // Direct exit via exit button - force exit to start page
+    clearSavedGame();
+    onLevelComplete(false);
+    onExit(true); // Pass true to force exit
+  }, [onExit, onLevelComplete]);
 
   const handleLevelCompleteExit = useCallback(() => {
     DEBUG.log('handleLevelCompleteExit called', {
@@ -1809,12 +1793,22 @@ const Game: React.FC<GameProps> = ({
     
     // Set level complete and immediately exit
     onLevelComplete(true);
-    onExit();
+    onExit(false); // Normal exit
     
     // Clean up after exit is initiated
     clearSavedGame();
     setShowLevelComplete(null);
   }, [onExit, onLevelComplete]);
+
+  const handleLevelCompleteNext = useCallback(() => {
+    // Start next level
+    const { currentBlock, currentLevel } = getCurrentLevelInfo(score);
+    const nextLevel = getNextLevelInfo(currentBlock, currentLevel, LEVEL_BLOCKS);
+    if (nextLevel) {
+      onStartGame(false, nextLevel.pointsRequired);
+    }
+    setShowLevelComplete(null);
+  }, [score, onStartGame]);
 
   // Keep this effect for handling achievement popups
   useEffect(() => {
@@ -2396,17 +2390,6 @@ const Game: React.FC<GameProps> = ({
     }
   }, [placedTiles, cols, isGameOver, tutorialState.active, handleGridClear]);
 
-  // Add these handlers before the return statement
-  const handleLevelCompleteNext = useCallback(() => {
-    // Start next level
-    const { currentBlock, currentLevel } = getCurrentLevelInfo(score);
-    const nextLevel = getNextLevelInfo(currentBlock, currentLevel, LEVEL_BLOCKS);
-    if (nextLevel) {
-      onStartGame(false, nextLevel.pointsRequired);
-    }
-    setShowLevelComplete(null);
-  }, [score, onStartGame]);
-
   return (
     <div
       className="game-container"
@@ -2704,25 +2687,6 @@ const Game: React.FC<GameProps> = ({
             (TUTORIAL_STEPS[tutorialState.currentStep].requiresAction === 'place' && tutorialState.hasPlaced)
           }
           onNext={progressTutorial}
-        />
-      )}
-      {showExitConfirm && (
-        <ConfirmModal
-          message={confirmMessage}
-          onConfirm={() => {
-            setShowExitConfirm(false);
-            onExit();
-          }}
-          onCancel={() => setShowExitConfirm(false)}
-        />
-      )}
-      {isDailyChallenge && (
-        <DailyChallengeHUD objectives={dailyChallenge?.objectives || []} />
-      )}
-      {showDailyComplete && (
-        <DailyChallengeComplete
-          score={score}
-          onExit={onExit}
         />
       )}
       {showLevelRoadmap && (
