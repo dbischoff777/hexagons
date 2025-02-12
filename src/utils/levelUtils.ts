@@ -106,4 +106,22 @@ export const checkLevelUnlock = (score: number, currentBlock: number, currentLev
   }
 
   return null;
+};
+
+// Add this function to get the target score for the next level
+export const getNextLevelTargetScore = (currentBlock: number, currentLevel: number): number => {
+  // Base score requirement for first level
+  const baseScore = 1000;
+  
+  // Calculate target score based on block and level
+  // Each block increases difficulty exponentially
+  const blockMultiplier = Math.pow(1.5, currentBlock - 1);
+  
+  // Each level within a block increases linearly
+  const levelMultiplier = 1 + (currentLevel - 1) * 0.5;
+  
+  // Calculate final target score
+  const targetScore = Math.round(baseScore * blockMultiplier * levelMultiplier);
+  
+  return targetScore;
 }; 
