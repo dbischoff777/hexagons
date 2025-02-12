@@ -21,6 +21,7 @@ const Particles: React.FC<ParticlesProps> = ({
 
     // Set canvas size
     const resizeCanvas = () => {
+      if (!canvas) return
       canvas.width = window.innerWidth
       canvas.height = window.innerHeight
     }
@@ -35,10 +36,14 @@ const Particles: React.FC<ParticlesProps> = ({
       speedX: number
       speedY: number
       opacity: number
+      canvasWidth: number
+      canvasHeight: number
 
-      constructor() {
-        this.x = Math.random() * canvas.width
-        this.y = Math.random() * canvas.height
+      constructor(canvasWidth: number, canvasHeight: number) {
+        this.canvasWidth = canvasWidth
+        this.canvasHeight = canvasHeight
+        this.x = Math.random() * this.canvasWidth
+        this.y = Math.random() * this.canvasHeight
         this.size = Math.random() * 3 + 1
         this.speedX = Math.random() * 2 - 1
         this.speedY = Math.random() * 2 - 1
@@ -50,14 +55,13 @@ const Particles: React.FC<ParticlesProps> = ({
         this.y += this.speedY
 
         // Wrap around screen
-        if (this.x > canvas.width) this.x = 0
-        if (this.x < 0) this.x = canvas.width
-        if (this.y > canvas.height) this.y = 0
-        if (this.y < 0) this.y = canvas.height
+        if (this.x > this.canvasWidth) this.x = 0
+        if (this.x < 0) this.x = this.canvasWidth
+        if (this.y > this.canvasHeight) this.y = 0
+        if (this.y < 0) this.y = this.canvasHeight
       }
 
-      draw() {
-        if (!ctx) return
+      draw(ctx: CanvasRenderingContext2D, color: string) {
         ctx.beginPath()
         ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2)
         ctx.fillStyle = `${color}${Math.floor(this.opacity * 255).toString(16).padStart(2, '0')}`
@@ -67,16 +71,19 @@ const Particles: React.FC<ParticlesProps> = ({
 
     // Create particles
     const particleCount = Math.floor(100 * intensity)
-    const particles = Array.from({ length: particleCount }, () => new Particle())
+    const particles = Array.from(
+      { length: particleCount }, 
+      () => new Particle(canvas.width, canvas.height)
+    )
 
     // Animation loop
     const animate = () => {
-      if (!ctx) return
+      if (!ctx || !canvas) return
       ctx.clearRect(0, 0, canvas.width, canvas.height)
       
       particles.forEach(particle => {
         particle.update()
-        particle.draw()
+        particle.draw(ctx, color)
       })
 
       requestAnimationFrame(animate)
@@ -84,8 +91,22 @@ const Particles: React.FC<ParticlesProps> = ({
 
     animate()
 
+    // Handle window resize
+    const handleResize = () => {
+      if (!canvas) return
+      resizeCanvas()
+      // Update particles with new canvas dimensions
+      particles.forEach(particle => {
+        particle.canvasWidth = canvas.width
+        particle.canvasHeight = canvas.height
+      })
+    }
+
+    window.addEventListener('resize', handleResize)
+
     return () => {
       window.removeEventListener('resize', resizeCanvas)
+      window.removeEventListener('resize', handleResize)
     }
   }, [intensity, color])
 

@@ -2,9 +2,15 @@ import React from 'react';
 import { LEVEL_BLOCKS, getCurrentLevelInfo, BADGES, LevelBlock, getPlayerProgress } from '../utils/progressionUtils';
 import './LevelRoadmap.css';
 
+// Add this interface for the reward type
+interface Reward {
+  id: string;
+  type: 'theme' | 'powerup' | 'badge';
+}
+
 interface LevelRoadmapProps {
   currentPoints: number;
-  onStartGame: (withTimer: boolean) => void;
+  onStartGame: (withTimer: boolean, targetScore?: number) => void;
 }
 
 const LevelRoadmap: React.FC<LevelRoadmapProps> = ({ currentPoints, onStartGame }) => {
@@ -15,10 +21,10 @@ const LevelRoadmap: React.FC<LevelRoadmapProps> = ({ currentPoints, onStartGame 
     pointsForNextLevel 
   } = getCurrentLevelInfo(currentPoints);
 
-  const handleLevelClick = (isCompleted: boolean) => {
+  const handleLevelClick = (isCompleted: boolean, targetScore: number) => {
     console.log('Level clicked, completed:', isCompleted);
     if (isCompleted) {
-      onStartGame(false); // Changed to false to start without timer
+      onStartGame(false, targetScore); // Pass the target score for the next level
     }
   };
 
@@ -67,7 +73,7 @@ const LevelRoadmap: React.FC<LevelRoadmapProps> = ({ currentPoints, onStartGame 
               <div 
                 key={levelInfo.level}
                 className={`level-cell ${isCurrentLevel ? 'current' : ''} ${isCompleted ? 'completed' : ''}`}
-                onClick={() => handleLevelClick(isCompleted)}
+                onClick={() => handleLevelClick(isCompleted, levelInfo.pointsRequired)}
                 style={{ cursor: isCompleted ? 'pointer' : 'default' }}
               >
                 <div className="level-number">{block.blockNumber}-{levelInfo.level}</div>
@@ -84,7 +90,7 @@ const LevelRoadmap: React.FC<LevelRoadmapProps> = ({ currentPoints, onStartGame 
                 )}
                 {levelInfo.rewards && (
                   <div className="rewards">
-                    {levelInfo.rewards.map((reward, index) => (
+                    {(levelInfo.rewards as Reward[]).map((reward, index) => (
                       <div 
                         key={index} 
                         className="reward-icon" 

@@ -22,6 +22,7 @@ import DailyChallengeComplete from './DailyChallengeComplete'
 import { 
   addExperience, 
   EXPERIENCE_VALUES, 
+  getCurrentLevelInfo, 
   getPlayerProgress, 
   getTheme,
   PROGRESSION_KEY,
@@ -49,6 +50,8 @@ interface GameProps {
   onStartGame: (withTimer: boolean) => void
   savedGameState?: GameState | null
   isDailyChallenge?: boolean
+  isLevelMode?: boolean
+  targetScore?: number
 }
 
 const rotateTileEdges = (edges: { color: string }[]) => {
@@ -93,12 +96,12 @@ const SCORE_FEEDBACK = {
   
   // Grid clears
   CLEAR: [
-    { emoji: '🎪✨', text: 'CLEAR!' },
-    { emoji: '🎮💫', text: 'GOOD CLEAR!' },
-    { emoji: '🎯⚡', text: 'GREAT CLEAR!' },
-    { emoji: '🏆💫', text: 'AMAZING CLEAR!' },
-    { emoji: '👑✨', text: 'EPIC CLEAR!' },
-  ],
+    { emoji: '🎪✨', text: 'CLEAR!' },         // Default clear
+    { emoji: '🎮💫', text: 'GOOD CLEAR!' },    // 25+ points
+    { emoji: '🎯⚡', text: 'GREAT CLEAR!' },   // 50+ points
+    { emoji: '🏆💫', text: 'AMAZING CLEAR!' }, // 75+ points
+    { emoji: '👑✨', text: 'EPIC CLEAR!' },    // 100+ points
+  ] as const,
   
   // Quick placements
   QUICK: [
@@ -121,16 +124,16 @@ const getFeedbackForScore = (score: number) => {
 }
 
 const getFeedbackForCombo = (comboCount: number) => {
-  const index = Math.min(comboCount - 2, SCORE_FEEDBACK.COMBO.length - 1)
-  return SCORE_FEEDBACK.COMBO[index]
-}
+  const index = Math.min(comboCount - 2, SCORE_FEEDBACK.COMBO.length - 1);
+  return SCORE_FEEDBACK.COMBO[index] || { emoji: '🔥', text: 'Combo!' };
+};
 
 const getFeedbackForClear = (clearScore: number) => {
-  if (clearScore >= 100) return SCORE_FEEDBACK.CLEAR[4]
-  if (clearScore >= 75) return SCORE_FEEDBACK.CLEAR[3]
-  if (clearScore >= 50) return SCORE_FEEDBACK.CLEAR[2]
-  if (clearScore >= 25) return SCORE_FEEDBACK.CLEAR[1]
-  return SCORE_FEEDBACK.CLEAR[0]
+  if (clearScore >= 100) return SCORE_FEEDBACK.CLEAR[4];
+  if (clearScore >= 75 && SCORE_FEEDBACK.CLEAR[3]) return SCORE_FEEDBACK.CLEAR[3];
+  if (clearScore >= 50) return SCORE_FEEDBACK.CLEAR[2];
+  if (clearScore >= 25) return SCORE_FEEDBACK.CLEAR[1];
+  return SCORE_FEEDBACK.CLEAR[0];
 }
 
 // Add these scoring constants near the top of the file
@@ -187,7 +190,20 @@ const UPGRADE_POINT_REWARDS = {
   }
 };
 
-const Game: React.FC<GameProps> = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = false, onSkipTutorial, onExit, onStartGame, savedGameState, isDailyChallenge }: GameProps) => {
+const Game: React.FC<GameProps> = ({ 
+  musicEnabled, 
+  soundEnabled, 
+  timedMode, 
+  onGameOver, 
+  tutorial = false, 
+  onSkipTutorial, 
+  onExit, 
+  onStartGame, 
+  savedGameState, 
+  isDailyChallenge,
+  isLevelMode = false,
+  targetScore
+}: GameProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const cols = 7
   const [upgradeState, setUpgradeState] = useState<UpgradeState>(getInitialUpgradeState());
@@ -331,6 +347,14 @@ const Game: React.FC<GameProps> = ({ musicEnabled, soundEnabled, timedMode, onGa
     abilityName?: string;
   } | undefined>();
   const [showUpgrades, setShowUpgrades] = useState(false);
+  const [showLevelComplete, setShowLevelComplete] = useState<{
+    show: boolean;
+    level: string;
+    score: number;
+    targetScore: number;
+    nextLevel: string;
+    bonusPoints: number;
+  } | null>(null);
 
   // Add this effect to update previousScore when score changes
   useEffect(() => {
@@ -1196,8 +1220,8 @@ const Game: React.FC<GameProps> = ({ musicEnabled, soundEnabled, timedMode, onGa
                 score: comboBonus,
                 x: canvas.width / 2,
                 y: canvas.height / 2 + 50,
-                emoji: comboInfo.emoji,
-                text: `${comboInfo.text}`,
+                emoji: comboInfo?.emoji ?? '🔥',
+                text: comboInfo?.text ?? 'Combo!',
                 type: 'combo'
               });
               setScore(prevScore => prevScore + comboBonus);
@@ -2103,28 +2127,54 @@ const Game: React.FC<GameProps> = ({ musicEnabled, soundEnabled, timedMode, onGa
     const multiplier = matchingTiles.length;
     const clearBonus = calculateScore(totalMatchScore * multiplier * 2);
     
+    // Get feedback with guaranteed default value
     const clearInfo = getFeedbackForClear(clearBonus);
     
     // Award upgrade points
     awardUpgradePoints(UPGRADE_POINT_REWARDS.clear.points);
     
-    // Show clear bonus popup
+    // Show clear bonus popup with safe access to emoji and text
     addScorePopup({
       score: clearBonus,
       x: canvasRef.current?.width ?? 0 / 2,
       y: canvasRef.current?.height ?? 0 / 2 - 50,
-      emoji: clearInfo.emoji,
-      text: clearInfo.text,
+      emoji: clearInfo?.emoji ?? '✨',
+      text: clearInfo?.text ?? 'Clear!',
       type: 'clear'
     });
     
-    // Update score
-    setScore(prevScore => {
-      const newScore = prevScore + clearBonus;
-      // Update objectives with the new score after clear bonus
+    // Update score immediately
+    const newScore = score + clearBonus;
+    setScore(newScore);
+    
+    // Update objectives with the new score after clear bonus
+    if (isDailyChallenge) {
       updateObjectives(matchingTiles.length, combo.count, newScore);
-      return newScore;
-    });
+    }
+    
+    // Check for level completion after applying clear bonus
+    if (isLevelMode && targetScore && newScore >= targetScore && !isGameOver) {
+      const { currentBlock, currentLevel } = getCurrentLevelInfo(newScore);
+      
+      setIsGameOver(true);
+      
+      // Show congratulations modal
+      setShowLevelComplete({
+        show: true,
+        level: `${currentBlock}-${currentLevel}`,
+        score: newScore,
+        targetScore,
+        nextLevel: `${currentBlock}-${currentLevel + 1}`,
+        bonusPoints: Math.floor((newScore - targetScore) / 100)
+      });
+      
+      // Update player progress
+      const progress = getPlayerProgress();
+      progress.points = Math.max(progress.points || 0, newScore);
+      localStorage.setItem(PROGRESSION_KEY, JSON.stringify(progress));
+      
+      onGameOver();
+    }
     
     // Remove matching tiles after a delay
     setTimeout(() => {
@@ -2163,6 +2213,33 @@ const Game: React.FC<GameProps> = ({ musicEnabled, soundEnabled, timedMode, onGa
       upgrade.currentLevel < upgrade.maxLevel && points >= upgrade.cost
     );
   }, [upgradeState]);
+
+  // Add effect to check for level completion
+  useEffect(() => {
+    if (isLevelMode && targetScore && score >= targetScore && !isGameOver) {
+      // Get current level info for the congratulations message
+      const { currentBlock, currentLevel } = getCurrentLevelInfo(score);
+      
+      setIsGameOver(true);
+      
+      // Show congratulations modal
+      setShowLevelComplete({
+        show: true,
+        level: `${currentBlock}-${currentLevel}`,
+        score,
+        targetScore,
+        nextLevel: `${currentBlock}-${currentLevel + 1}`,
+        bonusPoints: Math.floor((score - targetScore) / 100) // Bonus points for exceeding target
+      });
+      
+      // Update player progress
+      const progress = getPlayerProgress();
+      progress.points = Math.max(progress.points || 0, score);
+      localStorage.setItem(PROGRESSION_KEY, JSON.stringify(progress));
+      
+      onGameOver();
+    }
+  }, [isLevelMode, targetScore, score, isGameOver, onGameOver]);
 
   return (
     <div
@@ -2639,6 +2716,82 @@ const Game: React.FC<GameProps> = ({ musicEnabled, soundEnabled, timedMode, onGa
               transform: translateY(-20px);
             }
           }
+
+          .level-complete-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+          }
+
+          .level-complete-modal {
+            background: rgba(26, 26, 46, 0.95);
+            border: 2px solid #00FF9F;
+            border-radius: 15px;
+            padding: 30px;
+            max-width: 500px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 0 30px rgba(0, 255, 159, 0.3);
+          }
+
+          .level-complete-modal h2 {
+            color: #00FF9F;
+            font-size: 2em;
+            margin-bottom: 20px;
+            text-shadow: 0 0 10px rgba(0, 255, 159, 0.5);
+          }
+
+          .level-stats {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin: 20px 0;
+          }
+
+          .stat {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+          }
+
+          .stat.bonus {
+            background: rgba(0, 255, 159, 0.1);
+            border: 1px solid rgba(0, 255, 159, 0.3);
+          }
+
+          .value {
+            font-weight: bold;
+            color: #00FF9F;
+          }
+
+          .next-level {
+            font-size: 1.2em;
+            color: #00FFFF;
+            margin: 20px 0;
+          }
+
+          .level-complete-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 20px;
+          }
+
+          .cyberpunk-button.primary {
+            background: linear-gradient(45deg, #00FF9F, #00FFFF);
+            color: #1a1a2e;
+            font-weight: bold;
+          }
         `}
       </style>
       <UpgradeModal
@@ -2649,6 +2802,52 @@ const Game: React.FC<GameProps> = ({ musicEnabled, soundEnabled, timedMode, onGa
         points={upgradeState.points}
         onUpgrade={handleUpgrade}
       />
+      {showLevelComplete && (
+        <div className="level-complete-overlay">
+          <div className="level-complete-modal">
+            <h2>Level {showLevelComplete.level} Complete! 🎉</h2>
+            <div className="level-stats">
+              <div className="stat">
+                <span>Your Score</span>
+                <span className="value">{showLevelComplete.score.toLocaleString()}</span>
+              </div>
+              <div className="stat">
+                <span>Target Score</span>
+                <span className="value">{showLevelComplete.targetScore.toLocaleString()}</span>
+              </div>
+              {showLevelComplete.bonusPoints > 0 && (
+                <div className="stat bonus">
+                  <span>Bonus Points</span>
+                  <span className="value">+{showLevelComplete.bonusPoints}</span>
+                </div>
+              )}
+            </div>
+            <div className="next-level">
+              Next Level: {showLevelComplete.nextLevel}
+            </div>
+            <div className="level-complete-buttons">
+              <button 
+                className="cyberpunk-button"
+                onClick={() => {
+                  setShowLevelComplete(null);
+                  onExit();
+                }}
+              >
+                Back to Roadmap
+              </button>
+              <button 
+                className="cyberpunk-button primary"
+                onClick={() => {
+                  setShowLevelComplete(null);
+                  onStartGame(false);
+                }}
+              >
+                Play Next Level
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
