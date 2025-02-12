@@ -1,0 +1,249 @@
+.upgrade-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.85);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  backdrop-filter: blur(5px);
+}
+
+.upgrade-modal {
+  background: linear-gradient(145deg, #1a1a2e, #202040);
+  border-radius: 16px;
+  padding: 32px;
+  width: 90%;
+  max-width: 1200px;
+  max-height: 90vh;
+  overflow-y: auto;
+  position: relative;
+  border: 2px solid #00ff9f;
+  box-shadow: 0 0 30px rgba(0, 255, 159, 0.2);
+  animation: modalAppear 0.3s ease-out;
+}
+
+.upgrade-modal h2 {
+  color: #00ff9f;
+  text-align: center;
+  font-size: 2em;
+  margin-bottom: 24px;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  text-shadow: 0 0 10px rgba(0, 255, 159, 0.5);
+}
+
+.points-display {
+  color: #00ff9f;
+  font-size: 1.4em;
+  margin-bottom: 32px;
+  text-align: center;
+  padding: 12px;
+  background: rgba(0, 255, 159, 0.1);
+  border-radius: 8px;
+  border: 1px solid rgba(0, 255, 159, 0.3);
+}
+
+.upgrades-container {
+  display: flex;
+  gap: 32px;
+}
+
+.upgrade-section {
+  flex: 1;
+}
+
+.upgrade-section h3 {
+  color: #fff;
+  font-size: 1.5em;
+  margin-bottom: 20px;
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.upgrade-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 24px;
+}
+
+.upgrade-card {
+  background: rgba(42, 42, 64, 0.8);
+  border-radius: 12px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  border: 1px solid #3a3a50;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.upgrade-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #00ff9f, transparent);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.upgrade-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 6px 16px rgba(0, 255, 159, 0.15);
+  border-color: rgba(0, 255, 159, 0.5);
+}
+
+.upgrade-card:hover::before {
+  opacity: 1;
+}
+
+.upgrade-icon {
+  font-size: 32px;
+  text-align: center;
+  margin-bottom: 12px;
+  filter: drop-shadow(0 0 8px rgba(0, 255, 159, 0.5));
+}
+
+.upgrade-card h4 {
+  color: #fff;
+  font-size: 1.2em;
+  margin: 0;
+  text-align: center;
+}
+
+.upgrade-card p {
+  color: #aaa;
+  font-size: 0.9em;
+  margin: 0;
+  text-align: center;
+  line-height: 1.4;
+}
+
+.upgrade-level {
+  color: #00ff9f;
+  font-size: 1em;
+  text-align: center;
+  font-weight: bold;
+}
+
+.upgrade-effect {
+  color: #888;
+  font-size: 0.9em;
+  text-align: center;
+  padding: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 4px;
+}
+
+.upgrade-button {
+  background: linear-gradient(45deg, #00ff9f, #00b8ff);
+  color: #1a1a2e;
+  border: none;
+  border-radius: 6px;
+  padding: 12px;
+  font-size: 1em;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-top: auto;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.upgrade-button:disabled {
+  background: #2a2a40;
+  color: #666;
+  cursor: not-allowed;
+  border: 1px solid #3a3a50;
+}
+
+.upgrade-button:not(:disabled):hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 255, 159, 0.3);
+}
+
+@keyframes modalAppear {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Custom scrollbar for the modal */
+.upgrade-modal::-webkit-scrollbar {
+  width: 8px;
+}
+
+.upgrade-modal::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+}
+
+.upgrade-modal::-webkit-scrollbar-thumb {
+  background: rgba(0, 255, 159, 0.3);
+  border-radius: 4px;
+}
+
+.upgrade-modal::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 255, 159, 0.5);
+}
+
+/* Add these styles for the upgrade button in the game */
+.cyberpunk-button.can-upgrade {
+  background: linear-gradient(45deg, #00ff9f, #00b8ff);
+  border-color: #00ff9f;
+  color: #1a1a2e;
+  animation: pulseGlow 2s infinite;
+}
+
+.cyberpunk-button:not(.can-upgrade) {
+  background: linear-gradient(145deg, #1a1a2e, #202040);
+  color: #00ff9f;
+  opacity: 0.8;
+}
+
+@keyframes pulseGlow {
+  0% {
+    box-shadow: 0 0 10px rgba(0, 255, 159, 0.3),
+                0 0 20px rgba(0, 255, 159, 0);
+  }
+  50% {
+    box-shadow: 0 0 15px rgba(0, 255, 159, 0.5),
+                0 0 30px rgba(0, 255, 159, 0.3);
+  }
+  100% {
+    box-shadow: 0 0 10px rgba(0, 255, 159, 0.3),
+                0 0 20px rgba(0, 255, 159, 0);
+  }
+}
+
+/* Add a subtle shake animation when first becoming available */
+@keyframes upgradeAvailable {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-2px); }
+  75% { transform: translateX(2px); }
+}
+
+.cyberpunk-button.can-upgrade:not(:hover) {
+  animation: 
+    pulseGlow 2s infinite,
+    upgradeAvailable 0.5s ease-in-out;
+}
+
+.cyberpunk-button.can-upgrade:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(0, 255, 159, 0.4);
+} 

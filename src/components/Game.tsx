@@ -34,6 +34,9 @@ import { Companion } from '../types/companion'
 import CompanionHUD from './CompanionHUD'
 import { COMPANIONS } from '../types/companion'
 import type { CompanionId } from '../types/companion'
+import UpgradeModal from './UpgradeModal'
+import { getInitialUpgradeState, purchaseUpgrade, getUpgradeEffect, saveUpgradeState } from '../utils/upgradeUtils'
+import { UpgradeState } from '../types/upgrades'
 
 interface GameProps {
   musicEnabled: boolean
@@ -130,47 +133,6 @@ const getFeedbackForClear = (clearScore: number) => {
   return SCORE_FEEDBACK.CLEAR[0]
 }
 
-// Add this helper function at the top of the component, before any state declarations
-const createNewTile = (): PlacedTile => {
-  // First decide if this will be a mirror tile (10% chance)
-  const isMirror = Math.random() < 0.1
-  
-  if (isMirror) {
-    return {
-      ...createTileWithRandomEdges(0, 0),
-      isPlaced: false,
-      type: 'mirror' as const
-    }
-  }
-  
-  // If not mirror, maybe create a power-up tile (15% chance)
-  const hasPowerUp = Math.random() < 0.15
-  
-  if (hasPowerUp) {
-    const powerUpTypes = ['freeze', 'colorShift', 'multiplier'] as const
-    const randomPowerUp = powerUpTypes[Math.floor(Math.random() * powerUpTypes.length)]
-    
-    return {
-      ...createTileWithRandomEdges(0, 0),
-      isPlaced: false,
-      type: 'normal' as const,
-      powerUp: {
-        type: randomPowerUp,
-        duration: randomPowerUp === 'freeze' ? 5 : 15,
-        multiplier: randomPowerUp === 'multiplier' ? 2 : undefined,
-        active: false  // Add the missing 'active' property
-      }
-    }
-  }
-  
-  // Otherwise create a normal tile
-  return {
-    ...createTileWithRandomEdges(0, 0),
-    isPlaced: false,
-    type: 'normal' as const
-  }
-}
-
 // Add these scoring constants near the top of the file
 const SCORING_CONFIG = {
   baseMatch: 5, // Base points per matching edge
@@ -199,29 +161,95 @@ const calculateDynamicMultiplier = (
   return Math.min(base * levelBonus * streakBonus, max);
 };
 
+// Add these constants near the top of the file
+const UPGRADE_POINT_REWARDS = {
+  match: {
+    base: 1,  // Base points for matches
+    threshold: 3, // Minimum matches needed
+    bonus: 0.5   // Additional points per match above threshold
+  },
+  combo: {
+    base: 2,     // Base points for combos
+    threshold: 4, // Minimum combo needed
+    bonus: 1     // Additional points per combo level above threshold
+  },
+  clear: {
+    points: 5    // Points for clearing the grid
+  },
+  achievement: {
+    points: 10   // Points for unlocking achievements
+  },
+  levelUp: {
+    points: 15   // Points for leveling up
+  },
+  dailyChallenge: {
+    points: 20   // Points for completing daily challenge
+  }
+};
+
 const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = false, onSkipTutorial, onExit, onStartGame, savedGameState, isDailyChallenge }: GameProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const cols = 7
+  const [upgradeState, setUpgradeState] = useState<UpgradeState>(getInitialUpgradeState());
   
-  // Initialize all state from saved game if it exists
+  // Move createNewTile here, before any state that depends on it
+  const createNewTile = useCallback((): PlacedTile => {
+    const powerUpChance = getUpgradeEffect(upgradeState, 'powerUpChance');
+    const mirrorChance = getUpgradeEffect(upgradeState, 'mirrorTileChance');
+    
+    if (Math.random() < mirrorChance) {
+      return {
+        ...createTileWithRandomEdges(0, 0),
+        isPlaced: false,
+        type: 'mirror' as const
+      };
+    }
+    
+    if (Math.random() < powerUpChance) {
+      const powerUpTypes = ['freeze', 'colorShift', 'multiplier'] as const;
+      const randomPowerUp = powerUpTypes[Math.floor(Math.random() * powerUpTypes.length)];
+      
+      return {
+        ...createTileWithRandomEdges(0, 0),
+        isPlaced: false,
+        type: 'normal' as const,
+        powerUp: {
+          type: randomPowerUp,
+          duration: randomPowerUp === 'freeze' ? 5 : 15,
+          multiplier: randomPowerUp === 'multiplier' ? 2 : undefined,
+          active: false
+        }
+      };
+    }
+    
+    return {
+      ...createTileWithRandomEdges(0, 0),
+      isPlaced: false,
+      type: 'normal' as const
+    };
+  }, [upgradeState]);
+
+  // Now initialize states that depend on createNewTile
   const [placedTiles, setPlacedTiles] = useState<PlacedTile[]>(
     savedGameState?.placedTiles ?? [{
       ...createTileWithRandomEdges(0, 0),
       isPlaced: true
     }]
   )
-  const [score, setScore] = useState<number>(savedGameState?.score ?? 0)
-  const [timeLeft, setTimeLeft] = useState<number>(
-    savedGameState?.timeLeft ?? (timedMode ? INITIAL_TIME : Infinity)
-  )
-  const [isGameOver, setIsGameOver] = useState<boolean>(false)
-  const [nextTiles, setNextTiles] = useState<PlacedTile[]>(
+  
+  const [nextTiles, setNextTiles] = useState<PlacedTile[]>(() => 
     savedGameState?.nextTiles ?? [
       createNewTile(),
       createNewTile(),
       createNewTile()
     ]
+  );
+
+  const [score, setScore] = useState<number>(savedGameState?.score ?? 0)
+  const [timeLeft, setTimeLeft] = useState<number>(
+    savedGameState?.timeLeft ?? (timedMode ? INITIAL_TIME : Infinity)
   )
+  const [isGameOver, setIsGameOver] = useState<boolean>(false)
   const [selectedTileIndex, setSelectedTileIndex] = useState<number | null>(null)
   const [mousePosition, setMousePosition] = useState<{ x: number, y: number } | null>(null)
   const [scorePopups, setScorePopups] = useState<{
@@ -302,6 +330,7 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
     value?: number;
     abilityName?: string;
   } | undefined>();
+  const [showUpgrades, setShowUpgrades] = useState(false);
 
   // Add this effect to update previousScore when score changes
   useEffect(() => {
@@ -675,13 +704,13 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
           ctx.textBaseline = 'middle'
           
           // Draw text stroke first (outline)
-          ctx.strokeText(tile.value.toString(), x, y)
+          ctx.strokeText(tile.value.toString(), x, y)  // Use actual x, y for main grid
           
           // Then draw the bright text
           ctx.fillStyle = '#FFFFFF' // Always use white for better visibility
           ctx.shadowColor = '#00FFFF' // Cyan glow
           ctx.shadowBlur = 8
-          ctx.fillText(tile.value.toString(), x, y)
+          ctx.fillText(tile.value.toString(), x, y)  // Use actual x, y for main grid
           
           // Reset shadow
           ctx.shadowBlur = 0
@@ -1062,6 +1091,8 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
 
           // Award points for any matches
           if (matchCount > 0) {
+            handleMatches(matchCount);
+            
             const basePoints = matchCount * 5;  // 5 points per matching edge
             const feedback = getFeedbackForScore(basePoints);
             
@@ -1086,35 +1117,7 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
           
           // Additional bonus for clearing tiles when grid is full
           if (matchingTiles.length >= 3 && isGridFull(newPlacedTiles, cols)) {
-            const totalMatchScore = matchingTiles.reduce((sum: number, tile: PlacedTile) => sum + tile.value, 0);
-            const multiplier = matchingTiles.length
-            const clearBonus = calculateScore(totalMatchScore * multiplier * 2)
-            
-            const clearInfo = getFeedbackForClear(clearBonus)
-
-            setTimeout(() => {
-              addScorePopup({
-                score: clearBonus,
-                x: canvas.width / 2,
-                y: canvas.height / 2 - 50,
-                emoji: clearInfo.emoji,
-                text: clearInfo.text,
-                type: 'clear'
-              })
-              setScore(prevScore => {
-                const newScore = prevScore + clearBonus;
-                // Update objectives with the new score after clear bonus
-                updateObjectives(matchingTiles.length, combo.count, newScore);
-                return newScore;
-              })
-            }, 300)
-
-            // Remove matching tiles
-            setTimeout(() => {
-              setPlacedTiles(newPlacedTiles.filter((tile: PlacedTile) => 
-                !hasMatchingEdges(tile, newPlacedTiles, settings.isColorBlind)
-              ))
-            }, 500)
+            handleGridClear();
           }
           
           // Update board with new tile
@@ -1433,9 +1436,15 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
 
   // Update score calculation to include combo multiplier
   const calculateScore = (baseScore: number) => {
-    const powerUpMultiplier = powerUps.multiplier.active ? powerUps.multiplier.value : 1
-    return Math.round(baseScore * powerUpMultiplier * combo.multiplier)
-  }
+    const scoreMultiplier = getUpgradeEffect(upgradeState, 'scoreMultiplier');
+    const matchBonus = getUpgradeEffect(upgradeState, 'matchBonus');
+    const comboBonus = getUpgradeEffect(upgradeState, 'comboBonus');
+    
+    const powerUpMultiplier = powerUps.multiplier.active ? powerUps.multiplier.value : 1;
+    const finalMultiplier = scoreMultiplier * powerUpMultiplier * (combo.multiplier + comboBonus);
+    
+    return Math.round((baseScore + matchBonus) * finalMultiplier);
+  };
 
   // Modify the addScorePopup function to handle popup clearing and positioning better
   const addScorePopup = useCallback(({ score, x, y, emoji, text, type }: {
@@ -1587,7 +1596,7 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
           musicEnabled,
           soundEnabled
         },
-        companion: companion
+        companion
       }
       saveGameState(gameState)
     }
@@ -2023,6 +2032,138 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
     };
   }, []);
 
+  // Add this function to handle upgrades
+  const handleUpgrade = (upgradeId: string, type: 'tile' | 'grid') => {
+    const newState = purchaseUpgrade(upgradeState, upgradeId, type);
+    setUpgradeState(newState);
+    soundManager.playSound('powerUp');
+  };
+
+  // Modify the game over effect to award upgrade points
+  useEffect(() => {
+    if (isGameOver) {
+      // ... existing game over code ...
+
+      // Award upgrade points based on score
+      const pointsEarned = Math.floor(score / 100); // 1 point per 100 score
+      setUpgradeState(prev => {
+        const newState = {
+          ...prev,
+          points: prev.points + pointsEarned
+        };
+        saveUpgradeState(newState);
+        return newState;
+      });
+    }
+  }, [isGameOver, score]);
+
+  // Modify the awardUpgradePoints function to remove unused reason parameter
+  const awardUpgradePoints = useCallback((amount: number) => {
+    setUpgradeState(prev => {
+      const newState = {
+        ...prev,
+        points: prev.points + amount
+      };
+      saveUpgradeState(newState);
+      return newState;
+    });
+  }, []);
+
+  // Modify the match handling code to award points for multiple matches
+  const handleMatches = (matchCount: number) => {
+    if (matchCount >= UPGRADE_POINT_REWARDS.match.threshold) {
+      const bonusPoints = Math.floor(
+        (matchCount - UPGRADE_POINT_REWARDS.match.threshold) * 
+        UPGRADE_POINT_REWARDS.match.bonus
+      );
+      const totalPoints = UPGRADE_POINT_REWARDS.match.base + bonusPoints;
+      awardUpgradePoints(totalPoints);
+    }
+  };
+
+  // Modify the combo handling code
+  useEffect(() => {
+    if (combo.count >= UPGRADE_POINT_REWARDS.combo.threshold) {
+      const bonusPoints = Math.floor(
+        (combo.count - UPGRADE_POINT_REWARDS.combo.threshold) * 
+        UPGRADE_POINT_REWARDS.combo.bonus
+      );
+      const totalPoints = UPGRADE_POINT_REWARDS.combo.base + bonusPoints;
+      awardUpgradePoints(totalPoints);
+    }
+  }, [combo.count]);
+
+  // Modify the grid clear handling code
+  const handleGridClear = () => {
+    const matchingTiles = placedTiles.filter(tile => 
+      hasMatchingEdges(tile, placedTiles, settings.isColorBlind)
+    );
+    
+    const totalMatchScore = matchingTiles.reduce((sum, tile) => sum + tile.value, 0);
+    const multiplier = matchingTiles.length;
+    const clearBonus = calculateScore(totalMatchScore * multiplier * 2);
+    
+    const clearInfo = getFeedbackForClear(clearBonus);
+    
+    // Award upgrade points
+    awardUpgradePoints(UPGRADE_POINT_REWARDS.clear.points);
+    
+    // Show clear bonus popup
+    addScorePopup({
+      score: clearBonus,
+      x: canvasRef.current?.width ?? 0 / 2,
+      y: canvasRef.current?.height ?? 0 / 2 - 50,
+      emoji: clearInfo.emoji,
+      text: clearInfo.text,
+      type: 'clear'
+    });
+    
+    // Update score
+    setScore(prevScore => {
+      const newScore = prevScore + clearBonus;
+      // Update objectives with the new score after clear bonus
+      updateObjectives(matchingTiles.length, combo.count, newScore);
+      return newScore;
+    });
+    
+    // Remove matching tiles after a delay
+    setTimeout(() => {
+      setPlacedTiles(prev => 
+        prev.filter(tile => !hasMatchingEdges(tile, prev, settings.isColorBlind))
+      );
+    }, 500);
+  };
+
+  // Modify the achievement handling code
+  useEffect(() => {
+    if (newAchievements.length > 0) {
+      awardUpgradePoints(UPGRADE_POINT_REWARDS.achievement.points);
+    }
+  }, [newAchievements]);
+
+  // Modify the level up handling code
+  useEffect(() => {
+    const oldLevel = playerProgress.level;
+    if (playerProgress.level > oldLevel) {
+      awardUpgradePoints(UPGRADE_POINT_REWARDS.levelUp.points);
+    }
+  }, [playerProgress.level]);
+
+  // Modify the daily challenge completion code
+  useEffect(() => {
+    if (isDailyChallenge && showDailyComplete) {
+      awardUpgradePoints(UPGRADE_POINT_REWARDS.dailyChallenge.points);
+    }
+  }, [isDailyChallenge, showDailyComplete]);
+
+  // 2. Modify the upgrade button to show when upgrades are available
+  const canUpgrade = useCallback(() => {
+    const { tileUpgrades, gridUpgrades, points } = upgradeState;
+    return [...tileUpgrades, ...gridUpgrades].some(upgrade => 
+      upgrade.currentLevel < upgrade.maxLevel && points >= upgrade.cost
+    );
+  }, [upgradeState]);
+
   return (
     <div
       className="game-container"
@@ -2031,7 +2172,18 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
         transition: 'background 1s ease-in-out'
       }}
     >
-      <LevelProgress progress={playerProgress} />
+      <div className="game-header">
+        <LevelProgress progress={playerProgress} />
+        {!tutorialState.active && (
+          <button 
+            className={`upgrade-button cyberpunk-button ${canUpgrade() ? 'can-upgrade' : ''}`}
+            onClick={() => setShowUpgrades(true)}
+          >
+            <span className="icon">⚡</span>
+            Upgrades
+          </button>
+        )}
+      </div>
       <Particles 
         intensity={particleIntensity} 
         color={particleColor}
@@ -2166,24 +2318,22 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
 
                         // Draw tile value if it exists
                         if (tile.value > 0 && tile.type !== 'mirror') {  // Add check for non-mirror tiles
-                          // Regular tile number
-                          // Add dark outline for better contrast
-                          ctx.strokeStyle = '#000000'
-                          ctx.lineWidth = 3
-                          ctx.shadowColor = '#000000'
-                          ctx.shadowBlur = 4
-                          ctx.font = 'bold 24px Arial'
-                          ctx.textAlign = 'center'
-                          ctx.textBaseline = 'middle'
+                          ctx.strokeStyle = '#000000';
+                          ctx.lineWidth = 3;
+                          ctx.shadowColor = '#000000';
+                          ctx.shadowBlur = 4;
+                          ctx.font = 'bold 24px Arial';
+                          ctx.textAlign = 'center';
+                          ctx.textBaseline = 'middle';
                           
-                          // Draw text stroke first (outline)
-                          ctx.strokeText(tile.value.toString(), 50, 50)  // Use fixed coordinates for preview
+                          // Use fixed coordinates (50,50) for preview tiles
+                          ctx.strokeText(tile.value.toString(), 50, 50);
                           
                           // Then draw the bright text
-                          ctx.fillStyle = '#FFFFFF' // Always use white for better visibility
-                          ctx.shadowColor = '#00FFFF' // Cyan glow
-                          ctx.shadowBlur = 8
-                          ctx.fillText(tile.value.toString(), 50, 50)  // Use fixed coordinates for preview
+                          ctx.fillStyle = '#FFFFFF'; // Always use white for better visibility
+                          ctx.shadowColor = '#00FFFF'; // Cyan glow
+                          ctx.shadowBlur = 8;
+                          ctx.fillText(tile.value.toString(), 50, 50);
                           
                           // Reset shadow
                           ctx.shadowBlur = 0
@@ -2195,9 +2345,9 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
                             freeze: '❄️',
                             colorShift: '🎨',
                             multiplier: '✨'
-                          }
-                          ctx.font = '16px Arial'
-                          ctx.fillText(powerUpIcons[tile.powerUp.type], 50, 20)
+                          };
+                          ctx.font = '16px Arial';
+                          ctx.fillText(powerUpIcons[tile.powerUp.type], 50, 20);
                         }
 
                         // Draw mirror symbol
@@ -2382,8 +2532,123 @@ const Game = ({ musicEnabled, soundEnabled, timedMode, onGameOver, tutorial = fa
             animation: matchGlow 0.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
             will-change: filter;
           }
+
+          // ... existing styles ...
+
+          .game-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            width: 100%;
+          }
+
+          .cyberpunk-button {
+            background: linear-gradient(45deg, #1a1a2e, #2a2a40);
+            border: 2px solid rgba(0, 255, 159, 0.3);
+            border-radius: 4px;
+            color: #00ff9f;
+            padding: 8px 16px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 0 10px rgba(0, 255, 159, 0.3);
+          }
+
+          .cyberpunk-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0 20px rgba(0, 255, 159, 0.5);
+          }
+
+          .cyberpunk-button .icon {
+            font-size: 1.2em;
+          }
+
+          @keyframes glowPulse {
+            0% { box-shadow: 0 0 10px rgba(0, 255, 159, 0.3); }
+            50% { box-shadow: 0 0 20px rgba(0, 255, 159, 0.5); }
+            100% { box-shadow: 0 0 10px rgba(0, 255, 159, 0.3); }
+          }
+
+          .cyberpunk-button.can-upgrade {
+            background: linear-gradient(45deg, #00ff9f, #00b8ff);
+            border-color: #00ff9f;
+            animation: glowPulse 2s infinite;
+          }
+
+          .cyberpunk-button:not(.can-upgrade) {
+            opacity: 0.8;
+          }
+
+          @keyframes glowPulse {
+            0% { box-shadow: 0 0 10px rgba(0, 255, 159, 0.3); }
+            50% { box-shadow: 0 0 20px rgba(0, 255, 159, 0.5); }
+            100% { box-shadow: 0 0 10px rgba(0, 255, 159, 0.3); }
+          }
+
+          .cyberpunk-button.can-upgrade {
+            background: linear-gradient(45deg, #00ff9f, #00b8ff);
+            border-color: #00ff9f;
+            animation: glowPulse 2s infinite;
+          }
+
+          .cyberpunk-button:not(.can-upgrade) {
+            opacity: 0.8;
+          }
+
+          .upgrade-points {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 255, 159, 0.1);
+            padding: 8px 16px;
+            border-radius: 20px;
+            color: #00ff9f;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border: 1px solid rgba(0, 255, 159, 0.3);
+          }
+
+          .upgrade-points .icon {
+            font-size: 1.2em;
+          }
+
+          .points-earned-popup {
+            position: absolute;
+            right: 0;
+            color: #00ff9f;
+            font-weight: bold;
+            pointer-events: none;
+          }
+
+          @keyframes floatUp {
+            0% {
+              opacity: 1;
+              transform: translateY(0);
+            }
+            100% {
+              opacity: 0;
+              transform: translateY(-20px);
+            }
+          }
         `}
       </style>
+      <UpgradeModal
+        isOpen={showUpgrades}
+        onClose={() => setShowUpgrades(false)}
+        tileUpgrades={upgradeState.tileUpgrades}
+        gridUpgrades={upgradeState.gridUpgrades}
+        points={upgradeState.points}
+        onUpgrade={handleUpgrade}
+      />
     </div>
   )
 }
