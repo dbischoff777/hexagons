@@ -12,7 +12,7 @@ import LevelRoadmap from './LevelRoadmap'
 
 
 interface StartPageProps {
-  onStartGame: (withTimer: boolean, targetScore?: number) => void
+  onStartGame: (withTimer: boolean, isDailyChallenge?: boolean) => void
   onMusicToggle: (enabled: boolean) => void
   onSoundToggle: (enabled: boolean) => void
   musicEnabled: boolean
@@ -222,7 +222,7 @@ const StartPage: React.FC<StartPageProps> = ({ onStartGame, onMusicToggle, onSou
             setShowAchievements(false);
           }
         }}>
-          <div className="modal-content">
+          <div className="modal-content achievements-modal">
             <AchievementsView />
           </div>
         </div>

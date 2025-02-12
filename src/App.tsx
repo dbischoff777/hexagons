@@ -56,7 +56,8 @@ function App() {
     soundManager.setSoundEnabled(soundEnabled)
   }, [soundEnabled])
 
-  const handleStartGame = (withTimer: boolean, targetScore?: number) => {
+  // Handler for Game component
+  const handleGameStart = (withTimer: boolean, targetScore?: number) => {
     // Get current level info based on player progress
     const progress = getPlayerProgress();
     const { currentBlock, currentLevel } = getCurrentLevelInfo(progress.points);
@@ -79,18 +80,27 @@ function App() {
     setSavedGameState(null);
   };
 
+  // Handler for StartPage component
   const handleStartPageGame = (withTimer: boolean, isDailyChallenge?: boolean) => {
+    // Get current level info based on player progress
+    const progress = getPlayerProgress();
+    const { currentBlock, currentLevel } = getCurrentLevelInfo(progress.points);
+    
+    // Get next level's target score
+    const nextLevel = getNextLevelInfo(currentBlock, currentLevel, LEVEL_BLOCKS);
+    const effectiveTargetScore = nextLevel?.pointsRequired ?? 10000;
+    
+    // Set current game state
+    setCurrentGame({
+      isLevelMode: true,
+      targetScore: effectiveTargetScore,
+      currentBlock,
+      currentLevel
+    });
+    
     setGameStarted(true);
     setTimedMode(withTimer);
     setIsDailyChallenge(!!isDailyChallenge);
-    
-    // Reset game state for non-level games
-    setCurrentGame({
-      isLevelMode: false,
-      targetScore: undefined,
-      currentBlock: undefined,
-      currentLevel: undefined
-    });
     setSavedGameState(null);
   };
 
@@ -189,11 +199,11 @@ function App() {
             musicEnabled={musicEnabled} 
             soundEnabled={soundEnabled}
             timedMode={timedMode}
-            tutorial={tutorialMode}
             onGameOver={handleExitGame}
+            tutorial={tutorialMode}
             onSkipTutorial={handleExitGame}
             onExit={handleExitGame}
-            onStartGame={handleStartGame}
+            onStartGame={handleGameStart}
             savedGameState={savedGameState}
             isDailyChallenge={isDailyChallenge}
             isLevelMode={true}

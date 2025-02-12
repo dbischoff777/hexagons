@@ -30,7 +30,8 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  min-width: 300px;
+  min-width: 250px;
+  max-width: 400px;
 }
 
 .stat-label {
@@ -52,9 +53,10 @@
 
 .achievements-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
   gap: 25px;
   padding: 10px;
+  min-width: 1260px;
 }
 
 .achievement-card {
@@ -68,6 +70,7 @@
   opacity: 0.7;
   position: relative;
   overflow: hidden;
+  min-width: 300px;
 }
 
 .achievement-card::before {

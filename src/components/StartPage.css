@@ -268,23 +268,50 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.8);
+  background: rgba(0, 0, 0, 0.85);
   display: flex;
   justify-content: center;
   align-items: center;
   z-index: 1000;
+  padding: 20px;
 }
 
 .modal-content {
-  position: relative;
-  background: rgba(0, 0, 0, 0.9);
-  border-radius: 12px;
-  border: 1px solid rgba(0, 255, 159, 0.2);
-  width: 90%;
-  max-width: 1200px;
+  background: rgba(26, 26, 46, 0.95);
+  border: 2px solid #00FF9F;
+  border-radius: 15px;
+  padding: 30px;
+  width: auto;
+  min-width: min-content;
   max-height: 90vh;
   overflow-y: auto;
+}
+
+.achievements-modal {
+  min-height: 80vh;
+  padding: 30px;
+  background: rgba(26, 26, 46, 0.95);
+  border: 2px solid #00FF9F;
+}
+
+.roadmap-modal {
+  min-height: 80vh;
+  padding: 0;
+  background: rgba(26, 26, 46, 0.95);
+  border: 2px solid #00FF9F;
+}
+
+.modal-header {
   padding: 20px;
+  border-bottom: 1px solid rgba(0, 255, 159, 0.2);
+}
+
+.modal-header h2 {
+  margin: 0;
+  color: #00FF9F;
+  text-align: center;
+  font-size: 2rem;
+  text-shadow: 0 0 10px rgba(0, 255, 159, 0.5);
 }
 
 .close-button {
@@ -371,17 +398,6 @@
 .roadmap-button:hover {
   background: rgba(0, 255, 159, 0.25);
   transform: scale(1.05);
-}
-
-.roadmap-modal {
-  width: 90%;
-  max-width: 900px;
-  max-height: 80vh;
-  overflow-y: auto;
-  background: rgba(26, 26, 46, 0.95);
-  border: 2px solid #00FF9F;
-  border-radius: 12px;
-  padding: 0;
 }
 
 .modal-header {
