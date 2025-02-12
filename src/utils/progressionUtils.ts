@@ -315,7 +315,8 @@ export const getPlayerProgress = (): PlayerProgress => {
     selectedTheme: 'default',
     points: 0,
     badges: [],
-    selectedCompanion: 'default'
+    selectedCompanion: 'default',
+    unlockedLevels: { '1-1': true }
   };
 };
 

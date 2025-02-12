@@ -36,6 +36,7 @@ export interface PlayerProgress {
   points: number;
   badges: Badge[];
   selectedCompanion: CompanionId;
+  unlockedLevels: { [key: string]: boolean };
 }
 
 export interface ThemeConfig {

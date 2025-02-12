@@ -25,6 +25,7 @@ import {
   getCurrentLevelInfo, 
   getPlayerProgress, 
   getTheme,
+  LEVEL_BLOCKS,
   PROGRESSION_KEY,
 } from '../utils/progressionUtils'
 import LevelProgress from './LevelProgress'
@@ -188,6 +189,34 @@ const UPGRADE_POINT_REWARDS = {
   dailyChallenge: {
     points: 20   // Points for completing daily challenge
   }
+};
+
+// Add this helper function at the top level
+const getNextLevelInfo = (currentBlock: number, currentLevel: number, blocks: typeof LEVEL_BLOCKS) => {
+  // Find current block
+  const block = blocks.find(b => b.blockNumber === currentBlock);
+  if (!block) return null;
+
+  // If there are more levels in current block
+  if (currentLevel < block.levels.length) {
+    return {
+      block: currentBlock,
+      level: currentLevel + 1,
+      pointsRequired: block.levels[currentLevel].pointsRequired
+    };
+  }
+
+  // If we need to move to next block
+  const nextBlock = blocks.find(b => b.blockNumber === currentBlock + 1);
+  if (nextBlock && nextBlock.levels.length > 0) {
+    return {
+      block: nextBlock.blockNumber,
+      level: 1,
+      pointsRequired: nextBlock.levels[0].pointsRequired
+    };
+  }
+
+  return null;
 };
 
 const Game: React.FC<GameProps> = ({ 
@@ -354,6 +383,7 @@ const Game: React.FC<GameProps> = ({
     targetScore: number;
     nextLevel: string;
     bonusPoints: number;
+    isNextLevelUnlock?: boolean;
   } | null>(null);
 
   // Add this effect to update previousScore when score changes
@@ -2173,6 +2203,8 @@ const Game: React.FC<GameProps> = ({
 
   // Modify the grid clear handling code
   const handleGridClear = () => {
+    if (isGameOver) return; // Add early return if game is over
+
     const matchingTiles = placedTiles.filter(tile => 
       hasMatchingEdges(tile, placedTiles, settings.isColorBlind)
     );
@@ -2198,36 +2230,11 @@ const Game: React.FC<GameProps> = ({
     });
     
     // Update score immediately
-    const newScore = score + clearBonus;
-    setScore(newScore);
+    setScore(prev => prev + clearBonus);
     
     // Update objectives with the new score after clear bonus
     if (isDailyChallenge) {
-      updateObjectives(matchingTiles.length, combo.count, newScore);
-    }
-    
-    // Check for level completion after applying clear bonus
-    if (isLevelMode && targetScore && newScore >= targetScore && !isGameOver) {
-      const { currentBlock, currentLevel } = getCurrentLevelInfo(newScore);
-      
-      setIsGameOver(true);
-      
-      // Show congratulations modal
-      setShowLevelComplete({
-        show: true,
-        level: `${currentBlock}-${currentLevel}`,
-        score: newScore,
-        targetScore,
-        nextLevel: `${currentBlock}-${currentLevel + 1}`,
-        bonusPoints: Math.floor((newScore - targetScore) / 100)
-      });
-      
-      // Update player progress
-      const progress = getPlayerProgress();
-      progress.points = Math.max(progress.points || 0, newScore);
-      localStorage.setItem(PROGRESSION_KEY, JSON.stringify(progress));
-      
-      onGameOver();
+      updateObjectives(matchingTiles.length, combo.count, score + clearBonus);
     }
     
     // Remove matching tiles after a delay
@@ -2270,30 +2277,43 @@ const Game: React.FC<GameProps> = ({
 
   // Add effect to check for level completion
   useEffect(() => {
-    if (isLevelMode && targetScore && score >= targetScore && !isGameOver) {
-      // Get current level info for the congratulations message
+    if (isLevelMode && !isGameOver && score > 0) {  // Add score > 0 check
       const { currentBlock, currentLevel } = getCurrentLevelInfo(score);
-      
-      setIsGameOver(true);
-      
-      // Show congratulations modal
-      setShowLevelComplete({
-        show: true,
-        level: `${currentBlock}-${currentLevel}`,
-        score,
-        targetScore,
-        nextLevel: `${currentBlock}-${currentLevel + 1}`,
-        bonusPoints: Math.floor((score - targetScore) / 100) // Bonus points for exceeding target
-      });
-      
-      // Update player progress
-      const progress = getPlayerProgress();
-      progress.points = Math.max(progress.points || 0, score);
-      localStorage.setItem(PROGRESSION_KEY, JSON.stringify(progress));
-      
-      onGameOver();
+      const nextLevel = getNextLevelInfo(currentBlock, currentLevel, LEVEL_BLOCKS);
+
+      // Check if we've reached the target for the next level
+      if (nextLevel && score >= nextLevel.pointsRequired) {
+        // Prevent multiple triggers
+        setIsGameOver(true);
+        
+        // Show congratulations modal with next level unlock info
+        setShowLevelComplete({
+          show: true,
+          level: `${currentBlock}-${currentLevel}`,
+          score,
+          targetScore: nextLevel.pointsRequired,
+          nextLevel: `${nextLevel.block}-${nextLevel.level}`,
+          bonusPoints: Math.floor((score - nextLevel.pointsRequired) / 100),
+          isNextLevelUnlock: true
+        });
+        
+        // Update player progress to unlock the next level
+        const progress = getPlayerProgress();
+        progress.points = Math.max(progress.points || 0, score);
+        progress.unlockedLevels = progress.unlockedLevels || {};
+        
+        // Unlock the next level
+        const nextLevelKey = `${nextLevel.block}-${nextLevel.level}`;
+        progress.unlockedLevels[nextLevelKey] = true;
+        
+        // Save the updated progress
+        localStorage.setItem(PROGRESSION_KEY, JSON.stringify(progress));
+        
+        // Call onGameOver last
+        onGameOver();
+      }
     }
-  }, [isLevelMode, targetScore, score, isGameOver, onGameOver]);
+  }, [isLevelMode, score, isGameOver, onGameOver]); // Keep these dependencies
 
   return (
     <div
@@ -2859,14 +2879,20 @@ const Game: React.FC<GameProps> = ({
       {showLevelComplete && (
         <div className="level-complete-overlay">
           <div className="level-complete-modal">
-            <h2>Level {showLevelComplete.level} Complete! 🎉</h2>
+            <h2>
+              {showLevelComplete.isNextLevelUnlock 
+                ? '🎉 Next Level Unlocked! 🎉'
+                : `Level ${showLevelComplete.level} Complete! 🎉`}
+            </h2>
             <div className="level-stats">
               <div className="stat">
                 <span>Your Score</span>
                 <span className="value">{showLevelComplete.score.toLocaleString()}</span>
               </div>
               <div className="stat">
-                <span>Target Score</span>
+                <span>
+                  {showLevelComplete.isNextLevelUnlock ? 'Unlock Requirement' : 'Target Score'}
+                </span>
                 <span className="value">{showLevelComplete.targetScore.toLocaleString()}</span>
               </div>
               {showLevelComplete.bonusPoints > 0 && (
@@ -2877,7 +2903,9 @@ const Game: React.FC<GameProps> = ({
               )}
             </div>
             <div className="next-level">
-              Next Level: {showLevelComplete.nextLevel}
+              {showLevelComplete.isNextLevelUnlock 
+                ? `Unlocked: Level ${showLevelComplete.nextLevel}!`
+                : `Next Level: ${showLevelComplete.nextLevel}`}
             </div>
             <div className="level-complete-buttons">
               <button 
@@ -2896,7 +2924,7 @@ const Game: React.FC<GameProps> = ({
                   onStartGame(false);
                 }}
               >
-                Play Next Level
+                {showLevelComplete.isNextLevelUnlock ? 'Play Unlocked Level' : 'Play Next Level'}
               </button>
             </div>
           </div>
