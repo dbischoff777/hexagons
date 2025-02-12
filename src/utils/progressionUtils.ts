@@ -94,11 +94,11 @@ export const UNLOCKABLE_REWARDS: (UnlockableReward | CompanionUnlockReward)[] = 
   {
     type: 'tile',
     id: 'rainbow_tile',
-    name: 'Rainbow Tile',
+    name: 'Joker Tile',
     description: 'A special tile that matches with any color',
     levelRequired: 3,
     unlocked: false,
-    preview: '🌈'
+    preview: '★'
   },
   {
     type: 'theme',
