@@ -1253,30 +1253,84 @@ const Game: React.FC<GameProps> = ({
             })))
           }
 
-          // After successful tile placement, save the state
+          // Inside handleClick function, where we handle successful tile placement
           if (isValidPosition && !isOccupied) {
             setPreviousState({
               placedTiles,
               nextTiles,
               score
-            })
+            });
 
-            // Calculate new total score including the current placement score
-            const newTotalScore = score + matchCount * 5;
+            // Calculate base score from matches
+            const baseMatchScore = matchCount * 5;
+            let newTotalScore = score + baseMatchScore;
 
-            // Check for achievements separately
+            // Check if grid is full and there are matches
+            const isGridFullWithMatches = matchCount > 0 && isGridFull(newPlacedTiles, cols);
+            
+            if (isGridFullWithMatches) {
+              // Calculate clear bonus
+              const matchingTiles = newPlacedTiles.filter(tile => 
+                hasMatchingEdges(tile, newPlacedTiles, settings.isColorBlind)
+              );
+              const totalMatchScore = matchingTiles.reduce((sum, tile) => sum + tile.value, 0);
+              const multiplier = matchingTiles.length;
+              const clearBonus = calculateScore(totalMatchScore * multiplier * 2);
+              
+              // Add clear bonus to total score
+              newTotalScore += clearBonus;
+
+              // Show clear bonus popup
+              const clearInfo = getFeedbackForClear(clearBonus);
+              addScorePopup({
+                score: clearBonus,
+                x: canvasRef.current?.width ?? 0 / 2,
+                y: canvasRef.current?.height ?? 0 / 2 - 50,
+                emoji: clearInfo?.emoji ?? '✨',
+                text: clearInfo?.text ?? 'Clear!',
+                type: 'clear'
+              });
+            }
+
+            // Check for achievements
             checkAchievements({
               tilesPlaced: 1,
               comboCount: combo.count,
               score: newTotalScore,
-              clearBonus: matchCount > 0 && isGridFull(newPlacedTiles, cols)
+              clearBonus: isGridFullWithMatches
             });
 
-            // Update the score
+            // Update the score with the total including clear bonus
             setScore(newTotalScore);
 
-            // Add this line to update daily challenge objectives
-            updateObjectives(matchingTiles.length, combo.count);
+            // Update daily challenge objectives
+            if (isDailyChallenge) {
+              updateObjectives(matchCount, combo.count, newTotalScore);
+            }
+
+            // Check for level completion with the new total score
+            if (isLevelMode && targetScore && newTotalScore >= targetScore && !isGameOver) {
+              const { currentBlock, currentLevel } = getCurrentLevelInfo(newTotalScore);
+              
+              setIsGameOver(true);
+              
+              // Show congratulations modal
+              setShowLevelComplete({
+                show: true,
+                level: `${currentBlock}-${currentLevel}`,
+                score: newTotalScore,
+                targetScore,
+                nextLevel: `${currentBlock}-${currentLevel + 1}`,
+                bonusPoints: Math.floor((newTotalScore - targetScore) / 100)
+              });
+              
+              // Update player progress
+              const progress = getPlayerProgress();
+              progress.points = Math.max(progress.points || 0, newTotalScore);
+              localStorage.setItem(PROGRESSION_KEY, JSON.stringify(progress));
+              
+              onGameOver();
+            }
           }
 
           // Inside handleClick where matches are handled
