@@ -12,7 +12,7 @@ import LevelRoadmap from './LevelRoadmap'
 
 
 interface StartPageProps {
-  onStartGame: (withTimer: boolean, isDailyChallenge?: boolean) => void
+  onStartGame: (withTimer: boolean, targetScore?: number) => void
   onMusicToggle: (enabled: boolean) => void
   onSoundToggle: (enabled: boolean) => void
   musicEnabled: boolean
@@ -37,19 +37,19 @@ const StartPage: React.FC<StartPageProps> = ({ onStartGame, onMusicToggle, onSou
     setHasSavedGame(!!savedGame)
   }, [])
 
-  const handleNewGame = (timedMode: boolean, isDailyChallenge?: boolean) => {
+  const handleNewGame = (timedMode: boolean) => {
     if (hasSavedGame) {
       setShowConfirmModal(true)
       setPendingGameMode(timedMode)
     } else {
-      onStartGame(timedMode, isDailyChallenge)
+      onStartGame(timedMode, undefined)
     }
   }
 
   const handleContinueGame = () => {
     const savedGame = loadGameState()
     if (savedGame) {
-      onStartGame(savedGame.timedMode)
+      onStartGame(savedGame.timedMode, undefined)
     }
   }
 
@@ -68,7 +68,10 @@ const StartPage: React.FC<StartPageProps> = ({ onStartGame, onMusicToggle, onSou
           tutorial={true}
           onExit={() => setShowTutorial(false)}
           onSkipTutorial={() => setShowTutorial(false)}
-          onStartGame={onStartGame}
+          onStartGame={(withTimer) => onStartGame(withTimer, undefined)}
+          isLevelMode={false}
+          onLevelComplete={() => {}}
+          showLevelComplete={false}
         />
       </div>
     )
@@ -179,7 +182,7 @@ const StartPage: React.FC<StartPageProps> = ({ onStartGame, onMusicToggle, onSou
 
               <button 
                 className="mode-button daily" 
-                onClick={() => handleNewGame(false, true)}
+                onClick={() => handleNewGame(false)}
               >
                 <span className="mode-title">DAILY CHALLENGE</span>
                 <span className="mode-desc">New puzzles every day!</span>
