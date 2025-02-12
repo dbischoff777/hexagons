@@ -2858,6 +2858,8 @@ const Game: React.FC<GameProps> = ({
             width: 90%;
             text-align: center;
             box-shadow: 0 0 30px rgba(0, 255, 159, 0.3);
+            position: relative;
+            padding-bottom: 80px; // Add padding at bottom for button
           }
 
           .level-complete-modal h2 {
@@ -2900,10 +2902,36 @@ const Game: React.FC<GameProps> = ({
           }
 
           .level-complete-buttons {
+            position: absolute;
+            bottom: 20px;
+            left: 0;
+            right: 0;
             display: flex;
-            gap: 15px;
             justify-content: center;
-            margin-top: 20px;
+            gap: 15px;
+          }
+
+          .back-to-menu-button {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(45deg, #1a1a2e, #2a2a40);
+            border: 2px solid rgba(0, 255, 159, 0.3);
+            border-radius: 4px;
+            color: #00ff9f;
+            padding: 8px 24px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+          }
+
+          .back-to-menu-button:hover {
+            transform: translateX(-50%) translateY(-2px);
+            box-shadow: 0 0 20px rgba(0, 255, 159, 0.5);
           }
 
           .cyberpunk-button.primary {
@@ -2945,22 +2973,22 @@ const Game: React.FC<GameProps> = ({
                 </div>
               )}
             </div>
-            <div className="level-complete-buttons">
-              <button 
-                className="cyberpunk-button"
-                onClick={handleLevelCompleteExit}
-              >
-                Back to Menu
-              </button>
-              {showLevelComplete.isNextLevelUnlock && (
+            {showLevelComplete.isNextLevelUnlock && (
+              <div className="level-complete-buttons">
                 <button 
                   className="cyberpunk-button primary"
                   onClick={handleLevelCompleteNext}
                 >
                   Play Next Level
                 </button>
-              )}
-            </div>
+              </div>
+            )}
+            <button 
+              className="back-to-menu-button"
+              onClick={handleLevelCompleteExit}
+            >
+              Back to Menu
+            </button>
           </div>
         </div>
       )}
