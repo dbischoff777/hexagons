@@ -7,7 +7,7 @@ import { AccessibilityProvider } from './contexts/AccessibilityContext'
 import { GameState } from './types'
 import { loadGameState } from './utils/gameStateUtils'
 import PageTransition from './components/PageTransition'
-import { getCurrentLevelInfo, getPlayerProgress } from './utils/progressionUtils'
+import { getCurrentLevelInfo, getPlayerProgress, getNextLevelInfo, LEVEL_BLOCKS } from './utils/progressionUtils'
 
 interface CurrentGame {
   isLevelMode: boolean;
@@ -54,31 +54,23 @@ function App() {
     soundManager.setSoundEnabled(soundEnabled)
   }, [soundEnabled])
 
-  const handleStartGame = (withTimer: boolean, targetScore?: number, isLevelMode: boolean = false) => {
-    // Debug logging
-    console.log('Starting game in App:', {
-      withTimer,
-      targetScore,
-      isLevelMode,
-      source: 'handleStartGame'
-    });
-
+  const handleStartGame = (withTimer: boolean, targetScore?: number) => {
     // Get current level info based on player progress
     const progress = getPlayerProgress();
     const { currentBlock, currentLevel } = getCurrentLevelInfo(progress.points);
     
-    // Create new game state with explicit values
-    const newGameState: CurrentGame = {
+    // Get next level's target score if not provided
+    const nextLevel = getNextLevelInfo(currentBlock, currentLevel, LEVEL_BLOCKS);
+    const effectiveTargetScore = targetScore ?? nextLevel?.pointsRequired ?? 10000;
+    
+    // Set current game state
+    setCurrentGame({
       isLevelMode: true,
-      targetScore: targetScore ?? 10000,
-      currentBlock: currentBlock,
-      currentLevel: currentLevel
-    };
+      targetScore: effectiveTargetScore,
+      currentBlock,
+      currentLevel
+    });
     
-    console.log('Setting new game state:', newGameState);
-    
-    // Set states in the correct order
-    setCurrentGame(newGameState);
     setGameStarted(true);
     setTimedMode(withTimer);
     setIsDailyChallenge(false);
@@ -97,6 +89,7 @@ function App() {
       currentBlock: undefined,
       currentLevel: undefined
     });
+    setSavedGameState(null);
   };
 
   const handleExitGame = () => {

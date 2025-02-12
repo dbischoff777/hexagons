@@ -25,8 +25,9 @@ import {
   getCurrentLevelInfo, 
   getPlayerProgress, 
   getTheme,
+  LEVEL_BLOCKS,
   PROGRESSION_KEY,
-  checkLevelUnlock
+  getNextLevelInfo
 } from '../utils/progressionUtils'
 import LevelProgress from './LevelProgress'
 import LevelRoadmap from './LevelRoadmap'
@@ -39,7 +40,16 @@ import type { CompanionId } from '../types/companion'
 import UpgradeModal from './UpgradeModal'
 import { getInitialUpgradeState, purchaseUpgrade, getUpgradeEffect, saveUpgradeState } from '../utils/upgradeUtils'
 import { UpgradeState } from '../types/upgrades'
-import { unlockNextLevel, LevelCompletion, getNextLevelTargetScore } from '../utils/levelUtils'
+import { unlockNextLevel, LevelCompletion } from '../utils/levelUtils'
+
+// Replace the DEBUG object at the top
+const DEBUG = {
+  log: (message: string, data: any) => {
+    if (import.meta.env.DEV) {  // Use Vite's env variable instead of process
+      console.log(`[Game] ${message}:`, data);
+    }
+  }
+};
 
 interface GameProps {
   musicEnabled: boolean
@@ -357,44 +367,70 @@ const Game: React.FC<GameProps> = ({
 
   // Add a state to track initialization
   const [isInitialized, setIsInitialized] = useState(false);
+  
+  const awardUpgradePoints = useCallback((points: number) => {
+    setUpgradeState(prev => ({
+      ...prev,
+      points: prev.points + points
+    }));
+  }, []);
 
-  // Add initialization effect
+  const updateParticleEffect = useCallback((intensity: number, duration: number = 2000) => {
+    setParticleIntensity(intensity);
+    if (duration > 0) {
+      setTimeout(() => setParticleIntensity(0.3), duration);
+    }
+  }, []);
+
+  const playGameSound = useCallback((soundType: string) => {
+    if (soundEnabled) {
+      soundManager.playSound(soundType);
+    }
+  }, [soundEnabled]);
+
+  const handleGameAchievement = useCallback((_type: 'level' | 'daily' | 'achievement', points: number) => {
+    awardUpgradePoints(points);
+    playGameSound('achievement');
+    updateParticleEffect(1);
+  }, [playGameSound, updateParticleEffect, awardUpgradePoints]);
+
+  // Update the initialization effect
   useEffect(() => {
     if (!isInitialized && isLevelMode) {
       // Get current level info based on score
       const { currentBlock, currentLevel } = getCurrentLevelInfo(score);
       
-      // Get target score for next level if not provided
-      const effectiveTargetScore = targetScore || getNextLevelTargetScore(currentBlock, currentLevel);
+      // Get next level info using the utility function
+      const nextLevel = getNextLevelInfo(currentBlock, currentLevel, LEVEL_BLOCKS);
+      const effectiveTargetScore = nextLevel?.pointsRequired ?? 10000;
       
-      console.log('Game initializing with level mode:', {
+      DEBUG.log('Game initializing with level mode:', {
         isLevelMode,
         targetScore: effectiveTargetScore,
         currentBlock,
         currentLevel,
+        nextLevel,
         source: 'Game initialization'
       });
       
-      // Update target score if not provided
-      if (!targetScore && effectiveTargetScore) {
-        onStartGame(true, effectiveTargetScore);
-      }
-      
+      // Always update target score in level mode
+      onStartGame(true, effectiveTargetScore);
       setIsInitialized(true);
     }
-  }, [isLevelMode, targetScore, currentBlock, currentLevel, isInitialized, score, onStartGame]);
+  }, [isLevelMode, isInitialized, score, onStartGame]);
 
-  // Add debug logging at the start of the component
+  // Remove the separate debug logging effects and replace with single effect
   useEffect(() => {
-    console.log('Game mounted/updated with props:', {
+    DEBUG.log('Game state updated', {
       isLevelMode,
       targetScore,
       currentBlock,
       currentLevel,
       isDailyChallenge,
-      source: 'Game component mount'
+      score,
+      isGameOver
     });
-  }, [isLevelMode, targetScore, currentBlock, currentLevel, isDailyChallenge]);
+  }, [isLevelMode, targetScore, currentBlock, currentLevel, isDailyChallenge, score, isGameOver]);
 
   // Add this effect to log prop changes
   useEffect(() => {
@@ -406,65 +442,6 @@ const Game: React.FC<GameProps> = ({
       source: 'Game props change'
     });
   }, [isLevelMode, targetScore, currentBlock, currentLevel]);
-
-  // Update the level unlock check effect
-  useEffect(() => {
-    // Debug logging
-    console.log('Level unlock check:', {
-      isLevelMode,
-      score,
-      targetScore,
-      isGameOver,
-      currentBlock,
-      currentLevel,
-      isInitialized,
-      source: 'Level unlock check'
-    });
-
-    if (!isLevelMode) {
-      console.warn('Level mode is false when it should be true!', {
-        isLevelMode,
-        targetScore,
-        currentBlock,
-        currentLevel
-      });
-      return;
-    }
-
-    if (isLevelMode && !isGameOver && score > 0) {
-      const { currentBlock, currentLevel } = getCurrentLevelInfo(score);
-      const effectiveTargetScore = targetScore || getNextLevelTargetScore(currentBlock, currentLevel);
-      
-      // Check for level unlock with effective target score
-      if (effectiveTargetScore) {
-        const unlockInfo = checkLevelUnlock(score, currentBlock, currentLevel);
-        if (unlockInfo) {
-          // Show unlock notification without ending the game
-          setShowLevelComplete({
-            ...unlockInfo,
-            targetScore: effectiveTargetScore
-          });
-          
-          // Play celebration sound
-          if (soundEnabled) {
-            soundManager.playSound('achievement');
-          }
-
-          // Add some visual feedback
-          setParticleIntensity(1);
-          setTimeout(() => {
-            setParticleIntensity(0.3);
-          }, 2000);
-
-          // Debug logging
-          console.log('Level unlocked:', {
-            ...unlockInfo,
-            effectiveTargetScore
-          });
-        }
-      }
-    }
-  }, [isLevelMode, score, isGameOver, soundEnabled, targetScore, currentBlock, currentLevel, isInitialized]);
 
   // Add this effect to update previousScore when score changes
   useEffect(() => {
@@ -2253,18 +2230,6 @@ const Game: React.FC<GameProps> = ({
     }
   }, [isGameOver, score]);
 
-  // Modify the awardUpgradePoints function to remove unused reason parameter
-  const awardUpgradePoints = useCallback((amount: number) => {
-    setUpgradeState(prev => {
-      const newState = {
-        ...prev,
-        points: prev.points + amount
-      };
-      saveUpgradeState(newState);
-      return newState;
-    });
-  }, []);
-
   // Modify the match handling code to award points for multiple matches
   const handleMatches = (matchCount: number) => {
     if (matchCount >= UPGRADE_POINT_REWARDS.match.threshold) {
@@ -2289,67 +2254,59 @@ const Game: React.FC<GameProps> = ({
     }
   }, [combo.count]);
 
-  // Modify handleGridClear to use the helper function
+  // Consolidate grid clear functionality into a single function
   const handleGridClear = useCallback(() => {
-    // Calculate base points for grid clear
+    // Calculate points
     const basePoints = 1000;
     const multiplier = powerUps.multiplier.active ? powerUps.multiplier.value : 1;
     const clearPoints = basePoints * multiplier;
     
     // Update score
-    setScore(prevScore => {
-      const newScore = prevScore + clearPoints;
-      console.log('Grid clear score update:', {
-        prevScore,
-        clearPoints,
-        newScore,
-        multiplier
-      });
-      return newScore;
-    });
+    setScore(prevScore => prevScore + clearPoints);
 
-    // Update statistics
-    updateGridClears(1); // Pass count of 1 for single grid clear
+    // Update statistics and award points
+    updateGridClears(1);
+    awardUpgradePoints(UPGRADE_POINT_REWARDS.clear.points);
 
     // Visual and audio feedback
-    if (soundEnabled) {
-      soundManager.playSound('gridClear');
-    }
-    setParticleIntensity(1);
-    setTimeout(() => setParticleIntensity(0.3), 2000);
+    playGameSound('gridClear');
+    updateParticleEffect(1);
 
-    // Show feedback using existing score popup system
+    // Show feedback popup
+    const clearScore = clearPoints;
+    const feedback = getFeedbackForClear(clearScore);
     addScorePopup({
       score: clearPoints,
       x: canvasRef.current?.width ?? 0 / 2,
       y: canvasRef.current?.height ?? 0 / 2 - 50,
-      emoji: '🎪✨',
-      text: 'CLEAR!',
+      emoji: feedback.emoji,
+      text: feedback.text,
       type: 'clear'
     });
-  }, [powerUps.multiplier, soundEnabled, canvasRef]);
+
+  }, [powerUps.multiplier, playGameSound, updateParticleEffect, canvasRef]);
 
   // Modify the achievement handling code
   useEffect(() => {
     if (newAchievements.length > 0) {
-      awardUpgradePoints(UPGRADE_POINT_REWARDS.achievement.points);
+      handleGameAchievement('achievement', UPGRADE_POINT_REWARDS.achievement.points);
     }
-  }, [newAchievements]);
+  }, [newAchievements, handleGameAchievement]);
 
   // Modify the level up handling code
   useEffect(() => {
     const oldLevel = playerProgress.level;
     if (playerProgress.level > oldLevel) {
-      awardUpgradePoints(UPGRADE_POINT_REWARDS.levelUp.points);
+      handleGameAchievement('level', UPGRADE_POINT_REWARDS.levelUp.points);
     }
-  }, [playerProgress.level]);
+  }, [playerProgress.level, handleGameAchievement]);
 
   // Modify the daily challenge completion code
   useEffect(() => {
     if (isDailyChallenge && showDailyComplete) {
-      awardUpgradePoints(UPGRADE_POINT_REWARDS.dailyChallenge.points);
+      handleGameAchievement('daily', UPGRADE_POINT_REWARDS.dailyChallenge.points);
     }
-  }, [isDailyChallenge, showDailyComplete]);
+  }, [isDailyChallenge, showDailyComplete, handleGameAchievement]);
 
   // 2. Modify the upgrade button to show when upgrades are available
   const canUpgrade = useCallback(() => {
@@ -2359,43 +2316,56 @@ const Game: React.FC<GameProps> = ({
     );
   }, [upgradeState]);
 
-  // Add effect to check for level completion
-  useEffect(() => {
-    // Debug logging
-    console.log('Level completion check:', {
-      isLevelMode,
-      score,
-      isGameOver,
-      targetScore,
-      currentLevelInfo: getCurrentLevelInfo(score)
-    });
+  const checkLevelCompletion = useCallback(() => {
+    if (!isLevelMode || isGameOver || !score) return;
 
-    if (isLevelMode && !isGameOver && score > 0) {
-      const { currentBlock, currentLevel } = getCurrentLevelInfo(score);
-      const effectiveTargetScore = targetScore || getNextLevelTargetScore(currentBlock, currentLevel);
+    const { currentBlock, currentLevel } = getCurrentLevelInfo(score);
+    const nextLevel = getNextLevelInfo(currentBlock, currentLevel, LEVEL_BLOCKS);
+    const effectiveTargetScore = nextLevel?.pointsRequired ?? 10000;
+    
+    if (score >= effectiveTargetScore) {
+      // Unlock the next level in progression system
+      const completion = unlockNextLevel(score, currentBlock, currentLevel);
       
-      // Check for level completion with effective target score
-      if (effectiveTargetScore && score >= effectiveTargetScore) {
-        const completion = unlockNextLevel(score, currentBlock, currentLevel);
-        if (completion) {
-          // Show level complete modal and prevent further gameplay
-          setShowLevelComplete(completion);
-          setIsGameOver(true); // Use isGameOver to prevent further tile placement
-        }
-      }
+      // Calculate bonus points based on how much we exceeded the target
+      const bonusPoints = Math.floor((score - effectiveTargetScore) / 100);
+      
+      // Show level complete modal
+      setShowLevelComplete({
+        show: true,
+        level: `${currentBlock}-${currentLevel}`,
+        score: score,
+        targetScore: effectiveTargetScore,
+        nextLevel: completion?.nextLevel || `${currentBlock}-${currentLevel + 1}`,
+        bonusPoints: bonusPoints,
+        isNextLevelUnlock: completion?.isNextLevelUnlock || false,
+        message: 'Level Complete!'
+      });
+      
+      // End the game and trigger achievement
+      setIsGameOver(true);
+      handleGameAchievement('level', UPGRADE_POINT_REWARDS.levelUp.points);
     }
-  }, [isLevelMode, score, isGameOver, targetScore]);
+  }, [isLevelMode, isGameOver, score, handleGameAchievement]);
 
-  // Add this effect to log prop changes
+  // Use this function in place of the duplicate level completion checks
   useEffect(() => {
-    console.log('Game props changed:', {
-      isLevelMode,
-      targetScore,
-      currentBlock,
-      currentLevel,
-      source: 'Game props change'
-    });
-  }, [isLevelMode, targetScore, currentBlock, currentLevel]);
+    checkLevelCompletion();
+  }, [checkLevelCompletion]);
+
+  // Add this effect to check for grid full condition
+  useEffect(() => {
+    if (isGridFull(placedTiles, cols) && !isGameOver && !tutorialState.active) {
+      // Clear the grid
+      handleGridClear();
+      
+      // Reset the grid
+      setPlacedTiles([{
+        ...createTileWithRandomEdges(0, 0),
+        isPlaced: true
+      }]);
+    }
+  }, [placedTiles, cols, isGameOver, tutorialState.active, handleGridClear]);
 
   return (
     <div

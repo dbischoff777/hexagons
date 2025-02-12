@@ -79,12 +79,6 @@ const LevelRoadmap: React.FC<LevelRoadmapProps> = ({ currentPoints, onStartGame 
             const isCurrentLevel = block.blockNumber === currentBlock && levelInfo.level === currentLevel;
             const isCompleted = block.blockNumber === 1 && levelInfo.level === 1 ? true : 
               currentPoints >= levelInfo.pointsRequired;
-            //console.log('Level info:', {
-              //level: `${block.blockNumber}-${levelInfo.level}`,
-              //required: levelInfo.pointsRequired,
-              //current: currentPoints,
-              //isCompleted
-            //});
             const progress = isCurrentLevel ? 
               (pointsInCurrentLevel / (pointsForNextLevel - (block.levels[currentLevel - 2]?.pointsRequired || 0))) * 100 : 
               0;
