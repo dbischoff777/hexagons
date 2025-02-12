@@ -230,6 +230,7 @@ const Game: React.FC<GameProps> = ({
     const powerUpChance = getUpgradeEffect(upgradeState, 'powerUpChance');
     const mirrorChance = getUpgradeEffect(upgradeState, 'mirrorTileChance');
     
+    // First check for mirror tile
     if (Math.random() < mirrorChance) {
       return {
         ...createTileWithRandomEdges(0, 0),
@@ -238,7 +239,10 @@ const Game: React.FC<GameProps> = ({
       };
     }
     
-    if (Math.random() < powerUpChance) {
+    // If not a mirror tile, then check for power-up
+    // Adjust power-up chance to not compete with mirror tiles
+    const adjustedPowerUpChance = powerUpChance * (1 - mirrorChance);
+    if (Math.random() < adjustedPowerUpChance) {
       const powerUpTypes = ['freeze', 'colorShift', 'multiplier'] as const;
       const randomPowerUp = powerUpTypes[Math.floor(Math.random() * powerUpTypes.length)];
       
@@ -255,6 +259,7 @@ const Game: React.FC<GameProps> = ({
       };
     }
     
+    // If neither mirror nor power-up, create normal tile
     return {
       ...createTileWithRandomEdges(0, 0),
       isPlaced: false,
