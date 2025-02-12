@@ -38,6 +38,7 @@ import UpgradeModal from './UpgradeModal'
 import { getInitialUpgradeState, purchaseUpgrade, getUpgradeEffect, saveUpgradeState } from '../utils/upgradeUtils'
 import { UpgradeState } from '../types/upgrades'
 import { unlockNextLevel, LevelCompletion } from '../utils/levelUtils'
+import './LevelCompleteModal.css'
 
 // Replace the DEBUG object at the top
 const DEBUG = {
