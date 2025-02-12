@@ -2342,8 +2342,7 @@ const Game: React.FC<GameProps> = ({
         message: 'Level Complete!'
       });
       
-      // End the game and trigger achievement
-      setIsGameOver(true);
+      // Don't end the game immediately, wait for user confirmation
       handleGameAchievement('level', UPGRADE_POINT_REWARDS.levelUp.points);
     }
   }, [isLevelMode, isGameOver, score, handleGameAchievement]);
@@ -2366,6 +2365,22 @@ const Game: React.FC<GameProps> = ({
       }]);
     }
   }, [placedTiles, cols, isGameOver, tutorialState.active, handleGridClear]);
+
+  // Add these handlers before the return statement
+  const handleLevelCompleteNext = useCallback(() => {
+    // Start next level
+    const { currentBlock, currentLevel } = getCurrentLevelInfo(score);
+    const nextLevel = getNextLevelInfo(currentBlock, currentLevel, LEVEL_BLOCKS);
+    if (nextLevel) {
+      onStartGame(false, nextLevel.pointsRequired);
+    }
+    setShowLevelComplete(null);
+  }, [score, onStartGame]);
+
+  const handleLevelCompleteExit = useCallback(() => {
+    setShowLevelComplete(null);
+    onExit();
+  }, [onExit]);
 
   return (
     <div
@@ -2927,7 +2942,7 @@ const Game: React.FC<GameProps> = ({
               </div>
               <div className="stat">
                 <span>Target Score</span>
-                <span className="value">{targetScore?.toLocaleString() || showLevelComplete.targetScore.toLocaleString()}</span>
+                <span className="value">{showLevelComplete.targetScore.toLocaleString()}</span>
               </div>
               {showLevelComplete.bonusPoints > 0 && (
                 <div className="stat bonus">
@@ -2936,26 +2951,17 @@ const Game: React.FC<GameProps> = ({
                 </div>
               )}
             </div>
-            <div className="next-level">
-              {showLevelComplete.isNextLevelUnlock 
-                ? `You've unlocked Level ${showLevelComplete.nextLevel}!`
-                : `Keep playing to unlock Level ${showLevelComplete.nextLevel}!`}
-            </div>
             <div className="level-complete-buttons">
               <button 
                 className="cyberpunk-button"
-                onClick={() => {
-                  onExit();
-                }}
+                onClick={handleLevelCompleteExit}
               >
                 Back to Roadmap
               </button>
               {showLevelComplete.isNextLevelUnlock && (
                 <button 
                   className="cyberpunk-button primary"
-                  onClick={() => {
-                    onStartGame(false); // Don't start with timer in level mode
-                  }}
+                  onClick={handleLevelCompleteNext}
                 >
                   Play Next Level
                 </button>

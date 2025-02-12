@@ -93,9 +93,13 @@ function App() {
   };
 
   const handleExitGame = () => {
+    // Don't allow exit if level complete modal is showing
+    if (currentGame?.isLevelMode) {
+      return;
+    }
+    
     setIsExiting(true);
     setNextGameState({ started: false, timed: false });
-    // Reset game-related states
     setCurrentGame(null);
     setIsDailyChallenge(false);
     setSavedGameState(null);
