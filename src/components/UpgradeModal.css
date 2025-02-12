@@ -237,13 +237,32 @@
   75% { transform: translateX(2px); }
 }
 
+/* Update the upgrade button positioning */
+.cyberpunk-button {
+  position: absolute;
+  left: 20px; /* Match the left margin of other HUD elements */
+  top: 420px; /* Position below the companion abilities */
+  z-index: 100;
+  min-width: 200px; /* Ensure consistent width */
+  justify-content: center;
+  padding: 10px 20px;
+  margin: 0; /* Remove any default margins */
+}
+
+/* Update the can-upgrade animation to work with absolute positioning */
 .cyberpunk-button.can-upgrade:not(:hover) {
   animation: 
     pulseGlow 2s infinite,
-    upgradeAvailable 0.5s ease-in-out;
+    upgradeAvailableAbs 0.5s ease-in-out;
 }
 
+@keyframes upgradeAvailableAbs {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-2px); }
+  75% { transform: translateX(2px); }
+}
+
+/* Update hover effect to work with absolute positioning */
 .cyberpunk-button.can-upgrade:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 15px rgba(0, 255, 159, 0.4);
+  transform: translateY(-2px) translateX(0);
 } 
