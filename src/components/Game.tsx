@@ -66,6 +66,8 @@ interface GameProps {
   targetScore?: number
   currentBlock?: number
   currentLevel?: number
+  onLevelComplete: (isComplete: boolean) => void;
+  showLevelComplete: boolean;
 }
 
 const rotateTileEdges = (edges: { color: string }[]) => {
@@ -218,7 +220,9 @@ const Game: React.FC<GameProps> = ({
   isLevelMode,
   targetScore,
   currentBlock,
-  currentLevel
+  currentLevel,
+  onLevelComplete,
+  showLevelComplete: isLevelComplete
 }: GameProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const cols = 7
@@ -1778,15 +1782,39 @@ const Game: React.FC<GameProps> = ({
     }
   }
 
-  // Modify the exit handler
-  const handleExit = () => {
+  // Modify the exit handler to handle both normal exits and level complete exits
+  const handleExit = useCallback(() => {
+    if (isLevelComplete) {
+      // Direct exit if level is complete
+      clearSavedGame();
+      onLevelComplete(false);
+      onExit();
+      return;
+    }
+
+    // Show confirmation dialog for normal exits
     const confirmMessage = tutorialState.active
       ? "Are you sure you want to exit the tutorial? Your progress won't be saved."
       : "Are you sure you want to exit? Your progress will be lost.";
     
     setShowExitConfirm(true);
     setConfirmMessage(confirmMessage);
-  }
+  }, [isLevelComplete, tutorialState.active, onExit, onLevelComplete]);
+
+  const handleLevelCompleteExit = useCallback(() => {
+    DEBUG.log('handleLevelCompleteExit called', {
+      showLevelComplete: showLevelComplete,
+      isLevelComplete: isLevelComplete
+    });
+    
+    // Set level complete and immediately exit
+    onLevelComplete(true);
+    onExit();
+    
+    // Clean up after exit is initiated
+    clearSavedGame();
+    setShowLevelComplete(null);
+  }, [onExit, onLevelComplete]);
 
   // Keep this effect for handling achievement popups
   useEffect(() => {
@@ -2323,7 +2351,7 @@ const Game: React.FC<GameProps> = ({
     const nextLevel = getNextLevelInfo(currentBlock, currentLevel, LEVEL_BLOCKS);
     const effectiveTargetScore = nextLevel?.pointsRequired ?? 10000;
     
-    if (score >= effectiveTargetScore) {
+    if (score >= effectiveTargetScore && !isLevelComplete) { // Add check for isLevelComplete
       // Unlock the next level in progression system
       const completion = unlockNextLevel(score, currentBlock, currentLevel);
       
@@ -2344,8 +2372,10 @@ const Game: React.FC<GameProps> = ({
       
       // Don't end the game immediately, wait for user confirmation
       handleGameAchievement('level', UPGRADE_POINT_REWARDS.levelUp.points);
+      
+      onLevelComplete(true); // Signal level completion to parent
     }
-  }, [isLevelMode, isGameOver, score, handleGameAchievement]);
+  }, [isLevelMode, isGameOver, score, handleGameAchievement, onLevelComplete, isLevelComplete]);
 
   // Use this function in place of the duplicate level completion checks
   useEffect(() => {
@@ -2376,11 +2406,6 @@ const Game: React.FC<GameProps> = ({
     }
     setShowLevelComplete(null);
   }, [score, onStartGame]);
-
-  const handleLevelCompleteExit = useCallback(() => {
-    setShowLevelComplete(null);
-    onExit();
-  }, [onExit]);
 
   return (
     <div
@@ -2956,7 +2981,7 @@ const Game: React.FC<GameProps> = ({
                 className="cyberpunk-button"
                 onClick={handleLevelCompleteExit}
               >
-                Back to Roadmap
+                Back to Menu
               </button>
               {showLevelComplete.isNextLevelUnlock && (
                 <button 

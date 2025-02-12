@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import './App.css'
 import Game from './components/Game'
 import StartPage from './components/StartPage'
@@ -31,6 +31,8 @@ function App() {
   const [currentGame, setCurrentGame] = useState<CurrentGame | null>(null)
   const [musicEnabled, setMusicEnabled] = useState<boolean>(false)
   const [soundEnabled, setSoundEnabled] = useState<boolean>(false)
+  const [showLevelComplete, setShowLevelComplete] = useState<boolean>(false)
+  const levelCompleteRef = useRef(false)
 
   // Load saved game state on component mount
   useEffect(() => {
@@ -92,12 +94,39 @@ function App() {
     setSavedGameState(null);
   };
 
+  const handleLevelComplete = (isComplete: boolean) => {
+    console.log('handleLevelComplete called with:', isComplete);
+    levelCompleteRef.current = isComplete;
+    setShowLevelComplete(isComplete);
+  };
+
   const handleExitGame = () => {
-    // Don't allow exit if level complete modal is showing
-    if (currentGame?.isLevelMode) {
+    console.log('handleExitGame called', {
+      currentGame,
+      showLevelComplete: levelCompleteRef.current,
+      isExiting,
+      nextGameState
+    });
+
+    // Check level complete using ref
+    if (levelCompleteRef.current) {
+      console.log('Exiting from level complete');
+      setIsExiting(true);
+      setNextGameState({ started: false, timed: false });
+      setCurrentGame(null);
+      setIsDailyChallenge(false);
+      setSavedGameState(null);
+      levelCompleteRef.current = false;
       return;
     }
     
+    // Block normal exits during level mode
+    if (currentGame?.isLevelMode) {
+      console.log('Blocking exit - active level mode');
+      return;
+    }
+
+    // Handle normal exit
     setIsExiting(true);
     setNextGameState({ started: false, timed: false });
     setCurrentGame(null);
@@ -120,6 +149,7 @@ function App() {
       setGameStarted(nextGameState.started);
       setTimedMode(nextGameState.timed);
       setTutorialMode(false);
+      setShowLevelComplete(false);
       
       if (nextGameState.started) {
         const savedGame = loadGameState();
@@ -176,6 +206,8 @@ function App() {
             targetScore={currentGame?.targetScore}
             currentBlock={currentGame?.currentBlock}
             currentLevel={currentGame?.currentLevel}
+            onLevelComplete={handleLevelComplete}
+            showLevelComplete={showLevelComplete}
           />
         ) : (
           <StartPage 
