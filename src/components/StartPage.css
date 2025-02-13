@@ -22,13 +22,14 @@
 }
 
 .start-container {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2rem;
+  padding: 20px;
+  width: 100%;
   max-width: 800px;
-  width: 90%;
-  padding: 2rem;
+  margin: 0 auto;
 }
 
 .game-title {
@@ -102,9 +103,8 @@
 .game-start {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 10px;
   width: 100%;
-  max-width: 500px;
 }
 
 .play-button {
@@ -592,4 +592,14 @@
 .customizer-container {
   position: relative;
   z-index: 9;
+}
+
+.game-menu-container {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  width: 100%;
+  max-width: 400px;
+  margin: 0 auto;
 }

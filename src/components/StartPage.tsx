@@ -51,12 +51,49 @@ const StartPage: React.FC<StartPageProps> = ({ onStartGame, onMusicToggle, onSou
     PUPPY_PHRASES[Math.floor(Math.random() * PUPPY_PHRASES.length)]
   );
   const [customBulldogConfig, setCustomBulldogConfig] = useState(bulldogConfig);
+  const [bulldogPosition, setBulldogPosition] = useState<{ y: number | null }>({ y: null });
 
   useEffect(() => {
     // Check for saved game on mount
     const savedGame = loadGameState()
     setHasSavedGame(!!savedGame)
   }, [])
+
+  // Add effect to set initial position when menu loads
+  useEffect(() => {
+    const initializeBulldogPosition = () => {
+      const menuContainer = document.querySelector('.game-menu-container');
+      if (menuContainer) {
+        const rect = menuContainer.getBoundingClientRect();
+        const centerY = (rect.height - 160) / 2; // 160 is bulldog height
+        setBulldogPosition({ y: centerY });
+      }
+    };
+
+    // Set initial position
+    initializeBulldogPosition();
+
+    // Also handle window resize
+    window.addEventListener('resize', initializeBulldogPosition);
+    return () => window.removeEventListener('resize', initializeBulldogPosition);
+  }, []);
+
+  // Update the mouse tracking effect
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      const menuContainer = document.querySelector('.game-menu-container');
+      if (!menuContainer) return;
+
+      const rect = menuContainer.getBoundingClientRect();
+      const relativeY = e.clientY - rect.top;
+      const targetY = Math.max(0, Math.min(rect.height - 160, relativeY));
+      
+      setBulldogPosition({ y: targetY });
+    };
+
+    document.addEventListener('mousemove', handleMouseMove);
+    return () => document.removeEventListener('mousemove', handleMouseMove);
+  }, []);
 
   const handleNewGame = (timedMode: boolean) => {
     if (hasSavedGame) {
@@ -147,89 +184,102 @@ const StartPage: React.FC<StartPageProps> = ({ onStartGame, onMusicToggle, onSou
           </div>
         </div>
 
-        <div className="game-start">
-          {!showGameModes ? (
-            <>
-              {hasSavedGame && (
+        <div className="game-menu-container">
+          <div className="game-start">
+            {!showGameModes ? (
+              <>
+                {hasSavedGame && (
+                  <button 
+                    className="continue-button"
+                    onClick={handleContinueGame}
+                  >
+                    Continue Game
+                  </button>
+                )}
                 <button 
-                  className="continue-button"
-                  onClick={handleContinueGame}
+                  className="play-button" 
+                  onClick={() => setShowGameModes(true)}
                 >
-                  Continue Game
+                  PLAY
                 </button>
-              )}
-              <button 
-                className="play-button" 
-                onClick={() => setShowGameModes(true)}
-              >
-                PLAY
-              </button>
-              <button 
-                className="tutorial-button"
-                onClick={() => setShowTutorial(true)}
-              >
-                Play Tutorial
-              </button>
-              <button 
-                className="stats-button"
-                onClick={() => setShowStatistics(true)}
-              >
-                Statistics
-              </button>
-              <button 
-                className="achievements-button"
-                onClick={() => setShowAchievements(true)}
-              >
-                Achievements
-              </button>
-              <button 
-                className="unlockables-button"
-                onClick={() => setShowUnlockables(true)}
-              >
-                Unlockables
-              </button>
-            </>
-          ) : (
-            <div className="mode-selection">
-              <button 
-                className="mode-button timed" 
-                onClick={() => handleNewGame(true)}
-              >
-                <span className="mode-title">TIMED MODE</span>
-                <span className="mode-desc">Race against the clock</span>
-              </button>
-              
-              <button 
-                className="mode-button zen" 
-                onClick={() => handleNewGame(false)}
-              >
-                <span className="mode-title">ZEN MODE</span>
-                <span className="mode-desc">Play at your own pace</span>
-              </button>
+                <button 
+                  className="tutorial-button"
+                  onClick={() => setShowTutorial(true)}
+                >
+                  Play Tutorial
+                </button>
+                <button 
+                  className="stats-button"
+                  onClick={() => setShowStatistics(true)}
+                >
+                  Statistics
+                </button>
+                <button 
+                  className="achievements-button"
+                  onClick={() => setShowAchievements(true)}
+                >
+                  Achievements
+                </button>
+                <button 
+                  className="unlockables-button"
+                  onClick={() => setShowUnlockables(true)}
+                >
+                  Unlockables
+                </button>
+              </>
+            ) : (
+              <div className="mode-selection">
+                <button 
+                  className="mode-button timed" 
+                  onClick={() => handleNewGame(true)}
+                >
+                  <span className="mode-title">TIMED MODE</span>
+                  <span className="mode-desc">Race against the clock</span>
+                </button>
+                
+                <button 
+                  className="mode-button zen" 
+                  onClick={() => handleNewGame(false)}
+                >
+                  <span className="mode-title">ZEN MODE</span>
+                  <span className="mode-desc">Play at your own pace</span>
+                </button>
 
-              <button 
-                className="mode-button roadmap" 
-                onClick={() => setShowLevelRoadmap(true)}
-              >
-                <span className="mode-title">LEVEL ROADMAP</span>
-                <span className="mode-desc">Progress through levels</span>
-              </button>
+                <button 
+                  className="mode-button roadmap" 
+                  onClick={() => setShowLevelRoadmap(true)}
+                >
+                  <span className="mode-title">LEVEL ROADMAP</span>
+                  <span className="mode-desc">Progress through levels</span>
+                </button>
 
-              <button 
-                className="mode-button daily" 
-                onClick={() => handleNewGame(false)}
-              >
-                <span className="mode-title">DAILY CHALLENGE</span>
-                <span className="mode-desc">New puzzles every day!</span>
-              </button>
+                <button 
+                  className="mode-button daily" 
+                  onClick={() => handleNewGame(false)}
+                >
+                  <span className="mode-title">DAILY CHALLENGE</span>
+                  <span className="mode-desc">New puzzles every day!</span>
+                </button>
 
-              <button 
-                className="back-button"
-                onClick={() => setShowGameModes(false)}
-              >
-                Back
-              </button>
-            </div>
+                <button 
+                  className="back-button"
+                  onClick={() => setShowGameModes(false)}
+                >
+                  Back
+                </button>
+              </div>
+            )}
+          </div>
+          
+          {bulldogPosition.y !== null && (
+            <FrenchBulldog
+              onClick={handlePuppyClick}
+              phrase={puppyPhrase}
+              isClicked={false}
+              customConfig={customBulldogConfig}
+              onConfigChange={setCustomBulldogConfig}
+              position={{ y: bulldogPosition.y }}
+            />
           )}
         </div>
       </div>
@@ -305,14 +355,6 @@ const StartPage: React.FC<StartPageProps> = ({ onStartGame, onMusicToggle, onSou
           currentConfig={customBulldogConfig}
         />
       </div>
-
-      <FrenchBulldog
-        onClick={handlePuppyClick}
-        phrase={puppyPhrase}
-        isClicked={false}
-        customConfig={customBulldogConfig}
-        onConfigChange={setCustomBulldogConfig}
-      />
     </div>
   )
 }

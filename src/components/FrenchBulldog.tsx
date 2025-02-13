@@ -9,6 +9,7 @@ interface BulldogProps {
   isClicked?: boolean;
   customConfig?: typeof bulldogConfig;
   onConfigChange: (config: typeof bulldogConfig) => void;
+  position?: { y: number };  // Only track y position
 }
 
 const FrenchBulldog: React.FC<BulldogProps> = ({ 
@@ -16,7 +17,8 @@ const FrenchBulldog: React.FC<BulldogProps> = ({
   phrase, 
   isClicked,
   customConfig,
-  onConfigChange
+  onConfigChange,
+  position
 }) => {
   const config = customConfig ? { ...bulldogConfig, ...customConfig } : bulldogConfig;
 
@@ -104,10 +106,20 @@ const FrenchBulldog: React.FC<BulldogProps> = ({
     onClick();
   };
 
+  // Update position styling
+  const bulldogStyle = position ? {
+    position: 'absolute' as const,
+    left: 'calc(100% + 20px)',
+    top: `${position.y}px`,
+    transition: 'top 0.1s ease-out',
+    zIndex: 1000
+  } : {};
+
   return (
     <div 
       className={`french-bulldog ${isClicked ? 'clicked' : ''}`} 
       onClick={handleClick}
+      style={bulldogStyle}
     >
       <div className="bulldog-container">
         <div className="bulldog-body">

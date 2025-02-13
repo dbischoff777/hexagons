@@ -32,6 +32,8 @@
   z-index: 10;
   animation: float var(--breathe-duration) ease-in-out infinite;
   filter: drop-shadow(0 0 var(--glow-intensity) var(--glow-color));
+  will-change: transform;
+  pointer-events: auto;
 }
 
 .bulldog-container {
@@ -699,4 +701,31 @@
 .leg:hover {
   filter: brightness(1.2);
   cursor: pointer;
+}
+
+/* Update walk animation for vertical movement */
+@keyframes walk {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  50% {
+    transform: translateX(-5px);
+  }
+}
+
+.french-bulldog[style*="top"] {
+  animation: walk 0.5s infinite;
+}
+
+.french-bulldog[style*="top"] .front-legs .leg {
+  animation: pawStep 0.5s infinite alternate;
+}
+
+@keyframes pawStep {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-2px);
+  }
 }
