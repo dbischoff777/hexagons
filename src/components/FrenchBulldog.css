@@ -217,7 +217,7 @@
 /* Update speech bubble styles */
 .bulldog-speech-bubble {
   position: absolute;
-  left: calc(100% + 20px);  /* Position speech bubble to the right */
+  left: calc(100% + 20px);
   top: 30%;
   background: rgba(0, 0, 0, 0.95);
   border: 2px solid #00FF9F;
@@ -225,13 +225,13 @@
   padding: 15px 25px;
   opacity: 0;
   visibility: hidden;
-  transform: translateX(0);
+  transform: translateX(-20px);
   transition: all 0.3s ease;
   box-shadow: 0 0 20px rgba(0, 255, 159, 0.2);
   z-index: 5;
-  min-width: 250px;  /* Increased minimum width */
-  max-width: 400px;  /* Increased maximum width */
-  width: max-content;  /* Fit content width */
+  min-width: 250px;
+  max-width: 400px;
+  width: max-content;
   pointer-events: none;
 }
 
@@ -278,8 +278,15 @@
   border-left: none;  /* Remove left border */
 }
 
-/* Keep the original hover styles for non-menu contexts */
-.french-bulldog:not(.always-show-speech):hover .bulldog-speech-bubble {
+/* Remove the hover requirement and show speech bubble when not hidden */
+.french-bulldog:not([data-hide-speech="true"]) .bulldog-speech-bubble {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(0);
+}
+
+/* Keep the hover effect only for when speech is hidden */
+.french-bulldog[data-hide-speech="true"]:hover .bulldog-speech-bubble {
   opacity: 1;
   visibility: visible;
   transform: translateX(0);

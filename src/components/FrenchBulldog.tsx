@@ -126,6 +126,7 @@ const FrenchBulldog: React.FC<BulldogProps> = ({
       className={`french-bulldog ${isClicked ? 'clicked' : ''} ${alwaysShowSpeech ? 'always-show-speech' : ''}`} 
       onClick={handleClick}
       style={bulldogStyle}
+      data-hide-speech={hideSpeech}
     >
       <div className="bulldog-container">
         <div className="bulldog-body">

@@ -2437,6 +2437,52 @@ const Game: React.FC<GameProps> = ({
     document.documentElement.style.setProperty('--theme-background', theme.colors.background);
   }, [theme]);
 
+  const getCompanionPhrase = (action?: {
+    type: 'match' | 'combo' | 'clear' | 'ability';
+    value?: number;
+    abilityName?: string;
+  }): string => {
+    if (!action) return '';
+
+    const { personality } = companion;
+
+    switch (action.type) {
+      case 'match':
+        if (action.value && action.value >= 15) {
+          return personality.bigMatch[Math.floor(Math.random() * personality.bigMatch.length)];
+        }
+        return personality.smallMatch[Math.floor(Math.random() * personality.smallMatch.length)];
+      
+      case 'combo':
+        if (action.value && action.value >= 4) {
+          return personality.bigCombo[Math.floor(Math.random() * personality.bigCombo.length)];
+        }
+        return personality.smallCombo[Math.floor(Math.random() * personality.smallCombo.length)];
+      
+      case 'clear':
+        return personality.bigMatch[Math.floor(Math.random() * personality.bigMatch.length)];
+      
+      case 'ability':
+        return personality.abilityUse[Math.floor(Math.random() * personality.abilityUse.length)]
+          .replace('{ability}', action.abilityName || 'ability');
+      
+      default:
+        return personality.idle[Math.floor(Math.random() * personality.idle.length)];
+    }
+  };
+
+  // Inside the Game component, add this effect to manage speech timing
+  useEffect(() => {
+    if (lastAction) {
+      // Show speech for 3 seconds when there's a new action
+      const timer = setTimeout(() => {
+        setLastAction(undefined);
+      }, 3000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [lastAction]);
+
   return (
     <div
       className="game-container"
@@ -2513,8 +2559,8 @@ const Game: React.FC<GameProps> = ({
             // Add any click handling logic here
             console.log('Companion clicked');
           }}
-          phrase=""
-          hideSpeech={true}
+          phrase={getCompanionPhrase(lastAction)}
+          hideSpeech={!lastAction} // Only show speech when there's an action
           abilities={companion.abilities}
           customConfig={bulldogConfig}
           onConfigChange={(newConfig) => {
