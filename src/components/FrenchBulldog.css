@@ -214,99 +214,101 @@
   50% { transform: scale(1.1); }
 }
 
-/* Update speech bubble styles */
+/* Replace the existing speech bubble styles with these */
 .bulldog-speech-bubble {
   position: absolute;
-  left: calc(100% + 20px);
-  top: 30%;
-  background: rgba(0, 0, 0, 0.95);
-  border: 2px solid #00FF9F;
-  border-radius: 20px;
-  padding: 15px 25px;
+  left: 100%;
+  top: 0;
+  margin-left: 20px;
+  animation: popIn 0.3s ease-out;
+  background: rgba(0, 0, 0, 0.9);
+  border: 2px solid transparent;
+  border-radius: 12px;
+  padding: 12px;
+  color: white;
+  font-size: 14px;
+  max-width: 200px;
+  position: relative;
+  white-space: pre-wrap;
+  background-clip: padding-box;
+  box-shadow: 
+    0 0 15px rgba(0, 255, 255, 0.3),
+    inset 0 0 20px rgba(0, 255, 255, 0.1);
+  text-shadow: 0 0 8px rgba(0, 255, 255, 0.5);
   opacity: 0;
   visibility: hidden;
   transform: translateX(-20px);
   transition: all 0.3s ease;
-  box-shadow: 0 0 20px rgba(0, 255, 159, 0.2);
   z-index: 5;
-  min-width: 250px;
-  max-width: 400px;
-  width: max-content;
   pointer-events: none;
 }
 
+/* Add the glowing border effect */
+.bulldog-speech-bubble::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  bottom: -2px;
+  left: -2px;
+  z-index: -1;
+  border-radius: 12px;
+  background: linear-gradient(45deg, #00ffff, #0099ff);
+  animation: borderGlow 3s ease-in-out infinite;
+}
+
+/* Update the speech arrow to match CompanionSpeech */
+.bulldog-speech-arrow {
+  position: absolute;
+  left: -10px;
+  top: 20px;
+  width: 0;
+  height: 0;
+  border-top: 8px solid transparent;
+  border-bottom: 8px solid transparent;
+  border-right: 10px solid #00ffff;
+  filter: drop-shadow(0 0 5px rgba(0, 255, 255, 0.5));
+}
+
+/* Update the text styles */
 .bulldog-speech-text {
   color: #fff;
-  font-size: 16px;
-  line-height: 1.4;
-  white-space: pre-wrap;  /* Changed from normal to pre-wrap */
-  text-align: left;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-/* Style for behavior text */
-.bulldog-speech-text span.behavior {
-  color: rgba(0, 255, 159, 0.8);
-  font-style: italic;
   font-size: 14px;
-  display: block;  /* Make behavior text appear on its own line */
-  margin-bottom: 4px;
+  line-height: 1.4;
+  white-space: pre-wrap;
+  text-align: left;
 }
 
-/* Style for speech text */
-.bulldog-speech-text span.speech {
-  display: inline;  /* Keep regular speech inline */
-  white-space: nowrap;  /* Keep emojis on same line as text */
-}
-
-/* Menu-specific positioning adjustments */
-.french-bulldog.always-show-speech .bulldog-speech-bubble {
-  right: auto;
-  left: calc(100% + 30px);  /* Adjusted spacing from bulldog */
-  opacity: 1;
-  visibility: visible;
-  transform: translateX(0);
-}
-
-/* Update the speech arrow for menu context */
-.french-bulldog.always-show-speech .bulldog-speech-arrow {
-  right: auto;  /* Reset right positioning */
-  left: -12px;  /* Position on left side */
-  border-right: 12px solid #00FF9F;  /* Point right */
-  border-left: none;  /* Remove left border */
-}
-
-/* Remove the hover requirement and show speech bubble when not hidden */
+/* Show speech bubble when not hidden */
 .french-bulldog:not([data-hide-speech="true"]) .bulldog-speech-bubble {
   opacity: 1;
   visibility: visible;
   transform: translateX(0);
 }
 
-/* Keep the hover effect only for when speech is hidden */
-.french-bulldog[data-hide-speech="true"]:hover .bulldog-speech-bubble {
-  opacity: 1;
-  visibility: visible;
-  transform: translateX(0);
+/* Add animations */
+@keyframes popIn {
+  0% { transform: scale(0.8); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
 }
 
-.bulldog-speech-arrow {
-  position: absolute;
-  left: -12px;
-  top: 50%;
-  transform: translateY(-50%) rotate(180deg);
-  width: 0;
-  height: 0;
-  border-top: 12px solid transparent;
-  border-bottom: 12px solid transparent;
-  border-right: 12px solid #00FF9F;
+@keyframes borderGlow {
+  0% { opacity: 0.5; }
+  50% { opacity: 1; }
+  100% { opacity: 0.5; }
 }
 
-.french-bulldog:hover .bulldog-head {
-  filter: brightness(1.1);
-  box-shadow: 0 0 15px rgba(0, 255, 159, 0.3);
+/* Add state-specific styles */
+.french-bulldog.excited .bulldog-speech-bubble::before {
+  background: linear-gradient(45deg, #00ff9f, #00cc7f);
+}
+
+.french-bulldog.ability .bulldog-speech-bubble::before {
+  background: linear-gradient(45deg, #00ffff, #0099ff);
+}
+
+.french-bulldog.achievement .bulldog-speech-bubble::before {
+  background: linear-gradient(45deg, #ff9f00, #ff6600);
 }
 
 /* Update Sparkles */
@@ -472,6 +474,7 @@
   right: -5px;
   transform-origin: bottom center;
   animation: tailWag 3s ease-in-out infinite;
+  z-index: -1;
 }
 
 /* Add new animations */
