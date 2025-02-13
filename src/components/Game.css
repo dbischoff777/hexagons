@@ -1114,3 +1114,11 @@
   color: var(--theme-background);
   font-weight: bold;
 }
+
+.level-complete__message {
+  color: #ffffff;
+  font-size: 18px;
+  margin: 20px 0;
+  line-height: 1.5;
+  opacity: 0.9;
+}

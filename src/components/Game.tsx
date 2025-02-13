@@ -373,6 +373,9 @@ const Game: React.FC<GameProps> = ({
   // Add a state to track initialization
   const [isInitialized, setIsInitialized] = useState(false);
   
+  // Add this state near other state declarations
+  const [showExitPrompt, setShowExitPrompt] = useState(false);
+
   const awardUpgradePoints = useCallback((points: number) => {
     setUpgradeState(prev => ({
       ...prev,
@@ -1795,10 +1798,14 @@ const Game: React.FC<GameProps> = ({
 
   // Modify the exit handler to handle both normal exits and level complete exits
   const handleExit = useCallback(() => {
-    // Direct exit via exit button - force exit to start page
+    setShowExitPrompt(true);
+  }, []);
+
+  // Add new function to handle actual exit
+  const confirmExit = useCallback(() => {
     clearSavedGame();
     onLevelComplete(false);
-    onExit(true); // Pass true to force exit
+    onExit(true);
   }, [onExit, onLevelComplete]);
 
   const handleLevelCompleteExit = useCallback(() => {
@@ -2799,6 +2806,28 @@ const Game: React.FC<GameProps> = ({
                   PLAY NEXT LEVEL
                 </button>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+      {showExitPrompt && (
+        <div className="level-complete__overlay">
+          <div className="level-complete__modal">
+            <h2 className="level-complete__title">Exit Game?</h2>
+            <p className="level-complete__message">Are you sure you want to exit? Your progress will be lost.</p>
+            <div className="level-complete__buttons">
+              <button 
+                className="level-complete__button"
+                onClick={() => setShowExitPrompt(false)}
+              >
+                CONTINUE PLAYING
+              </button>
+              <button 
+                className="level-complete__button level-complete__button--primary"
+                onClick={confirmExit}
+              >
+                EXIT GAME
+              </button>
             </div>
           </div>
         </div>
