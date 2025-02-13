@@ -617,20 +617,19 @@
 }
 
 .customize-button {
-  background: linear-gradient(45deg, #FF6B6B, #FF8E53);
-  border: none;
+  background: rgba(0, 255, 159, 0.15);
+  color: #00FF9F;
+  border: 2px solid #00FF9F;
   border-radius: 8px;
-  color: white;
   padding: 15px 30px;
   font-size: 1.1em;
   cursor: pointer;
   transition: all 0.3s ease;
   text-transform: uppercase;
   font-weight: bold;
-  box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
 }
 
 .customize-button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(255, 107, 107, 0.4);
+  background: rgba(0, 255, 159, 0.25);
+  transform: scale(1.05);
 }
