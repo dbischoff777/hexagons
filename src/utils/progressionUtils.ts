@@ -423,45 +423,45 @@ export const LEVEL_BLOCKS: LevelBlock[] = [
     blockNumber: 1,
     levels: [
       { level: 1, pointsRequired: 0 },
-      { level: 2, pointsRequired: 10000 },
-      { level: 3, pointsRequired: 25000 },
-      { level: 4, pointsRequired: 45000 },
-      { level: 5, pointsRequired: 70000 },
-      { level: 6, pointsRequired: 100000 },
-      { level: 7, pointsRequired: 135000 },
-      { level: 8, pointsRequired: 175000 },
-      { level: 9, pointsRequired: 220000 },
-      { level: 10, pointsRequired: 270000 }
+      { level: 2, pointsRequired: 100000 },
+      { level: 3, pointsRequired: 250000 },
+      { level: 4, pointsRequired: 450000 },
+      { level: 5, pointsRequired: 700000 },
+      { level: 6, pointsRequired: 1000000 },
+      { level: 7, pointsRequired: 1350000 },
+      { level: 8, pointsRequired: 1750000 },
+      { level: 9, pointsRequired: 2200000 },
+      { level: 10, pointsRequired: 2700000 }
     ]
   },
   {
     blockNumber: 2,
     levels: [
-      { level: 1, pointsRequired: 325000 },
-      { level: 2, pointsRequired: 385000 },
-      { level: 3, pointsRequired: 450000 },
-      { level: 4, pointsRequired: 520000 },
-      { level: 5, pointsRequired: 595000 },
-      { level: 6, pointsRequired: 675000 },
-      { level: 7, pointsRequired: 760000 },
-      { level: 8, pointsRequired: 850000 },
-      { level: 9, pointsRequired: 945000 },
-      { level: 10, pointsRequired: 1045000 }
+      { level: 1, pointsRequired: 3250000 },
+      { level: 2, pointsRequired: 3850000 },
+      { level: 3, pointsRequired: 4500000 },
+      { level: 4, pointsRequired: 5200000 },
+      { level: 5, pointsRequired: 5950000 },
+      { level: 6, pointsRequired: 6750000 },
+      { level: 7, pointsRequired: 7600000 },
+      { level: 8, pointsRequired: 8500000 },
+      { level: 9, pointsRequired: 9450000 },
+      { level: 10, pointsRequired: 10450000 }
     ]
   },
   {
     blockNumber: 3,
     levels: [
-      { level: 1, pointsRequired: 1150000 },
-      { level: 2, pointsRequired: 1260000 },
-      { level: 3, pointsRequired: 1375000 },
-      { level: 4, pointsRequired: 1495000 },
-      { level: 5, pointsRequired: 1620000 },
-      { level: 6, pointsRequired: 1750000 },
-      { level: 7, pointsRequired: 1885000 },
-      { level: 8, pointsRequired: 2025000 },
-      { level: 9, pointsRequired: 2170000 },
-      { level: 10, pointsRequired: 2320000 }
+      { level: 1, pointsRequired: 11500000 },
+      { level: 2, pointsRequired: 12600000 },
+      { level: 3, pointsRequired: 13750000 },
+      { level: 4, pointsRequired: 14950000 },
+      { level: 5, pointsRequired: 16200000 },
+      { level: 6, pointsRequired: 17500000 },
+      { level: 7, pointsRequired: 18850000 },
+      { level: 8, pointsRequired: 20250000 },
+      { level: 9, pointsRequired: 21700000 },
+      { level: 10, pointsRequired: 23200000 }
     ]
   }
 ];

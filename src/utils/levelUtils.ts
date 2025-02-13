@@ -43,13 +43,20 @@ export const unlockNextLevel = (
   currentBlock: number, 
   currentLevel: number
 ): LevelCompletion | null => {
-  // Get the next level info
-  const nextLevelInfo = getNextLevelInfo(currentBlock, currentLevel, LEVEL_BLOCKS);
-  if (!nextLevelInfo) return null;
+  // Only allow unlocking the next sequential level
+  const nextLevel = currentLevel + 1;
+  const nextBlock = currentBlock;
+  
+  // Find current block
+  const block = LEVEL_BLOCKS.find(b => b.blockNumber === currentBlock);
+  if (!block) return null;
+
+  // Check if next level exists in current block
+  if (nextLevel > block.levels.length) return null;
 
   // Format level strings
   const currentLevelString = `${currentBlock}-${currentLevel}`;
-  const nextLevelString = `${nextLevelInfo.block}-${nextLevelInfo.level}`;
+  const nextLevelString = `${nextBlock}-${nextLevel}`;
 
   // Get player progress
   const progress = getPlayerProgress();
@@ -59,6 +66,10 @@ export const unlockNextLevel = (
     progress.unlockedLevels = {};
   }
   
+  // Get the target score for the next level
+  const nextLevelData = block.levels[nextLevel - 1];
+  if (!nextLevelData) return null;
+
   // Update unlocked levels if not already unlocked
   if (!progress.unlockedLevels[nextLevelString]) {
     progress.unlockedLevels[nextLevelString] = true;
@@ -69,9 +80,9 @@ export const unlockNextLevel = (
     show: true,
     level: currentLevelString,
     score: score,
-    targetScore: nextLevelInfo.pointsRequired,
+    targetScore: nextLevelData.pointsRequired,
     nextLevel: nextLevelString,
-    bonusPoints: 0,
+    bonusPoints: Math.floor((score - nextLevelData.pointsRequired) / 100),
     isNextLevelUnlock: true
   };
 };

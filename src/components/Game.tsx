@@ -1817,12 +1817,24 @@ const Game: React.FC<GameProps> = ({
   const handleLevelCompleteNext = useCallback(() => {
     if (showLevelComplete?.nextLevel) {
       const [nextBlock, nextLevel] = showLevelComplete.nextLevel.split('-').map(Number);
-      const nextLevelInfo = getNextLevelInfo(nextBlock, nextLevel, LEVEL_BLOCKS);
       
-      if (nextLevelInfo) {
-        onStartGame(false, nextLevelInfo.pointsRequired);
-        setShowLevelComplete(null);
-      }
+      // Get the current block's data
+      const currentBlock = LEVEL_BLOCKS.find(b => b.blockNumber === nextBlock);
+      if (!currentBlock) return;
+
+      // Get the next level's data
+      const nextLevelData = currentBlock.levels[nextLevel - 1];
+      if (!nextLevelData) return;
+
+      console.log('Starting next level:', {
+        block: nextBlock,
+        level: nextLevel,
+        targetScore: nextLevelData.pointsRequired,
+        source: 'Level Complete Next'
+      });
+
+      onStartGame(false, nextLevelData.pointsRequired);
+      setShowLevelComplete(null);
     }
   }, [showLevelComplete, onStartGame]);
 
