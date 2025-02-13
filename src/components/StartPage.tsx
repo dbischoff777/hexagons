@@ -36,6 +36,51 @@ const PUPPY_PHRASES = [
   "*puppy eyes* Can we play together? 💫"
 ];
 
+// Add button-specific phrases
+const BUTTON_HOVER_PHRASES = {
+  play: [
+    "*excited bouncing* Let's play! Let's play! 🎮",
+    "*tail wagging frantically* Yes! Game time! ✨",
+  ],
+  continue: [
+    "*perks up* Oh! We can continue our last game! 🎯",
+    "*happy dance* Back to where we left off! 🎲",
+  ],
+  tutorial: [
+    "*tilts head curiously* I can teach you how to play! 📚",
+    "*attentive pose* I'm a great teacher, I promise! 🎓",
+  ],
+  statistics: [
+    "*proud stance* Look at all your achievements! 📊",
+    "*scholarly nod* The numbers look great! 📈",
+  ],
+  achievements: [
+    "*shows off medals* We've earned so many together! 🏆",
+    "*proud strut* Look at our collection! ⭐",
+  ],
+  unlockables: [
+    "*playful spin* Ooh, what should we unlock next? 🎁",
+    "*excited panting* So many treasures to discover! 💎",
+  ],
+  // Game modes
+  timed: [
+    "*alert stance* Ready to race against time! ⏱️",
+    "*focused gaze* We can beat the clock together! ⚡",
+  ],
+  zen: [
+    "*relaxed pose* Take your time, no pressure! 🌸",
+    "*peaceful smile* Zen mode is so relaxing... 🍃",
+  ],
+  roadmap: [
+    "*adventurous pose* What level shall we conquer? 🗺️",
+    "*excited jumping* Let's climb to the top! 🏔️",
+  ],
+  daily: [
+    "*morning stretch* A fresh challenge awaits! 🌅",
+    "*eager bounce* I love daily puzzles! 🎯",
+  ]
+};
+
 const StartPage: React.FC<StartPageProps> = ({ onStartGame, onMusicToggle, onSoundToggle, musicEnabled, soundEnabled }) => {
   const [showGameModes, setShowGameModes] = useState(false)
   const [showTutorial, setShowTutorial] = useState(false)
@@ -125,6 +170,12 @@ const StartPage: React.FC<StartPageProps> = ({ onStartGame, onMusicToggle, onSou
     }
   };
 
+  const handleButtonHover = (buttonType: keyof typeof BUTTON_HOVER_PHRASES) => {
+    const phrases = BUTTON_HOVER_PHRASES[buttonType];
+    const randomPhrase = phrases[Math.floor(Math.random() * phrases.length)];
+    setPuppyPhrase(randomPhrase);
+  };
+
   if (showStatistics) {
     return <StatisticsPage onBack={() => setShowStatistics(false)} />
   }
@@ -192,6 +243,7 @@ const StartPage: React.FC<StartPageProps> = ({ onStartGame, onMusicToggle, onSou
                   <button 
                     className="continue-button"
                     onClick={handleContinueGame}
+                    onMouseEnter={() => handleButtonHover('continue')}
                   >
                     Continue Game
                   </button>
@@ -199,30 +251,35 @@ const StartPage: React.FC<StartPageProps> = ({ onStartGame, onMusicToggle, onSou
                 <button 
                   className="play-button" 
                   onClick={() => setShowGameModes(true)}
+                  onMouseEnter={() => handleButtonHover('play')}
                 >
                   PLAY
                 </button>
                 <button 
                   className="tutorial-button"
                   onClick={() => setShowTutorial(true)}
+                  onMouseEnter={() => handleButtonHover('tutorial')}
                 >
                   Play Tutorial
                 </button>
                 <button 
                   className="stats-button"
                   onClick={() => setShowStatistics(true)}
+                  onMouseEnter={() => handleButtonHover('statistics')}
                 >
                   Statistics
                 </button>
                 <button 
                   className="achievements-button"
                   onClick={() => setShowAchievements(true)}
+                  onMouseEnter={() => handleButtonHover('achievements')}
                 >
                   Achievements
                 </button>
                 <button 
                   className="unlockables-button"
                   onClick={() => setShowUnlockables(true)}
+                  onMouseEnter={() => handleButtonHover('unlockables')}
                 >
                   Unlockables
                 </button>
@@ -232,6 +289,7 @@ const StartPage: React.FC<StartPageProps> = ({ onStartGame, onMusicToggle, onSou
                 <button 
                   className="mode-button timed" 
                   onClick={() => handleNewGame(true)}
+                  onMouseEnter={() => handleButtonHover('timed')}
                 >
                   <span className="mode-title">TIMED MODE</span>
                   <span className="mode-desc">Race against the clock</span>
@@ -240,6 +298,7 @@ const StartPage: React.FC<StartPageProps> = ({ onStartGame, onMusicToggle, onSou
                 <button 
                   className="mode-button zen" 
                   onClick={() => handleNewGame(false)}
+                  onMouseEnter={() => handleButtonHover('zen')}
                 >
                   <span className="mode-title">ZEN MODE</span>
                   <span className="mode-desc">Play at your own pace</span>
@@ -248,6 +307,7 @@ const StartPage: React.FC<StartPageProps> = ({ onStartGame, onMusicToggle, onSou
                 <button 
                   className="mode-button roadmap" 
                   onClick={() => setShowLevelRoadmap(true)}
+                  onMouseEnter={() => handleButtonHover('roadmap')}
                 >
                   <span className="mode-title">LEVEL ROADMAP</span>
                   <span className="mode-desc">Progress through levels</span>
@@ -256,6 +316,7 @@ const StartPage: React.FC<StartPageProps> = ({ onStartGame, onMusicToggle, onSou
                 <button 
                   className="mode-button daily" 
                   onClick={() => handleNewGame(false)}
+                  onMouseEnter={() => handleButtonHover('daily')}
                 >
                   <span className="mode-title">DAILY CHALLENGE</span>
                   <span className="mode-desc">New puzzles every day!</span>
@@ -264,6 +325,7 @@ const StartPage: React.FC<StartPageProps> = ({ onStartGame, onMusicToggle, onSou
                 <button 
                   className="back-button"
                   onClick={() => setShowGameModes(false)}
+                  onMouseEnter={() => setPuppyPhrase(PUPPY_PHRASES[Math.floor(Math.random() * PUPPY_PHRASES.length)])}
                 >
                   Back
                 </button>
@@ -279,6 +341,7 @@ const StartPage: React.FC<StartPageProps> = ({ onStartGame, onMusicToggle, onSou
               customConfig={customBulldogConfig}
               onConfigChange={setCustomBulldogConfig}
               position={{ y: bulldogPosition.y }}
+              alwaysShowSpeech={true}
             />
           )}
         </div>

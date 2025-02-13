@@ -213,10 +213,10 @@
   50% { transform: scale(1.1); }
 }
 
-/* Speech Bubble */
+/* Base speech bubble styles */
 .speech-bubble {
   position: absolute;
-  right: 120%;
+  right: 120%;  /* Default position (left side) */
   top: 30%;
   background: rgba(0, 0, 0, 0.95);
   border: 2px solid #00FF9F;
@@ -231,6 +231,30 @@
   min-width: 200px;
   max-width: 300px;
   pointer-events: none;
+}
+
+/* Menu-specific speech bubble positioning */
+.french-bulldog.always-show-speech .speech-bubble {
+  right: auto;  /* Reset right positioning */
+  left: 120%;   /* Position on right side */
+  opacity: 1;   /* Make visible */
+  visibility: visible;  /* Make visible */
+  transform: translateX(0);  /* Reset transform */
+}
+
+/* Update the speech arrow for menu context */
+.french-bulldog.always-show-speech .speech-arrow {
+  right: auto;  /* Reset right positioning */
+  left: -12px;  /* Position on left side */
+  border-right: 12px solid #00FF9F;  /* Point right */
+  border-left: none;  /* Remove left border */
+}
+
+/* Keep the original hover styles for non-menu contexts */
+.french-bulldog:not(.always-show-speech):hover .speech-bubble {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(0);
 }
 
 .speech-text {
@@ -260,13 +284,6 @@
   border-top: 12px solid transparent;
   border-bottom: 12px solid transparent;
   border-left: 12px solid #00FF9F;
-}
-
-/* Show speech bubble on dog hover */
-.french-bulldog:hover .speech-bubble {
-  opacity: 1;
-  visibility: visible;
-  transform: translateX(0);
 }
 
 .french-bulldog:hover .bulldog-head {

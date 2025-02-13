@@ -10,6 +10,7 @@ interface BulldogProps {
   customConfig?: typeof bulldogConfig;
   onConfigChange: (config: typeof bulldogConfig) => void;
   position?: { y: number };  // Only track y position
+  alwaysShowSpeech?: boolean;  // Add this prop
 }
 
 const FrenchBulldog: React.FC<BulldogProps> = ({ 
@@ -18,7 +19,8 @@ const FrenchBulldog: React.FC<BulldogProps> = ({
   isClicked,
   customConfig,
   onConfigChange,
-  position
+  position,
+  alwaysShowSpeech = false  // Default to false
 }) => {
   const config = customConfig ? { ...bulldogConfig, ...customConfig } : bulldogConfig;
 
@@ -117,7 +119,7 @@ const FrenchBulldog: React.FC<BulldogProps> = ({
 
   return (
     <div 
-      className={`french-bulldog ${isClicked ? 'clicked' : ''}`} 
+      className={`french-bulldog ${isClicked ? 'clicked' : ''} ${alwaysShowSpeech ? 'always-show-speech' : ''}`} 
       onClick={handleClick}
       style={bulldogStyle}
     >
