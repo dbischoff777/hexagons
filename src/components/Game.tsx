@@ -2547,8 +2547,7 @@ const Game: React.FC<GameProps> = ({
         </button>
       )}
       <div className="game-hud">
-        <div className="score">
-          Score
+        <div className="score" data-label="Score">
           <span className="score-value">
             {score.toLocaleString()}
           </span>
