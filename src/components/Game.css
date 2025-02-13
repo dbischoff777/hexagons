@@ -175,6 +175,15 @@
   50% { opacity: 0.8; }
 }
 
+.game-header {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 10;
+  pointer-events: none;
+}
+
 .game-hud {
   position: absolute;
   top: 30px;
@@ -184,7 +193,7 @@
   justify-content: center;
   gap: 300px;
   pointer-events: none;
-  z-index: 2;
+  z-index: 5;
   font-size: 32px;
   font-weight: bold;
   text-transform: uppercase;
@@ -238,6 +247,7 @@
   width: 100%;
   max-width: 1200px;
   margin: 0 auto;
+  z-index: 1;
 }
 
 .game-board {
@@ -1121,4 +1131,18 @@
   margin: 20px 0;
   line-height: 1.5;
   opacity: 0.9;
+}
+
+/* Update French Bulldog positioning specifically for the game context */
+.game-container .french-bulldog {
+  position: absolute;
+  top: 160px !important; /* Force the top position */
+  left: 20px;
+  z-index: 90;
+  transform: none !important; /* Remove float animation in game */
+}
+
+/* Ensure speech bubble doesn't get cut off */
+.game-container .speech-bubble {
+  z-index: 91;
 }

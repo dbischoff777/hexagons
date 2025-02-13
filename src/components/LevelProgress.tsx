@@ -7,20 +7,22 @@ interface LevelProgressProps {
 }
 
 const LevelProgress: React.FC<LevelProgressProps> = ({ progress }) => {
-  const progressPercent = (progress.experience / progress.experienceToNext) * 100;
+  const percentToNextLevel = (progress.experience / progress.experienceToNext) * 100;
 
   return (
     <div className="level-progress">
       <div className="level-info">
-        <span className="level-number">Level {progress.level}</span>
-        <span className="xp-info">
+        <div className="level-number">Level {progress.level}</div>
+        <div className="xp-info">
           {progress.experience} / {progress.experienceToNext} XP
-        </span>
+        </div>
       </div>
       <div className="progress-bar-container">
         <div 
           className="progress-bar-fill"
-          style={{ width: `${progressPercent}%` }}
+          style={{ 
+            '--progress-width': `${percentToNextLevel}%` 
+          } as React.CSSProperties}
         />
       </div>
     </div>
