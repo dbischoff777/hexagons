@@ -147,10 +147,14 @@ input[type="range"]::-webkit-slider-thumb {
 }
 
 /* Accessories section */
+.accessories-section {
+  padding: 10px;
+}
+
 .accessory-toggles {
   display: grid;
   gap: 12px;
-  margin-bottom: 20px;
+  margin-bottom: 25px;
 }
 
 .accessory-toggle {
@@ -174,57 +178,14 @@ input[type="range"]::-webkit-slider-thumb {
   accent-color: #00FF9F;
 }
 
-/* Lock overlay */
-.lock-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.7);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  border-radius: 8px;
-  gap: 8px;
+.accessory-styles {
+  margin-top: 25px;
 }
 
-.lock-icon {
-  font-size: 24px;
-}
-
-.unlock-text {
+.accessory-styles h4 {
   color: #00FF9F;
-  font-size: 12px;
-  text-align: center;
-  padding: 0 5px;
-}
-
-.preset-button.locked {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-/* Locked content message */
-.locked-content {
-  text-align: center;
-  padding: 30px 20px;
-  background: rgba(0, 0, 0, 0.2);
-  border-radius: 8px;
-  margin: 20px 0;
-}
-
-.locked-content .lock-icon {
-  font-size: 32px;
   margin-bottom: 15px;
-  display: block;
-}
-
-.locked-content p {
-  color: rgba(255, 255, 255, 0.8);
-  margin: 5px 0;
-  font-size: 0.9em;
+  font-size: 1em;
 }
 
 /* Accessory style previews */
@@ -235,6 +196,7 @@ input[type="range"]::-webkit-slider-thumb {
 }
 
 .style-button {
+  position: relative;
   width: 100%;
   background: rgba(0, 0, 0, 0.3);
   border: 1px solid #00FF9F;
@@ -249,9 +211,14 @@ input[type="range"]::-webkit-slider-thumb {
   gap: 8px;
 }
 
-.style-button:hover {
+.style-button:hover:not(.locked) {
   background: rgba(0, 255, 159, 0.1);
   transform: translateY(-2px);
+}
+
+.style-button.locked {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .style-preview {
@@ -275,4 +242,79 @@ input[type="range"]::-webkit-slider-thumb {
 .style-preview .preview-sparkles {
   background: linear-gradient(45deg, var(--color) 0%, var(--color-light) 100%);
   opacity: 0.8;
-} 
+}
+
+/* Update lock overlay styles */
+.style-button .lock-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  gap: 4px;
+  border: 1px solid rgba(0, 255, 159, 0.2);
+}
+
+.lock-overlay .lock-icon {
+  font-size: 20px;
+  color: #00FF9F;
+}
+
+.unlock-text {
+  color: #00FF9F;
+  font-size: 11px;
+  text-align: center;
+  line-height: 1.2;
+}
+
+/* Update tab styles */
+.tab .tab-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.tab .unlock-status {
+  font-size: 0.8em;
+  opacity: 0.9;
+}
+
+.tab:disabled .unlock-status {
+  color: #00FF9F;
+}
+
+.tab.active .unlock-status {
+  opacity: 1;
+}
+
+/* Update level progress styles */
+.level-progress {
+  margin-top: 20px;
+  padding-top: 15px;
+  border-top: 1px solid rgba(0, 255, 159, 0.2);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 15px;
+  font-size: 1.2em;
+}
+
+.level-progress span:first-child {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.level-progress span:nth-child(2) {
+  color: rgba(0, 255, 159, 0.5);
+  font-size: 0.9em;
+}
+
+.level-progress span:last-child {
+  color: #00FF9F;
+}

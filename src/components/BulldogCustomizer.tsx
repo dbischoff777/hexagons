@@ -1,8 +1,15 @@
 import React, { useState } from 'react';
 import './BulldogCustomizer.css';
 import bulldogConfig from '../config/bulldogConfig.json';
-import { CustomizationOption } from '../utils/customizationUtils';
-
+import { 
+  CustomizationOption, 
+  isPresetUnlocked, 
+  isAccessoryStyleUnlocked,
+  getPresetRequiredLevel,
+  getAccessoryRequiredLevel,
+  LEVEL_REQUIREMENTS
+} from '../utils/customizationUtils';
+import { getPlayerProgress } from '../utils/progressionUtils';
 interface CustomizerProps {
   onConfigChange: (newConfig: typeof bulldogConfig) => void;
   currentConfig: typeof bulldogConfig;
@@ -23,14 +30,6 @@ const BulldogCustomizer: React.FC<CustomizerProps> = ({
     const option = unlockedOptions.find(opt => opt.id === optionId);
     return option?.unlocked || false;
   };
-
-  // Helper to render lock overlay and level requirement
-  const LockOverlay = ({ option }: { option: CustomizationOption }) => (
-    <div className="lock-overlay">
-      <span className="lock-icon">🔒</span>
-      <span className="unlock-text">Unlocks at Level {option.levelRequired}</span>
-    </div>
-  );
 
   const handleAnimationChange = (section: AnimationSection, property: string, value: string) => {
     const newConfig = { ...currentConfig };
@@ -136,7 +135,7 @@ const BulldogCustomizer: React.FC<CustomizerProps> = ({
     }
   };
 
-  const handleColorPresetChange = (name: string, colors: typeof COLOR_PRESETS[keyof typeof COLOR_PRESETS]) => {
+  const handleColorPresetChange = (colors: typeof COLOR_PRESETS[keyof typeof COLOR_PRESETS]) => {
     const newConfig = { ...currentConfig };
     
     // Update body and head colors
@@ -159,6 +158,19 @@ const BulldogCustomizer: React.FC<CustomizerProps> = ({
     onConfigChange(newConfig);
   };
 
+  const handleAccessoryStyleChange = (colors: typeof ACCESSORY_PRESETS[keyof typeof ACCESSORY_PRESETS]) => {
+    const newConfig = { ...currentConfig };
+    if (newConfig.accessories.collar.enabled) {
+      newConfig.accessories.collar.colors.main = colors.collar;
+    }
+    if (newConfig.effects.sparkles.enabled) {
+      newConfig.effects.sparkles.color = colors.sparkles;
+    }
+    onConfigChange(newConfig);
+  };
+
+  const playerLevel = getPlayerProgress().level;
+
   return (
     <div className="customizer-wrapper">
       <div className="bulldog-customizer">
@@ -169,170 +181,213 @@ const BulldogCustomizer: React.FC<CustomizerProps> = ({
             className={`tab ${activeTab === 'colors' ? 'active' : ''}`}
             onClick={() => setActiveTab('colors')}
           >
-            Colors {isOptionUnlocked('basic_colors') ? '✨' : '🔒'}
+            <div className="tab-content">
+              <span>Colors</span>
+              {isOptionUnlocked('basic_colors') ? 
+                <span className="unlock-status">✨</span> : 
+                <span className="unlock-status">🔒 Lvl {LEVEL_REQUIREMENTS.colors.basic}</span>
+              }
+            </div>
           </button>
           <button 
             className={`tab ${activeTab === 'animations' ? 'active' : ''}`}
             onClick={() => isOptionUnlocked('animations') && setActiveTab('animations')}
             disabled={!isOptionUnlocked('animations')}
           >
-            Animations {isOptionUnlocked('animations') ? '✨' : '🔒'}
+            <div className="tab-content">
+              <span>Animations</span>
+              {isOptionUnlocked('animations') ? 
+                <span className="unlock-status">✨</span> : 
+                <span className="unlock-status">🔒 Lvl {LEVEL_REQUIREMENTS.animations}</span>
+              }
+            </div>
           </button>
           <button 
             className={`tab ${activeTab === 'accessories' ? 'active' : ''}`}
-            onClick={() => isOptionUnlocked('accessories') && setActiveTab('accessories')}
-            disabled={!isOptionUnlocked('accessories')}
+            onClick={() => isOptionUnlocked('basic_accessories') && setActiveTab('accessories')}
+            disabled={!isOptionUnlocked('basic_accessories')}
           >
-            Accessories {isOptionUnlocked('accessories') ? '✨' : '🔒'}
+            <div className="tab-content">
+              <span>Accessories</span>
+              {isOptionUnlocked('basic_accessories') ? 
+                <span className="unlock-status">✨</span> : 
+                <span className="unlock-status">🔒 Lvl {LEVEL_REQUIREMENTS.accessories.basic}</span>
+              }
+            </div>
           </button>
         </div>
 
         <div className="tab-content">
           {activeTab === 'colors' && (
             <section className="color-section">
-              <div className="color-presets">
-                <h4>Color Themes</h4>
-                <div className="preset-buttons">
-                  {Object.entries(COLOR_PRESETS).map(([name, colors]) => {
-                    const isSpecialColor = name !== 'default' && name !== 'classic';
-                    const isLocked = isSpecialColor && !isOptionUnlocked('special_colors');
-                    const option = unlockedOptions.find(opt => opt.id === 'special_colors');
+              {isOptionUnlocked('basic_colors') ? (
+                <div className="color-presets">
+                  <h4>Color Themes</h4>
+                  <div className="preset-buttons">
+                    {Object.entries(COLOR_PRESETS).map(([name, colors]) => {
+                      const isLocked = !isPresetUnlocked(name, playerLevel);
+                      const requiredLevel = getPresetRequiredLevel(name);
 
-                    return (
-                      <div key={name} className="preset-button-wrapper">
-                        <button
-                          className={`preset-button ${isLocked ? 'locked' : ''}`}
-                          onClick={() => !isLocked && handleColorPresetChange(name, colors)}
-                          disabled={isLocked}
-                        >
-                          <div className="preset-preview">
-                            <div className="preview-main" style={{ background: colors.main }}></div>
-                            <div className="preview-accent" style={{ background: colors.collar }}></div>
-                            <div className="preview-glow" style={{ background: colors.sparkle }}></div>
-                          </div>
-                          {name.charAt(0).toUpperCase() + name.slice(1)}
-                        </button>
-                        {isLocked && option && <LockOverlay option={option} />}
-                      </div>
-                    );
-                  })}
+                      return (
+                        <div key={name} className="preset-button-wrapper">
+                          <button
+                            className={`preset-button ${isLocked ? 'locked' : ''}`}
+                            onClick={() => !isLocked && handleColorPresetChange(colors)}
+                            disabled={isLocked}
+                          >
+                            <div className="preset-preview">
+                              <div className="preview-main" style={{ background: colors.main }}></div>
+                              <div className="preview-accent" style={{ background: colors.collar }}></div>
+                              <div className="preview-glow" style={{ background: colors.sparkle }}></div>
+                            </div>
+                            {name.charAt(0).toUpperCase() + name.slice(1)}
+                          </button>
+                          {isLocked && (
+                            <div className="lock-overlay">
+                              <span className="lock-icon">🔒</span>
+                              <span className="unlock-text">Unlocks at Level {requiredLevel}</span>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
-              </div>
+              ) : (
+                <div className="locked-content">
+                </div>
+              )}
             </section>
           )}
 
-          {activeTab === 'animations' && isOptionUnlocked('animations') && (
+          {activeTab === 'animations' && (
             <section className="animation-section">
-              <div className="animation-options">
-                <div className="animation-option">
-                  <label>Breathe Duration</label>
-                  <input 
-                    type="range"
-                    min="2"
-                    max="8"
-                    step="0.5"
-                    value={parseFloat(currentConfig.body.animations.breatheDuration)}
-                    onChange={(e) => handleAnimationChange('body', 'breatheDuration', `${e.target.value}s`)}
-                  />
-                  <span>{currentConfig.body.animations.breatheDuration}</span>
+              {isOptionUnlocked('animations') ? (
+                <div className="animation-options">
+                  <div className="animation-option">
+                    <label>Breathe Duration</label>
+                    <input 
+                      type="range"
+                      min="2"
+                      max="8"
+                      step="0.5"
+                      value={parseFloat(currentConfig.body.animations.breatheDuration)}
+                      onChange={(e) => handleAnimationChange('body', 'breatheDuration', `${e.target.value}s`)}
+                    />
+                    <span>{currentConfig.body.animations.breatheDuration}</span>
+                  </div>
+                  <div className="animation-option">
+                    <label>Ear Twitch Duration</label>
+                    <input 
+                      type="range"
+                      min="3"
+                      max="10"
+                      step="0.5"
+                      value={parseFloat(currentConfig.head.animations.earTwitchDuration)}
+                      onChange={(e) => handleAnimationChange('head', 'earTwitchDuration', `${e.target.value}s`)}
+                    />
+                    <span>{currentConfig.head.animations.earTwitchDuration}</span>
+                  </div>
                 </div>
-                <div className="animation-option">
-                  <label>Ear Twitch Duration</label>
-                  <input 
-                    type="range"
-                    min="3"
-                    max="10"
-                    step="0.5"
-                    value={parseFloat(currentConfig.head.animations.earTwitchDuration)}
-                    onChange={(e) => handleAnimationChange('head', 'earTwitchDuration', `${e.target.value}s`)}
-                  />
-                  <span>{currentConfig.head.animations.earTwitchDuration}</span>
+              ) : (
+                <div className="locked-content">
                 </div>
-              </div>
+              )}
             </section>
           )}
 
-          {activeTab === 'accessories' && isOptionUnlocked('accessories') && (
+          {activeTab === 'accessories' && (
             <section className="accessories-section">
-              <div className="accessory-toggles">
-                <div className="accessory-toggle">
-                  <label>
-                    <input 
-                      type="checkbox"
-                      checked={currentConfig.accessories.collar.enabled}
-                      onChange={() => {
-                        const newConfig = { ...currentConfig };
-                        newConfig.accessories.collar.enabled = !newConfig.accessories.collar.enabled;
-                        onConfigChange(newConfig);
-                      }}
-                    />
-                    Collar
-                  </label>
-                </div>
-                <div className="accessory-toggle">
-                  <label>
-                    <input 
-                      type="checkbox"
-                      checked={currentConfig.effects.sparkles.enabled}
-                      onChange={() => {
-                        const newConfig = { ...currentConfig };
-                        newConfig.effects.sparkles.enabled = !newConfig.effects.sparkles.enabled;
-                        onConfigChange(newConfig);
-                      }}
-                    />
-                    Sparkles
-                  </label>
-                </div>
-              </div>
+              {isOptionUnlocked('basic_accessories') ? (
+                <>
+                  <div className="accessory-toggles">
+                    <div className="accessory-toggle">
+                      <label>
+                        <input 
+                          type="checkbox"
+                          checked={currentConfig.accessories.collar.enabled}
+                          onChange={() => {
+                            const newConfig = { ...currentConfig };
+                            newConfig.accessories.collar.enabled = !newConfig.accessories.collar.enabled;
+                            onConfigChange(newConfig);
+                          }}
+                        />
+                        Collar
+                      </label>
+                    </div>
+                    <div className="accessory-toggle">
+                      <label>
+                        <input 
+                          type="checkbox"
+                          checked={currentConfig.effects.sparkles.enabled}
+                          onChange={() => {
+                            const newConfig = { ...currentConfig };
+                            newConfig.effects.sparkles.enabled = !newConfig.effects.sparkles.enabled;
+                            onConfigChange(newConfig);
+                          }}
+                        />
+                        Sparkles
+                      </label>
+                    </div>
+                  </div>
 
-              <div className="accessory-styles">
-                <h4>Accessory Styles</h4>
-                <div className="style-buttons">
-                  {Object.entries(ACCESSORY_PRESETS).map(([name, colors]) => (
-                    <button
-                      key={name}
-                      className="style-button"
-                      onClick={() => {
-                        const newConfig = { ...currentConfig };
-                        if (newConfig.accessories.collar.enabled) {
-                          newConfig.accessories.collar.colors.main = colors.collar;
-                        }
-                        if (newConfig.effects.sparkles.enabled) {
-                          newConfig.effects.sparkles.color = colors.sparkles;
-                        }
-                        onConfigChange(newConfig);
-                      }}
-                    >
-                      <div className="style-preview">
-                        <div 
-                          className="preview-color preview-collar"
-                          style={{ 
-                            '--color': colors.collar,
-                            '--color-light': `${colors.collar}99`
-                          } as React.CSSProperties}
-                        />
-                        <div 
-                          className="preview-color preview-sparkles"
-                          style={{ 
-                            '--color': colors.sparkles,
-                            '--color-light': `${colors.sparkles}99`
-                          } as React.CSSProperties}
-                        />
-                      </div>
-                      {name.charAt(0).toUpperCase() + name.slice(1)}
-                    </button>
-                  ))}
+                  <div className="accessory-styles">
+                    <h4>Accessory Styles</h4>
+                    <div className="style-buttons">
+                      {Object.entries(ACCESSORY_PRESETS).map(([name, colors]) => {
+                        const isLocked = !isAccessoryStyleUnlocked(name, playerLevel);
+                        const requiredLevel = getAccessoryRequiredLevel(name);
+
+                        return (
+                          <button
+                            key={name}
+                            className={`style-button ${isLocked ? 'locked' : ''}`}
+                            onClick={() => {
+                              if (!isLocked) {
+                                handleAccessoryStyleChange(colors);
+                              }
+                            }}
+                            disabled={isLocked}
+                          >
+                            <div className="style-preview">
+                              <div
+                                className="preview-color preview-collar"
+                                style={{ 
+                                  '--color': colors.collar,
+                                  '--color-light': `${colors.collar}99`
+                                } as React.CSSProperties}
+                              />
+                              <div 
+                                className="preview-color preview-sparkles"
+                                style={{ 
+                                  '--color': colors.sparkles,
+                                  '--color-light': `${colors.sparkles}99`
+                                } as React.CSSProperties}
+                              />
+                            </div>
+                            <span>{name.charAt(0).toUpperCase() + name.slice(1)}</span>
+                            {isLocked && (
+                              <div className="lock-overlay">
+                                <span className="lock-icon">🔒</span>
+                                <span className="unlock-text">Unlocks at Level {requiredLevel}</span>
+                              </div>
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <div className="locked-content">
                 </div>
-              </div>
+              )}
             </section>
           )}
 
           {(activeTab === 'animations' && !isOptionUnlocked('animations')) ||
            (activeTab === 'accessories' && !isOptionUnlocked('accessories')) && (
             <div className="locked-content">
-              <span className="lock-icon">🔒</span>
-              <p>This feature is currently locked.</p>
-              <p>Keep playing to unlock more customization options!</p>
             </div>
           )}
         </div>
