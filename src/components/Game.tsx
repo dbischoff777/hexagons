@@ -2409,6 +2409,13 @@ const Game: React.FC<GameProps> = ({
     }
   }, [placedTiles, cols, isGameOver, tutorialState.active, handleGridClear]);
 
+  // Add this effect to update theme colors
+  useEffect(() => {
+    document.documentElement.style.setProperty('--theme-accent', theme.colors.accent);
+    document.documentElement.style.setProperty('--theme-secondary', theme.colors.secondary);
+    document.documentElement.style.setProperty('--theme-background', theme.colors.background);
+  }, [theme]);
+
   return (
     <div
       className="game-container"
@@ -2745,133 +2752,6 @@ const Game: React.FC<GameProps> = ({
           onComplete={() => setNewBadges(prev => prev.slice(1))}
         />
       )}
-      <style>
-        {`
-          @keyframes placeTile {
-            0% { transform: scale(1.1); opacity: 0.8; }
-            50% { transform: scale(0.95); }
-            100% { transform: scale(1); opacity: 1; }
-          }
-
-          @keyframes matchGlow {
-            0% { filter: drop-shadow(0 0 5px ${theme.colors.accent}66); }
-            50% { filter: drop-shadow(0 0 15px ${theme.colors.accent}); }
-            100% { filter: drop-shadow(0 0 5px ${theme.colors.accent}66); }
-          }
-
-          .game-board {
-            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            will-change: transform;
-          }
-
-          .tile-placed {
-            animation: placeTile 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-            will-change: transform, opacity;
-          }
-
-          .tile-matched {
-            animation: matchGlow 0.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
-            will-change: filter;
-          }
-
-          // ... existing styles ...
-
-          .game-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 1rem;
-            width: 100%;
-          }
-
-          .cyberpunk-button {
-            background: linear-gradient(45deg, #1a1a2e, #2a2a40);
-            border: 2px solid rgba(0, 255, 159, 0.3);
-            border-radius: 4px;
-            color: #00ff9f;
-            padding: 8px 16px;
-            font-size: 1rem;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            box-shadow: 0 0 10px rgba(0, 255, 159, 0.3);
-          }
-
-          .cyberpunk-button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 0 20px rgba(0, 255, 159, 0.5);
-          }
-
-          .cyberpunk-button .icon {
-            font-size: 1.2em;
-          }
-
-          @keyframes glowPulse {
-            0% { box-shadow: 0 0 10px rgba(0, 255, 159, 0.3); }
-            50% { box-shadow: 0 0 20px rgba(0, 255, 159, 0.5); }
-            100% { box-shadow: 0 0 10px rgba(0, 255, 159, 0.3); }
-          }
-
-          .cyberpunk-button.can-upgrade {
-            background: linear-gradient(45deg, #00ff9f, #00b8ff);
-            border-color: #00ff9f;
-            animation: glowPulse 2s infinite;
-          }
-
-          .cyberpunk-button:not(.can-upgrade) {
-            opacity: 0.8;
-          }
-
-          .upgrade-points {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            background: rgba(0, 255, 159, 0.1);
-            padding: 8px 16px;
-            border-radius: 20px;
-            color: #00ff9f;
-            font-weight: bold;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            border: 1px solid rgba(0, 255, 159, 0.3);
-          }
-
-          .upgrade-points .icon {
-            font-size: 1.2em;
-          }
-
-          .points-earned-popup {
-            position: absolute;
-            right: 0;
-            color: #00ff9f;
-            font-weight: bold;
-            pointer-events: none;
-          }
-
-          @keyframes floatUp {
-            0% {
-              opacity: 1;
-              transform: translateY(0);
-            }
-            100% {
-              opacity: 0;
-              transform: translateY(-20px);
-            }
-          }
-          
-          .cyberpunk-button.primary {
-            background: linear-gradient(45deg, #00FF9F, #00FFFF);
-            color: #1a1a2e;
-            font-weight: bold;
-          }
-        `}
-      </style>
       <UpgradeModal
         isOpen={showUpgrades}
         onClose={() => setShowUpgrades(false)}

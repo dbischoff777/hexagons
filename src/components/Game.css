@@ -1094,3 +1094,23 @@
     0 0 20px rgba(0, 255, 159, 0.3);
   letter-spacing: 2px;
 }
+
+:root {
+  --theme-accent: #00FF9F;
+  --theme-secondary: #00FFFF;
+  --theme-background: #1a1a2e;
+}
+
+/* Update the matchGlow animation to use CSS variables */
+@keyframes matchGlow {
+  0% { filter: drop-shadow(0 0 5px var(--theme-accent)); }
+  50% { filter: drop-shadow(0 0 15px var(--theme-accent)); }
+  100% { filter: drop-shadow(0 0 5px var(--theme-accent)); }
+}
+
+/* Update the primary button style */
+.cyberpunk-button.primary {
+  background: linear-gradient(45deg, var(--theme-accent), var(--theme-secondary));
+  color: var(--theme-background);
+  font-weight: bold;
+}
