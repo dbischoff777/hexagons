@@ -2561,8 +2561,8 @@ const Game: React.FC<GameProps> = ({
                           ctx.setLineDash([])
                         }
 
-                        // Draw tile value if it exists
-                        if (tile.value > 0 && tile.type !== 'mirror') {  // Add check for non-mirror tiles
+                        // Draw tile value if it exists (for normal tiles only)
+                        if (tile.value > 0 && !tile.isJoker && tile.type !== 'mirror' && !tile.powerUp) {
                           ctx.strokeStyle = '#000000';
                           ctx.lineWidth = 3;
                           ctx.shadowColor = '#000000';
@@ -2571,86 +2571,101 @@ const Game: React.FC<GameProps> = ({
                           ctx.textAlign = 'center';
                           ctx.textBaseline = 'middle';
                           
-                          // Use fixed coordinates (50,50) for preview tiles
+                          // Draw text stroke first (outline)
                           ctx.strokeText(tile.value.toString(), 50, 50);
                           
                           // Then draw the bright text
-                          ctx.fillStyle = '#FFFFFF'; // Always use white for better visibility
-                          ctx.shadowColor = '#00FFFF'; // Cyan glow
+                          ctx.fillStyle = '#FFFFFF';
+                          ctx.shadowColor = '#00FFFF';
                           ctx.shadowBlur = 8;
                           ctx.fillText(tile.value.toString(), 50, 50);
                           
                           // Reset shadow
-                          ctx.shadowBlur = 0
+                          ctx.shadowBlur = 0;
                         }
 
-                        // Draw power-up indicator if present
-                        if (tile.powerUp) {
+                        // Handle joker tiles
+                        if (tile.isJoker) {
+                          // Draw star symbol above the number
+                          ctx.fillStyle = '#FFFFFF';
+                          ctx.shadowColor = '#FFFFFF';
+                          ctx.shadowBlur = 15;
+                          ctx.font = 'bold 20px Arial';
+                          ctx.textAlign = 'center';
+                          ctx.textBaseline = 'middle';
+                          ctx.fillText('★', 50, 38);
+
+                          // Draw number below the star
+                          ctx.shadowColor = 'rgba(0, 0, 0, 0.2)';
+                          ctx.shadowBlur = 2;
+                          ctx.fillStyle = selectedTileIndex === index ? '#1a1a1a' : '#2d2d2d';
+                          ctx.font = `bold ${selectedTileIndex === index ? 24 : 22}px Arial`;
+                          ctx.textAlign = 'center';
+                          ctx.textBaseline = 'middle';
+                          ctx.fillText(tile.value.toString(), 50, 62);
+
+                          // Add rainbow border effect for joker tiles
+                          const gradient = ctx.createLinearGradient(10, 10, 90, 90);
+                          gradient.addColorStop(0, '#ff0000');
+                          gradient.addColorStop(0.2, '#ffff00');
+                          gradient.addColorStop(0.4, '#00ff00');
+                          gradient.addColorStop(0.6, '#00ffff');
+                          gradient.addColorStop(0.8, '#0000ff');
+                          gradient.addColorStop(1, '#ff00ff');
+                          
+                          ctx.strokeStyle = gradient;
+                          ctx.lineWidth = 4;
+                          ctx.beginPath();
+                          ctx.arc(50, 50, 42, 0, Math.PI * 2);
+                          ctx.stroke();
+                        }
+
+                        // Handle mirror tiles
+                        else if (tile.type === 'mirror') {
+                          // Draw mirror symbol above the number
+                          ctx.fillStyle = '#FFFFFF';
+                          ctx.shadowColor = '#FFFFFF';
+                          ctx.shadowBlur = 15;
+                          ctx.font = 'bold 20px Arial';
+                          ctx.textAlign = 'center';
+                          ctx.textBaseline = 'middle';
+                          ctx.fillText('↔', 50, 38);
+
+                          // Draw number below the symbol
+                          ctx.shadowColor = 'rgba(0, 0, 0, 0.2)';
+                          ctx.shadowBlur = 2;
+                          ctx.fillStyle = selectedTileIndex === index ? '#1a1a1a' : '#2d2d2d';
+                          ctx.font = `bold ${selectedTileIndex === index ? 24 : 22}px Arial`;
+                          ctx.textAlign = 'center';
+                          ctx.textBaseline = 'middle';
+                          ctx.fillText(tile.value.toString(), 50, 62);
+                        }
+
+                        // Handle power-up tiles
+                        else if (tile.powerUp) {
                           const powerUpIcons = {
                             freeze: '❄️',
                             colorShift: '🎨',
                             multiplier: '✨'
                           };
-                          ctx.font = '16px Arial';
-                          ctx.fillText(powerUpIcons[tile.powerUp.type], 50, 20);
-                        }
 
-                        // Draw mirror symbol
-                        if (tile.type === 'mirror') {
-                          // Draw mirror symbol above the number
-                          ctx.fillStyle = '#FFFFFF'
-                          ctx.shadowColor = '#FFFFFF'
-                          ctx.shadowBlur = 15
-                          ctx.font = 'bold 20px Arial'
-                          ctx.textAlign = 'center'
-                          ctx.textBaseline = 'middle'
-                          ctx.fillText('↔', 50, 38)  // Use fixed coordinates for preview
+                          // Draw power-up icon above the number
+                          ctx.fillStyle = '#FFFFFF';
+                          ctx.shadowColor = '#FFFFFF';
+                          ctx.shadowBlur = 15;
+                          ctx.font = 'bold 20px Arial';
+                          ctx.textAlign = 'center';
+                          ctx.textBaseline = 'middle';
+                          ctx.fillText(powerUpIcons[tile.powerUp.type], 50, 38);
 
-                          // Draw number below the symbol
-                          ctx.shadowColor = 'rgba(0, 0, 0, 0.2)'
-                          ctx.shadowBlur = 2
-                          ctx.fillStyle = selectedTileIndex === index ? '#1a1a1a' : '#2d2d2d'
-                          ctx.font = `bold ${selectedTileIndex === index ? 24 : 22}px Arial`
-                          ctx.textAlign = 'center'
-                          ctx.textBaseline = 'middle'
-                          ctx.fillText(tile.value.toString(), 50, 62)
-
-                          // Show mirror info when selected (matching power-up info style)
-                          if (selectedTileIndex === index) {
-                            // Draw info box above tile
-                            ctx.fillStyle = 'rgba(0, 0, 0, 0.8)'
-                            ctx.strokeStyle = '#00FFFF'
-                            ctx.lineWidth = 2
-                            const text = 'Mirrors Adjacent Colors'
-                            const padding = 10
-                            const boxWidth = ctx.measureText(text).width + padding * 2
-                            const boxHeight = 30
-                            const boxX = 50 - boxWidth / 2
-                            const boxY = -40  // Position at top of preview tile
-
-                            // Draw box with rounded corners and glow
-                            ctx.shadowColor = '#00FFFF'
-                            ctx.shadowBlur = 10
-                            ctx.beginPath()
-                            ctx.roundRect(boxX, boxY, boxWidth, boxHeight, 5)
-                            ctx.fill()
-                            ctx.stroke()
-
-                            // Draw description text
-                            ctx.fillStyle = '#FFFFFF'
-                            ctx.shadowBlur = 2
-                            ctx.font = '14px Arial'
-                            ctx.fillText(text, 50, boxY + boxHeight/2)
-
-                            // Add arrow pointer like power-ups
-                            ctx.beginPath()
-                            ctx.moveTo(50 - 8, boxY + boxHeight)
-                            ctx.lineTo(50 + 8, boxY + boxHeight)
-                            ctx.lineTo(50, boxY + boxHeight + 8)
-                            ctx.closePath()
-                            ctx.fillStyle = '#00FFFF'
-                            ctx.fill()
-                          }
+                          // Draw number below the icon
+                          ctx.shadowColor = 'rgba(0, 0, 0, 0.2)';
+                          ctx.shadowBlur = 2;
+                          ctx.fillStyle = selectedTileIndex === index ? '#1a1a1a' : '#2d2d2d';
+                          ctx.font = `bold ${selectedTileIndex === index ? 24 : 22}px Arial`;
+                          ctx.textAlign = 'center';
+                          ctx.textBaseline = 'middle';
+                          ctx.fillText(tile.value.toString(), 50, 62);
                         }
                       }
                     }
