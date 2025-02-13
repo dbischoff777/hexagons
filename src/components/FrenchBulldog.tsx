@@ -239,11 +239,11 @@ const FrenchBulldog: React.FC<BulldogProps> = ({
           </div>
         )}
 
-        <div className="speech-bubble">
-          <div className="speech-text">
+        <div className="bulldog-speech-bubble">
+          <div className="bulldog-speech-text">
             {formatPhrase(phrase)}
           </div>
-          <div className="speech-arrow"></div>
+          <div className="bulldog-speech-arrow"></div>
         </div>
 
         <div className="particle-container">
