@@ -38,6 +38,7 @@ import UpgradeModal from './UpgradeModal'
 import { getInitialUpgradeState, purchaseUpgrade, getUpgradeEffect, saveUpgradeState } from '../utils/upgradeUtils'
 import { UpgradeState } from '../types/upgrades'
 import { unlockNextLevel, LevelCompletion } from '../utils/levelUtils'
+import './LevelCompleteOverlay.css'
 
 // Replace the DEBUG object at the top
 const DEBUG = {
@@ -1401,26 +1402,36 @@ const Game: React.FC<GameProps> = ({
 
             // Check for level completion with the new total score
             if (isLevelMode && targetScore && newTotalScore >= targetScore && !isGameOver) {
-              const { currentBlock, currentLevel } = getCurrentLevelInfo(newTotalScore);
+              const levelInfo = getCurrentLevelInfo(newTotalScore);
               
               setIsGameOver(true);
               
-              // Show congratulations modal
-              setShowLevelComplete({
-                show: true,
-                level: `${currentBlock}-${currentLevel}`,
-                score: newTotalScore,
-                targetScore,
-                nextLevel: `${currentBlock}-${currentLevel + 1}`,
-                bonusPoints: Math.floor((newTotalScore - targetScore) / 100)
-              });
+              // Calculate bonus points
+              const bonusPoints = Math.floor((newTotalScore - targetScore) / 100);
               
-              // Update player progress
-              const progress = getPlayerProgress();
-              progress.points = Math.max(progress.points || 0, newTotalScore);
-              localStorage.setItem(PROGRESSION_KEY, JSON.stringify(progress));
+              // Get completion info from unlockNextLevel
+              const completion = unlockNextLevel(newTotalScore, levelInfo.currentBlock, levelInfo.currentLevel);
               
-              onGameOver();
+              if (completion) {
+                // Get next level info to determine if there is a next level to unlock
+                const nextLevelInfo = getNextLevelInfo(levelInfo.currentBlock, levelInfo.currentLevel, LEVEL_BLOCKS);
+                
+                // Show congratulations modal
+                setShowLevelComplete({
+                  ...completion,
+                  targetScore,
+                  bonusPoints,
+                  message: 'Level Complete!',
+                  isNextLevelUnlock: !!nextLevelInfo // Set based on whether next level exists
+                });
+                
+                // Update player progress
+                const progress = getPlayerProgress();
+                progress.points = Math.max(progress.points || 0, newTotalScore);
+                localStorage.setItem(PROGRESSION_KEY, JSON.stringify(progress));
+                
+                onGameOver();
+              }
             }
           }
 
@@ -1791,29 +1802,22 @@ const Game: React.FC<GameProps> = ({
   }, [onExit, onLevelComplete]);
 
   const handleLevelCompleteExit = useCallback(() => {
-    DEBUG.log('handleLevelCompleteExit called', {
-      showLevelComplete: showLevelComplete,
-      isLevelComplete: isLevelComplete
-    });
-    
-    // Set level complete and immediately exit
-    onLevelComplete(true);
-    onExit(false); // Normal exit
-    
-    // Clean up after exit is initiated
     clearSavedGame();
-    setShowLevelComplete(null);
-  }, [onExit, onLevelComplete]);
+    onLevelComplete(true);
+    onExit(false);
+  }, [onLevelComplete, onExit]);
 
   const handleLevelCompleteNext = useCallback(() => {
-    // Start next level
-    const { currentBlock, currentLevel } = getCurrentLevelInfo(score);
-    const nextLevel = getNextLevelInfo(currentBlock, currentLevel, LEVEL_BLOCKS);
-    if (nextLevel) {
-      onStartGame(false, nextLevel.pointsRequired);
+    if (showLevelComplete?.nextLevel) {
+      const [nextBlock, nextLevel] = showLevelComplete.nextLevel.split('-').map(Number);
+      const nextLevelInfo = getNextLevelInfo(nextBlock, nextLevel, LEVEL_BLOCKS);
+      
+      if (nextLevelInfo) {
+        onStartGame(false, nextLevelInfo.pointsRequired);
+        setShowLevelComplete(null);
+      }
     }
-    setShowLevelComplete(null);
-  }, [score, onStartGame]);
+  }, [showLevelComplete, onStartGame]);
 
   // Keep this effect for handling achievement popups
   useEffect(() => {
@@ -2343,43 +2347,53 @@ const Game: React.FC<GameProps> = ({
     );
   }, [upgradeState]);
 
+  // Update the checkLevelCompletion function
   const checkLevelCompletion = useCallback(() => {
-    if (!isLevelMode || isGameOver || !score) return;
+    if (!isLevelMode || isGameOver || !score || !currentBlock || !currentLevel) return;
 
-    const { currentBlock, currentLevel } = getCurrentLevelInfo(score);
-    const nextLevel = getNextLevelInfo(currentBlock, currentLevel, LEVEL_BLOCKS);
-    const effectiveTargetScore = nextLevel?.pointsRequired ?? 10000;
+    const effectiveTargetScore = targetScore ?? 10000;
     
-    if (score >= effectiveTargetScore && !isLevelComplete) { // Add check for isLevelComplete
+    if (score >= effectiveTargetScore && !isLevelComplete) {
       // Unlock the next level in progression system
       const completion = unlockNextLevel(score, currentBlock, currentLevel);
       
-      // Calculate bonus points based on how much we exceeded the target
-      const bonusPoints = Math.floor((score - effectiveTargetScore) / 100);
-      
-      // Show level complete modal
-      setShowLevelComplete({
-        show: true,
-        level: `${currentBlock}-${currentLevel}`,
-        score: score,
-        targetScore: effectiveTargetScore,
-        nextLevel: completion?.nextLevel || `${currentBlock}-${currentLevel + 1}`,
-        bonusPoints: bonusPoints,
-        isNextLevelUnlock: completion?.isNextLevelUnlock || false,
-        message: 'Level Complete!'
-      });
-      
-      // Don't end the game immediately, wait for user confirmation
-      handleGameAchievement('level', UPGRADE_POINT_REWARDS.levelUp.points);
-      
-      onLevelComplete(true); // Signal level completion to parent
+      if (completion) {
+        // Calculate bonus points based on how much we exceeded the target
+        const bonusPoints = Math.floor((score - effectiveTargetScore) / 100);
+        
+        // Show level complete modal with completion data
+        setShowLevelComplete({
+          ...completion,
+          targetScore: effectiveTargetScore,
+          bonusPoints: bonusPoints,
+          message: 'Level Complete!'
+        });
+        
+        // Only trigger these once when level is completed
+        if (!isLevelComplete) {
+          handleGameAchievement('level', UPGRADE_POINT_REWARDS.levelUp.points);
+          onLevelComplete(true);
+        }
+      }
     }
-  }, [isLevelMode, isGameOver, score, handleGameAchievement, onLevelComplete, isLevelComplete]);
+  }, [
+    isLevelMode,
+    isGameOver,
+    score,
+    currentBlock,
+    currentLevel,
+    targetScore,
+    isLevelComplete,
+    handleGameAchievement,
+    onLevelComplete
+  ]);
 
-  // Use this function in place of the duplicate level completion checks
+  // Update the level completion effect
   useEffect(() => {
-    checkLevelCompletion();
-  }, [checkLevelCompletion]);
+    if (!isLevelComplete) {
+      checkLevelCompletion();
+    }
+  }, [checkLevelCompletion, isLevelComplete]);
 
   // Add this effect to check for grid full condition
   useEffect(() => {
@@ -2835,105 +2849,7 @@ const Game: React.FC<GameProps> = ({
               transform: translateY(-20px);
             }
           }
-
-          .level-complete-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.8);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-          }
-
-          .level-complete-modal {
-            background: rgba(26, 26, 46, 0.95);
-            border: 2px solid #00FF9F;
-            border-radius: 15px;
-            padding: 30px;
-            max-width: 500px;
-            width: 90%;
-            text-align: center;
-            box-shadow: 0 0 30px rgba(0, 255, 159, 0.3);
-            position: relative;
-            padding-bottom: 80px; // Add padding at bottom for button
-          }
-
-          .level-complete-modal h2 {
-            color: #00FF9F;
-            font-size: 2em;
-            margin-bottom: 20px;
-            text-shadow: 0 0 10px rgba(0, 255, 159, 0.5);
-          }
-
-          .level-stats {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            margin: 20px 0;
-          }
-
-          .stat {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px;
-            background: rgba(0, 0, 0, 0.3);
-            border-radius: 8px;
-          }
-
-          .stat.bonus {
-            background: rgba(0, 255, 159, 0.1);
-            border: 1px solid rgba(0, 255, 159, 0.3);
-          }
-
-          .value {
-            font-weight: bold;
-            color: #00FF9F;
-          }
-
-          .next-level {
-            font-size: 1.2em;
-            color: #00FFFF;
-            margin: 20px 0;
-          }
-
-          .level-complete-buttons {
-            position: absolute;
-            bottom: 20px;
-            left: 0;
-            right: 0;
-            display: flex;
-            justify-content: center;
-            gap: 15px;
-          }
-
-          .back-to-menu-button {
-            position: absolute;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: linear-gradient(45deg, #1a1a2e, #2a2a40);
-            border: 2px solid rgba(0, 255, 159, 0.3);
-            border-radius: 4px;
-            color: #00ff9f;
-            padding: 8px 24px;
-            font-size: 1rem;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-          }
-
-          .back-to-menu-button:hover {
-            transform: translateX(-50%) translateY(-2px);
-            box-shadow: 0 0 20px rgba(0, 255, 159, 0.5);
-          }
-
+          
           .cyberpunk-button.primary {
             background: linear-gradient(45deg, #00FF9F, #00FFFF);
             color: #1a1a2e;
@@ -2950,45 +2866,45 @@ const Game: React.FC<GameProps> = ({
         onUpgrade={handleUpgrade}
       />
       {showLevelComplete && (
-        <div className="level-complete-overlay">
-          <div className="level-complete-modal">
-            <h2>{showLevelComplete.message || 'Level Complete!'}</h2>
-            <div className="level-stats">
-              <div className="stat">
-                <span>Current Level</span>
-                <span className="value">{showLevelComplete.level}</span>
+        <div className="level-complete__overlay">
+          <div className="level-complete__modal">
+            <h2 className="level-complete__title">{showLevelComplete.message || 'Level Complete!'}</h2>
+            <div className="level-complete__stats">
+              <div className="level-complete__stat-item">
+                <span className="level-complete__stat-label">Current Level</span>
+                <span className="level-complete__stat-value">{showLevelComplete.level}</span>
               </div>
-              <div className="stat">
-                <span>Your Score</span>
-                <span className="value">{showLevelComplete.score.toLocaleString()}</span>
+              <div className="level-complete__stat-item">
+                <span className="level-complete__stat-label">Your Score</span>
+                <span className="level-complete__stat-value">{showLevelComplete.score.toLocaleString()}</span>
               </div>
-              <div className="stat">
-                <span>Target Score</span>
-                <span className="value">{showLevelComplete.targetScore.toLocaleString()}</span>
+              <div className="level-complete__stat-item">
+                <span className="level-complete__stat-label">Target Score</span>
+                <span className="level-complete__stat-value">{showLevelComplete.targetScore.toLocaleString()}</span>
               </div>
               {showLevelComplete.bonusPoints > 0 && (
-                <div className="stat bonus">
-                  <span>Bonus Points</span>
-                  <span className="value">+{showLevelComplete.bonusPoints}</span>
+                <div className="level-complete__stat-item bonus">
+                  <span className="level-complete__stat-label">Bonus Points</span>
+                  <span className="level-complete__stat-value">+{showLevelComplete.bonusPoints}</span>
                 </div>
               )}
             </div>
-            {showLevelComplete.isNextLevelUnlock && (
-              <div className="level-complete-buttons">
+            <div className="level-complete__buttons">
+              <button 
+                className="level-complete__button"
+                onClick={handleLevelCompleteExit}
+              >
+                BACK TO MENU
+              </button>
+              {showLevelComplete.isNextLevelUnlock && (
                 <button 
-                  className="cyberpunk-button primary"
+                  className="level-complete__button level-complete__button--primary"
                   onClick={handleLevelCompleteNext}
                 >
-                  Play Next Level
+                  PLAY NEXT LEVEL
                 </button>
-              </div>
-            )}
-            <button 
-              className="back-to-menu-button"
-              onClick={handleLevelCompleteExit}
-            >
-              Back to Menu
-            </button>
+              )}
+            </div>
           </div>
         </div>
       )}

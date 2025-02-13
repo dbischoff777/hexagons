@@ -38,38 +38,45 @@ export const getNextLevelInfo = (currentBlock: number, currentLevel: number, blo
   return null;
 };
 
-export const unlockNextLevel = (score: number, currentBlock: number, currentLevel: number) => {
-  const nextLevel = getNextLevelInfo(currentBlock, currentLevel, LEVEL_BLOCKS);
-  if (!nextLevel) return null;
+export const unlockNextLevel = (
+  score: number, 
+  currentBlock: number, 
+  currentLevel: number
+): LevelCompletion | null => {
+  // Get the next level info
+  const nextLevelInfo = getNextLevelInfo(currentBlock, currentLevel, LEVEL_BLOCKS);
+  if (!nextLevelInfo) return null;
 
-  // Check if score meets requirement for next level
-  if (score >= nextLevel.pointsRequired) {
-    const progress = getPlayerProgress();
-    progress.points = Math.max(progress.points || 0, score);
-    progress.unlockedLevels = progress.unlockedLevels || {};
-    
-    // Unlock the next level
-    const nextLevelKey = `${nextLevel.block}-${nextLevel.level}`;
-    progress.unlockedLevels[nextLevelKey] = true;
-    
-    // Save progress
+  // Format level strings
+  const currentLevelString = `${currentBlock}-${currentLevel}`;
+  const nextLevelString = `${nextLevelInfo.block}-${nextLevelInfo.level}`;
+
+  // Get player progress
+  const progress = getPlayerProgress();
+  
+  // Ensure unlockedLevels is an object
+  if (!progress.unlockedLevels || typeof progress.unlockedLevels !== 'object') {
+    progress.unlockedLevels = {};
+  }
+  
+  // Update unlocked levels if not already unlocked
+  if (!progress.unlockedLevels[nextLevelString]) {
+    progress.unlockedLevels[nextLevelString] = true;
     localStorage.setItem(PROGRESSION_KEY, JSON.stringify(progress));
-
-    return {
-      show: true,
-      level: `${currentBlock}-${currentLevel}`,
-      score,
-      targetScore: nextLevel.pointsRequired,
-      nextLevel: nextLevelKey,
-      bonusPoints: Math.floor((score - nextLevel.pointsRequired) / 100),
-      isNextLevelUnlock: true
-    };
   }
 
-  return null;
+  return {
+    show: true,
+    level: currentLevelString,
+    score: score,
+    targetScore: nextLevelInfo.pointsRequired,
+    nextLevel: nextLevelString,
+    bonusPoints: 0,
+    isNextLevelUnlock: true
+  };
 };
 
-// Add this function to check if a level should be unlocked
+// Update the checkLevelUnlock function to use object instead of array
 export const checkLevelUnlock = (score: number, currentBlock: number, currentLevel: number) => {
   // Get the next level's requirements
   const nextLevel = getNextLevelInfo(currentBlock, currentLevel, LEVEL_BLOCKS);
@@ -79,20 +86,23 @@ export const checkLevelUnlock = (score: number, currentBlock: number, currentLev
   const progress = getPlayerProgress();
   const nextLevelKey = `${nextLevel.block}-${nextLevel.level}`;
 
+  // Ensure unlockedLevels is an object
+  if (!progress.unlockedLevels || typeof progress.unlockedLevels !== 'object') {
+    progress.unlockedLevels = {};
+  }
+
   // Check if level is already unlocked
-  if (progress.unlockedLevels?.[nextLevelKey]) return null;
+  if (progress.unlockedLevels[nextLevelKey]) return null;
 
   // Check if score meets requirement for next level
   if (score >= nextLevel.pointsRequired) {
     // Update progress
     progress.points = Math.max(progress.points || 0, score);
-    progress.unlockedLevels = progress.unlockedLevels || {};
     progress.unlockedLevels[nextLevelKey] = true;
     
     // Save progress
     localStorage.setItem(PROGRESSION_KEY, JSON.stringify(progress));
 
-    // Return unlock information
     return {
       show: true,
       level: `${currentBlock}-${currentLevel}`,
