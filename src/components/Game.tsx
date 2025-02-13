@@ -2358,13 +2358,13 @@ const Game: React.FC<GameProps> = ({
     }
   }, [isDailyChallenge, showDailyComplete, handleGameAchievement]);
 
-  // 2. Modify the upgrade button to show when upgrades are available
+/*   // 2. Modify the upgrade button to show when upgrades are available
   const canUpgrade = useCallback(() => {
     const { tileUpgrades, gridUpgrades, points } = upgradeState;
     return [...tileUpgrades, ...gridUpgrades].some(upgrade => 
       upgrade.currentLevel < upgrade.maxLevel && points >= upgrade.cost
     );
-  }, [upgradeState]);
+  }, [upgradeState]); */
 
   // Update the checkLevelCompletion function
   const checkLevelCompletion = useCallback(() => {
@@ -2445,15 +2445,6 @@ const Game: React.FC<GameProps> = ({
     >
       <div className="game-header">
         <LevelProgress progress={playerProgress} />
-        {!tutorialState.active && (
-          <button 
-            className={`upgrade-button cyberpunk-button ${canUpgrade() ? 'can-upgrade' : ''}`}
-            onClick={() => setShowUpgrades(true)}
-          >
-            <span className="icon">⚡</span>
-            Upgrades
-          </button>
-        )}
       </div>
       <Particles 
         intensity={particleIntensity} 
