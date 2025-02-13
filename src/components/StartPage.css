@@ -603,3 +603,34 @@
   max-width: 400px;
   margin: 0 auto;
 }
+
+.button-group {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+  justify-content: center;
+}
+
+.button-group button {
+  flex: 1;
+  max-width: 200px;
+}
+
+.customize-button {
+  background: linear-gradient(45deg, #FF6B6B, #FF8E53);
+  border: none;
+  border-radius: 8px;
+  color: white;
+  padding: 15px 30px;
+  font-size: 1.1em;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  font-weight: bold;
+  box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
+}
+
+.customize-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(255, 107, 107, 0.4);
+}

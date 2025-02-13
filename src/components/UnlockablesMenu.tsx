@@ -28,7 +28,11 @@ const DEFAULT_THEME: SeasonalTheme = {
   icon: '🎮'
 };
 
-const UnlockablesMenu: React.FC<UnlockablesMenuProps> = ({ onSelectTheme, onSelectCompanion, onClose }) => {
+const UnlockablesMenu: React.FC<UnlockablesMenuProps> = ({ 
+  onSelectTheme, 
+  onSelectCompanion, 
+  onClose
+}) => {
   const rewards = getUnlockedRewards();
   const progress = getPlayerProgress();
   const currentTheme = getTheme(progress.selectedTheme || 'default');

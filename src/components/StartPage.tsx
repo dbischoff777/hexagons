@@ -11,8 +11,8 @@ import { setTheme, getPlayerProgress, setCompanion } from '../utils/progressionU
 import LevelRoadmap from './LevelRoadmap'
 import soundManager from '../utils/soundManager'
 import FrenchBulldog from './FrenchBulldog'
-import BulldogCustomizer from './BulldogCustomizer'
 import bulldogConfig from '../config/bulldogConfig.json'
+import CustomizeBuddyMenu from './CustomizeBuddyMenu'
 
 
 interface StartPageProps {
@@ -62,6 +62,11 @@ const BUTTON_HOVER_PHRASES = {
     "*playful spin* Ooh, what should we unlock next? 🎁",
     "*excited panting* So many treasures to discover! 💎",
   ],
+  customize: [
+    "*preens proudly* Want to help style my look? 🎨",
+    "*excited tail wag* Ooh, makeover time! ✨",
+    "*playful spin* Let's try something new! 🎀"
+  ],
   // Game modes
   timed: [
     "*alert stance* Ready to race against time! ⏱️",
@@ -91,6 +96,7 @@ const StartPage: React.FC<StartPageProps> = ({ onStartGame, onMusicToggle, onSou
   const [showAchievements, setShowAchievements] = useState(false)
   const [showUnlockables, setShowUnlockables] = useState(false)
   const [showLevelRoadmap, setShowLevelRoadmap] = useState(false)
+  const [showCustomize, setShowCustomize] = useState(false)
   const playerProgress = getPlayerProgress()
   const [puppyPhrase, setPuppyPhrase] = useState(() => 
     PUPPY_PHRASES[Math.floor(Math.random() * PUPPY_PHRASES.length)]
@@ -276,13 +282,22 @@ const StartPage: React.FC<StartPageProps> = ({ onStartGame, onMusicToggle, onSou
                 >
                   Achievements
                 </button>
-                <button 
-                  className="unlockables-button"
-                  onClick={() => setShowUnlockables(true)}
-                  onMouseEnter={() => handleButtonHover('unlockables')}
-                >
-                  Unlockables
-                </button>
+                <div className="button-group">
+                  <button 
+                    className="unlockables-button"
+                    onClick={() => setShowUnlockables(true)}
+                    onMouseEnter={() => handleButtonHover('unlockables')}
+                  >
+                    Unlockables
+                  </button>
+                  <button 
+                    className="customize-button"
+                    onClick={() => setShowCustomize(true)}
+                    onMouseEnter={() => handleButtonHover('customize')}
+                  >
+                    Customize Buddy
+                  </button>
+                </div>
               </>
             ) : (
               <div className="mode-selection">
@@ -382,11 +397,19 @@ const StartPage: React.FC<StartPageProps> = ({ onStartGame, onMusicToggle, onSou
             setTheme(themeId);
             setShowUnlockables(false);
           }}
-          onSelectCompanion={(companionId: "default" | "cyber_cat" | "ghost" | "alien" | "dragon" | "unicorn" | "wizard" | "ninja" | "phoenix" | "octopus" | "crystal" | "star") => {
+          onSelectCompanion={(companionId) => {
             setCompanion(companionId);
             setShowUnlockables(false);
           }}
           onClose={() => setShowUnlockables(false)}
+        />
+      )}
+
+      {showCustomize && (
+        <CustomizeBuddyMenu
+          onClose={() => setShowCustomize(false)}
+          onCustomizeChange={setCustomBulldogConfig}
+          currentBulldogConfig={customBulldogConfig}
         />
       )}
 
@@ -411,13 +434,6 @@ const StartPage: React.FC<StartPageProps> = ({ onStartGame, onMusicToggle, onSou
           </div>
         </div>
       )}
-
-      <div className="customizer-container">
-        <BulldogCustomizer 
-          onConfigChange={setCustomBulldogConfig}
-          currentConfig={customBulldogConfig}
-        />
-      </div>
     </div>
   )
 }

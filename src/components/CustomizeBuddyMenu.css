@@ -1,0 +1,84 @@
+.customize-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.85);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.customize-container {
+  background: rgba(26, 26, 46, 0.95);
+  border: 2px solid #00FF9F;
+  border-radius: 15px;
+  padding: 25px;
+  width: 90%;
+  max-width: 500px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.customize-container h2 {
+  color: #00FF9F;
+  text-align: center;
+  margin-bottom: 20px;
+  font-size: 1.5em;
+}
+
+.customize-container .bulldog-customizer {
+  position: relative;
+  transform: none;
+  opacity: 1;
+  visibility: visible;
+  width: 100%;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+}
+
+.customize-container .preset-buttons {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 15px;
+  margin-top: 15px;
+}
+
+.customize-container .preset-button {
+  width: 100%;
+  padding: 10px;
+}
+
+.customize-container section {
+  margin-bottom: 20px;
+}
+
+.customize-container .customizer-tabs {
+  margin-top: 20px;
+}
+
+.customize-container .tab-content {
+  margin-top: 20px;
+}
+
+/* Scrollbar styling */
+.customize-container::-webkit-scrollbar {
+  width: 8px;
+}
+
+.customize-container::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+}
+
+.customize-container::-webkit-scrollbar-thumb {
+  background: rgba(0, 255, 159, 0.3);
+  border-radius: 4px;
+}
+
+.customize-container::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 255, 159, 0.5);
+} 

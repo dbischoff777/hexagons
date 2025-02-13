@@ -1,24 +1,36 @@
 import React, { useState } from 'react';
 import './BulldogCustomizer.css';
 import bulldogConfig from '../config/bulldogConfig.json';
+import { CustomizationOption } from '../utils/customizationUtils';
 
 interface CustomizerProps {
   onConfigChange: (newConfig: typeof bulldogConfig) => void;
   currentConfig: typeof bulldogConfig;
+  unlockedOptions?: CustomizationOption[];
 }
 
 type AnimationSection = 'body' | 'head';
 
-// Replace ChevronIcon with a settings/customize icon
-const CustomizeIcon = () => (
-  <svg viewBox="0 0 24 24" fill="currentColor">
-    <path d="M12 8c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4zm8.94 3c-.46-4.17-3.77-7.48-7.94-7.94V1h-2v2.06C6.83 3.52 3.52 6.83 3.06 11H1v2h2.06c.46 4.17 3.77 7.48 7.94 7.94V23h2v-2.06c4.17-.46 7.48-3.77 7.94-7.94H23v-2h-2.06zM12 19c-3.87 0-7-3.13-7-7s3.13-7 7-7 7 3.13 7 7-3.13 7-7 7z"/>
-  </svg>
-);
-
-const BulldogCustomizer: React.FC<CustomizerProps> = ({ onConfigChange, currentConfig }) => {
+const BulldogCustomizer: React.FC<CustomizerProps> = ({
+  onConfigChange,
+  currentConfig,
+  unlockedOptions = []
+}) => {
   const [activeTab, setActiveTab] = useState('colors');
-  const [isOpen, setIsOpen] = useState(false);
+
+  // Helper function to check if an option is unlocked
+  const isOptionUnlocked = (optionId: string) => {
+    const option = unlockedOptions.find(opt => opt.id === optionId);
+    return option?.unlocked || false;
+  };
+
+  // Helper to render lock overlay and level requirement
+  const LockOverlay = ({ option }: { option: CustomizationOption }) => (
+    <div className="lock-overlay">
+      <span className="lock-icon">🔒</span>
+      <span className="unlock-text">Unlocks at Level {option.levelRequired}</span>
+    </div>
+  );
 
   const handleAnimationChange = (section: AnimationSection, property: string, value: string) => {
     const newConfig = { ...currentConfig };
@@ -124,38 +136,54 @@ const BulldogCustomizer: React.FC<CustomizerProps> = ({ onConfigChange, currentC
     }
   };
 
+  const handleColorPresetChange = (name: string, colors: typeof COLOR_PRESETS[keyof typeof COLOR_PRESETS]) => {
+    const newConfig = { ...currentConfig };
+    
+    // Update body and head colors
+    newConfig.body.colors.main = colors.main;
+    newConfig.body.colors.chest = colors.chest;
+    newConfig.head.colors.ears = colors.ears;
+    
+    // Update effects
+    newConfig.effects.glow.color = `rgba(${parseInt(colors.glow.slice(1,3), 16)}, ${parseInt(colors.glow.slice(3,5), 16)}, ${parseInt(colors.glow.slice(5,7), 16)}, 0.4)`;
+    newConfig.effects.sparkles.color = colors.sparkle;
+    
+    // Update collar colors
+    newConfig.accessories.collar.colors.main = colors.collar;
+    newConfig.accessories.collar.colors.tag = colors.collarTag;
+    newConfig.accessories.collar.colors.glow = `rgba(${parseInt(colors.collar.slice(1,3), 16)}, ${parseInt(colors.collar.slice(3,5), 16)}, ${parseInt(colors.collar.slice(5,7), 16)}, 0.4)`;
+    
+    // Update accessory glow colors
+    newConfig.effects.sparkles.glowColor = `rgba(${parseInt(colors.sparkle.slice(1,3), 16)}, ${parseInt(colors.sparkle.slice(3,5), 16)}, ${parseInt(colors.sparkle.slice(5,7), 16)}, 0.6)`;
+    
+    onConfigChange(newConfig);
+  };
+
   return (
-    <div className={`customizer-wrapper ${isOpen ? 'open' : ''}`}>
-      <button 
-        className="customize-button"
-        onClick={() => setIsOpen(!isOpen)}
-        aria-label="Customize bulldog"
-      >
-        <CustomizeIcon />
-        Customize
-      </button>
-      
+    <div className="customizer-wrapper">
       <div className="bulldog-customizer">
-        <h3>Customize Your Bulldog</h3>
+        <h3>Customize Your Buddy</h3>
         
         <div className="customizer-tabs">
           <button 
             className={`tab ${activeTab === 'colors' ? 'active' : ''}`}
             onClick={() => setActiveTab('colors')}
           >
-            Colors
+            Colors {isOptionUnlocked('basic_colors') ? '✨' : '🔒'}
           </button>
           <button 
             className={`tab ${activeTab === 'animations' ? 'active' : ''}`}
-            onClick={() => setActiveTab('animations')}
+            onClick={() => isOptionUnlocked('animations') && setActiveTab('animations')}
+            disabled={!isOptionUnlocked('animations')}
           >
-            Animations
+            Animations {isOptionUnlocked('animations') ? '✨' : '🔒'}
           </button>
           <button 
             className={`tab ${activeTab === 'accessories' ? 'active' : ''}`}
-            onClick={() => setActiveTab('accessories')}
+            onClick={() => isOptionUnlocked('accessories') && setActiveTab('accessories')}
+            disabled={!isOptionUnlocked('accessories')}
           >
-            Accessories
+            Accessories {isOptionUnlocked('accessories') ? '✨' : '🔒'}
           </button>
         </div>
 
@@ -165,46 +193,35 @@ const BulldogCustomizer: React.FC<CustomizerProps> = ({ onConfigChange, currentC
               <div className="color-presets">
                 <h4>Color Themes</h4>
                 <div className="preset-buttons">
-                  {Object.entries(COLOR_PRESETS).map(([name, colors]) => (
-                    <button
-                      key={name}
-                      className="preset-button"
-                      onClick={() => {
-                        const newConfig = { ...currentConfig };
-                        // Update body and head colors
-                        newConfig.body.colors.main = colors.main;
-                        newConfig.body.colors.chest = colors.chest;
-                        newConfig.head.colors.ears = colors.ears;
-                        
-                        // Update effects
-                        newConfig.effects.glow.color = `rgba(${parseInt(colors.glow.slice(1,3), 16)}, ${parseInt(colors.glow.slice(3,5), 16)}, ${parseInt(colors.glow.slice(5,7), 16)}, 0.4)`;
-                        newConfig.effects.sparkles.color = colors.sparkle;
-                        
-                        // Update collar colors
-                        newConfig.accessories.collar.colors.main = colors.collar;
-                        newConfig.accessories.collar.colors.tag = colors.collarTag;
-                        newConfig.accessories.collar.colors.glow = `rgba(${parseInt(colors.collar.slice(1,3), 16)}, ${parseInt(colors.collar.slice(3,5), 16)}, ${parseInt(colors.collar.slice(5,7), 16)}, 0.4)`;
-                        
-                        // Update accessory glow colors
-                        newConfig.effects.sparkles.glowColor = `rgba(${parseInt(colors.sparkle.slice(1,3), 16)}, ${parseInt(colors.sparkle.slice(3,5), 16)}, ${parseInt(colors.sparkle.slice(5,7), 16)}, 0.6)`;
-                        
-                        onConfigChange(newConfig);
-                      }}
-                    >
-                      <div className="preset-preview">
-                        <div className="preview-main" style={{ background: colors.main }}></div>
-                        <div className="preview-accent" style={{ background: colors.collar }}></div>
-                        <div className="preview-glow" style={{ background: colors.sparkle }}></div>
+                  {Object.entries(COLOR_PRESETS).map(([name, colors]) => {
+                    const isSpecialColor = name !== 'default' && name !== 'classic';
+                    const isLocked = isSpecialColor && !isOptionUnlocked('special_colors');
+                    const option = unlockedOptions.find(opt => opt.id === 'special_colors');
+
+                    return (
+                      <div key={name} className="preset-button-wrapper">
+                        <button
+                          className={`preset-button ${isLocked ? 'locked' : ''}`}
+                          onClick={() => !isLocked && handleColorPresetChange(name, colors)}
+                          disabled={isLocked}
+                        >
+                          <div className="preset-preview">
+                            <div className="preview-main" style={{ background: colors.main }}></div>
+                            <div className="preview-accent" style={{ background: colors.collar }}></div>
+                            <div className="preview-glow" style={{ background: colors.sparkle }}></div>
+                          </div>
+                          {name.charAt(0).toUpperCase() + name.slice(1)}
+                        </button>
+                        {isLocked && option && <LockOverlay option={option} />}
                       </div>
-                      {name.charAt(0).toUpperCase() + name.slice(1)}
-                    </button>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             </section>
           )}
 
-          {activeTab === 'animations' && (
+          {activeTab === 'animations' && isOptionUnlocked('animations') && (
             <section className="animation-section">
               <div className="animation-options">
                 <div className="animation-option">
@@ -235,7 +252,7 @@ const BulldogCustomizer: React.FC<CustomizerProps> = ({ onConfigChange, currentC
             </section>
           )}
 
-          {activeTab === 'accessories' && (
+          {activeTab === 'accessories' && isOptionUnlocked('accessories') && (
             <section className="accessories-section">
               <div className="accessory-toggles">
                 <div className="accessory-toggle">
@@ -287,8 +304,20 @@ const BulldogCustomizer: React.FC<CustomizerProps> = ({ onConfigChange, currentC
                       }}
                     >
                       <div className="style-preview">
-                        <div className="preview-color" style={{ background: colors.collar }}></div>
-                        <div className="preview-color" style={{ background: colors.sparkles }}></div>
+                        <div 
+                          className="preview-color preview-collar"
+                          style={{ 
+                            '--color': colors.collar,
+                            '--color-light': `${colors.collar}99`
+                          } as React.CSSProperties}
+                        />
+                        <div 
+                          className="preview-color preview-sparkles"
+                          style={{ 
+                            '--color': colors.sparkles,
+                            '--color-light': `${colors.sparkles}99`
+                          } as React.CSSProperties}
+                        />
                       </div>
                       {name.charAt(0).toUpperCase() + name.slice(1)}
                     </button>
@@ -296,6 +325,15 @@ const BulldogCustomizer: React.FC<CustomizerProps> = ({ onConfigChange, currentC
                 </div>
               </div>
             </section>
+          )}
+
+          {(activeTab === 'animations' && !isOptionUnlocked('animations')) ||
+           (activeTab === 'accessories' && !isOptionUnlocked('accessories')) && (
+            <div className="locked-content">
+              <span className="lock-icon">🔒</span>
+              <p>This feature is currently locked.</p>
+              <p>Keep playing to unlock more customization options!</p>
+            </div>
           )}
         </div>
       </div>
