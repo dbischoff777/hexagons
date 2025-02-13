@@ -78,4 +78,26 @@ class SoundManager {
   }
 }
 
-export default SoundManager 
+export default SoundManager
+
+const SOUNDS = {
+  bark: '/sounds/bark.mp3',
+  // Add more sounds here
+};
+
+export const playBarkSound = async () => {
+  try {
+    // Check if sound file exists
+    const response = await fetch(SOUNDS.bark);
+    if (!response.ok) {
+      console.log('Bark sound file not found');
+      return;
+    }
+
+    const bark = new Audio(SOUNDS.bark);
+    bark.volume = 0.3;
+    await bark.play();
+  } catch (error) {
+    console.log('Error playing sound:', error);
+  }
+}; 

@@ -9,6 +9,10 @@ import AchievementsView from './AchievementsView'
 import UnlockablesMenu from './UnlockablesMenu'
 import { setTheme, getPlayerProgress, setCompanion } from '../utils/progressionUtils'
 import LevelRoadmap from './LevelRoadmap'
+import soundManager from '../utils/soundManager'
+import FrenchBulldog from './FrenchBulldog'
+import BulldogCustomizer from './BulldogCustomizer'
+import bulldogConfig from '../config/bulldogConfig.json'
 
 
 interface StartPageProps {
@@ -18,6 +22,19 @@ interface StartPageProps {
   musicEnabled: boolean
   soundEnabled: boolean
 }
+
+const PUPPY_PHRASES = [
+  "Woof! Want to play a game? *tail wags* 🎮",
+  "*excited bouncing* Match the tiles with me! ✨",
+  "*happy panting* You're doing great! 🌟",
+  "*playful bark* Ready for a challenge? 🎯",
+  "*tilts head* Let's solve some puzzles! 🎲",
+  "*perks ears* I smell high scores coming! 🌈",
+  "*wiggles excitedly* Time for hexagon fun! 🔷",
+  "*happy zoomies* Let's beat your record! ⭐",
+  "*curious sniff* What level shall we try? 🎪",
+  "*puppy eyes* Can we play together? 💫"
+];
 
 const StartPage: React.FC<StartPageProps> = ({ onStartGame, onMusicToggle, onSoundToggle, musicEnabled, soundEnabled }) => {
   const [showGameModes, setShowGameModes] = useState(false)
@@ -30,6 +47,10 @@ const StartPage: React.FC<StartPageProps> = ({ onStartGame, onMusicToggle, onSou
   const [showUnlockables, setShowUnlockables] = useState(false)
   const [showLevelRoadmap, setShowLevelRoadmap] = useState(false)
   const playerProgress = getPlayerProgress()
+  const [puppyPhrase, setPuppyPhrase] = useState(() => 
+    PUPPY_PHRASES[Math.floor(Math.random() * PUPPY_PHRASES.length)]
+  );
+  const [customBulldogConfig, setCustomBulldogConfig] = useState(bulldogConfig);
 
   useEffect(() => {
     // Check for saved game on mount
@@ -52,6 +73,20 @@ const StartPage: React.FC<StartPageProps> = ({ onStartGame, onMusicToggle, onSou
       onStartGame(savedGame.timedMode, undefined)
     }
   }
+
+  const handlePuppyClick = () => {
+    const newPhrase = PUPPY_PHRASES[Math.floor(Math.random() * PUPPY_PHRASES.length)];
+    setPuppyPhrase(newPhrase);
+    
+    // Add click animation
+    const puppy = document.querySelector('.french-puppy');
+    puppy?.classList.add('clicked');
+    setTimeout(() => puppy?.classList.remove('clicked'), 500);
+    
+    if (soundEnabled) {
+      soundManager.getInstance().playSound('puppy');
+    }
+  };
 
   if (showStatistics) {
     return <StatisticsPage onBack={() => setShowStatistics(false)} />
@@ -263,6 +298,21 @@ const StartPage: React.FC<StartPageProps> = ({ onStartGame, onMusicToggle, onSou
           </div>
         </div>
       )}
+
+      <div className="customizer-container">
+        <BulldogCustomizer 
+          onConfigChange={setCustomBulldogConfig}
+          currentConfig={customBulldogConfig}
+        />
+      </div>
+
+      <FrenchBulldog
+        onClick={handlePuppyClick}
+        phrase={puppyPhrase}
+        isClicked={false}
+        customConfig={customBulldogConfig}
+        onConfigChange={setCustomBulldogConfig}
+      />
     </div>
   )
 }

@@ -1,0 +1,131 @@
+{
+  "body": {
+    "dimensions": {
+      "width": 120,
+      "height": 70,
+      "chestWidth": 60,
+      "chestHeight": 40
+    },
+    "colors": {
+      "main": "#7c7c7c",
+      "chest": "#8c8c8c",
+      "shadow": "rgba(0, 0, 0, 0.2)"
+    },
+    "animations": {
+      "breatheDuration": "4s",
+      "breatheScale": 1.03
+    }
+  },
+  "head": {
+    "dimensions": {
+      "width": 100,
+      "height": 100
+    },
+    "colors": {
+      "main": "#7c7c7c",
+      "ears": "#6a6a6a"
+    },
+    "animations": {
+      "earTwitchDuration": "6s"
+    }
+  },
+  "legs": {
+    "dimensions": {
+      "width": 15,
+      "height": 25,
+      "pawWidth": 20,
+      "pawHeight": 10
+    },
+    "positions": {
+      "frontLeft": 25,
+      "frontRight": 25,
+      "backLeft": 15,
+      "backRight": 15
+    },
+    "colors": {
+      "main": "#7c7c7c",
+      "paws": "#6a6a6a"
+    },
+    "animations": {
+      "idleDuration": "4s",
+      "moveDistance": 2,
+      "leftPawRaised": false,
+      "rightPawRaised": false
+    }
+  },
+  "tail": {
+    "dimensions": {
+      "width": 15,
+      "height": 25
+    },
+    "colors": {
+      "main": "#7c7c7c"
+    },
+    "animations": {
+      "wagDuration": "3s",
+      "wagAngle": 15
+    }
+  },
+  "accessories": {
+    "collar": {
+      "enabled": true,
+      "colors": {
+        "main": "#FF5F9F",
+        "glow": "rgba(255, 95, 159, 0.4)",
+        "tag": "#00FF9F"
+      }
+    },
+    "foodBowl": {
+      "enabled": true,
+      "dimensions": {
+        "width": 40,
+        "height": 20,
+        "rimHeight": 8
+      },
+      "colors": {
+        "rim": "#00FF9F",
+        "base": "rgba(0, 255, 159, 0.2)",
+        "kibble": "#FF5F9F"
+      }
+    },
+    "bowtie": {
+      "enabled": false,
+      "colors": {
+        "main": "#FF1493",
+        "glow": "rgba(255, 20, 147, 0.4)"
+      }
+    },
+    "glasses": {
+      "enabled": false,
+      "colors": {
+        "frame": "#4B0082",
+        "lens": "rgba(0, 255, 159, 0.2)"
+      }
+    }
+  },
+  "effects": {
+    "sparkles": {
+      "enabled": true,
+      "color": "#00FF9F",
+      "glowColor": "rgba(0, 255, 159, 0.6)"
+    },
+    "glow": {
+      "color": "rgba(0, 255, 159, 0.4)",
+      "intensity": 20
+    }
+  },
+  "speechBubble": {
+    "dimensions": {
+      "minWidth": 200,
+      "maxWidth": 300,
+      "padding": "15px 25px",
+      "arrowSize": 12
+    },
+    "colors": {
+      "background": "rgba(0, 0, 0, 0.95)",
+      "border": "#00FF9F",
+      "text": "#ffffff",
+      "behaviorText": "rgba(0, 255, 159, 0.8)"
+    }
+  }
+} 

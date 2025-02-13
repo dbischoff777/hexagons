@@ -1,0 +1,375 @@
+.bulldog-customizer {
+  background: rgba(0, 0, 0, 0.9);
+  border: 2px solid #00FF9F;
+  border-radius: 15px;
+  padding: 20px;
+  color: #fff;
+  width: 300px;
+  box-shadow: 0 0 20px rgba(0, 255, 159, 0.2);
+  transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+/* Tabs */
+.customizer-tabs {
+  display: flex;
+  gap: 5px;
+  margin-bottom: 20px;
+  padding: 0 5px;
+}
+
+.tab {
+  flex: 1;
+  background: transparent;
+  color: #fff;
+  border: 1px solid #00FF9F;
+  border-radius: 8px;
+  padding: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 14px;
+}
+
+.tab:hover {
+  background: rgba(0, 255, 159, 0.1);
+  box-shadow: 0 0 10px rgba(0, 255, 159, 0.2);
+}
+
+.tab.active {
+  background: rgba(0, 255, 159, 0.2);
+  box-shadow: 0 0 15px rgba(0, 255, 159, 0.3);
+}
+
+/* Tab Content */
+.tab-content {
+  min-height: 200px;
+}
+
+/* Animation Controls */
+.animation-options {
+  display: grid;
+  gap: 15px;
+}
+
+.animation-option {
+  display: grid;
+  gap: 8px;
+}
+
+.animation-option label {
+  font-size: 14px;
+  color: #00FF9F;
+}
+
+.animation-option input[type="range"] {
+  width: 100%;
+  height: 4px;
+  background: rgba(0, 255, 159, 0.2);
+  border-radius: 2px;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.animation-option input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  background: #00FF9F;
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 0 10px rgba(0, 255, 159, 0.4);
+  transition: all 0.2s ease;
+}
+
+.animation-option input[type="range"]::-webkit-slider-thumb:hover {
+  transform: scale(1.1);
+  box-shadow: 0 0 15px rgba(0, 255, 159, 0.6);
+}
+
+.animation-option span {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.7);
+  text-align: right;
+}
+
+/* Color Options */
+.color-options {
+  display: none;
+}
+
+/* Accessory Options */
+.accessory-options {
+  display: grid;
+  gap: 15px;
+}
+
+/* Update Accessory Options */
+.accessory-toggles {
+  display: grid;
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.accessory-toggle {
+  display: flex;
+  align-items: center;
+  padding: 8px;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.accessory-toggle:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.accessory-toggle label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+}
+
+.accessory-toggle input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: #00FF9F;
+}
+
+/* Accessory Style Presets */
+.accessory-styles {
+  margin-top: 20px;
+}
+
+.style-buttons {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.style-button {
+  background: transparent;
+  border: 1px solid #00FF9F;
+  border-radius: 8px;
+  padding: 10px;
+  color: #fff;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.style-button:hover {
+  background: rgba(0, 255, 159, 0.1);
+  box-shadow: 0 0 10px rgba(0, 255, 159, 0.2);
+}
+
+.style-preview {
+  display: flex;
+  gap: 5px;
+}
+
+.preview-color {
+  width: 15px;
+  height: 30px;
+  border-radius: 4px;
+  border: 1px solid #00FF9F;
+  box-shadow: 0 0 10px rgba(0, 255, 159, 0.2);
+}
+
+/* Remove old color picker styles */
+.accessory-toggle input[type="color"] {
+  display: none;
+}
+
+/* Animations */
+@keyframes customizer-glow {
+  0%, 100% { box-shadow: 0 0 20px rgba(0, 255, 159, 0.2); }
+  50% { box-shadow: 0 0 30px rgba(0, 255, 159, 0.3); }
+}
+
+.bulldog-customizer {
+  animation: customizer-glow 2s ease-in-out infinite;
+}
+
+/* Transitions */
+.tab-content section {
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.bulldog-customizer h3 {
+  color: #00FF9F;
+  margin: 0 0 20px 0;
+  text-align: center;
+}
+
+.bulldog-customizer section {
+  margin-bottom: 20px;
+}
+
+.bulldog-customizer h4 {
+  color: #00FF9F;
+  margin: 0 0 10px 0;
+  font-size: 16px;
+}
+
+.color-options, .accessory-options, .effect-options {
+  display: grid;
+  gap: 10px;
+}
+
+.color-option:hover label,
+.accessory-toggle:hover label,
+.effect-toggle:hover label {
+  color: #00FF9F;
+}
+
+.effect-toggle label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+}
+
+.effect-toggle input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: #00FF9F;
+}
+
+/* Color Presets */
+.color-presets {
+  margin-bottom: 20px;
+}
+
+.preset-buttons {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 15px;
+}
+
+.preset-button {
+  background: transparent;
+  border: 1px solid #00FF9F;
+  border-radius: 8px;
+  padding: 10px;
+  color: #fff;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  min-width: 120px;
+}
+
+.preset-button:hover {
+  background: rgba(0, 255, 159, 0.1);
+  box-shadow: 0 0 10px rgba(0, 255, 159, 0.2);
+}
+
+.preset-preview {
+  display: flex;
+  gap: 2px;
+  padding: 2px;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+  border: 1px solid #00FF9F;
+}
+
+.preview-main,
+.preview-accent,
+.preview-glow {
+  width: 15px;
+  height: 30px;
+  border-radius: 4px;
+}
+
+.preview-main {
+  flex: 2;
+}
+
+.preview-accent,
+.preview-glow {
+  flex: 1;
+}
+
+/* Update menu position */
+.bulldog-customizer {
+  position: absolute;
+  bottom: 50px;
+  right: -20px; /* Shift slightly left to align better with button */
+  transform-origin: bottom right;
+  opacity: 0;
+  visibility: hidden;
+  transform: scale(0.95);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.customizer-wrapper.open .bulldog-customizer {
+  opacity: 1;
+  visibility: visible;
+  transform: scale(1);
+}
+
+/* Update button position */
+.customizer-wrapper {
+  position: fixed;
+  right: 160px; /* Adjust for wider button */
+  bottom: 220px;
+  z-index: 9;
+}
+
+/* Optional: Add a backdrop when menu is open */
+.customizer-wrapper.open::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: -1;
+  opacity: 0;
+  animation: fadeIn 0.3s ease forwards;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Update button styles */
+.customize-button {
+  width: auto;
+  min-width: 40px;
+  height: 40px;
+  background: rgba(0, 0, 0, 0.9);
+  border: 2px solid #00FF9F;
+  border-radius: 20px;
+  color: #00FF9F;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 16px;
+  font-size: 14px;
+  transition: all 0.3s ease;
+}
+
+.customize-button svg {
+  width: 20px;
+  height: 20px;
+}
+
+.customize-button:hover {
+  background: rgba(0, 255, 159, 0.1);
+  box-shadow: 0 0 15px rgba(0, 255, 159, 0.2);
+  transform: scale(1.05);
+} 
