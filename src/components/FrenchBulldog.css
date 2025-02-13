@@ -24,8 +24,9 @@
   
   /* Update existing properties */
   position: absolute;
-  bottom: 40px;
-  right: 40px;
+  left: 20px;
+  top: 100px;  /* Position below level progression */
+  transform: none;  /* Remove transform since we're using fixed positioning */
   width: 160px;
   height: 160px;
   cursor: pointer;
@@ -216,7 +217,7 @@
 /* Update speech bubble styles */
 .bulldog-speech-bubble {
   position: absolute;
-  right: 120%;
+  left: calc(100% + 20px);  /* Position speech bubble to the right */
   top: 30%;
   background: rgba(0, 0, 0, 0.95);
   border: 2px solid #00FF9F;
@@ -224,7 +225,7 @@
   padding: 15px 25px;
   opacity: 0;
   visibility: hidden;
-  transform: translateX(20px);
+  transform: translateX(0);
   transition: all 0.3s ease;
   box-shadow: 0 0 20px rgba(0, 255, 159, 0.2);
   z-index: 5;
@@ -286,14 +287,14 @@
 
 .bulldog-speech-arrow {
   position: absolute;
-  right: -12px;
+  left: -12px;
   top: 50%;
-  transform: translateY(-50%);
+  transform: translateY(-50%) rotate(180deg);
   width: 0;
   height: 0;
   border-top: 12px solid transparent;
   border-bottom: 12px solid transparent;
-  border-left: 12px solid #00FF9F;
+  border-right: 12px solid #00FF9F;
 }
 
 .french-bulldog:hover .bulldog-head {
@@ -755,4 +756,58 @@
   100% {
     transform: translateX(-2px);
   }
+}
+
+/* Add new styles for abilities container */
+.bulldog-abilities {
+  position: absolute;
+  left: 0;
+  top: calc(100% + 10px);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 10;
+  width: 240px;  /* Fixed wider width */
+}
+
+.ability-button {
+  background: rgba(0, 0, 0, 0.7);
+  border: 2px solid #00FF9F;
+  border-radius: 8px;
+  color: white;
+  padding: 10px 16px;  /* Slightly larger padding */
+  display: flex;
+  align-items: center;
+  gap: 12px;  /* Increased gap between icon and text */
+  width: 100%;  /* Fill container width */
+  position: relative;
+  overflow: hidden;
+  font-size: 15px;  /* Slightly larger font */
+}
+
+.ability-button.active {
+  background: rgba(0, 255, 159, 0.2);
+}
+
+.ability-button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.ability-icon {
+  font-size: 20px;  /* Larger icon size */
+}
+
+.ability-name {
+  flex: 1;  /* Take up remaining space */
+  text-align: left;
+}
+
+.cooldown-overlay,
+.ready-overlay {
+  position: absolute;
+  right: 12px;  /* Slightly more padding from edge */
+  font-size: 14px;
+  min-width: 45px;  /* Ensure consistent width for status */
+  text-align: right;
 }

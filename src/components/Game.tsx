@@ -31,7 +31,7 @@ import LevelRoadmap from './LevelRoadmap'
 import BadgePopup from './BadgePopup'
 import { Badge } from '../types/progression'
 import { Companion } from '../types/companion'
-import CompanionHUD from './CompanionHUD'
+/* import CompanionHUD from './CompanionHUD' */
 import { COMPANIONS } from '../types/companion'
 import type { CompanionId } from '../types/companion'
 import UpgradeModal from './UpgradeModal'
@@ -39,6 +39,8 @@ import { getInitialUpgradeState, purchaseUpgrade, getUpgradeEffect, saveUpgradeS
 import { UpgradeState } from '../types/upgrades'
 import { unlockNextLevel, LevelCompletion } from '../utils/levelUtils'
 import './LevelCompleteOverlay.css'
+import FrenchBulldog from './FrenchBulldog'
+import bulldogConfig from '../config/bulldogConfig.json'
 
 // Replace the DEBUG object at the top
 const DEBUG = {
@@ -2506,11 +2508,19 @@ const Game: React.FC<GameProps> = ({
         </div>
       </div>
       {showCompanion && (
-        <CompanionHUD 
-          companion={companion}
-          score={score}
-          combo={combo.count}
-          lastAction={lastAction}  // Add this state to track game events
+        <FrenchBulldog
+          onClick={() => {
+            // Add any click handling logic here
+            console.log('Companion clicked');
+          }}
+          phrase=""
+          hideSpeech={true}
+          abilities={companion.abilities}
+          customConfig={bulldogConfig}
+          onConfigChange={(newConfig) => {
+            // Add any config change handling logic here
+            console.log('Config changed', newConfig);
+          }}
         />
       )}
       <div className="board-container">

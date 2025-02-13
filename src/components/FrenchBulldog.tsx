@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import './FrenchBulldog.css';
 import bulldogConfig from '../config/bulldogConfig.json';
 import { playBarkSound } from '../utils/soundManager';
-
+import { CompanionAbility } from '../types/companion';
 interface BulldogProps {
   onClick: () => void;
   phrase: string;
@@ -11,6 +11,8 @@ interface BulldogProps {
   onConfigChange: (config: typeof bulldogConfig) => void;
   position?: { y: number };  // Only track y position
   alwaysShowSpeech?: boolean;  // Add this prop
+  abilities?: CompanionAbility[];
+  hideSpeech?: boolean;
 }
 
 const FrenchBulldog: React.FC<BulldogProps> = ({ 
@@ -20,7 +22,9 @@ const FrenchBulldog: React.FC<BulldogProps> = ({
   customConfig,
   onConfigChange,
   position,
-  alwaysShowSpeech = false  // Default to false
+  alwaysShowSpeech = false,  // Default to false
+  abilities = [],
+  hideSpeech = false
 }) => {
   const config = customConfig ? { ...bulldogConfig, ...customConfig } : bulldogConfig;
 
@@ -239,12 +243,41 @@ const FrenchBulldog: React.FC<BulldogProps> = ({
           </div>
         )}
 
-        <div className="bulldog-speech-bubble">
-          <div className="bulldog-speech-text">
-            {formatPhrase(phrase)}
+        {/* Only show speech bubble if not hidden */}
+        {!hideSpeech && (
+          <div className="bulldog-speech-bubble">
+            <div className="bulldog-speech-text">
+              {formatPhrase(phrase)}
+            </div>
+            <div className="bulldog-speech-arrow"></div>
           </div>
-          <div className="bulldog-speech-arrow"></div>
-        </div>
+        )}
+
+        {/* Add abilities below the dog */}
+        {abilities.length > 0 && (
+          <div className="bulldog-abilities">
+            {abilities.map(ability => (
+              <button
+                key={ability.id}
+                className={`ability-button ${ability.isActive ? 'active' : ''}`}
+                disabled={true}
+                title={`${ability.description} (Activates automatically when ready)`}
+              >
+                <div className="ability-icon">{ability.icon}</div>
+                <span className="ability-name">{ability.name}</span>
+                {ability.currentCooldown > 0 ? (
+                  <div className="cooldown-overlay">
+                    {ability.currentCooldown}s
+                  </div>
+                ) : !ability.isActive && (
+                  <div className="ready-overlay">
+                    Ready!
+                  </div>
+                )}
+              </button>
+            ))}
+          </div>
+        )}
 
         <div className="particle-container">
           {particles.map(particle => (
