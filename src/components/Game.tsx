@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useCallback } from 'react'
+import { useEffect, useRef, useState, useCallback, useMemo } from 'react'
 import { PowerUpState, ComboState, GameState, PlacedTile } from '../types/index'
 import { createTileWithRandomEdges, hexToPixel, getAdjacentTiles, getAdjacentPositions, getAdjacentDirection, COLORS, updateMirrorTileEdges } from '../utils/hexUtils'
 import { INITIAL_TIME, hasMatchingEdges, formatTime, updateTileValues, isGridFull } from '../utils/gameUtils'
@@ -1228,6 +1228,7 @@ const Game: React.FC<GameProps> = ({
             
             setScore(prevScore => prevScore + basePoints);
             addTileAnimation(q, r, 'match');
+            console.log('Setting lastAction for match:', { type: 'match', value: matchCount * 5 });
             setLastAction({ type: 'match', value: matchCount * 5 });
           }
 
@@ -1322,6 +1323,7 @@ const Game: React.FC<GameProps> = ({
                 type: 'combo'
               });
               setScore(prevScore => prevScore + comboBonus);
+              console.log('Setting lastAction for combo:', { type: 'combo', value: combo.count });
               setLastAction({ type: 'combo', value: combo.count });
             }
           } else {
@@ -2308,6 +2310,8 @@ const Game: React.FC<GameProps> = ({
 
   // Consolidate grid clear functionality into a single function
   const handleGridClear = useCallback(() => {
+    console.log('Setting lastAction for grid clear');
+    setLastAction({ type: 'clear' });
     // Calculate points
     const basePoints = 1000;
     const multiplier = powerUps.multiplier.active ? powerUps.multiplier.value : 1;
@@ -2437,51 +2441,78 @@ const Game: React.FC<GameProps> = ({
     document.documentElement.style.setProperty('--theme-background', theme.colors.background);
   }, [theme]);
 
-  const getCompanionPhrase = (action?: {
-    type: 'match' | 'combo' | 'clear' | 'ability';
-    value?: number;
-    abilityName?: string;
-  }): string => {
-    if (!action) return '';
-
-    const { personality } = companion;
-
-    switch (action.type) {
-      case 'match':
-        if (action.value && action.value >= 15) {
-          return personality.bigMatch[Math.floor(Math.random() * personality.bigMatch.length)];
-        }
-        return personality.smallMatch[Math.floor(Math.random() * personality.smallMatch.length)];
-      
-      case 'combo':
-        if (action.value && action.value >= 4) {
-          return personality.bigCombo[Math.floor(Math.random() * personality.bigCombo.length)];
-        }
-        return personality.smallCombo[Math.floor(Math.random() * personality.smallCombo.length)];
-      
-      case 'clear':
-        return personality.bigMatch[Math.floor(Math.random() * personality.bigMatch.length)];
-      
-      case 'ability':
-        return personality.abilityUse[Math.floor(Math.random() * personality.abilityUse.length)]
-          .replace('{ability}', action.abilityName || 'ability');
-      
-      default:
-        return personality.idle[Math.floor(Math.random() * personality.idle.length)];
-    }
+  // Add this helper function outside the component
+  const getRandomPhrase = (phrases: readonly string[]): string => {
+    return phrases[Math.floor(Math.random() * phrases.length)];
   };
 
-  // Inside the Game component, add this effect to manage speech timing
+  // Inside the Game component, modify the getCompanionPhrase function
+  const getCompanionPhrase = useMemo(() => {
+    return (action?: {
+      type: 'match' | 'combo' | 'clear' | 'ability';
+      value?: number;
+      abilityName?: string;
+    }): string => {
+      console.log('getCompanionPhrase called with action:', action);
+
+      if (!action) {
+        console.log('No action provided, returning empty string');
+        return '';
+      }
+
+      const { personality } = companion;
+      
+      switch (action.type) {
+        case 'match':
+          if (action.value && action.value >= 15) {
+            return getRandomPhrase(personality.bigMatch);
+          }
+          return getRandomPhrase(personality.smallMatch);
+        
+        case 'combo':
+          if (action.value && action.value >= 4) {
+            return getRandomPhrase(personality.bigCombo);
+          }
+          return getRandomPhrase(personality.smallCombo);
+        
+        case 'clear':
+          return getRandomPhrase(personality.bigMatch);
+        
+        case 'ability':
+          if (!action.abilityName) {
+            return getRandomPhrase(personality.idle);
+          }
+          const phrase = getRandomPhrase(personality.abilityUse);
+          return phrase.replace('{ability}', action.abilityName);
+        
+        default:
+          return getRandomPhrase(personality.idle);
+      }
+    };
+  }, [companion.personality]); // Only recreate if personality changes
+
+  // Update the speech timing effect to include debouncing
   useEffect(() => {
+    console.log('Speech effect triggered with lastAction:', lastAction);
+    
     if (lastAction) {
-      // Show speech for 3 seconds when there's a new action
+      console.log('Starting speech timer for action:', lastAction);
+      
+      // Clear any existing timers
       const timer = setTimeout(() => {
+        console.log('Speech timer completed, clearing lastAction');
         setLastAction(undefined);
       }, 3000);
       
-      return () => clearTimeout(timer);
+      return () => {
+        console.log('Cleaning up speech timer');
+        clearTimeout(timer);
+      };
     }
   }, [lastAction]);
+
+  // In the FrenchBulldog component render, memoize the phrase
+  const currentPhrase = useMemo(() => getCompanionPhrase(lastAction), [lastAction, getCompanionPhrase]);
 
   return (
     <div
@@ -2556,16 +2587,14 @@ const Game: React.FC<GameProps> = ({
       {showCompanion && (
         <FrenchBulldog
           onClick={() => {
-            // Add any click handling logic here
             console.log('Companion clicked');
           }}
-          phrase={getCompanionPhrase(lastAction)}
-          hideSpeech={!lastAction} // Only show speech when there's an action
+          phrase={currentPhrase}
+          hideSpeech={!lastAction}
           abilities={companion.abilities}
           customConfig={bulldogConfig}
           onConfigChange={(newConfig) => {
-            // Add any config change handling logic here
-            console.log('Config changed', newConfig);
+            console.log('Companion config changed:', newConfig);
           }}
         />
       )}
