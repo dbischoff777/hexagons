@@ -78,39 +78,60 @@ const DEFAULT_ABILITIES: CompanionAbility[] = [
 // First, let's create default personalities that we can reuse
 const DEFAULT_PERSONALITY: CompanionPersonality = {
   greetings: [
-    "Hello! Ready to play some Hex?",
-    "Systems online! Let's make some matches!",
-    "Beep boop! Game time! 🤖"
+    "Woof! Ready to play? 🐾",
+    "Tail wags and happy barks! Let's go! 🐕",
+    "*Excited bouncing* Game time!",
+    "*Playful bark* Hi friend!",
+    "*Tilts head* Ready when you are!",
+    "Woof woof! Let's make some matches! 🦴"
   ],
   smallMatch: [
-    "Nice match! Keep it up!",
-    "That's the way! 👍",
-    "Every match counts!"
+    "*Happy tail wag* Good match!",
+    "Woof! Nice one! 🐾",
+    "*Playful bounce* Keep going!",
+    "*Perks ears* That's it!",
+    "Arf! You're doing great! 🦴",
+    "*Excited panting* Another match!"
   ],
   bigMatch: [
-    "INCREDIBLE MATCH! 🎯",
-    "You're on fire! 🔥",
-    "Now that's what I call a match! ⚡"
+    "*Jumps excitedly* AMAZING MATCH! 🌟",
+    "WOOF WOOF! INCREDIBLE! ⭐",
+    "*Zoomies* THAT WAS AWESOME!",
+    "*Happy spins* PAWSOME MATCH! 🐾",
+    "*Excited barking* YOU'RE ON FIRE! 🔥",
+    "*Bouncing around* SPECTACULAR! ✨"
   ],
   smallCombo: [
-    "Combo started! Let's build it!",
-    "Good rhythm! Keep going!",
-    "That's the combo spirit!"
+    "*Tail wagging faster* Combo started!",
+    "*Alert ears* Keep the combo going!",
+    "Arf! That's the spirit! 🐾",
+    "*Playful stance* More combos coming!",
+    "*Happy panting* You're on a roll!",
+    "*Perked ears* Getting warmed up!"
   ],
   bigCombo: [
-    "COMBO MASTER! 🌟",
-    "You're unstoppable! 💫",
-    "What a combo streak! 🎯"
+    "*Super zoomies* COMBO MASTER! 🌟",
+    "*Excited jumping* UNSTOPPABLE! ⚡",
+    "*Happy spins* WHAT A STREAK! 🎯",
+    "*Rapid tail wags* INCREDIBLE COMBO!",
+    "*Joyful barking* YOU'RE AMAZING! ✨",
+    "*Bouncing with joy* PAWFECT COMBO! 🐾"
   ],
   abilityUse: [
-    "Power-up time! 💪",
-    "Let me help you with that!",
-    "Special ability incoming! ✨"
+    "*Alert stance* Time for a power-up! 💫",
+    "*Protective bark* Let me help! 🐕",
+    "*Determined look* Special move incoming!",
+    "*Focused stance* Watch this trick! ✨",
+    "*Playful growl* Time to show off! 🌟",
+    "*Tail pointing* Here comes help! 🐾"
   ],
   idle: [
-    "The grid is full of possibilities...",
-    "Remember to check for matching edges!",
-    "I'm analyzing optimal moves... 🤔"
+    "*Curious head tilt* I see some matches...",
+    "*Sniffing around* Something good here...",
+    "*Watchful pose* I'll help you find matches!",
+    "*Alert ears* I sense a good move...",
+    "*Gentle tail wag* Take your time...",
+    "*Patient sitting* We'll find the right match!"
   ]
 };
 
