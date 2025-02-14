@@ -263,14 +263,14 @@ const StartPage: React.FC<StartPageProps> = ({
                     onClick={() => setShowUnlockables(true)}
                     onMouseEnter={() => handleButtonHover('unlockables')}
                   >
-                    🎁 Unlockables
+                    🎁 Unlocks
                   </button>
                   <button 
                     className="customize-button"
                     onClick={() => setShowCustomize(true)}
                     onMouseEnter={() => handleButtonHover('customize')}
                   >
-                    🎨 Customize Buddy
+                    🎨 Customize
                   </button>
                 </div>
                 <button 

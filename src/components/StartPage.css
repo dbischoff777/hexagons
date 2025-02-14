@@ -26,7 +26,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 20px;
+  padding: 2rem;
   width: 100%;
   max-width: 800px;
   margin: 0 auto;
@@ -36,7 +36,7 @@
   font-size: 5rem;
   color: #00FF9F;
   text-shadow: 0 0 20px rgba(0, 255, 159, 0.5);
-  margin: 0;
+  margin: 0 0 0.5rem;
   letter-spacing: 0.5rem;
   animation: glow 2s ease-in-out infinite;
 }
@@ -46,7 +46,7 @@
   color: #fff;
   opacity: 0.9;
   text-align: center;
-  margin: 0;
+  margin: 0 0 1rem;
 }
 
 .settings-bar {
@@ -103,7 +103,7 @@
 .game-start {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 1rem;
   width: 100%;
 }
 
@@ -123,6 +123,7 @@
   align-items: center;
   justify-content: center;
   gap: 0.8rem;
+  margin: 1rem 0;
 }
 
 .play-button:hover {
@@ -135,6 +136,8 @@
   flex-direction: column;
   gap: 1rem;
   animation: fadeIn 0.3s ease-out;
+  width: 100%;
+  padding: 1rem 0;
 }
 
 .mode-button {
@@ -143,7 +146,7 @@
   flex-direction: column;
   align-items: center;
   gap: 0.5rem;
-  padding: 1.5rem;
+  padding: 1.2rem;
   border-radius: 1rem;
   cursor: pointer;
   transition: all 0.3s ease;
@@ -152,6 +155,7 @@
   align-items: center;
   justify-content: center;
   gap: 0.8rem;
+  margin: 0;
 }
 
 .mode-button.timed {
@@ -178,7 +182,7 @@
   align-items: center;
   justify-content: center;
   gap: 0.8rem;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.3rem;
 }
 
 .mode-desc {
@@ -252,7 +256,7 @@
   transition: all 0.3s ease;
   font-weight: bold;
   letter-spacing: 0.2rem;
-  margin-bottom: 1rem;
+  margin: 0;
   animation: pulse 2s infinite;
   display: flex;
   align-items: center;
@@ -305,7 +309,7 @@
   background: rgba(26, 26, 46, 0.95);
   border: 2px solid #00FF9F;
   border-radius: 15px;
-  padding: 30px;
+  padding: 2rem;
   width: auto;
   min-width: min-content;
   max-height: 90vh;
@@ -635,43 +639,49 @@
 
 .button-group {
   display: flex;
-  gap: 10px;
+  gap: 1rem;
   width: 100%;
   justify-content: center;
+  margin: 1rem 0;
 }
 
 .button-group button {
   flex: 1;
-  max-width: 200px;
-}
-
-.customize-button {
+  width: 50%; /* Make both buttons take equal width */
+  padding: 1rem;
+  font-size: 1.2rem;
   background: rgba(0, 255, 159, 0.15);
   color: #00FF9F;
   border: 2px solid #00FF9F;
   border-radius: 8px;
-  padding: 15px 30px;
-  font-size: 1.1em;
   cursor: pointer;
   transition: all 0.3s ease;
   text-transform: uppercase;
-  font-weight: bold;
+  letter-spacing: 1px;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 0.8rem;
+  margin: 0;
 }
 
-.customize-button:hover {
+.button-group button:hover {
   background: rgba(0, 255, 159, 0.25);
   transform: scale(1.05);
+  box-shadow: 0 0 15px rgba(0, 255, 159, 0.3);
+}
+
+/* Remove individual button styles since they're now handled by the group */
+.unlockables-button,
+.customize-button {
+  margin: 0;
 }
 
 /* Replace the old settings-button style with this */
 .settings-button-fixed {
   width: 100%;
   max-width: 400px;
-  margin: 1rem auto;
+  margin: 1rem 0;
   padding: 1rem;
   background: linear-gradient(45deg, #00ff9f33, #00ffff33);
   border: 2px solid #00ff9f;
@@ -700,4 +710,62 @@
 button:hover > *:first-child {
   transform: scale(1.2);
   transition: transform 0.3s ease;
+}
+
+/* Update the achievements and unlockables button styles */
+.achievements-button,
+.unlockables-button {
+  width: 100%;
+  padding: 1rem;
+  font-size: 1.2rem;
+  background: rgba(0, 255, 159, 0.15);
+  color: #00FF9F;
+  border: 2px solid #00FF9F;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.8rem;
+  margin: 0;
+}
+
+.achievements-button:hover,
+.unlockables-button:hover {
+  background: rgba(0, 255, 159, 0.25);
+  transform: scale(1.05);
+  box-shadow: 0 0 15px rgba(0, 255, 159, 0.3);
+}
+
+/* Update the continue and tutorial button styles to match */
+.continue-button,
+.tutorial-button,
+.stats-button {
+  width: 100%;
+  padding: 1rem;
+  font-size: 1.2rem;
+  background: rgba(0, 255, 159, 0.15);
+  color: #00FF9F;
+  border: 2px solid #00FF9F;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.8rem;
+  margin: 0;
+}
+
+.continue-button:hover,
+.tutorial-button:hover,
+.stats-button:hover {
+  background: rgba(0, 255, 159, 0.25);
+  transform: scale(1.05);
+  box-shadow: 0 0 15px rgba(0, 255, 159, 0.3);
 }
