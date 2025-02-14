@@ -480,9 +480,9 @@ const Game: React.FC<GameProps> = ({
           setShowWarning(false)
           setShowRotationText(false)
           
-          // Start a smooth rotation animation
+          // Start a smooth rotation animation with faster duration
           let startTime: number | null = null
-          const duration = 2000 // 2 seconds duration
+          const duration = 1000 // Reduced from 2000 to 1000ms (1 second)
           const startRotation = boardRotation
           const targetRotation = startRotation + 180
           
@@ -491,10 +491,10 @@ const Game: React.FC<GameProps> = ({
             const elapsed = currentTime - startTime
             const progress = Math.min(elapsed / duration, 1)
             
-            // Smooth easing function
+            // Use a custom easing function for smoother acceleration/deceleration
             const easeProgress = progress < 0.5
-              ? 2 * progress * progress // Ease in
-              : -1 + (4 - 2 * progress) * progress // Ease out
+              ? 4 * progress * progress * progress // Faster acceleration
+              : 1 - Math.pow(-2 * progress + 2, 3) / 2 // Smoother deceleration
             
             const currentRotation = startRotation + (targetRotation - startRotation) * easeProgress
             
@@ -513,7 +513,7 @@ const Game: React.FC<GameProps> = ({
           
           requestAnimationFrame(animate)
         }, 1500)
-      }, 5000) // Increased to 30 seconds
+      }, 5000) // Keep the same interval
       
       return () => clearInterval(warningTimer)
     }
@@ -2582,7 +2582,7 @@ const Game: React.FC<GameProps> = ({
           abilities={companion.abilities}
           customConfig={bulldogConfig}
           onConfigChange={(newConfig) => {
-            //console.log('Companion config changed:', newConfig);
+            console.log('Companion config changed:', newConfig);
           }}
         />
       )}
