@@ -1,0 +1,226 @@
+.settings-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.9);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  backdrop-filter: blur(5px);
+}
+
+.settings-modal {
+  background: linear-gradient(165deg, #1a1a2e, #16213e);
+  border: 2px solid #00ff9f;
+  border-radius: 15px;
+  padding: 2.5rem;
+  width: 90%;
+  max-width: 800px;
+  box-shadow: 
+    0 0 30px rgba(0, 255, 159, 0.2),
+    0 0 60px rgba(0, 0, 0, 0.4);
+  animation: modalAppear 0.3s ease-out;
+}
+
+@keyframes modalAppear {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.settings-modal h2 {
+  color: #00ff9f;
+  text-align: center;
+  margin-bottom: 2.5rem;
+  font-size: 1.8rem;
+  text-transform: uppercase;
+  letter-spacing: 3px;
+  text-shadow: 
+    0 0 10px rgba(0, 255, 159, 0.5),
+    0 0 20px rgba(0, 255, 159, 0.3);
+  position: relative;
+}
+
+.settings-modal h2::after {
+  content: '';
+  position: absolute;
+  bottom: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60%;
+  height: 2px;
+  background: linear-gradient(90deg, 
+    transparent,
+    rgba(0, 255, 159, 0.8),
+    transparent
+  );
+}
+
+.settings-group {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.settings-section {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-top: 0.5rem;
+}
+
+.settings-modal h3 {
+  color: #00ff9f;
+  margin: 2rem 0 1rem;
+  font-size: 1.3rem;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  padding-bottom: 0.5rem;
+  position: relative;
+  text-shadow: 0 0 10px rgba(0, 255, 159, 0.3);
+}
+
+.settings-modal h3::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 1px;
+  background: linear-gradient(90deg, 
+    rgba(0, 255, 159, 0.8),
+    rgba(0, 255, 159, 0.1)
+  );
+}
+
+.settings-modal h3:first-child {
+  margin-top: 0;
+}
+
+.setting-item {
+  flex: 1;
+  min-width: 250px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.2rem;
+  background: rgba(0, 0, 0, 0.4);
+  border-radius: 12px;
+  border: 1px solid rgba(0, 255, 159, 0.15);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.setting-item::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    45deg,
+    transparent,
+    rgba(0, 255, 159, 0.03),
+    transparent
+  );
+  transform: translateX(-100%);
+  transition: transform 0.6s ease;
+}
+
+.setting-item:hover {
+  background: rgba(0, 0, 0, 0.5);
+  border-color: rgba(0, 255, 159, 0.3);
+  transform: translateX(5px);
+}
+
+.setting-item:hover::before {
+  transform: translateX(100%);
+}
+
+.setting-item label {
+  color: #fff;
+  font-size: 1.1rem;
+  font-weight: 500;
+  margin-right: 1.5rem;
+  text-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+}
+
+.setting-button {
+  background: linear-gradient(45deg, #00ff9f22, #00ffff22);
+  border: 2px solid #00ff9f;
+  color: #00ff9f;
+  padding: 0.7rem 1.3rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  min-width: 100px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.setting-button::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(
+    circle,
+    rgba(0, 255, 159, 0.1),
+    transparent 70%
+  );
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.setting-button:hover::after,
+.setting-button.active::after {
+  opacity: 1;
+}
+
+.setting-button:hover,
+.setting-button.active {
+  background: linear-gradient(45deg, #00ff9f44, #00ffff44);
+  transform: scale(1.05);
+  box-shadow: 
+    0 0 15px rgba(0, 255, 159, 0.3),
+    0 0 30px rgba(0, 255, 159, 0.1);
+}
+
+.setting-button.active {
+  background: linear-gradient(45deg, #00ff9f66, #00ffff66);
+}
+
+.close-button {
+  margin-top: 1rem;
+  width: 100%;
+  padding: 1rem;
+  background: linear-gradient(45deg, #00ff9f33, #00ffff33);
+  border: 2px solid #00ff9f;
+  color: #00ff9f;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1.1rem;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.close-button:hover {
+  background: linear-gradient(45deg, #00ff9f66, #00ffff66);
+  transform: scale(1.02);
+  box-shadow: 0 0 15px rgba(0, 255, 159, 0.3);
+} 

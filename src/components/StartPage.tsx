@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react'
 import './StartPage.css'
-import AccessibilitySettings from './AccessibilitySettings'
 import Game from './Game'
 import { loadGameState, clearSavedGame } from '../utils/gameStateUtils'
 import StatisticsPage from './StatisticsPage'
@@ -13,7 +12,7 @@ import soundManager from '../utils/soundManager'
 import FrenchBulldog from './FrenchBulldog'
 import bulldogConfig from '../config/bulldogConfig.json'
 import CustomizeBuddyMenu from './CustomizeBuddyMenu'
-
+import SettingsModal from './SettingsModal'
 
 interface StartPageProps {
   onStartGame: (withTimer: boolean, isDailyChallenge?: boolean) => void
@@ -38,7 +37,6 @@ const PUPPY_PHRASES = [
   "*puppy eyes* Can we play together? 💫"
 ];
 
-// Add button-specific phrases
 const BUTTON_HOVER_PHRASES = {
   play: [
     "*excited bouncing* Let's play! Let's play! 🎮",
@@ -69,7 +67,6 @@ const BUTTON_HOVER_PHRASES = {
     "*excited tail wag* Ooh, makeover time! ✨",
     "*playful spin* Let's try something new! 🎀"
   ],
-  // Game modes
   timed: [
     "*alert stance* Ready to race against time! ⏱️",
     "*focused gaze* We can beat the clock together! ⚡",
@@ -85,10 +82,22 @@ const BUTTON_HOVER_PHRASES = {
   daily: [
     "*morning stretch* A fresh challenge awaits! 🌅",
     "*eager bounce* I love daily puzzles! 🎯",
-  ]
+  ],
+  settings: [
+    "*curious tilt* Want to adjust something? ⚙️",
+    "*helpful pose* I can help with settings! 🔧",
+  ],
 };
 
-const StartPage: React.FC<StartPageProps> = ({ onStartGame, onMusicToggle, onSoundToggle, musicEnabled, soundEnabled, rotationEnabled, onRotationToggle }) => {
+const StartPage: React.FC<StartPageProps> = ({
+  onStartGame,
+  onMusicToggle,
+  onSoundToggle,
+  musicEnabled,
+  soundEnabled,
+  rotationEnabled,
+  onRotationToggle
+}) => {
   const [showGameModes, setShowGameModes] = useState(false)
   const [showTutorial, setShowTutorial] = useState(false)
   const [showStatistics, setShowStatistics] = useState(false)
@@ -99,54 +108,49 @@ const StartPage: React.FC<StartPageProps> = ({ onStartGame, onMusicToggle, onSou
   const [showUnlockables, setShowUnlockables] = useState(false)
   const [showLevelRoadmap, setShowLevelRoadmap] = useState(false)
   const [showCustomize, setShowCustomize] = useState(false)
+  const [showSettings, setShowSettings] = useState(false)
   const playerProgress = getPlayerProgress()
   const [puppyPhrase, setPuppyPhrase] = useState(() => 
     PUPPY_PHRASES[Math.floor(Math.random() * PUPPY_PHRASES.length)]
-  );
-  const [customBulldogConfig, setCustomBulldogConfig] = useState(bulldogConfig);
-  const [bulldogPosition, setBulldogPosition] = useState<{ y: number | null }>({ y: null });
+  )
+  const [customBulldogConfig, setCustomBulldogConfig] = useState(bulldogConfig)
+  const [bulldogPosition, setBulldogPosition] = useState<{ y: number | null }>({ y: null })
 
   useEffect(() => {
-    // Check for saved game on mount
     const savedGame = loadGameState()
     setHasSavedGame(!!savedGame)
   }, [])
 
-  // Add effect to set initial position when menu loads
   useEffect(() => {
     const initializeBulldogPosition = () => {
-      const menuContainer = document.querySelector('.game-menu-container');
+      const menuContainer = document.querySelector('.game-menu-container')
       if (menuContainer) {
-        const rect = menuContainer.getBoundingClientRect();
-        const centerY = (rect.height - 160) / 2; // 160 is bulldog height
-        setBulldogPosition({ y: centerY });
+        const rect = menuContainer.getBoundingClientRect()
+        const centerY = (rect.height - 160) / 2
+        setBulldogPosition({ y: centerY })
       }
-    };
+    }
 
-    // Set initial position
-    initializeBulldogPosition();
+    initializeBulldogPosition()
+    window.addEventListener('resize', initializeBulldogPosition)
+    return () => window.removeEventListener('resize', initializeBulldogPosition)
+  }, [])
 
-    // Also handle window resize
-    window.addEventListener('resize', initializeBulldogPosition);
-    return () => window.removeEventListener('resize', initializeBulldogPosition);
-  }, []);
-
-  // Update the mouse tracking effect
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
-      const menuContainer = document.querySelector('.game-menu-container');
-      if (!menuContainer) return;
+      const menuContainer = document.querySelector('.game-menu-container')
+      if (!menuContainer) return
 
-      const rect = menuContainer.getBoundingClientRect();
-      const relativeY = e.clientY - rect.top;
-      const targetY = Math.max(0, Math.min(rect.height - 160, relativeY));
+      const rect = menuContainer.getBoundingClientRect()
+      const relativeY = e.clientY - rect.top
+      const targetY = Math.max(0, Math.min(rect.height - 160, relativeY))
       
-      setBulldogPosition({ y: targetY });
-    };
+      setBulldogPosition({ y: targetY })
+    }
 
-    document.addEventListener('mousemove', handleMouseMove);
-    return () => document.removeEventListener('mousemove', handleMouseMove);
-  }, []);
+    document.addEventListener('mousemove', handleMouseMove)
+    return () => document.removeEventListener('mousemove', handleMouseMove)
+  }, [])
 
   const handleNewGame = (timedMode: boolean) => {
     if (hasSavedGame) {
@@ -165,24 +169,23 @@ const StartPage: React.FC<StartPageProps> = ({ onStartGame, onMusicToggle, onSou
   }
 
   const handlePuppyClick = () => {
-    const newPhrase = PUPPY_PHRASES[Math.floor(Math.random() * PUPPY_PHRASES.length)];
-    setPuppyPhrase(newPhrase);
+    const newPhrase = PUPPY_PHRASES[Math.floor(Math.random() * PUPPY_PHRASES.length)]
+    setPuppyPhrase(newPhrase)
     
-    // Add click animation
-    const puppy = document.querySelector('.french-puppy');
-    puppy?.classList.add('clicked');
-    setTimeout(() => puppy?.classList.remove('clicked'), 500);
+    const puppy = document.querySelector('.french-puppy')
+    puppy?.classList.add('clicked')
+    setTimeout(() => puppy?.classList.remove('clicked'), 500)
     
     if (soundEnabled) {
-      soundManager.getInstance().playSound('puppy');
+      soundManager.getInstance().playSound('puppy')
     }
-  };
+  }
 
   const handleButtonHover = (buttonType: keyof typeof BUTTON_HOVER_PHRASES) => {
-    const phrases = BUTTON_HOVER_PHRASES[buttonType];
-    const randomPhrase = phrases[Math.floor(Math.random() * phrases.length)];
-    setPuppyPhrase(randomPhrase);
-  };
+    const phrases = BUTTON_HOVER_PHRASES[buttonType]
+    const randomPhrase = phrases[Math.floor(Math.random() * phrases.length)]
+    setPuppyPhrase(randomPhrase)
+  }
 
   if (showStatistics) {
     return <StatisticsPage onBack={() => setShowStatistics(false)} />
@@ -190,22 +193,20 @@ const StartPage: React.FC<StartPageProps> = ({ onStartGame, onMusicToggle, onSou
 
   if (showTutorial) {
     return (
-      <div className="start-page">
-        <Game 
-          musicEnabled={musicEnabled}
-          soundEnabled={soundEnabled}
-          timedMode={false}
-          onGameOver={() => setShowTutorial(false)}
-          tutorial={true}
-          onExit={() => setShowTutorial(false)}
-          onSkipTutorial={() => setShowTutorial(false)}
-          onStartGame={(withTimer) => onStartGame(withTimer, undefined)}
-          isLevelMode={false}
-          onLevelComplete={() => {}}
-          showLevelComplete={false}
-          rotationEnabled={rotationEnabled}
-        />
-      </div>
+      <Game 
+        musicEnabled={musicEnabled}
+        soundEnabled={soundEnabled}
+        timedMode={false}
+        onGameOver={() => setShowTutorial(false)}
+        tutorial={true}
+        onExit={() => setShowTutorial(false)}
+        onSkipTutorial={() => setShowTutorial(false)}
+        onStartGame={(withTimer) => onStartGame(withTimer, undefined)}
+        isLevelMode={false}
+        onLevelComplete={() => {}}
+        showLevelComplete={false}
+        rotationEnabled={rotationEnabled}
+      />
     )
   }
 
@@ -214,45 +215,6 @@ const StartPage: React.FC<StartPageProps> = ({ onStartGame, onMusicToggle, onSou
       <div className="start-container">
         <h1 className="game-title">HEXMATCH</h1>
         <p className="welcome-text">Match the edges, clear the grid, beat the clock!</p>
-
-        <div className="settings-bar">
-          <div className="settings-group">
-            <div className="setting-item">
-              <label>Music</label>
-              <button 
-                className={`setting-button ${musicEnabled ? 'active' : ''}`}
-                onClick={() => onMusicToggle(!musicEnabled)}
-              >
-                {musicEnabled ? '🎵 ON' : '🔇 OFF'}
-              </button>
-            </div>
-            
-            <div className="setting-item">
-              <label>Sound FX</label>
-              <button 
-                className={`setting-button ${soundEnabled ? 'active' : ''}`}
-                onClick={() => onSoundToggle(!soundEnabled)}
-              >
-                {soundEnabled ? '🔊 ON' : '🔈 OFF'}
-              </button>
-            </div>
-
-            <div className="setting-item">
-              <label>Grid Rotation</label>
-              <button 
-                className={`setting-button ${rotationEnabled ? 'active' : ''}`}
-                onClick={() => onRotationToggle(!rotationEnabled)}
-              >
-                {rotationEnabled ? '🔄 ON' : '⭕ OFF'}
-              </button>
-            </div>
-
-            <div className="setting-item">
-              <label>Accessibility</label>
-              <AccessibilitySettings />
-            </div>
-          </div>
-        </div>
 
         <div className="game-menu-container">
           <div className="game-start">
@@ -311,6 +273,13 @@ const StartPage: React.FC<StartPageProps> = ({ onStartGame, onMusicToggle, onSou
                     Customize Buddy
                   </button>
                 </div>
+                <button 
+                  className="settings-button-fixed"
+                  onClick={() => setShowSettings(true)}
+                  onMouseEnter={() => handleButtonHover('settings')}
+                >
+                  ⚙️ Settings
+                </button>
               </>
             ) : (
               <div className="mode-selection">
@@ -395,7 +364,7 @@ const StartPage: React.FC<StartPageProps> = ({ onStartGame, onMusicToggle, onSou
       {showAchievements && (
         <div className="modal-overlay" onClick={(e) => {
           if (e.target === e.currentTarget) {
-            setShowAchievements(false);
+            setShowAchievements(false)
           }
         }}>
           <div className="modal-content achievements-modal">
@@ -407,12 +376,12 @@ const StartPage: React.FC<StartPageProps> = ({ onStartGame, onMusicToggle, onSou
       {showUnlockables && (
         <UnlockablesMenu
           onSelectTheme={(themeId) => {
-            setTheme(themeId);
-            setShowUnlockables(false);
+            setTheme(themeId)
+            setShowUnlockables(false)
           }}
           onSelectCompanion={(companionId) => {
-            setCompanion(companionId);
-            setShowUnlockables(false);
+            setCompanion(companionId)
+            setShowUnlockables(false)
           }}
           onClose={() => setShowUnlockables(false)}
         />
@@ -429,7 +398,7 @@ const StartPage: React.FC<StartPageProps> = ({ onStartGame, onMusicToggle, onSou
       {showLevelRoadmap && (
         <div className="modal-overlay" onClick={(e) => {
           if (e.target === e.currentTarget) {
-            setShowLevelRoadmap(false);
+            setShowLevelRoadmap(false)
           }
         }}>
           <div className="modal-content roadmap-modal">
@@ -439,16 +408,27 @@ const StartPage: React.FC<StartPageProps> = ({ onStartGame, onMusicToggle, onSou
             <LevelRoadmap 
               currentPoints={playerProgress.points || 0} 
               onStartGame={(withTimer) => {
-                clearSavedGame();
-                setShowLevelRoadmap(false);
-                onStartGame(withTimer);
+                clearSavedGame()
+                setShowLevelRoadmap(false)
+                onStartGame(withTimer)
               }}
             />
           </div>
         </div>
       )}
+
+      <SettingsModal
+        isOpen={showSettings}
+        onClose={() => setShowSettings(false)}
+        musicEnabled={musicEnabled}
+        soundEnabled={soundEnabled}
+        rotationEnabled={rotationEnabled}
+        onMusicToggle={onMusicToggle}
+        onSoundToggle={onSoundToggle}
+        onRotationToggle={onRotationToggle}
+      />
     </div>
   )
 }
 
-export default StartPage 
+export default StartPage

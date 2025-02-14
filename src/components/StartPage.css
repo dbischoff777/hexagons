@@ -633,3 +633,28 @@
   background: rgba(0, 255, 159, 0.25);
   transform: scale(1.05);
 }
+
+/* Replace the old settings-button style with this */
+.settings-button-fixed {
+  width: 100%;
+  max-width: 400px;
+  margin: 1rem auto;
+  padding: 1rem;
+  background: linear-gradient(45deg, #00ff9f33, #00ffff33);
+  border: 2px solid #00ff9f;
+  color: #00ff9f;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1.1rem;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  position: relative;
+  z-index: 100;
+}
+
+.settings-button-fixed:hover {
+  background: linear-gradient(45deg, #00ff9f66, #00ffff66);
+  transform: scale(1.05);
+  box-shadow: 0 0 15px rgba(0, 255, 159, 0.3);
+}
