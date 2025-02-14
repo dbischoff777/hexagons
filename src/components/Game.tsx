@@ -945,7 +945,7 @@ const Game: React.FC<GameProps> = ({
         // Save the current context state
         ctx.save()
         
-        // Move to center, rotate, then move back
+        // Move to center, rotate, then move back - this only affects rendering
         ctx.translate(centerX, centerY)
         ctx.rotate((boardRotation * Math.PI) / 180)
         ctx.translate(-centerX, -centerY)
@@ -961,11 +961,11 @@ const Game: React.FC<GameProps> = ({
           }
         }
 
-        // Draw all placed tiles in one batch
+        // Draw all placed tiles without modifying their properties
         placedTiles.forEach(tile => {
           const { x, y } = hexToPixel(tile.q, tile.r, centerX, centerY, tileSize)
-          const isMatched = hasMatchingEdges(tile, placedTiles, settings.isColorBlind)
-          drawHexagonWithColoredEdges(x, y, tileSize, tile, isMatched)
+          // Pass the original tile without any rotation modifications
+          drawHexagonWithColoredEdges(x, y, tileSize, tile, hasMatchingEdges(tile, placedTiles, settings.isColorBlind))
         })
 
         // Restore the context to its original state
@@ -1123,8 +1123,8 @@ const Game: React.FC<GameProps> = ({
         const rotatedY = adjustedX * Math.sin(angle) + adjustedY * Math.cos(angle)
         
         // Calculate grid position using rotated coordinates
-        const q = Math.round((rotatedX + centerX - centerX) / (tileSize * 1.5))
-        const r = Math.round((rotatedY + centerY - centerY - q * tileSize * Math.sqrt(3)/2) / (tileSize * Math.sqrt(3)))
+        const q = Math.round((rotatedX) / (tileSize * 1.5))
+        const r = Math.round((rotatedY - q * tileSize * Math.sqrt(3)/2) / (tileSize * Math.sqrt(3)))
         const s = -q - r
 
         const isValidPosition = Math.max(Math.abs(q), Math.abs(r), Math.abs(s)) <= Math.floor(cols/2)
