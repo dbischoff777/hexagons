@@ -1,11 +1,17 @@
-// Constants for rotation
+// Constants
 export const ROTATION_WARNING_DELAY = 1500; // 1.5 seconds warning before rotation
 export const ROTATION_INTERVAL = 5000; // 5 seconds between rotations
 export const ROTATION_ANIMATION_DURATION = 1000; // 1 second for smooth rotation
 
+// Types
+export interface RotationState {
+  boardRotation: number;
+  showWarning: boolean;
+  showRotationText: boolean;
+}
+
 // Helper function to rotate tile edges
 export const rotateTileEdges = (edges: { color: string }[]) => {
-  // Preserve the original array and create a new one to avoid reference issues
   return [...edges.slice(-1), ...edges.slice(0, -1)];
 };
 
@@ -28,19 +34,34 @@ export const animateRotation = (
       ? 4 * progress * progress * progress
       : 1 - Math.pow(-2 * progress + 2, 3) / 2;
 
-    // Only update the rotation transform, not any other properties
     const currentRotation = startRotation + (targetRotation - startRotation) * easeProgress;
     onRotationUpdate(currentRotation % 360);
 
     if (progress < 1) {
       requestAnimationFrame(animate);
     } else {
-      // Ensure we end exactly at the target rotation to prevent floating point errors
       onRotationUpdate(targetRotation % 360);
-      // Use setTimeout to ensure any state updates have completed
       setTimeout(onRotationComplete, 0);
     }
   };
 
   requestAnimationFrame(animate);
+};
+
+// Function to setup rotation timer
+export const setupRotationTimer = (
+  isGameOver: boolean,
+  rotationEnabled: boolean,
+  onWarning: () => void,
+  onRotation: () => void
+): (() => void) => {
+  if (!isGameOver && rotationEnabled) {
+    const timer = setInterval(() => {
+      onWarning();
+      setTimeout(onRotation, ROTATION_WARNING_DELAY);
+    }, ROTATION_INTERVAL);
+
+    return () => clearInterval(timer);
+  }
+  return () => {};
 }; 

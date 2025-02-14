@@ -41,12 +41,8 @@ import { unlockNextLevel, LevelCompletion } from '../utils/levelUtils'
 import './LevelCompleteOverlay.css'
 import FrenchBulldog from './FrenchBulldog'
 import bulldogConfig from '../config/bulldogConfig.json'
-import { 
-  rotateTileEdges, 
-  animateRotation, 
-  ROTATION_WARNING_DELAY, 
-  ROTATION_INTERVAL 
-} from '../utils/rotationUtils';
+import { animateRotation, rotateTileEdges, setupRotationTimer } from '../utils/rotationUtils';
+import '../styles/rotation.css';
 
 // Replace the DEBUG object at the top
 const DEBUG = {
@@ -476,31 +472,31 @@ const Game: React.FC<GameProps> = ({
 
   // Update rotation timer effect
   useEffect(() => {
-    if (!isGameOver && rotationEnabled) {
-      const warningTimer = setInterval(() => {
+    const cleanup = setupRotationTimer(
+      isGameOver,
+      rotationEnabled,
+      () => {
         setShowWarning(true);
         setShowRotationText(true);
+      },
+      () => {
+        setShowWarning(false);
+        setShowRotationText(false);
 
-        setTimeout(() => {
-          setShowWarning(false);
-          setShowRotationText(false);
+        animateRotation(
+          boardRotation,
+          (rotation) => setBoardRotation(rotation),
+          () => {
+            setPlacedTiles(tiles => tiles.map(tile => ({
+              ...tile,
+              edges: rotateTileEdges(tile.edges)
+            })));
+          }
+        );
+      }
+    );
 
-          // Use the new animation utility
-          animateRotation(
-            boardRotation,
-            (rotation) => setBoardRotation(rotation),
-            () => {
-              setPlacedTiles(tiles => tiles.map(tile => ({
-                ...tile,
-                edges: rotateTileEdges(tile.edges)
-              })));
-            }
-          );
-        }, ROTATION_WARNING_DELAY);
-      }, ROTATION_INTERVAL);
-
-      return () => clearInterval(warningTimer);
-    }
+    return cleanup;
   }, [isGameOver, boardRotation, rotationEnabled]);
 
   // Main game effect
