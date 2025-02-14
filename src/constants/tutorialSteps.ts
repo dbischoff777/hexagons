@@ -42,7 +42,7 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
   },
   {
     id: 'matching',
-    message: 'When 3 or more edges of the same color connect, they\'ll match and score points! The more matches, the higher your score.',
+    message: 'When 1 or more edges of the same color connect, they\'ll match and score points! The more matches, the higher your score.',
     position: 'center',
     highlightArea: { type: 'matches' }
   },
