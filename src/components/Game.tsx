@@ -2442,10 +2442,10 @@ const Game: React.FC<GameProps> = ({
       value?: number;
       abilityName?: string;
     }): string => {
-      console.log('getCompanionPhrase called with action:', action);
+      //console.log('getCompanionPhrase called with action:', action);
 
       if (!action) {
-        console.log('No action provided, returning empty string');
+        //console.log('No action provided, returning empty string');
         return '';
       }
 
@@ -2485,7 +2485,7 @@ const Game: React.FC<GameProps> = ({
     //console.log('Speech effect triggered with lastAction:', lastAction);
     
     if (lastAction) {
-      console.log('Starting speech timer for action:', lastAction);
+      //console.log('Starting speech timer for action:', lastAction);
       
       // Clear any existing timers
       const timer = setTimeout(() => {
