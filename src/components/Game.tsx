@@ -442,7 +442,7 @@ const Game: React.FC<GameProps> = ({
     });
   }, [isLevelMode, targetScore, currentBlock, currentLevel, isDailyChallenge, score, isGameOver]);
 
-  // Add this effect to log prop changes
+ /*  // Add this effect to log prop changes
   useEffect(() => {
     console.log('Game props changed:', {
       isLevelMode,
@@ -451,7 +451,7 @@ const Game: React.FC<GameProps> = ({
       currentLevel,
       source: 'Game props change'
     });
-  }, [isLevelMode, targetScore, currentBlock, currentLevel]);
+  }, [isLevelMode, targetScore, currentBlock, currentLevel]); */
 
   // Add this effect to update previousScore when score changes
   useEffect(() => {
@@ -513,22 +513,11 @@ const Game: React.FC<GameProps> = ({
           
           requestAnimationFrame(animate)
         }, 1500)
-      }, 30000) // Increased to 30 seconds
+      }, 5000) // Increased to 30 seconds
       
       return () => clearInterval(warningTimer)
     }
   }, [isGameOver, boardRotation])
-
-  // Remove the grid-full rotation effect since rotation should only happen on timer
-  useEffect(() => {
-    if (isGridFull(placedTiles, cols) && !isGameOver && !tutorialState.active) {
-      // Only show warning, don't rotate
-      setShowWarning(true)
-      setTimeout(() => {
-        setShowWarning(false)
-      }, 2000)
-    }
-  }, [placedTiles, cols, isGameOver, tutorialState.active])
 
   // Main game effect
   useEffect(() => {
@@ -1228,7 +1217,7 @@ const Game: React.FC<GameProps> = ({
             
             setScore(prevScore => prevScore + basePoints);
             addTileAnimation(q, r, 'match');
-            console.log('Setting lastAction for match:', { type: 'match', value: matchCount * 5 });
+            //console.log('Setting lastAction for match:', { type: 'match', value: matchCount * 5 });
             setLastAction({ type: 'match', value: matchCount * 5 });
           }
 
@@ -1323,7 +1312,7 @@ const Game: React.FC<GameProps> = ({
                 type: 'combo'
               });
               setScore(prevScore => prevScore + comboBonus);
-              console.log('Setting lastAction for combo:', { type: 'combo', value: combo.count });
+              //console.log('Setting lastAction for combo:', { type: 'combo', value: combo.count });
               setLastAction({ type: 'combo', value: combo.count });
             }
           } else {
@@ -1830,12 +1819,12 @@ const Game: React.FC<GameProps> = ({
       const nextLevelData = currentBlock.levels[nextLevel - 1];
       if (!nextLevelData) return;
 
-      console.log('Starting next level:', {
+    /*   console.log('Starting next level:', {
         block: nextBlock,
         level: nextLevel,
         targetScore: nextLevelData.pointsRequired,
         source: 'Level Complete Next'
-      });
+      }); */
 
       onStartGame(false, nextLevelData.pointsRequired);
       setShowLevelComplete(null);
@@ -2310,7 +2299,7 @@ const Game: React.FC<GameProps> = ({
 
   // Consolidate grid clear functionality into a single function
   const handleGridClear = useCallback(() => {
-    console.log('Setting lastAction for grid clear');
+    //console.log('Setting lastAction for grid clear');
     setLastAction({ type: 'clear' });
     // Calculate points
     const basePoints = 1000;
@@ -2493,19 +2482,19 @@ const Game: React.FC<GameProps> = ({
 
   // Update the speech timing effect to include debouncing
   useEffect(() => {
-    console.log('Speech effect triggered with lastAction:', lastAction);
+    //console.log('Speech effect triggered with lastAction:', lastAction);
     
     if (lastAction) {
       console.log('Starting speech timer for action:', lastAction);
       
       // Clear any existing timers
       const timer = setTimeout(() => {
-        console.log('Speech timer completed, clearing lastAction');
+        //console.log('Speech timer completed, clearing lastAction');
         setLastAction(undefined);
       }, 3000);
       
       return () => {
-        console.log('Cleaning up speech timer');
+        //console.log('Cleaning up speech timer');
         clearTimeout(timer);
       };
     }
@@ -2586,14 +2575,14 @@ const Game: React.FC<GameProps> = ({
       {showCompanion && (
         <FrenchBulldog
           onClick={() => {
-            console.log('Companion clicked');
+            //console.log('Companion clicked');
           }}
           phrase={currentPhrase}
           hideSpeech={!lastAction}
           abilities={companion.abilities}
           customConfig={bulldogConfig}
           onConfigChange={(newConfig) => {
-            console.log('Companion config changed:', newConfig);
+            //console.log('Companion config changed:', newConfig);
           }}
         />
       )}
