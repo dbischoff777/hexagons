@@ -5,11 +5,11 @@
   position: absolute;
   top: 0;
   left: 0;
-  animation: fadeIn 0.5s ease-out forwards;
+  animation: fadeIn 1s ease-out forwards;
 }
 
 .page-transition.exit {
-  animation: fadeOut 0.5s ease-in forwards;
+  animation: fadeOut 1s ease-in forwards;
 }
 
 @keyframes fadeIn {

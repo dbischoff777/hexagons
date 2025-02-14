@@ -13,6 +13,7 @@ import FrenchBulldog from './FrenchBulldog'
 import bulldogConfig from '../config/bulldogConfig.json'
 import CustomizeBuddyMenu from './CustomizeBuddyMenu'
 import SettingsModal from './SettingsModal'
+import PageTransition from './PageTransition'
 
 interface StartPageProps {
   onStartGame: (withTimer: boolean, isDailyChallenge?: boolean) => void
@@ -115,6 +116,7 @@ const StartPage: React.FC<StartPageProps> = ({
   )
   const [customBulldogConfig, setCustomBulldogConfig] = useState(bulldogConfig)
   const [bulldogPosition, setBulldogPosition] = useState<{ y: number | null }>({ y: null })
+  const [isTutorialExiting, setIsTutorialExiting] = useState(false)
 
   useEffect(() => {
     const savedGame = loadGameState()
@@ -187,26 +189,36 @@ const StartPage: React.FC<StartPageProps> = ({
     setPuppyPhrase(randomPhrase)
   }
 
+  const handleCloseTutorial = () => {
+    setIsTutorialExiting(true)
+    setTimeout(() => {
+      setShowTutorial(false)
+      setIsTutorialExiting(false)
+    }, 300) // Match this with your transition duration
+  }
+
   if (showStatistics) {
     return <StatisticsPage onBack={() => setShowStatistics(false)} />
   }
 
   if (showTutorial) {
     return (
-      <Game 
-        musicEnabled={musicEnabled}
-        soundEnabled={soundEnabled}
-        timedMode={false}
-        onGameOver={() => setShowTutorial(false)}
-        tutorial={true}
-        onExit={() => setShowTutorial(false)}
-        onSkipTutorial={() => setShowTutorial(false)}
-        onStartGame={(withTimer) => onStartGame(withTimer, undefined)}
-        isLevelMode={false}
-        onLevelComplete={() => {}}
-        showLevelComplete={false}
-        rotationEnabled={rotationEnabled}
-      />
+      <PageTransition isExiting={isTutorialExiting}>
+        <Game 
+          musicEnabled={musicEnabled}
+          soundEnabled={soundEnabled}
+          timedMode={false}
+          onGameOver={handleCloseTutorial}
+          tutorial={true}
+          onExit={handleCloseTutorial}
+          onSkipTutorial={handleCloseTutorial}
+          onStartGame={(withTimer) => onStartGame(withTimer, undefined)}
+          isLevelMode={false}
+          onLevelComplete={() => {}}
+          showLevelComplete={false}
+          rotationEnabled={rotationEnabled}
+        />
+      </PageTransition>
     )
   }
 
