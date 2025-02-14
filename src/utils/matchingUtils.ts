@@ -1,6 +1,67 @@
 import { PlacedTile } from '../types'
 import { DIRECTIONS, getAdjacentTiles } from './hexUtils'
 
+// Move feedback constants here
+export const SCORE_FEEDBACK = {
+  // Regular matches
+  LOW: [
+    { emoji: '✨💫', text: 'Nice!' },
+    { emoji: '💎✨', text: 'Good!' },
+    { emoji: '👍💫', text: 'Cool!' },
+  ],
+  MEDIUM: [
+    { emoji: '🌟💫', text: 'Great!' },
+    { emoji: '💫⭐', text: 'Awesome!' },
+    { emoji: '⭐✨', text: 'Sweet!' },
+  ],
+  HIGH: [
+    { emoji: '🔥⚡', text: 'Amazing!' },
+    { emoji: '⚡💥', text: 'Fantastic!' },
+    { emoji: '💥🔥', text: 'Incredible!' },
+  ],
+  EPIC: [
+    { emoji: '🌈✨', text: 'EPIC!' },
+    { emoji: '👑💫', text: 'LEGENDARY!' },
+    { emoji: '💎✨', text: 'BRILLIANT!' },
+  ],
+  
+  // Combos
+  COMBO: [
+    { emoji: '👍💫', text: '2x COMBO!' },
+    { emoji: '🔥💫', text: '3x COMBO!' },
+    { emoji: '⚡💫', text: '4x COMBO!' },
+    { emoji: '💫✨', text: '5x COMBO!' },
+    { emoji: '🌟💫', text: '6x COMBO!' },
+    { emoji: '💥⚡', text: '7x COMBO!' },
+    { emoji: '👑✨', text: '8x COMBO!' },
+    { emoji: '🌈💫', text: 'MEGA COMBO!' },
+  ],
+  
+  // Grid clears
+  CLEAR: [
+    { emoji: '🎪✨', text: 'CLEAR!' },         // Default clear
+    { emoji: '🎮💫', text: 'GOOD CLEAR!' },    // 25+ points
+    { emoji: '🎯⚡', text: 'GREAT CLEAR!' },   // 50+ points
+    { emoji: '🏆💫', text: 'AMAZING CLEAR!' }, // 75+ points
+    { emoji: '👑✨', text: 'EPIC CLEAR!' },    // 100+ points
+  ] as const,
+  
+  // Quick placements
+  QUICK: [
+    { emoji: '⚡💨', text: 'QUICK!' },
+    { emoji: '💨✨', text: 'SWIFT!' },
+    { emoji: '🚀💫', text: 'SPEEDY!' },
+  ]
+} as const;
+
+/**
+ * Gets a random feedback item from the specified category
+ */
+export const getRandomFeedback = (category: keyof typeof SCORE_FEEDBACK) => {
+  const options = SCORE_FEEDBACK[category];
+  return options[Math.floor(Math.random() * options.length)];
+}
+
 /**
  * Checks if a tile has matching edges with any adjacent tiles
  */
@@ -104,20 +165,29 @@ export const updateTileValues = (tiles: PlacedTile[]): PlacedTile[] => {
  * Gets feedback text and emoji based on score value
  */
 export const getFeedbackForScore = (score: number) => {
-  if (score >= 30) return { text: "EPIC!", emoji: "🌟✨" };
-  if (score >= 20) return { text: "Amazing!", emoji: "🎯💫" };
-  if (score >= 15) return { text: "Great!", emoji: "⭐️" };
-  if (score >= 10) return { text: "Nice!", emoji: "✨" };
-  return { text: "Match!", emoji: "✨" };
+  if (score >= 30) return getRandomFeedback('EPIC');
+  if (score >= 20) return getRandomFeedback('HIGH');
+  if (score >= 15) return getRandomFeedback('MEDIUM');
+  if (score >= 10) return getRandomFeedback('LOW');
+  return getRandomFeedback('LOW');
 }
 
 /**
  * Gets feedback text and emoji based on combo count
  */
 export const getFeedbackForCombo = (comboCount: number) => {
-  if (comboCount >= 10) return { text: "UNSTOPPABLE!", emoji: "🔥⚡️" };
-  if (comboCount >= 7) return { text: "DOMINATING!", emoji: "🌟💥" };
-  if (comboCount >= 5) return { text: "RAMPAGE!", emoji: "🎯🔥" };
-  if (comboCount >= 3) return { text: "COMBO!", emoji: "⭐️" };
-  return { text: "Quick Match!", emoji: "✨" };
+  // COMBO array is 0-based, but represents 2x-9x combos
+  const comboIndex = Math.min(Math.max(0, comboCount - 2), 7);
+  return SCORE_FEEDBACK.COMBO[comboIndex];
+}
+
+/**
+ * Gets feedback text and emoji based on clear score
+ */
+export const getFeedbackForClear = (clearScore: number) => {
+  if (clearScore >= 100) return SCORE_FEEDBACK.CLEAR[4];
+  if (clearScore >= 75) return SCORE_FEEDBACK.CLEAR[3];
+  if (clearScore >= 50) return SCORE_FEEDBACK.CLEAR[2];
+  if (clearScore >= 25) return SCORE_FEEDBACK.CLEAR[1];
+  return SCORE_FEEDBACK.CLEAR[0];
 }
