@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, useCallback, useMemo } from 'react'
 import { PowerUpState, ComboState, GameState, PlacedTile } from '../types/index'
 import { createTileWithRandomEdges, hexToPixel, getAdjacentTiles, getAdjacentPositions, getAdjacentDirection, COLORS, updateMirrorTileEdges } from '../utils/hexUtils'
-import { INITIAL_TIME, hasMatchingEdges, formatTime, updateTileValues, isGridFull } from '../utils/gameUtils'
+import { INITIAL_TIME, formatTime, isGridFull } from '../utils/gameUtils'
 import SoundManager from '../utils/soundManager'
 import './Game.css'
 import { useAccessibility } from '../contexts/AccessibilityContext'
@@ -43,6 +43,12 @@ import FrenchBulldog from './FrenchBulldog'
 import bulldogConfig from '../config/bulldogConfig.json'
 import { animateRotation, rotateTileEdges, setupRotationTimer } from '../utils/rotationUtils';
 import '../styles/rotation.css';
+import { 
+  hasMatchingEdges, 
+  updateTileValues, 
+  getFeedbackForScore, 
+  getFeedbackForCombo,
+} from '../utils/matchingUtils';
 
 // Replace the DEBUG object at the top
 const DEBUG = {
@@ -130,18 +136,6 @@ const getRandomFeedback = (category: keyof typeof SCORE_FEEDBACK) => {
   const options = SCORE_FEEDBACK[category]
   return options[Math.floor(Math.random() * options.length)]
 }
-
-const getFeedbackForScore = (score: number) => {
-  if (score >= 100) return getRandomFeedback('EPIC')
-  if (score >= 75) return getRandomFeedback('HIGH')
-  if (score >= 50) return getRandomFeedback('MEDIUM')
-  return getRandomFeedback('LOW')
-}
-
-const getFeedbackForCombo = (comboCount: number) => {
-  const index = Math.min(comboCount - 2, SCORE_FEEDBACK.COMBO.length - 1);
-  return SCORE_FEEDBACK.COMBO[index] || { emoji: '🔥', text: 'Combo!' };
-};
 
 const getFeedbackForClear = (clearScore: number) => {
   if (clearScore >= 100) return SCORE_FEEDBACK.CLEAR[4];
