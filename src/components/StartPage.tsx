@@ -226,7 +226,7 @@ const StartPage: React.FC<StartPageProps> = ({
                     onClick={handleContinueGame}
                     onMouseEnter={() => handleButtonHover('continue')}
                   >
-                    Continue Game
+                    ▶️ Continue Game
                   </button>
                 )}
                 <button 
@@ -234,28 +234,28 @@ const StartPage: React.FC<StartPageProps> = ({
                   onClick={() => setShowGameModes(true)}
                   onMouseEnter={() => handleButtonHover('play')}
                 >
-                  PLAY
+                  🎮 PLAY
                 </button>
                 <button 
                   className="tutorial-button"
                   onClick={() => setShowTutorial(true)}
                   onMouseEnter={() => handleButtonHover('tutorial')}
                 >
-                  Play Tutorial
+                  📖 Play Tutorial
                 </button>
                 <button 
                   className="stats-button"
                   onClick={() => setShowStatistics(true)}
                   onMouseEnter={() => handleButtonHover('statistics')}
                 >
-                  Statistics
+                  📊 Statistics
                 </button>
                 <button 
                   className="achievements-button"
                   onClick={() => setShowAchievements(true)}
                   onMouseEnter={() => handleButtonHover('achievements')}
                 >
-                  Achievements
+                  🏆 Achievements
                 </button>
                 <div className="button-group">
                   <button 
@@ -263,14 +263,14 @@ const StartPage: React.FC<StartPageProps> = ({
                     onClick={() => setShowUnlockables(true)}
                     onMouseEnter={() => handleButtonHover('unlockables')}
                   >
-                    Unlockables
+                    🎁 Unlockables
                   </button>
                   <button 
                     className="customize-button"
                     onClick={() => setShowCustomize(true)}
                     onMouseEnter={() => handleButtonHover('customize')}
                   >
-                    Customize Buddy
+                    🎨 Customize Buddy
                   </button>
                 </div>
                 <button 
@@ -288,7 +288,7 @@ const StartPage: React.FC<StartPageProps> = ({
                   onClick={() => handleNewGame(true)}
                   onMouseEnter={() => handleButtonHover('timed')}
                 >
-                  <span className="mode-title">TIMED MODE</span>
+                  <span className="mode-title">⏱️ TIMED MODE</span>
                   <span className="mode-desc">Race against the clock</span>
                 </button>
                 
@@ -297,7 +297,7 @@ const StartPage: React.FC<StartPageProps> = ({
                   onClick={() => handleNewGame(false)}
                   onMouseEnter={() => handleButtonHover('zen')}
                 >
-                  <span className="mode-title">ZEN MODE</span>
+                  <span className="mode-title">🍃 ZEN MODE</span>
                   <span className="mode-desc">Play at your own pace</span>
                 </button>
 
@@ -306,7 +306,7 @@ const StartPage: React.FC<StartPageProps> = ({
                   onClick={() => setShowLevelRoadmap(true)}
                   onMouseEnter={() => handleButtonHover('roadmap')}
                 >
-                  <span className="mode-title">LEVEL ROADMAP</span>
+                  <span className="mode-title">🗺️ LEVEL ROADMAP</span>
                   <span className="mode-desc">Progress through levels</span>
                 </button>
 
@@ -315,7 +315,7 @@ const StartPage: React.FC<StartPageProps> = ({
                   onClick={() => handleNewGame(false)}
                   onMouseEnter={() => handleButtonHover('daily')}
                 >
-                  <span className="mode-title">DAILY CHALLENGE</span>
+                  <span className="mode-title">📅 DAILY CHALLENGE</span>
                   <span className="mode-desc">New puzzles every day!</span>
                 </button>
 
@@ -324,7 +324,7 @@ const StartPage: React.FC<StartPageProps> = ({
                   onClick={() => setShowGameModes(false)}
                   onMouseEnter={() => setPuppyPhrase(PUPPY_PHRASES[Math.floor(Math.random() * PUPPY_PHRASES.length)])}
                 >
-                  Back
+                  ↩️ Back
                 </button>
               </div>
             )}
