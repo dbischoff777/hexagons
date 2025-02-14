@@ -41,6 +41,12 @@ import { unlockNextLevel, LevelCompletion } from '../utils/levelUtils'
 import './LevelCompleteOverlay.css'
 import FrenchBulldog from './FrenchBulldog'
 import bulldogConfig from '../config/bulldogConfig.json'
+import { 
+  rotateTileEdges, 
+  animateRotation, 
+  ROTATION_WARNING_DELAY, 
+  ROTATION_INTERVAL 
+} from '../utils/rotationUtils';
 
 // Replace the DEBUG object at the top
 const DEBUG = {
@@ -69,10 +75,6 @@ interface GameProps {
   onLevelComplete: (isComplete: boolean) => void;
   showLevelComplete: boolean;
   rotationEnabled: boolean  // Add this line
-}
-
-const rotateTileEdges = (edges: { color: string }[]) => {
-  return [...edges.slice(-1), ...edges.slice(0, -1)]
 }
 
 // Add this near the top of the file, outside the component
@@ -474,50 +476,32 @@ const Game: React.FC<GameProps> = ({
 
   // Update rotation timer effect
   useEffect(() => {
-    if (!isGameOver && rotationEnabled) {  // Add rotationEnabled check
+    if (!isGameOver && rotationEnabled) {
       const warningTimer = setInterval(() => {
-        setShowWarning(true)
-        setShowRotationText(true)
+        setShowWarning(true);
+        setShowRotationText(true);
+
         setTimeout(() => {
-          setShowWarning(false)
-          setShowRotationText(false)
-          
-          // Start a smooth rotation animation with faster duration
-          let startTime: number | null = null
-          const duration = 1000
-          const startRotation = boardRotation
-          const targetRotation = startRotation + 180
-          
-          const animate = (currentTime: number) => {
-            if (!startTime) startTime = currentTime
-            const elapsed = currentTime - startTime
-            const progress = Math.min(elapsed / duration, 1)
-            
-            const easeProgress = progress < 0.5
-              ? 4 * progress * progress * progress
-              : 1 - Math.pow(-2 * progress + 2, 3) / 2
-            
-            const currentRotation = startRotation + (targetRotation - startRotation) * easeProgress
-            
-            setBoardRotation(currentRotation % 360)
-            
-            if (progress < 1) {
-              requestAnimationFrame(animate)
-            } else {
+          setShowWarning(false);
+          setShowRotationText(false);
+
+          // Use the new animation utility
+          animateRotation(
+            boardRotation,
+            (rotation) => setBoardRotation(rotation),
+            () => {
               setPlacedTiles(tiles => tiles.map(tile => ({
                 ...tile,
                 edges: rotateTileEdges(tile.edges)
-              })))
+              })));
             }
-          }
-          
-          requestAnimationFrame(animate)
-        }, 1500)
-      }, 5000)
-      
-      return () => clearInterval(warningTimer)
+          );
+        }, ROTATION_WARNING_DELAY);
+      }, ROTATION_INTERVAL);
+
+      return () => clearInterval(warningTimer);
     }
-  }, [isGameOver, boardRotation, rotationEnabled])  // Add rotationEnabled to dependencies
+  }, [isGameOver, boardRotation, rotationEnabled]);
 
   // Main game effect
   useEffect(() => {
