@@ -68,6 +68,7 @@ interface GameProps {
   currentLevel?: number
   onLevelComplete: (isComplete: boolean) => void;
   showLevelComplete: boolean;
+  rotationEnabled: boolean  // Add this line
 }
 
 const rotateTileEdges = (edges: { color: string }[]) => {
@@ -222,7 +223,8 @@ const Game: React.FC<GameProps> = ({
   currentBlock,
   currentLevel,
   onLevelComplete,
-  showLevelComplete: isLevelComplete
+  showLevelComplete: isLevelComplete,
+  rotationEnabled
 }: GameProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const cols = 7
@@ -472,7 +474,7 @@ const Game: React.FC<GameProps> = ({
 
   // Update rotation timer effect
   useEffect(() => {
-    if (!isGameOver) {
+    if (!isGameOver && rotationEnabled) {  // Add rotationEnabled check
       const warningTimer = setInterval(() => {
         setShowWarning(true)
         setShowRotationText(true)
@@ -482,7 +484,7 @@ const Game: React.FC<GameProps> = ({
           
           // Start a smooth rotation animation with faster duration
           let startTime: number | null = null
-          const duration = 1000 // Reduced from 2000 to 1000ms (1 second)
+          const duration = 1000
           const startRotation = boardRotation
           const targetRotation = startRotation + 180
           
@@ -491,10 +493,9 @@ const Game: React.FC<GameProps> = ({
             const elapsed = currentTime - startTime
             const progress = Math.min(elapsed / duration, 1)
             
-            // Use a custom easing function for smoother acceleration/deceleration
             const easeProgress = progress < 0.5
-              ? 4 * progress * progress * progress // Faster acceleration
-              : 1 - Math.pow(-2 * progress + 2, 3) / 2 // Smoother deceleration
+              ? 4 * progress * progress * progress
+              : 1 - Math.pow(-2 * progress + 2, 3) / 2
             
             const currentRotation = startRotation + (targetRotation - startRotation) * easeProgress
             
@@ -503,7 +504,6 @@ const Game: React.FC<GameProps> = ({
             if (progress < 1) {
               requestAnimationFrame(animate)
             } else {
-              // Update tile positions after animation completes
               setPlacedTiles(tiles => tiles.map(tile => ({
                 ...tile,
                 edges: rotateTileEdges(tile.edges)
@@ -513,11 +513,11 @@ const Game: React.FC<GameProps> = ({
           
           requestAnimationFrame(animate)
         }, 1500)
-      }, 5000) // Keep the same interval
+      }, 5000)
       
       return () => clearInterval(warningTimer)
     }
-  }, [isGameOver, boardRotation])
+  }, [isGameOver, boardRotation, rotationEnabled])  // Add rotationEnabled to dependencies
 
   // Main game effect
   useEffect(() => {
@@ -1506,7 +1506,7 @@ const Game: React.FC<GameProps> = ({
       canvas.removeEventListener('click', handleClick)
       canvas.removeEventListener('contextmenu', handleContextMenu)
     }
-  }, [placedTiles, nextTiles, selectedTileIndex, score, timeLeft, isGameOver, mousePosition, settings])
+  }, [placedTiles, nextTiles, selectedTileIndex, score, timeLeft, isGameOver, mousePosition, settings, rotationEnabled])
 
   // Add power-up activation handler
   const activatePowerUp = (tile: PlacedTile) => {

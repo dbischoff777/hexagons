@@ -5,7 +5,7 @@ import StartPage from './components/StartPage'
 import SoundManager from './utils/soundManager'
 import { AccessibilityProvider } from './contexts/AccessibilityContext'
 import { GameState } from './types'
-import { loadGameState } from './utils/gameStateUtils'
+import { loadGameState, saveGameState } from './utils/gameStateUtils'
 import PageTransition from './components/PageTransition'
 import { getCurrentLevelInfo, getPlayerProgress, getNextLevelInfo, LEVEL_BLOCKS } from './utils/progressionUtils'
 
@@ -33,6 +33,10 @@ function App() {
   const [soundEnabled, setSoundEnabled] = useState<boolean>(false)
   const [showLevelComplete, setShowLevelComplete] = useState<boolean>(false)
   const levelCompleteRef = useRef(false)
+  const [rotationEnabled, setRotationEnabled] = useState(() => {
+    const savedState = loadGameState();
+    return savedState?.audioSettings?.rotationEnabled ?? true;
+  });
 
   // Load saved game state on component mount
   useEffect(() => {
@@ -148,6 +152,20 @@ function App() {
     if (enabled) soundManager.playSound('buttonClick')
   }
 
+  const handleRotationToggle = (enabled: boolean) => {
+    setRotationEnabled(enabled);
+    const savedState = loadGameState();
+    if (savedState) {
+      saveGameState({
+        ...savedState,
+        audioSettings: {
+          ...savedState.audioSettings,
+          rotationEnabled: enabled
+        }
+      });
+    }
+  };
+
   const handleTransitionComplete = () => {
     if (nextGameState) {
       setGameStarted(nextGameState.started);
@@ -163,7 +181,8 @@ function App() {
             ...savedGame,
             audioSettings: {
               musicEnabled,
-              soundEnabled
+              soundEnabled,
+              rotationEnabled
             }
           });
         } else {
@@ -212,6 +231,7 @@ function App() {
             currentLevel={currentGame?.currentLevel}
             onLevelComplete={handleLevelComplete}
             showLevelComplete={showLevelComplete}
+            rotationEnabled={rotationEnabled}
           />
         ) : (
           <StartPage 
@@ -220,6 +240,8 @@ function App() {
             onSoundToggle={handleSoundToggle}
             musicEnabled={musicEnabled}
             soundEnabled={soundEnabled}
+            rotationEnabled={rotationEnabled}
+            onRotationToggle={handleRotationToggle}
           />
         )}
       </PageTransition>

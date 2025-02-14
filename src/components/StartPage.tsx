@@ -21,6 +21,8 @@ interface StartPageProps {
   onSoundToggle: (enabled: boolean) => void
   musicEnabled: boolean
   soundEnabled: boolean
+  rotationEnabled: boolean
+  onRotationToggle: (enabled: boolean) => void
 }
 
 const PUPPY_PHRASES = [
@@ -86,7 +88,7 @@ const BUTTON_HOVER_PHRASES = {
   ]
 };
 
-const StartPage: React.FC<StartPageProps> = ({ onStartGame, onMusicToggle, onSoundToggle, musicEnabled, soundEnabled }) => {
+const StartPage: React.FC<StartPageProps> = ({ onStartGame, onMusicToggle, onSoundToggle, musicEnabled, soundEnabled, rotationEnabled, onRotationToggle }) => {
   const [showGameModes, setShowGameModes] = useState(false)
   const [showTutorial, setShowTutorial] = useState(false)
   const [showStatistics, setShowStatistics] = useState(false)
@@ -201,6 +203,7 @@ const StartPage: React.FC<StartPageProps> = ({ onStartGame, onMusicToggle, onSou
           isLevelMode={false}
           onLevelComplete={() => {}}
           showLevelComplete={false}
+          rotationEnabled={rotationEnabled}
         />
       </div>
     )
@@ -231,6 +234,16 @@ const StartPage: React.FC<StartPageProps> = ({ onStartGame, onMusicToggle, onSou
                 onClick={() => onSoundToggle(!soundEnabled)}
               >
                 {soundEnabled ? '🔊 ON' : '🔈 OFF'}
+              </button>
+            </div>
+
+            <div className="setting-item">
+              <label>Grid Rotation</label>
+              <button 
+                className={`setting-button ${rotationEnabled ? 'active' : ''}`}
+                onClick={() => onRotationToggle(!rotationEnabled)}
+              >
+                {rotationEnabled ? '🔄 ON' : '⭕ OFF'}
               </button>
             </div>
 

@@ -69,6 +69,7 @@ export interface GameState {
   audioSettings: {
     musicEnabled: boolean
     soundEnabled: boolean
+    rotationEnabled?: boolean
   }
   companion: Companion
 }
