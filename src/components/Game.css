@@ -312,7 +312,7 @@
   text-shadow: 0 0 15px #00FF9F;
   font-size: 1.0em;
   z-index: 5;
-  animation: score-popup 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  animation: popup-base 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
 
 .score-popup[data-type='quick'] {
@@ -320,7 +320,7 @@
   text-shadow: 0 0 15px #00FFFF;
   font-size: 1.1em;
   z-index: 6;
-  animation: quick-popup 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  animation: popup-base 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
 
 .score-popup[data-type='combo'] {
@@ -328,7 +328,7 @@
   text-shadow: 0 0 15px #FFD700;
   font-size: 1.2em;
   z-index: 7;
-  animation: combo-popup 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  animation: popup-base 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
 
 .score-popup[data-type='clear'] {
@@ -336,87 +336,30 @@
   text-shadow: 0 0 15px #FF69B4;
   font-size: 1.3em;
   z-index: 8;
-  animation: clear-popup 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  animation: popup-base 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
 
 /* Animation keyframes for each type */
-@keyframes score-popup {
+@keyframes popup-base {
   0% {
-    transform: translate(-50%, 20px) scale(0.8);
+    transform: translate(-50%, var(--start-y, 0)) scale(var(--start-scale, 0.8)) rotate(var(--start-rotate, 0deg));
     opacity: 0;
+    filter: blur(var(--start-blur, 0px));
   }
   20% {
-    transform: translate(-50%, -20px) scale(1.2);
+    transform: translate(-50%, var(--mid-y, -30px)) scale(var(--mid-scale, 1.2)) rotate(var(--mid-rotate, 0deg));
     opacity: 1;
+    filter: blur(var(--mid-blur, 0px));
   }
   80% {
-    transform: translate(-50%, -40px) scale(1);
+    transform: translate(-50%, var(--end-y, -50px)) scale(var(--end-scale, 1)) rotate(var(--end-rotate, 0deg));
     opacity: 1;
+    filter: blur(var(--end-blur, 0px));
   }
   100% {
-    transform: translate(-50%, -60px) scale(0.8);
+    transform: translate(-50%, var(--final-y, -70px)) scale(var(--final-scale, 0.8)) rotate(var(--final-rotate, 0deg));
     opacity: 0;
-  }
-}
-
-@keyframes quick-popup {
-  0% {
-    transform: translate(-50%, 0) scale(0.8) rotate(-5deg);
-    opacity: 0;
-  }
-  20% {
-    transform: translate(-50%, -30px) scale(1.2) rotate(5deg);
-    opacity: 1;
-  }
-  80% {
-    transform: translate(-50%, -50px) scale(1) rotate(-3deg);
-    opacity: 1;
-  }
-  100% {
-    transform: translate(-50%, -70px) scale(0.8) rotate(0deg);
-    opacity: 0;
-  }
-}
-
-@keyframes combo-popup {
-  0% {
-    transform: translate(-50%, 0) scale(0.5);
-    opacity: 0;
-  }
-  40% {
-    transform: translate(-50%, -40px) scale(1.4);
-    opacity: 1;
-  }
-  60% {
-    transform: translate(-50%, -50px) scale(1.2);
-    opacity: 1;
-  }
-  100% {
-    transform: translate(-50%, -80px) scale(0.8);
-    opacity: 0;
-  }
-}
-
-@keyframes clear-popup {
-  0% {
-    transform: translate(-50%, 0) scale(0.8);
-    filter: blur(4px);
-    opacity: 0;
-  }
-  20% {
-    transform: translate(-50%, -30px) scale(1.3);
-    filter: blur(0);
-    opacity: 1;
-  }
-  80% {
-    transform: translate(-50%, -60px) scale(1.1);
-    filter: blur(0);
-    opacity: 1;
-  }
-  100% {
-    transform: translate(-50%, -90px) scale(0.9);
-    filter: blur(2px);
-    opacity: 0;
+    filter: blur(var(--final-blur, 0px));
   }
 }
 
@@ -465,26 +408,7 @@
     0 0 15px #00FFFF,
     0 0 25px #00FFFF;
   font-size: 1.2em;
-  animation: quickPopup 0.8s ease-out forwards;
-}
-
-@keyframes quickPopup {
-  0% {
-    transform: translate(-50%, 0) scale(0.8);
-    opacity: 0;
-  }
-  30% {
-    transform: translate(-50%, -30px) scale(1.2);
-    opacity: 1;
-  }
-  80% {
-    transform: translate(-50%, -50px) scale(1);
-    opacity: 1;
-  }
-  100% {
-    transform: translate(-50%, -70px) scale(0.8);
-    opacity: 0;
-  }
+  animation: popup-base 0.8s ease-out forwards;
 }
 
 /* Update the popup animation to stay within bounds */
@@ -1181,4 +1105,66 @@
 /* Ensure speech bubble doesn't get cut off */
 .game-container .speech-bubble {
   z-index: 91;
+}
+
+/* Add CSS custom properties for each popup type */
+.score-popup[data-type='score'] {
+  --start-y: 20px;
+  --mid-y: -20px;
+  --end-y: -40px;
+  --final-y: -60px;
+}
+
+.score-popup[data-type='quick'] {
+  --start-y: 0;
+  --mid-y: -30px;
+  --end-y: -50px;
+  --final-y: -70px;
+  --start-rotate: -5deg;
+  --mid-rotate: 5deg;
+  --end-rotate: -3deg;
+}
+
+.score-popup[data-type='combo'] {
+  --start-y: 0;
+  --start-scale: 0.5;
+  --mid-y: -40px;
+  --mid-scale: 1.4;
+  --end-y: -50px;
+  --end-scale: 1.2;
+  --final-y: -80px;
+  --final-scale: 0.8;
+  --final-blur: 2px;
+}
+
+.score-popup[data-type='clear'] {
+  --start-y: 0;
+  --start-scale: 0.8;
+  --start-blur: 4px;
+  --mid-y: -30px;
+  --mid-scale: 1.3;
+  --mid-blur: 0px;
+  --end-y: -60px;
+  --end-scale: 1.1;
+  --end-blur: 0px;
+  --final-y: -90px;
+  --final-scale: 0.9;
+  --final-blur: 2px;
+}
+
+/* Remove duplicate .emoji styles - keep only one instance */
+.score-popup .emoji {
+  color: #00FF9F;
+  text-shadow: 0 0 15px #00FF9F;
+  font-size: 48px;
+  display: inline-block;
+  letter-spacing: -8px;
+  margin-right: 8px;
+  animation: emoji-appear 0.3s ease-out;
+  transform-origin: center;
+}
+
+/* Remove duplicate .board-controls class - keep only one instance */
+.board-controls {
+  display: none;  /* Hide the container since we're not using it */
 }
