@@ -52,6 +52,8 @@ import {
   getFeedbackForClear,
 } from '../utils/matchingUtils';
 import { RotationState } from '../utils/rotationUtils';
+import { createInitialTile, createTiles } from '../utils/tileFactory';
+import '../styles/tiles.css';
 
 // Replace the DEBUG object at the top
 const DEBUG = {
@@ -159,62 +161,13 @@ const Game: React.FC<GameProps> = ({
   const cols = 7
   const [upgradeState, setUpgradeState] = useState<UpgradeState>(getInitialUpgradeState());
   
-  // Move createNewTile here, before any state that depends on it
-  const createNewTile = useCallback((): PlacedTile => {
-    const powerUpChance = getUpgradeEffect(upgradeState, 'powerUpChance');
-    const mirrorChance = getUpgradeEffect(upgradeState, 'mirrorTileChance');
-    
-    // First check for mirror tile
-    if (Math.random() < mirrorChance) {
-      return {
-        ...createTileWithRandomEdges(0, 0),
-        isPlaced: false,
-        type: 'mirror' as const
-      };
-    }
-    
-    // If not a mirror tile, then check for power-up
-    // Adjust power-up chance to not compete with mirror tiles
-    const adjustedPowerUpChance = powerUpChance * (1 - mirrorChance);
-    if (Math.random() < adjustedPowerUpChance) {
-      const powerUpTypes = ['freeze', 'colorShift', 'multiplier'] as const;
-      const randomPowerUp = powerUpTypes[Math.floor(Math.random() * powerUpTypes.length)];
-      
-      return {
-        ...createTileWithRandomEdges(0, 0),
-        isPlaced: false,
-        type: 'normal' as const,
-        powerUp: {
-          type: randomPowerUp,
-          duration: randomPowerUp === 'freeze' ? 5 : 15,
-          multiplier: randomPowerUp === 'multiplier' ? 2 : undefined,
-          active: false
-        }
-      };
-    }
-    
-    // If neither mirror nor power-up, create normal tile
-    return {
-      ...createTileWithRandomEdges(0, 0),
-      isPlaced: false,
-      type: 'normal' as const
-    };
-  }, [upgradeState]);
-
   // Now initialize states that depend on createNewTile
-  const [placedTiles, setPlacedTiles] = useState<PlacedTile[]>(
-    savedGameState?.placedTiles ?? [{
-      ...createTileWithRandomEdges(0, 0),
-      isPlaced: true
-    }]
-  )
+  const [placedTiles, setPlacedTiles] = useState<PlacedTile[]>([
+    savedGameState?.placedTiles?.[0] ?? createInitialTile()
+  ]);
   
   const [nextTiles, setNextTiles] = useState<PlacedTile[]>(() => 
-    savedGameState?.nextTiles ?? [
-      createNewTile(),
-      createNewTile(),
-      createNewTile()
-    ]
+    savedGameState?.nextTiles ?? createTiles(3, upgradeState)
   );
 
   const [score, setScore] = useState<number>(savedGameState?.score ?? 0)
@@ -857,8 +810,6 @@ const Game: React.FC<GameProps> = ({
     const centerY = canvas.height / 2
     const tileSize = 40
     const rows = 7
-    const nextPiecesX = centerX + 400
-    const nextPiecesY = 200
 
     const draw = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height)
@@ -988,9 +939,9 @@ const Game: React.FC<GameProps> = ({
     }
 
     const handleClick = (event: MouseEvent) => {
-      const rect = canvas.getBoundingClientRect()
-      const mouseX = event.clientX - rect.left
-      const mouseY = event.clientY - rect.top
+      const rect = canvas.getBoundingClientRect();
+      const mouseX = event.clientX - rect.left;
+      const mouseY = event.clientY - rect.top;
 
       if (isGameOver) {
         const containerHeight = 500
@@ -1003,35 +954,43 @@ const Game: React.FC<GameProps> = ({
         if (mouseX >= buttonX && mouseX <= buttonX + buttonWidth &&
             mouseY >= buttonY && mouseY <= buttonY + buttonHeight) {
           // Reset game state
-          setPlacedTiles([{
-            ...createTileWithRandomEdges(0, 0),
-            isPlaced: true
-          }])
-          setScore(0)
-          setTimeLeft(timedMode ? INITIAL_TIME : Infinity)
-          setIsGameOver(false)
-          setNextTiles([
-            createNewTile(),
-            createNewTile(),
-            createNewTile()
-          ])
-          setSelectedTileIndex(null)
+          resetGame();
           return
         }
         return
       }
 
       // Check if click is in next pieces area
-      nextTiles.forEach((tile, index) => {
-        const pieceX = nextPiecesX
-        const pieceY = nextPiecesY + index * 100
-        const distance = Math.sqrt((mouseX - pieceX) ** 2 + (mouseY - pieceY) ** 2)
+      const nextPiecesX = canvas.width - 150;
+      const nextPiecesStartY = canvas.height / 2 - 150;
+      const nextPiecesWidth = 100;
+      const nextPiecesHeight = 400;
+
+      // First check if click is within the next pieces container bounds
+      if (mouseX >= nextPiecesX && // Changed from nextPiecesX - nextPiecesWidth/2
+          mouseX <= nextPiecesX + nextPiecesWidth && // Changed from nextPiecesX + nextPiecesWidth/2
+          mouseY >= nextPiecesStartY && 
+          mouseY <= nextPiecesStartY + nextPiecesHeight) {
         
-        if (distance < tileSize && !tile.isPlaced) {
-          setSelectedTileIndex(index)
-          return
-        }
-      })
+        nextTiles.forEach((tile, index) => {
+          const tileX = nextPiecesX + nextPiecesWidth/2; // Center of container
+          const tileY = nextPiecesStartY + (index * 120) + 60; // Center of each tile slot
+          
+          // Calculate distance from click to tile center
+          const dx = mouseX - tileX;
+          const dy = mouseY - tileY;
+          const distance = Math.sqrt(dx * dx + dy * dy);
+          
+          // Only register click if within the tile's actual radius (40px)
+          if (distance <= 40 && !tile.isPlaced) {
+            setSelectedTileIndex(selectedTileIndex === index ? null : index);
+            if (soundEnabled) {
+              soundManager.playSound('buttonClick');
+            }
+            return;
+          }
+        });
+      }
 
       // If a tile is selected and click is on the grid
       if (selectedTileIndex !== null) {
@@ -1163,7 +1122,7 @@ const Game: React.FC<GameProps> = ({
           
           // Generate new tile for the used slot
           const newTiles = [...nextTiles]
-          newTiles[selectedTileIndex] = createNewTile()  // Replace direct creation with a function call
+          newTiles[selectedTileIndex] = createTileWithRandomEdges(0, 0);  // Replace direct creation with a function call
           setNextTiles(newTiles)
           setSelectedTileIndex(null)
 
@@ -2344,10 +2303,7 @@ const Game: React.FC<GameProps> = ({
       handleGridClear();
       
       // Reset the grid
-      setPlacedTiles([{
-        ...createTileWithRandomEdges(0, 0),
-        isPlaced: true
-      }]);
+      setPlacedTiles([createInitialTile()]);
     }
   }, [placedTiles, cols, isGameOver, tutorialState.active, handleGridClear]);
 
@@ -2432,6 +2388,15 @@ const Game: React.FC<GameProps> = ({
   const currentPhrase = useMemo(() => getCompanionPhrase(lastAction), [lastAction, getCompanionPhrase]);
 
   const soundManager = SoundManager.getInstance();
+
+  const resetGame = () => {
+    setPlacedTiles([createInitialTile()]);
+    setNextTiles(createTiles(3, upgradeState));
+    setScore(0);
+    setTimeLeft(timedMode ? INITIAL_TIME : Infinity);
+    setIsGameOver(false);
+    setSelectedTileIndex(null);
+  };
 
   return (
     <div
@@ -2704,7 +2669,7 @@ const Game: React.FC<GameProps> = ({
             onClick={handleUndo}
             disabled={!previousState}
           >
-            Undo Last Move
+            Undo
           </button>
         </div>
       </div>

@@ -22,18 +22,22 @@ export interface DragState {
   offsetY: number
 }
 
+export type PowerUpType = 'freeze' | 'colorShift' | 'multiplier';
+
+export interface PowerUp {
+  type: PowerUpType;
+  duration?: number;
+  multiplier?: number;
+  active: boolean;
+}
+
 export interface PlacedTile extends Tile {
   isPlaced: boolean
   isJoker?: boolean  // Rainbow tile
   isMirror?: boolean // Mirror tile
   matchPotential?: number[]
   type: 'normal' | 'mirror' | 'rainbow'
-  powerUp?: {
-    type: 'freeze' | 'colorShift' | 'multiplier'
-    duration?: number
-    multiplier?: number
-    active: boolean
-  }
+  powerUp?: PowerUp
   temporaryColorMatch?: boolean
   hasBeenMatched?: boolean
 }
