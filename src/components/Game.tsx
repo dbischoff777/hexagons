@@ -378,6 +378,9 @@ const Game: React.FC<GameProps> = ({
   // Add this state near other state declarations
   const [showExitPrompt, setShowExitPrompt] = useState(false);
 
+  // Add this state to track animation
+  const [isRotating, setIsRotating] = useState(false);
+
   const awardUpgradePoints = useCallback((points: number) => {
     setUpgradeState(prev => ({
       ...prev,
@@ -472,6 +475,8 @@ const Game: React.FC<GameProps> = ({
 
   // Update rotation timer effect
   useEffect(() => {
+    if (!rotationEnabled || isGameOver || isRotating) return;
+
     const cleanup = setupRotationTimer(
       isGameOver,
       rotationEnabled,
@@ -482,22 +487,29 @@ const Game: React.FC<GameProps> = ({
       () => {
         setShowWarning(false);
         setShowRotationText(false);
+        setIsRotating(true);
 
-        animateRotation(
+        const cleanupAnimation = animateRotation(
           boardRotation,
           (rotation) => setBoardRotation(rotation),
           () => {
-            setPlacedTiles(tiles => tiles.map(tile => ({
+            setPlacedTiles(prevTiles => prevTiles.map(tile => ({
               ...tile,
               edges: rotateTileEdges(tile.edges)
             })));
+            setIsRotating(false);
           }
         );
+
+        return () => {
+          cleanupAnimation();
+          setIsRotating(false);
+        };
       }
     );
 
     return cleanup;
-  }, [isGameOver, boardRotation, rotationEnabled]);
+  }, [isGameOver, rotationEnabled, isRotating]); // Add isRotating to dependencies
 
   // Main game effect
   useEffect(() => {

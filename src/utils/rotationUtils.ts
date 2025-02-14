@@ -21,6 +21,7 @@ export const animateRotation = (
   onRotationUpdate: (rotation: number) => void,
   onRotationComplete: () => void
 ) => {
+  let animationFrameId: number;
   let startTime: number | null = null;
   const targetRotation = startRotation + 180;
 
@@ -38,14 +39,21 @@ export const animateRotation = (
     onRotationUpdate(currentRotation % 360);
 
     if (progress < 1) {
-      requestAnimationFrame(animate);
+      animationFrameId = requestAnimationFrame(animate);
     } else {
       onRotationUpdate(targetRotation % 360);
-      setTimeout(onRotationComplete, 0);
+      onRotationComplete();
     }
   };
 
-  requestAnimationFrame(animate);
+  animationFrameId = requestAnimationFrame(animate);
+
+  // Return cleanup function
+  return () => {
+    if (animationFrameId) {
+      cancelAnimationFrame(animationFrameId);
+    }
+  };
 };
 
 // Function to setup rotation timer
@@ -56,12 +64,16 @@ export const setupRotationTimer = (
   onRotation: () => void
 ): (() => void) => {
   if (!isGameOver && rotationEnabled) {
-    const timer = setInterval(() => {
+    let warningTimeoutId: number;
+    const intervalId = setInterval(() => {
       onWarning();
-      setTimeout(onRotation, ROTATION_WARNING_DELAY);
+      warningTimeoutId = window.setTimeout(onRotation, ROTATION_WARNING_DELAY);
     }, ROTATION_INTERVAL);
 
-    return () => clearInterval(timer);
+    return () => {
+      clearInterval(intervalId);
+      clearTimeout(warningTimeoutId);
+    };
   }
   return () => {};
 }; 
