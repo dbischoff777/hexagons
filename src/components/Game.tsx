@@ -48,7 +48,8 @@ import {
   updateTileValues, 
   getFeedbackForScore, 
   getFeedbackForCombo,
-  SCORE_FEEDBACK,
+  getRandomFeedback,
+  getFeedbackForClear,
 } from '../utils/matchingUtils';
 
 // Replace the DEBUG object at the top
@@ -78,19 +79,6 @@ interface GameProps {
   onLevelComplete: (isComplete: boolean) => void;
   showLevelComplete: boolean;
   rotationEnabled: boolean  // Add this line
-}
-
-const getRandomFeedback = (category: keyof typeof SCORE_FEEDBACK) => {
-  const options = SCORE_FEEDBACK[category]
-  return options[Math.floor(Math.random() * options.length)]
-}
-
-const getFeedbackForClear = (clearScore: number) => {
-  if (clearScore >= 100) return SCORE_FEEDBACK.CLEAR[4];
-  if (clearScore >= 75 && SCORE_FEEDBACK.CLEAR[3]) return SCORE_FEEDBACK.CLEAR[3];
-  if (clearScore >= 50) return SCORE_FEEDBACK.CLEAR[2];
-  if (clearScore >= 25) return SCORE_FEEDBACK.CLEAR[1];
-  return SCORE_FEEDBACK.CLEAR[0];
 }
 
 // Add these scoring constants near the top of the file

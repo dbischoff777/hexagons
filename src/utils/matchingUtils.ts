@@ -186,7 +186,7 @@ export const getFeedbackForCombo = (comboCount: number) => {
  */
 export const getFeedbackForClear = (clearScore: number) => {
   if (clearScore >= 100) return SCORE_FEEDBACK.CLEAR[4];
-  if (clearScore >= 75) return SCORE_FEEDBACK.CLEAR[3];
+  if (clearScore >= 75 && SCORE_FEEDBACK.CLEAR[3]) return SCORE_FEEDBACK.CLEAR[3];
   if (clearScore >= 50) return SCORE_FEEDBACK.CLEAR[2];
   if (clearScore >= 25) return SCORE_FEEDBACK.CLEAR[1];
   return SCORE_FEEDBACK.CLEAR[0];
