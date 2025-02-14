@@ -5,6 +5,7 @@ export const ROTATION_ANIMATION_DURATION = 1000; // 1 second for smooth rotation
 
 // Helper function to rotate tile edges
 export const rotateTileEdges = (edges: { color: string }[]) => {
+  // Preserve the original array and create a new one to avoid reference issues
   return [...edges.slice(-1), ...edges.slice(0, -1)];
 };
 
@@ -27,13 +28,17 @@ export const animateRotation = (
       ? 4 * progress * progress * progress
       : 1 - Math.pow(-2 * progress + 2, 3) / 2;
 
+    // Only update the rotation transform, not any other properties
     const currentRotation = startRotation + (targetRotation - startRotation) * easeProgress;
     onRotationUpdate(currentRotation % 360);
 
     if (progress < 1) {
       requestAnimationFrame(animate);
     } else {
-      onRotationComplete();
+      // Ensure we end exactly at the target rotation to prevent floating point errors
+      onRotationUpdate(targetRotation % 360);
+      // Use setTimeout to ensure any state updates have completed
+      setTimeout(onRotationComplete, 0);
     }
   };
 

@@ -279,6 +279,8 @@
   width: 100%;
   max-width: 1000px;
   height: 800px;
+  transform-style: preserve-3d;
+  will-change: transform;
 }
 
 /* Animation classes */
@@ -608,6 +610,9 @@
 /* Update warning flash animation */
 .rotation-warning {
   animation: pulse 0.4s ease-in-out 3;
+  will-change: transform;
+  /* Prevent animation from affecting child elements */
+  transform-style: preserve-3d;
 }
 
 .rotation-text {
@@ -1109,6 +1114,9 @@
   box-shadow: 
     0 0 20px rgba(0, 255, 159, 0.4),
     inset 0 0 10px rgba(0, 255, 159, 0.2);
+  /* Prevent inheritance of parent transforms */
+  transform-style: preserve-3d;
+  will-change: transform;
 }
 
 /* Enhance the glow effect for matched tiles */
