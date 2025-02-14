@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, useCallback, useMemo } from 'react'
 import { PowerUpState, ComboState, GameState, PlacedTile } from '../types/index'
 import { createTileWithRandomEdges, hexToPixel, getAdjacentTiles, getAdjacentPositions, getAdjacentDirection, COLORS, updateMirrorTileEdges } from '../utils/hexUtils'
 import { INITIAL_TIME, formatTime, isGridFull } from '../utils/gameUtils'
-import SoundManager from '../utils/soundManager'
+import { SoundManager } from '../utils/soundManager'
 import './Game.css'
 import { useAccessibility } from '../contexts/AccessibilityContext'
 import { drawAccessibilityOverlay, findPotentialMatches } from '../utils/accessibilityUtils'
@@ -51,6 +51,7 @@ import {
   getRandomFeedback,
   getFeedbackForClear,
 } from '../utils/matchingUtils';
+import { RotationState } from '../utils/rotationUtils';
 
 // Replace the DEBUG object at the top
 const DEBUG = {
@@ -232,10 +233,6 @@ const Game: React.FC<GameProps> = ({
     text: string;
     type: 'score' | 'combo' | 'quick' | 'clear';
   }[]>([])
-  const [boardRotation, setBoardRotation] = useState<number>(savedGameState?.boardRotation ?? 0)
-  const [showWarning, setShowWarning] = useState(false)
-  const [showRotationText, setShowRotationText] = useState(false)
-  const soundManager = SoundManager.getInstance()
   const [powerUps, setPowerUps] = useState<PowerUpState>(
     savedGameState?.powerUps ?? {
       freeze: { active: false, remainingTime: 0 },
@@ -308,8 +305,13 @@ const Game: React.FC<GameProps> = ({
   // Add this state near other state declarations
   const [showExitPrompt, setShowExitPrompt] = useState(false);
 
-  // Add this state to track animation
-  const [isRotating, setIsRotating] = useState(false);
+  // Replace the separate rotation states with a single state
+  const [rotationState, setRotationState] = useState<RotationState>({
+    boardRotation: savedGameState?.boardRotation ?? 0,
+    showWarning: false,
+    showRotationText: false,
+    isRotating: false
+  });
 
   const awardUpgradePoints = useCallback((points: number) => {
     setUpgradeState(prev => ({
@@ -403,43 +405,41 @@ const Game: React.FC<GameProps> = ({
     }, type === 'place' ? 500 : type === 'match' ? 800 : 600);
   }, []);
 
-  // Update rotation timer effect
+  // Update the rotation effect
   useEffect(() => {
-    if (!rotationEnabled || isGameOver || isRotating) return;
+    if (!rotationEnabled || isGameOver || rotationState.isRotating) return;
 
     const cleanup = setupRotationTimer(
       isGameOver,
       rotationEnabled,
       () => {
-        setShowWarning(true);
-        setShowRotationText(true);
+        setRotationState(prev => ({
+          ...prev,
+          showWarning: true,
+          showRotationText: true
+        }));
       },
       () => {
-        setShowWarning(false);
-        setShowRotationText(false);
-        setIsRotating(true);
-
         const cleanupAnimation = animateRotation(
-          boardRotation,
-          (rotation) => setBoardRotation(rotation),
+          rotationState.boardRotation,
+          (newState) => {
+            setRotationState(newState);
+          },
           () => {
+            // Update tiles only after rotation is complete
             setPlacedTiles(prevTiles => prevTiles.map(tile => ({
               ...tile,
               edges: rotateTileEdges(tile.edges)
             })));
-            setIsRotating(false);
           }
         );
 
-        return () => {
-          cleanupAnimation();
-          setIsRotating(false);
-        };
+        return cleanupAnimation;
       }
     );
 
     return cleanup;
-  }, [isGameOver, rotationEnabled, isRotating]); // Add isRotating to dependencies
+  }, [isGameOver, rotationEnabled, rotationState.isRotating, rotationState.boardRotation]);
 
   // Main game effect
   useEffect(() => {
@@ -867,10 +867,10 @@ const Game: React.FC<GameProps> = ({
         // Save the current context state
         ctx.save()
         
-        // Move to center, rotate, then move back - this only affects rendering
-        ctx.translate(centerX, centerY)
-        ctx.rotate((boardRotation * Math.PI) / 180)
-        ctx.translate(-centerX, -centerY)
+        // Move to center, rotate, then move back
+        ctx.translate(centerX, centerY);
+        ctx.rotate((rotationState.boardRotation * Math.PI) / 180);
+        ctx.translate(-centerX, -centerY);
 
         // Draw grid with valid placement highlights
         for (let q = -rows; q <= rows; q++) {
@@ -1040,7 +1040,7 @@ const Game: React.FC<GameProps> = ({
         const adjustedY = mouseY - centerY
         
         // Apply inverse rotation to get true grid coordinates
-        const angle = (-boardRotation * Math.PI) / 180
+        const angle = (-rotationState.boardRotation * Math.PI) / 180
         const rotatedX = adjustedX * Math.cos(angle) - adjustedY * Math.sin(angle)
         const rotatedY = adjustedX * Math.sin(angle) + adjustedY * Math.cos(angle)
         
@@ -1428,7 +1428,7 @@ const Game: React.FC<GameProps> = ({
       canvas.removeEventListener('click', handleClick)
       canvas.removeEventListener('contextmenu', handleContextMenu)
     }
-  }, [placedTiles, nextTiles, selectedTileIndex, score, timeLeft, isGameOver, mousePosition, settings, rotationEnabled])
+  }, [placedTiles, nextTiles, selectedTileIndex, score, timeLeft, isGameOver, mousePosition, settings, rotationEnabled, rotationState.boardRotation])
 
   // Add power-up activation handler
   const activatePowerUp = (tile: PlacedTile) => {
@@ -1687,7 +1687,7 @@ const Game: React.FC<GameProps> = ({
         moveHistory: previousState ? [previousState] : [],
         startTime: loadGameState()?.startTime ?? Date.now(),
         timedMode,
-        boardRotation: boardRotation === 0 || boardRotation === 180 ? boardRotation : 0, // Ensure only valid rotations are saved
+        boardRotation: rotationState.boardRotation === 0 || rotationState.boardRotation === 180 ? rotationState.boardRotation : 0, // Ensure only valid rotations are saved
         powerUps,
         combo,
         audioSettings: {
@@ -1698,7 +1698,7 @@ const Game: React.FC<GameProps> = ({
       }
       saveGameState(gameState)
     }
-  }, [placedTiles, nextTiles, score, timeLeft, previousState, isGameOver, tutorialState.active, boardRotation, powerUps, combo, musicEnabled, soundEnabled, companion])
+  }, [placedTiles, nextTiles, score, timeLeft, previousState, isGameOver, tutorialState.active, rotationState.boardRotation, powerUps, combo, musicEnabled, soundEnabled, companion])
 
   // Add this function to handle undoing moves
   const handleUndo = () => {
@@ -1897,7 +1897,10 @@ const Game: React.FC<GameProps> = ({
       if (savedGameState.boardRotation !== undefined && savedGameState.boardRotation !== 0 && savedGameState.boardRotation !== 180) {
         // Normalize to either 0 or 180 degrees
         const normalizedRotation = savedGameState.boardRotation >= 90 ? 180 : 0;
-        setBoardRotation(normalizedRotation);
+        setRotationState(prev => ({
+          ...prev,
+          boardRotation: normalizedRotation
+        }));
         
         // If the rotation changed, update tile edges accordingly
         if (normalizedRotation !== savedGameState.boardRotation) {
@@ -1916,7 +1919,10 @@ const Game: React.FC<GameProps> = ({
         }
       } else {
         // If rotation is already normalized, just set the values directly
-        setBoardRotation(savedGameState.boardRotation ?? 0);
+        setRotationState(prev => ({
+          ...prev,
+          boardRotation: savedGameState.boardRotation ?? 0
+        }));
         setPlacedTiles(savedGameState.placedTiles);
       }
       
@@ -2425,6 +2431,8 @@ const Game: React.FC<GameProps> = ({
   // In the FrenchBulldog component render, memoize the phrase
   const currentPhrase = useMemo(() => getCompanionPhrase(lastAction), [lastAction, getCompanionPhrase]);
 
+  const soundManager = SoundManager.getInstance();
+
   return (
     <div
       className="game-container"
@@ -2514,11 +2522,11 @@ const Game: React.FC<GameProps> = ({
           className={`
             game-board 
             ${isGridFull(placedTiles, cols) ? 'grid-full' : ''}
-            ${showWarning ? 'rotation-warning' : ''}
+            ${rotationState.showWarning ? 'rotation-warning' : ''}
             ${animatingTiles.length > 0 ? 'has-animations' : ''}
           `}
         />
-        {showRotationText && (
+        {rotationState.showRotationText && (
           <div className="rotation-text">
             Rotation Incoming!
           </div>

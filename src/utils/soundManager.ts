@@ -1,4 +1,4 @@
-class SoundManager {
+export class SoundManager {
   private static instance: SoundManager
   private backgroundMusic: HTMLAudioElement
   private sounds: { [key: string]: HTMLAudioElement }

@@ -42,6 +42,16 @@
   animation: pulse 0.4s ease-in-out 3;
   will-change: transform;
   transform-style: preserve-3d;
+  backface-visibility: hidden;
+  perspective: 1000px;
+}
+
+.game-board {
+  will-change: transform;
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
+  perspective: 1000px;
+  transform: translateZ(0);
 }
 
 .rotation-text {
@@ -62,4 +72,6 @@
   border-radius: 10px;
   backdrop-filter: blur(5px);
   animation: warningText 1.4s ease-in-out forwards;
+  will-change: transform, opacity;
+  backface-visibility: hidden;
 } 

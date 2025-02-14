@@ -8,6 +8,7 @@ export interface RotationState {
   boardRotation: number;
   showWarning: boolean;
   showRotationText: boolean;
+  isRotating: boolean;
 }
 
 // Helper function to rotate tile edges
@@ -15,37 +16,60 @@ export const rotateTileEdges = (edges: { color: string }[]) => {
   return [...edges.slice(-1), ...edges.slice(0, -1)];
 };
 
-// Function to handle smooth rotation animation
+// Modified animation function with better performance
 export const animateRotation = (
   startRotation: number,
-  onRotationUpdate: (rotation: number) => void,
-  onRotationComplete: () => void
+  onRotationUpdate: (state: RotationState) => void,
+  onComplete: () => void
 ) => {
   let animationFrameId: number;
   let startTime: number | null = null;
   const targetRotation = startRotation + 180;
+
+  // Use a more optimized easing function
+  const easeInOutCubic = (t: number): number => {
+    return t < 0.5
+      ? 4 * t * t * t
+      : 1 - Math.pow(-2 * t + 2, 3) / 2;
+  };
 
   const animate = (currentTime: number) => {
     if (!startTime) startTime = currentTime;
     const elapsed = currentTime - startTime;
     const progress = Math.min(elapsed / ROTATION_ANIMATION_DURATION, 1);
 
-    // Easing function for smooth rotation
-    const easeProgress = progress < 0.5
-      ? 4 * progress * progress * progress
-      : 1 - Math.pow(-2 * progress + 2, 3) / 2;
+    // Use the optimized easing function
+    const easeProgress = easeInOutCubic(progress);
 
-    const currentRotation = startRotation + (targetRotation - startRotation) * easeProgress;
-    onRotationUpdate(currentRotation % 360);
+    // Calculate rotation with minimal floating point operations
+    const currentRotation = startRotation + ((targetRotation - startRotation) * easeProgress);
+    
+    // Round to 2 decimal places to reduce jitter
+    const roundedRotation = Math.round(currentRotation * 100) / 100;
+    
+    // Update all rotation-related state at once
+    onRotationUpdate({
+      boardRotation: roundedRotation % 360,
+      showWarning: false,
+      showRotationText: false,
+      isRotating: true
+    });
 
     if (progress < 1) {
       animationFrameId = requestAnimationFrame(animate);
     } else {
-      onRotationUpdate(targetRotation % 360);
-      onRotationComplete();
+      // Ensure we end exactly at target rotation
+      onRotationUpdate({
+        boardRotation: targetRotation % 360,
+        showWarning: false,
+        showRotationText: false,
+        isRotating: false
+      });
+      onComplete();
     }
   };
 
+  // Use requestAnimationFrame for smoother animation
   animationFrameId = requestAnimationFrame(animate);
 
   // Return cleanup function
@@ -56,7 +80,7 @@ export const animateRotation = (
   };
 };
 
-// Function to setup rotation timer
+// Function to setup rotation timer with improved performance
 export const setupRotationTimer = (
   isGameOver: boolean,
   rotationEnabled: boolean,
@@ -65,13 +89,26 @@ export const setupRotationTimer = (
 ): (() => void) => {
   if (!isGameOver && rotationEnabled) {
     let warningTimeoutId: number;
-    const intervalId = setInterval(() => {
-      onWarning();
-      warningTimeoutId = window.setTimeout(onRotation, ROTATION_WARNING_DELAY);
-    }, ROTATION_INTERVAL);
+    let intervalId: number;
+
+    // Use a more precise timing mechanism
+    const startTime = performance.now();
+    const scheduleNextRotation = () => {
+      const currentTime = performance.now();
+      const elapsed = currentTime - startTime;
+      const nextInterval = ROTATION_INTERVAL - (elapsed % ROTATION_INTERVAL);
+
+      intervalId = window.setTimeout(() => {
+        onWarning();
+        warningTimeoutId = window.setTimeout(onRotation, ROTATION_WARNING_DELAY);
+        scheduleNextRotation();
+      }, nextInterval);
+    };
+
+    scheduleNextRotation();
 
     return () => {
-      clearInterval(intervalId);
+      clearTimeout(intervalId);
       clearTimeout(warningTimeoutId);
     };
   }
