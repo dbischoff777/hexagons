@@ -97,15 +97,15 @@
 
 .game-hud {
   position: absolute;
-  top: 30px;
+  top: min(30px, 4vh);
   left: 0;
   right: 0;
   display: flex;
   justify-content: center;
-  gap: 300px;
+  gap: min(300px, 25vw);
   pointer-events: none;
   z-index: 5;
-  font-size: 32px;
+  font-size: min(32px, 3vw);
   font-weight: bold;
   text-transform: uppercase;
   letter-spacing: 2px;
@@ -115,16 +115,16 @@
   position: fixed;
   left: 50%;
   transform: translateX(-50%);
-  min-width: 200px;
-  padding: 12px 20px;
-  border-radius: 12px;
+  min-width: min(200px, 20vw);
+  padding: min(12px, 1.5vh) min(20px, 2vw);
+  border-radius: min(12px, 1.5vh);
   background: rgba(26, 26, 46, 0.95);
   backdrop-filter: blur(10px);
   border: 2px solid rgba(0, 255, 159, 0.3);
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 6px;
+  gap: min(6px, 0.8vh);
   overflow: visible;
   box-shadow: 
     0 4px 20px rgba(0, 255, 159, 0.2),
@@ -144,7 +144,7 @@
 }
 
 .score-value {
-  font-size: 1.4em;
+  font-size: min(1.4em, 4vw);
   font-weight: bold;
   color: #00FF9F;
   text-shadow: 
@@ -178,9 +178,9 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 20px;
+  gap: min(20px, 2vh);
   width: 100%;
-  max-width: 1200px;
+  max-width: min(1200px, 90vw);
   margin: 0 auto;
   z-index: 1;
 }
@@ -188,8 +188,9 @@
 .game-board {
   position: relative;
   width: 100%;
-  max-width: 1000px;
-  height: 800px;
+  max-width: min(1000px, 80vw);
+  height: min(800px, 80vh);
+  aspect-ratio: 1.25; /* 1000/800 */
   transform-style: preserve-3d;
   will-change: transform;
 }
@@ -249,21 +250,21 @@
 .power-up-indicator {
   position: fixed;
   left: 50%;
-  top: 30px;
-  transform: translateX(150px);
+  top: min(30px, 4vh);
+  transform: translateX(min(150px, 15vw));
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: min(10px, 1.5vh);
   z-index: 2;
   height: auto;
 }
 
 .power-up-timer {
   background: rgba(26, 26, 46, 0.95);
-  padding: 5px 10px;
-  border-radius: 5px;
+  padding: min(5px, 0.7vh) min(10px, 1.2vw);
+  border-radius: min(5px, 0.7vh);
   color: #00FFFF;
-  font-size: 16px;
+  font-size: min(16px, 1.8vw);
   display: flex;
   align-items: center;
   gap: 5px;
@@ -271,9 +272,9 @@
   border: 2px solid currentColor;
   text-shadow: 0 0 10px currentColor;
   box-shadow: 0 0 15px rgba(0, 255, 255, 0.2);
-  min-width: 200px;
+  min-width: min(200px, 20vw);
   justify-content: center;
-  margin-top: 45px;
+  margin-top: min(45px, 6vh);
 }
 
 .power-up-timer:first-child {
@@ -672,15 +673,22 @@
 /* Update French Bulldog positioning specifically for the game context */
 .game-container .french-bulldog {
   position: absolute;
-  top: 160px !important; /* Force the top position */
-  left: 20px;
+  top: min(160px, 20vh) !important;
+  left: min(20px, 2vw);
   z-index: 90;
-  transform: none !important; /* Remove float animation in game */
+  transform: none !important;
+  /* Scale the bulldog based on viewport */
+  --bulldog-scale: min(1, calc(0.6 + 0.4 * (100vw / 1920)));
+  transform: scale(var(--bulldog-scale)) !important;
 }
 
 /* Ensure speech bubble doesn't get cut off */
 .game-container .speech-bubble {
   z-index: 91;
+  font-size: min(16px, 1.8vw);
+  padding: min(10px, 1.5vh) min(20px, 2.5vw);
+  border-radius: min(8px, 1vh);
+  max-width: min(300px, 25vw);
 }
 
 /* Add CSS custom properties for each popup type */
