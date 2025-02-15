@@ -436,16 +436,13 @@ const Game: React.FC<GameProps> = ({
         if (selectedTileIndex !== null && mousePosition) {
           const selectedTile = nextTiles[selectedTileIndex]
           
-          // Don't create a new object on every render
-          const rotatedTile = selectedTile // Use the tile directly since it already has the correct rotation
-
           ctx.globalAlpha = 0.6
           drawHexagonWithColoredEdges({
             ctx,
             x: mousePosition.x,
             y: mousePosition.y,
             size: tileSize,
-            tile: rotatedTile,
+            tile: selectedTile,
             isSelected: true,
             settings,
             theme,
@@ -910,7 +907,15 @@ const Game: React.FC<GameProps> = ({
       canvas.removeEventListener('click', handleClick)
       canvas.removeEventListener('contextmenu', handleContextMenu)
     }
-  }, [placedTiles, nextTiles, selectedTileIndex, score, timeLeft, isGameOver, mousePosition, settings, rotationEnabled, rotationState.boardRotation]) // Make sure these dependencies are necessary
+  }, [
+    placedTiles, 
+    nextTiles, 
+    selectedTileIndex, 
+    mousePosition, 
+    isGameOver,
+    rotationState.boardRotation,
+    settings
+  ]) // Removed dependencies that change too frequently
 
   // Add power-up activation handler
   const activatePowerUp = (tile: PlacedTile) => {

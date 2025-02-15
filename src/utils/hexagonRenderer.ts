@@ -21,6 +21,8 @@ interface HexagonRenderProps {
   }
   selectedTileIndex: number | null
   animatingTiles: { q: number, r: number, type: 'place' | 'match' | 'hint' }[]
+  showInfoBox?: boolean
+  isCursorTile?: boolean
 }
 
 const powerUpStyles = {
@@ -42,6 +44,24 @@ const powerUpStyles = {
 const PULSE_ANIMATION = (time: number) => Math.sin(time / 200) * 0.2 + 0.4
 const GLOW_ANIMATION = (time: number) => Math.sin(time / 800) * 10 + 15
 
+// Add caching for common calculations
+const pointsCache = new Map<string, [number, number][]>();
+const getPoints = (x: number, y: number, size: number): [number, number][] => {
+  const key = `${x},${y},${size}`;
+  if (!pointsCache.has(key)) {
+    const points: [number, number][] = [];
+    for (let i = 0; i < 6; i++) {
+      const angle = (i * Math.PI) / 3;
+      points.push([
+        x + size * Math.cos(angle),
+        y + size * Math.sin(angle)
+      ]);
+    }
+    pointsCache.set(key, points);
+  }
+  return pointsCache.get(key)!;
+};
+
 export const drawHexagonWithColoredEdges = ({
   ctx,
   x,
@@ -56,70 +76,56 @@ export const drawHexagonWithColoredEdges = ({
   animatingTiles,
   showInfoBox = false,
   isCursorTile = false
-}: HexagonRenderProps & { showInfoBox?: boolean, isCursorTile?: boolean }) => {
-  const points: [number, number][] = []
-  
-  // Calculate points
-  for (let i = 0; i < 6; i++) {
-    const angle = (i * Math.PI) / 3
-    points.push([
-      x + size * Math.cos(angle),
-      y + size * Math.sin(angle)
-    ])
-  }
+}: HexagonRenderProps) => {
+  ctx.save();
+  const points = getPoints(x, y, size);
 
   // Draw valid placement highlight
   if (selectedTileIndex !== null) {
-    drawPlacementHighlight(ctx, points)
+    drawPlacementHighlight(ctx, points);
   }
 
   // Draw selection highlight
   if (isSelected) {
-    drawSelectionHighlight(ctx, points, x, y, size)
+    drawSelectionHighlight(ctx, points, x, y, size);
   }
 
-  // Apply base styles
-  applyBaseStyles(ctx, tile, isMatched, theme, x, y, size)
-
-  // Draw the hexagon
-  drawHexagonShape(ctx, points)
-
-  // Draw edges and special features
+  // Apply base styles and draw
   if (tile?.edges) {
-    drawEdges(ctx, tile, points, isSelected, settings, isMatched)
-    drawSpecialFeatures(ctx, tile, x, y, isSelected)
+    applyBaseStyles(ctx, tile, isMatched, theme, x, y, size);
+    drawHexagonShape(ctx, points);
+    drawEdges(ctx, tile, points, isSelected, settings, isMatched);
+    drawSpecialFeatures(ctx, tile, x, y, isSelected);
     
-    // Show info box for cursor tile or selected tile in options
     if ((isCursorTile || showInfoBox) && isSelected) {
       if (tile.isJoker) {
-        drawInfoBox(ctx, x, y, size, 'Matches any color', '#00FFFF')
+        drawInfoBox(ctx, x, y, size, 'Matches any color', '#00FFFF');
       } else if (tile.powerUp) {
-        const style = powerUpStyles[tile.powerUp.type]
+        const style = powerUpStyles[tile.powerUp.type];
         const descriptions = {
           freeze: 'Freezes Timer (5s)',
           colorShift: 'Changes Adjacent Colors',
           multiplier: 'Double Points (15s)'
-        }
-        drawInfoBox(ctx, x, y, size, descriptions[tile.powerUp.type], style.glow)
+        };
+        drawInfoBox(ctx, x, y, size, descriptions[tile.powerUp.type], style.glow);
       } else if (tile.type === 'mirror') {
-        drawInfoBox(ctx, x, y, size, 'Mirrors Adjacent Colors', '#00FFFF')
+        drawInfoBox(ctx, x, y, size, 'Mirrors Adjacent Colors', '#00FFFF');
       }
     }
   }
 
-  // Draw accessibility overlay
-  if (tile && (settings.isColorBlind || settings.showEdgeNumbers)) {
-    drawAccessibilityOverlay(ctx, tile, x, y, size, settings)
-  }
-
   // Handle animations
-  handleAnimations(ctx, tile, animatingTiles, x, y, theme)
+  if (tile) {
+    handleAnimations(ctx, tile, animatingTiles, x, y, theme);
+  }
 
   // Add match glow
   if (isMatched) {
-    drawMatchGlow(ctx, points, theme)
+    drawMatchGlow(ctx, points, theme);
   }
-}
+
+  ctx.restore();
+};
 
 // Helper functions (private)
 function drawPlacementHighlight(ctx: CanvasRenderingContext2D, points: [number, number][]) {
