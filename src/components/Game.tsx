@@ -238,7 +238,6 @@ const Game: React.FC<GameProps> = ({
     };
   });
   const [showCompanion, setShowCompanion] = useState(false);
-  const [previousScore, setPreviousScore] = useState(0);
   const [lastAction, setLastAction] = useState<{
     type: 'match' | 'combo' | 'clear' | 'ability';
     value?: number;
@@ -260,6 +259,9 @@ const Game: React.FC<GameProps> = ({
     showRotationText: false,
     isRotating: false
   });
+
+  // Keep the state
+  const [previousScore, setPreviousScore] = useState(0);
 
   const awardUpgradePoints = useCallback((points: number) => {
     setUpgradeState(prev => ({
@@ -325,18 +327,7 @@ const Game: React.FC<GameProps> = ({
     });
   }, [isLevelMode, targetScore, currentBlock, currentLevel, isDailyChallenge, score, isGameOver]);
 
- /*  // Add this effect to log prop changes
-  useEffect(() => {
-    console.log('Game props changed:', {
-      isLevelMode,
-      targetScore,
-      currentBlock,
-      currentLevel,
-      source: 'Game props change'
-    });
-  }, [isLevelMode, targetScore, currentBlock, currentLevel]); */
-
-  // Add this effect to update previousScore when score changes
+  // Keep the effect that updates previousScore
   useEffect(() => {
     setPreviousScore(score);
   }, [score]);
@@ -1524,23 +1515,26 @@ const Game: React.FC<GameProps> = ({
     }
 
     // Remove this specific popup after animation
+    // Longer duration for score type
+    const duration = type === 'score' ? 2000 : 800;
     setTimeout(() => {
       setScorePopups(prev => prev.filter(p => p.id !== newPopup.id));
-    }, 800);
+    }, duration);
   }, []);
 
   // Update the cleanup effect
   useEffect(() => {
-    const POPUP_DURATION = 800 // Slightly shorter than animation duration
+    // Longer duration for score popups
+    const POPUP_DURATION = 2000;
 
     if (scorePopups.length > 0) {
       const timer = setTimeout(() => {
-        setScorePopups([])
-      }, POPUP_DURATION)
+        setScorePopups([]);
+      }, POPUP_DURATION);
 
-      return () => clearTimeout(timer)
+      return () => clearTimeout(timer);
     }
-  }, [scorePopups])
+  }, [scorePopups]);
 
   // Add tutorial progress function
   const progressTutorial = () => {
@@ -2398,13 +2392,6 @@ const Game: React.FC<GameProps> = ({
           <span className="score-value">
             {score.toLocaleString()}
           </span>
-          {score > previousScore && (
-            <div className="score-increment-container">
-              <span className="score-increment">
-                +{(score - previousScore).toLocaleString()}
-              </span>
-            </div>
-          )}
         </div>
         <div className="timer-container">
           {timedMode && !isLevelMode && ( // Only show timer in timed mode and not level mode
