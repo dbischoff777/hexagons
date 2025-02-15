@@ -59,6 +59,7 @@ import ScorePopup from './ScorePopup';
 import { ScorePopupData } from '../types/scorePopup';
 import { createScorePopup } from '../utils/popupUtils';
 import { drawHexagonWithColoredEdges } from '../utils/hexagonRenderer'
+import { formatScore } from '../utils/formatNumbers';
 
 // Replace the DEBUG object at the top
 const DEBUG = {
@@ -1976,9 +1977,9 @@ const Game: React.FC<GameProps> = ({
         </button>
       )}
       <div className="game-hud">
-        <div className="score" data-label="Score">
+        <div className="score" data-label="">
           <span className="score-value">
-            {score.toLocaleString()}
+            {formatScore(score)}
           </span>
         </div>
         <div className="timer-container">
