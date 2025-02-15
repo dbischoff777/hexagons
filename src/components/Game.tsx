@@ -600,12 +600,25 @@ const Game: React.FC<GameProps> = ({
             }
           });
 
-          // Award points for any matches
+          // Inside handleClick where we handle matches
           if (matchCount > 0) {
-            handleMatches(matchCount);
+            const basePoints = matchCount * 5;
+            const matchScore = calculateScore(basePoints, upgradeState, powerUps, combo);
             
-            const basePoints = matchCount * 5;  // 5 points per matching edge
+            // Batch all state updates together
+            const updatedTiles = newPlacedTiles.map(tile => ({
+              ...tile,
+              value: tile.hasBeenMatched ? matchScore : tile.value
+            }));
+            
+            // Update all states in one go
             const feedback = getFeedbackForScore(basePoints);
+            
+            // Group state updates
+            setPlacedTiles(updatedTiles);
+            handleScoreChange(score + basePoints);
+            addTileAnimation(q, r, 'match');
+            setLastAction({ type: 'match', value: basePoints });
             
             addScorePopup({
               score: basePoints,
@@ -616,10 +629,8 @@ const Game: React.FC<GameProps> = ({
               type: 'score'
             });
             
-            handleScoreChange(score + basePoints);
-            addTileAnimation(q, r, 'match');
-            //console.log('Setting lastAction for match:', { type: 'match', value: matchCount * 5 });
-            setLastAction({ type: 'match', value: matchCount * 5 });
+            // Call handlers after state updates
+            handleMatches(matchCount);
           }
 
           // Check for matches for grid-full bonus
