@@ -14,10 +14,9 @@
 .customize-container {
   background: rgba(26, 26, 46, 0.95);
   border: 2px solid #00FF9F;
-  border-radius: 15px;
-  padding: 25px;
-  width: 90%;
-  max-width: 500px;
+  border-radius: clamp(12px, 2vw, 15px);
+  padding: clamp(20px, 3vh, 25px);
+  width: min(90vw, 500px);
   max-height: 90vh;
   overflow-y: auto;
 }
@@ -25,8 +24,8 @@
 .customize-container h2 {
   color: #00FF9F;
   text-align: center;
-  margin-bottom: 20px;
-  font-size: 1.5em;
+  margin-bottom: clamp(15px, 2.5vh, 20px);
+  font-size: clamp(1.3em, 2.2vw, 1.5em);
 }
 
 .customize-container .bulldog-customizer {
@@ -42,41 +41,41 @@
 
 .customize-container .preset-buttons {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-  gap: 15px;
-  margin-top: 15px;
+  grid-template-columns: repeat(auto-fill, minmax(clamp(100px, 15vw, 120px), 1fr));
+  gap: clamp(12px, 2vw, 15px);
+  margin-top: clamp(12px, 2vh, 15px);
 }
 
 .customize-container .preset-button {
   width: 100%;
-  padding: 10px;
+  padding: clamp(8px, 1.5vh, 10px);
 }
 
 .customize-container section {
-  margin-bottom: 20px;
+  margin-bottom: clamp(15px, 2.5vh, 20px);
 }
 
 .customize-container .customizer-tabs {
-  margin-top: 20px;
+  margin-top: clamp(15px, 2.5vh, 20px);
 }
 
 .customize-container .tab-content {
-  margin-top: 20px;
+  margin-top: clamp(15px, 2.5vh, 20px);
 }
 
 /* Scrollbar styling */
 .customize-container::-webkit-scrollbar {
-  width: 8px;
+  width: clamp(6px, 1vw, 8px);
 }
 
 .customize-container::-webkit-scrollbar-track {
   background: rgba(0, 0, 0, 0.2);
-  border-radius: 4px;
+  border-radius: clamp(3px, 0.5vw, 4px);
 }
 
 .customize-container::-webkit-scrollbar-thumb {
   background: rgba(0, 255, 159, 0.3);
-  border-radius: 4px;
+  border-radius: clamp(3px, 0.5vw, 4px);
 }
 
 .customize-container::-webkit-scrollbar-thumb:hover {

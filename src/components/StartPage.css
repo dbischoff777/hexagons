@@ -26,42 +26,42 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 2rem;
-  width: 100%;
-  max-width: 800px;
+  padding: clamp(1rem, 3vw, 2rem);
+  width: min(1200px, 95vw);
   margin: 0 auto;
 }
 
 .game-title {
-  font-size: 5rem;
+  font-size: clamp(2.5rem, 8vw, 5rem);
   color: #00FF9F;
   text-shadow: 0 0 20px rgba(0, 255, 159, 0.5);
-  margin: 0 0 0.5rem;
-  letter-spacing: 0.5rem;
+  margin: 0 0 clamp(0.5rem, 1vh, 1rem);
+  letter-spacing: clamp(0.25rem, 1vw, 0.5rem);
   animation: glow 2s ease-in-out infinite;
 }
 
 .welcome-text {
-  font-size: 1.2rem;
+  font-size: clamp(1rem, 2vw, 1.2rem);
   color: #fff;
   opacity: 0.9;
   text-align: center;
-  margin: 0 0 1rem;
+  margin: 0 0 clamp(0.5rem, 1vh, 1rem);
 }
 
 .settings-bar {
   width: 100%;
+  max-width: min(800px, 90vw);
   display: flex;
   justify-content: center;
-  margin: 1rem 0;
+  margin: clamp(0.5rem, 1vh, 1rem) 0;
 }
 
 .settings-group {
   display: flex;
-  gap: 1.5rem;
+  gap: clamp(1rem, 2vw, 1.5rem);
   background: rgba(0, 0, 0, 0.3);
-  padding: 1.2rem;
-  border-radius: 1rem;
+  padding: clamp(0.8rem, 1.5vw, 1.2rem);
+  border-radius: clamp(0.5rem, 1vw, 1rem);
   border: 1px solid rgba(0, 255, 159, 0.2);
 }
 
@@ -134,9 +134,10 @@
 .mode-selection {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: clamp(0.5rem, 1vh, 1rem);
   animation: fadeIn 0.3s ease-out;
   width: 100%;
+  max-width: min(600px, 90vw);
   padding: 1rem 0;
 }
 
@@ -146,8 +147,8 @@
   flex-direction: column;
   align-items: center;
   gap: 0.5rem;
-  padding: 1.2rem;
-  border-radius: 1rem;
+  padding: clamp(1rem, 2vh, 1.5rem);
+  border-radius: clamp(0.5rem, 1vw, 1rem);
   cursor: pointer;
   transition: all 0.3s ease;
   border: none;
@@ -156,6 +157,7 @@
   justify-content: center;
   gap: 0.8rem;
   margin: 0;
+  font-size: clamp(1rem, 2vw, 1.2rem);
 }
 
 .mode-button.timed {
@@ -175,7 +177,7 @@
 }
 
 .mode-title {
-  font-size: 1.5rem;
+  font-size: clamp(1.2rem, 2.5vw, 1.5rem);
   font-weight: bold;
   letter-spacing: 0.1rem;
   display: flex;
@@ -186,7 +188,7 @@
 }
 
 .mode-desc {
-  font-size: 0.9rem;
+  font-size: clamp(0.8rem, 1.5vw, 1rem);
   opacity: 0.8;
 }
 
@@ -302,17 +304,17 @@
   justify-content: center;
   align-items: center;
   z-index: 1000;
-  padding: 20px;
+  padding: clamp(1rem, 3vw, 2rem);
 }
 
 .modal-content {
   background: rgba(26, 26, 46, 0.95);
   border: 2px solid #00FF9F;
-  border-radius: 15px;
-  padding: 2rem;
-  width: auto;
+  border-radius: clamp(0.5rem, 1vw, 1rem);
+  padding: clamp(1rem, 3vw, 2rem);
+  width: min(95vw, 800px);
   min-width: min-content;
-  max-height: 90vh;
+  max-height: min(90vh, 800px);
   overflow-y: auto;
 }
 
@@ -639,8 +641,9 @@
 
 .button-group {
   display: flex;
-  gap: 1rem;
+  gap: clamp(0.5rem, 1vw, 1rem);
   width: 100%;
+  max-width: min(600px, 90vw);
   justify-content: center;
   margin: 1rem 0;
 }
@@ -648,8 +651,8 @@
 .button-group button {
   flex: 1;
   width: 50%; /* Make both buttons take equal width */
-  padding: 1rem;
-  font-size: 1.2rem;
+  padding: clamp(0.8rem, 1.5vh, 1rem);
+  font-size: clamp(1rem, 1.5vw, 1.2rem);
   background: rgba(0, 255, 159, 0.15);
   color: #00FF9F;
   border: 2px solid #00FF9F;
@@ -680,15 +683,15 @@
 /* Replace the old settings-button style with this */
 .settings-button-fixed {
   width: 100%;
-  max-width: 400px;
-  margin: 1rem 0;
-  padding: 1rem;
+  max-width: min(400px, 90vw);
+  padding: clamp(0.8rem, 1.5vh, 1rem);
+  margin: clamp(0.5rem, 1vh, 1rem) 0;
   background: linear-gradient(45deg, #00ff9f33, #00ffff33);
   border: 2px solid #00ff9f;
   color: #00ff9f;
   border-radius: 8px;
   cursor: pointer;
-  font-size: 1.1rem;
+  font-size: clamp(1rem, 1.5vw, 1.2rem);
   transition: all 0.3s ease;
   text-transform: uppercase;
   letter-spacing: 1px;
@@ -774,10 +777,10 @@ button:hover > *:first-child {
   position: fixed;
   bottom: 10px;
   right: 10px;
-  font-size: 12px;
+  font-size: clamp(10px, 1vw, 12px);
   color: rgba(0, 255, 159, 0.6);
   font-family: monospace;
-  padding: 4px 8px;
+  padding: clamp(4px, 0.5vw, 8px) clamp(6px, 0.8vw, 12px);
   background: rgba(26, 26, 46, 0.6);
   border-radius: 4px;
   backdrop-filter: blur(4px);
@@ -787,4 +790,30 @@ button:hover > *:first-child {
 .version-number:hover {
   color: rgba(0, 255, 159, 0.9);
   background: rgba(26, 26, 46, 0.8);
+}
+
+/* Media queries for different screen sizes */
+@media (max-width: 768px) {
+  .start-container {
+    padding: clamp(0.5rem, 2vw, 1rem);
+  }
+  
+  .settings-group {
+    flex-direction: column;
+    gap: clamp(0.5rem, 1vh, 0.8rem);
+  }
+  
+  .mode-selection {
+    gap: clamp(0.3rem, 0.8vh, 0.5rem);
+  }
+}
+
+@media (max-height: 600px) {
+  .game-title {
+    font-size: clamp(2rem, 6vw, 3rem);
+  }
+  
+  .mode-button {
+    padding: clamp(0.5rem, 1.5vh, 0.8rem);
+  }
 }

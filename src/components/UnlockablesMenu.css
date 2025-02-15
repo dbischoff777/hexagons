@@ -14,10 +14,9 @@
 .unlockables-container {
   background: rgba(26, 26, 46, 0.95);
   border: 2px solid #00FF9F;
-  border-radius: 15px;
-  padding: 30px;
-  width: 90%;
-  max-width: 800px;
+  border-radius: clamp(10px, 2vw, 15px);
+  padding: clamp(20px, 4vh, 30px);
+  width: min(90vw, 800px);
   max-height: 90vh;
   overflow-y: auto;
 }
@@ -39,8 +38,8 @@
 
 .themes-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 20px;
+  grid-template-columns: repeat(auto-fill, minmax(clamp(150px, 20vw, 200px), 1fr));
+  gap: clamp(10px, 2vw, 20px);
 }
 
 .theme-item {
@@ -55,8 +54,8 @@
 }
 
 .theme-preview {
-  width: 120px;
-  height: 80px;
+  width: clamp(80px, 15vw, 120px);
+  height: clamp(60px, 10vw, 80px);
   border-radius: 8px;
   overflow: hidden;
   margin-bottom: 8px;
@@ -178,8 +177,8 @@
 }
 
 .companion-preview {
-  width: 120px;
-  height: 120px;
+  width: clamp(80px, 15vw, 120px);
+  height: clamp(80px, 15vw, 120px);
   border-radius: 50%;
   background: rgba(0, 255, 159, 0.1);
   display: flex;

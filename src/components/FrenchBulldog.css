@@ -1,9 +1,9 @@
 .french-bulldog {
   /* Base variables from config */
-  --body-width: var(--bulldog-body-width, 120px);
-  --body-height: var(--bulldog-body-height, 70px);
-  --head-width: var(--bulldog-head-width, 100px);
-  --head-height: var(--bulldog-head-height, 100px);
+  --body-width: clamp(100px, 15vw, 120px);
+  --body-height: clamp(60px, 9vw, 70px);
+  --head-width: clamp(80px, 12vw, 100px);
+  --head-height: clamp(80px, 12vw, 100px);
   
   /* Colors */
   --body-main-color: var(--bulldog-body-main-color, #7c7c7c);
@@ -24,15 +24,15 @@
   
   /* Update existing properties */
   position: absolute;
-  left: 20px;
-  top: 100px;  /* Position below level progression */
+  left: clamp(15px, 2.5vw, 20px);
+  top: clamp(80px, 12vh, 100px);
   transform: none;  /* Remove transform since we're using fixed positioning */
-  width: 160px;
-  height: 160px;
+  width: clamp(140px, 20vw, 160px);
+  height: clamp(140px, 20vw, 160px);
   cursor: pointer;
   z-index: 10;
   animation: float var(--breathe-duration) ease-in-out infinite;
-  filter: drop-shadow(0 0 var(--glow-intensity) var(--glow-color));
+  filter: drop-shadow(0 0 clamp(15px, 2.5vw, 20px) var(--glow-color));
   will-change: transform;
   pointer-events: auto;
 }
@@ -50,7 +50,7 @@
   height: var(--head-height);
   background: var(--head-main-color);
   border-radius: 50%;
-  top: -20px;
+  top: clamp(-15px, -2.5vh, -20px);
   left: 50%;
   transform: translateX(-50%);
   transition: transform 0.3s ease;
@@ -61,10 +61,10 @@
 /* Ears */
 .bulldog-ears .ear {
   position: absolute;
-  width: 30px;
-  height: 30px;
+  width: clamp(25px, 3.5vw, 30px);
+  height: clamp(25px, 3.5vw, 30px);
   background: var(--ear-color);
-  border-radius: 10px;
+  border-radius: clamp(8px, 1.2vw, 10px);
   transition: transform 0.3s ease;
   animation: earTwitch 6s ease-in-out infinite;
 }
@@ -159,8 +159,12 @@
 
 /* Animations */
 @keyframes float {
-  0%, 100% { transform: translateY(0) rotate(0deg); }
-  50% { transform: translateY(-15px) rotate(-2deg); }
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(clamp(-5px, -0.8vh, -6px));
+  }
 }
 
 .french-bulldog:hover {
@@ -173,11 +177,12 @@
 }
 
 @keyframes earTwitch {
-  0%, 90%, 100% { transform: rotate(-30deg); }
-  92% { transform: rotate(-40deg); }
-  94% { transform: rotate(-25deg); }
-  96% { transform: rotate(-35deg); }
-  98% { transform: rotate(-28deg); }
+  0%, 100% {
+    transform: rotate(0);
+  }
+  50% {
+    transform: rotate(clamp(8deg, 1.2vw, 10deg));
+  }
 }
 
 @keyframes headTilt {
@@ -747,7 +752,7 @@
     transform: translateX(0);
   }
   50% {
-    transform: translateX(-5px);
+    transform: translateX(clamp(-4px, -0.6vw, -5px));
   }
 }
 
@@ -764,7 +769,7 @@
     transform: translateX(0);
   }
   100% {
-    transform: translateX(-2px);
+    transform: translateX(clamp(-1.5px, -0.3vw, -2px));
   }
 }
 
@@ -772,27 +777,27 @@
 .bulldog-abilities {
   position: absolute;
   left: 0;
-  top: calc(100% + 10px);
+  top: calc(100% + clamp(8px, 1.5vh, 10px));
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: clamp(6px, 1vh, 8px);
   z-index: 10;
-  width: 240px;  /* Fixed wider width */
+  width: clamp(200px, 30vw, 240px);
 }
 
 .ability-button {
   background: rgba(0, 0, 0, 0.7);
   border: 2px solid #00FF9F;
-  border-radius: 8px;
+  border-radius: clamp(6px, 1vw, 8px);
   color: white;
-  padding: 10px 16px;  /* Slightly larger padding */
+  padding: clamp(8px, 1.5vh, 10px) clamp(12px, 2vw, 16px);
   display: flex;
   align-items: center;
-  gap: 12px;  /* Increased gap between icon and text */
-  width: 100%;  /* Fill container width */
+  gap: clamp(10px, 1.5vw, 12px);
+  width: 100%;
   position: relative;
   overflow: hidden;
-  font-size: 15px;  /* Slightly larger font */
+  font-size: clamp(0.9rem, 1.6vw, 1rem);
 }
 
 .ability-button.active {
@@ -805,19 +810,19 @@
 }
 
 .ability-icon {
-  font-size: 20px;  /* Larger icon size */
+  font-size: clamp(16px, 2.5vw, 20px);
 }
 
 .ability-name {
-  flex: 1;  /* Take up remaining space */
+  flex: 1;
   text-align: left;
 }
 
 .cooldown-overlay,
 .ready-overlay {
   position: absolute;
-  right: 12px;  /* Slightly more padding from edge */
-  font-size: 14px;
-  min-width: 45px;  /* Ensure consistent width for status */
+  right: clamp(10px, 1.5vw, 12px);
+  font-size: clamp(0.8rem, 1.4vw, 0.9rem);
+  min-width: clamp(40px, 6vw, 45px);
   text-align: right;
 }

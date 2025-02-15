@@ -6,6 +6,7 @@ import {
   LevelBlock, 
   getPlayerProgress 
 } from '../utils/progressionUtils';
+import { formatPoints } from '../utils/formatNumbers';
 import './LevelRoadmap.css';
 
 // Add this interface for the reward type
@@ -96,8 +97,8 @@ const LevelRoadmap: React.FC<LevelRoadmapProps> = ({ currentPoints, onStartGame 
                 style={{ cursor: isCompleted || (block.blockNumber === 1 && levelInfo.level === 1) ? 'pointer' : 'default' }}
               >
                 <div className="level-number">{block.blockNumber}-{levelInfo.level}</div>
-                <div className="points-required">
-                  {levelInfo.pointsRequired.toLocaleString()} pts
+                <div className={`points-required ${window.innerWidth <= 600 ? 'shortened' : ''}`}>
+                  {formatPoints(levelInfo.pointsRequired)} pts
                 </div>
                 {isCurrentLevel && (
                   <div className="progress-bar">

@@ -2,11 +2,11 @@
   display: flex;
   flex-direction: column;
   gap: 40px;
-  padding: 30px;
-  background: rgba(0, 0, 0, 0.8);
+  padding: clamp(8px, 2vh, 20px);
   border-radius: 15px;
   margin: 0 auto;
   position: relative;
+  width: min(1400px, clamp(200px, 94vw, 1400px));
 }
 
 .level-block {
@@ -35,8 +35,8 @@
 
 .level-grid {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 15px;
+  grid-template-columns: repeat(auto-fit, minmax(min(150px, calc((100% - 60px) / 5)), 1fr));
+  gap: clamp(10px, min(2vw, 3vh), 15px);
   position: relative;
 }
 
@@ -91,12 +91,12 @@
 }
 
 .points-required {
-  font-size: 0.9em;
+  font-size: clamp(0.8em, 1.4vw, 0.9em);
   color: #888;
-  margin: 8px 0;
+  margin: clamp(6px, 1vh, 8px) 0;
   background: rgba(0, 0, 0, 0.3);
-  padding: 4px 8px;
-  border-radius: 12px;
+  padding: clamp(3px, 0.5vh, 4px) clamp(6px, 1vw, 8px);
+  border-radius: clamp(8px, 1.2vw, 12px);
   display: inline-block;
 }
 
@@ -216,4 +216,88 @@
   0% { transform: scale(1); opacity: 0.8; }
   50% { transform: scale(1.1); opacity: 1; }
   100% { transform: scale(1); opacity: 0.8; }
+}
+
+.roadmap-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(120px, clamp(100px, calc(94vw/6), 250px)), 1fr));
+  gap: clamp(10px, min(2vw, 3vh), 25px);
+  padding: clamp(4px, 1vw, 10px);
+  width: 100%;
+}
+
+.level-card {
+  background: rgba(0, 0, 0, 0.3);
+  border: 10px solid rgba(0, 255, 159, 0.2);
+  border-radius: clamp(10px, 1.5vw, 12px);
+  padding: clamp(15px, min(2.5vh, 3vw), 20px);
+  min-width: min(100%, clamp(100px, calc(94vw/6), 250px));
+  transition: all 0.3s ease;
+}
+
+.level-header {
+  font-size: clamp(1.2rem, min(2vw, 2.5vh), 1.4rem);
+  margin-bottom: clamp(12px, min(2vh, 2.5vw), 15px);
+}
+
+.level-content {
+  gap: clamp(10px, min(1.5vh, 2vw), 12px);
+}
+
+.reward-item {
+  padding: clamp(8px, min(1.2vh, 1.5vw), 10px);
+  border-radius: clamp(8px, min(1.2vw, 1.5vh), 10px);
+  gap: clamp(8px, min(1.2vw, 1.5vh), 10px);
+  font-size: clamp(0.9rem, min(1.6vw, 2vh), 1rem);
+}
+
+.reward-icon {
+  font-size: clamp(1.1em, min(2vw, 2.5vh), 1.2em);
+  min-width: clamp(20px, 3vw, 24px);
+}
+
+.reward-description {
+  font-size: clamp(0.85em, min(1.4vw, 1.8vh), 0.9em);
+  line-height: 1.4;
+}
+
+.level-progress {
+  margin-top: clamp(12px, min(2vh, 2.5vw), 15px);
+  font-size: clamp(0.9rem, min(1.6vw, 2vh), 1rem);
+}
+
+.progress-bar {
+  height: clamp(8px, min(1.2vh, 1.5vw), 10px);
+  border-radius: clamp(4px, min(0.6vw, 0.8vh), 5px);
+  margin: clamp(8px, min(1.2vh, 1.5vw), 10px) 0;
+}
+
+.level-cell-label {
+  font-size: clamp(0.9rem, 1.6vw, 1.1rem);
+  margin-bottom: clamp(4px, 0.8vh, 6px);
+}
+
+.level-cell-points {
+  font-size: clamp(0.8rem, 1.4vw, 0.9rem);
+  opacity: 0.8;
+}
+
+@media (max-width: 600px) {
+  .level-cell-points {
+    font-size: clamp(0.7rem, 1.2vw, 0.8rem);
+  }
+  
+  .level-cell-points.shortened {
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.02em;
+  }
+  
+  .points-required {
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.02em;
+  }
+  
+  .points-required.shortened {
+    font-size: clamp(0.75em, 1.2vw, 0.85em);
+  }
 } 
