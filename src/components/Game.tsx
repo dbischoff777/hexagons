@@ -5,7 +5,7 @@ import { INITIAL_TIME, formatTime, isGridFull } from '../utils/gameUtils'
 import { SoundManager } from '../utils/soundManager'
 import './Game.css'
 import { useAccessibility } from '../contexts/AccessibilityContext'
-import { drawAccessibilityOverlay, findPotentialMatches } from '../utils/accessibilityUtils'
+import { findPotentialMatches } from '../utils/accessibilityUtils'
 import { TutorialState } from '../types/tutorial'
 import { TUTORIAL_STEPS } from '../constants/tutorialSteps'
 import { TutorialMessage } from './TutorialMessage'
@@ -58,6 +58,7 @@ import '../styles/tiles.css';
 import ScorePopup from './ScorePopup';
 import { ScorePopupData } from '../types/scorePopup';
 import { createScorePopup } from '../utils/popupUtils';
+import { drawHexagonWithColoredEdges } from '../utils/hexagonRenderer'
 
 // Replace the DEBUG object at the top
 const DEBUG = {
@@ -395,404 +396,65 @@ const Game: React.FC<GameProps> = ({
     canvas.width = 1000
     canvas.height = 800
 
-    const drawHexagonWithColoredEdges = (
-      x: number, 
-      y: number, 
-      size: number, 
-      tile?: PlacedTile, 
-      isMatched: boolean = false, 
-      isSelected: boolean = false
-    ) => {
-      const points: [number, number][] = []
-      
-      // Calculate all points first
-      for (let i = 0; i < 6; i++) {
-        const angle = (i * Math.PI) / 3
-        const xPos = x + size * Math.cos(angle)
-        const yPos = y + size * Math.sin(angle)
-        points.push([xPos, yPos])
-      }
+    const draw = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height)
 
-      // Draw valid placement highlight
-      if (selectedTileIndex !== null) {
-        ctx.beginPath()
-        points.forEach((point, i) => {
-          if (i === 0) ctx.moveTo(point[0], point[1])
-          else ctx.lineTo(point[0], point[1])
+      if (!isGameOver || isLevelMode) {
+        ctx.save()
+        ctx.translate(centerX, centerY)
+        ctx.rotate((rotationState.boardRotation * Math.PI) / 180)
+        ctx.translate(-centerX, -centerY)
+
+        // Draw base grid first
+        for (let q = -rows; q <= rows; q++) {
+          for (let r = Math.max(-cols, -q-cols); r <= Math.min(cols, -q+cols); r++) {
+            const s = -q - r
+            if (Math.max(Math.abs(q), Math.abs(r), Math.abs(s)) <= Math.floor(cols/2)) {
+              const { x, y } = hexToPixel(q, r, centerX, centerY, tileSize)
+              drawHexagonWithColoredEdges({
+                ctx, x, y, size: tileSize, settings, theme, selectedTileIndex, animatingTiles
+              })
+            }
+          }
+        }
+
+        // Draw placed tiles separately
+        placedTiles.forEach(tile => {
+          const { x, y } = hexToPixel(tile.q, tile.r, centerX, centerY, tileSize)
+          const isMatched = tile.hasBeenMatched || false
+          const isSelected = selectedTileIndex !== null && tile === placedTiles[selectedTileIndex]
+          
+          drawHexagonWithColoredEdges({
+            ctx, x, y, size: tileSize, tile, isMatched, isSelected, settings, theme, selectedTileIndex, animatingTiles
+          })
         })
-        ctx.closePath()
-        
-        // Create pulsing glow effect
-        const pulseIntensity = Math.sin(Date.now() / 200) * 0.2 + 0.4 // Values between 0.2 and 0.6
-        ctx.fillStyle = `rgba(0, 255, 159, ${pulseIntensity * 0.2})`
-        ctx.fill()
-        
-        // Add neon outline
-        ctx.strokeStyle = '#00FF9F'
-        ctx.lineWidth = 2
-        ctx.setLineDash([5, 5])  // Dashed line
-        ctx.stroke()
-        ctx.setLineDash([])  // Reset dash
-      }
 
-      // Draw selection highlight first (if selected)
-      if (isSelected) {
-        ctx.beginPath();
-        points.forEach((point, i) => {
-          if (i === 0) ctx.moveTo(point[0], point[1]);
-          else ctx.lineTo(point[0], point[1]);
-        });
-        ctx.closePath();
-        
-        // Enhanced cyberpunk glow effect
-        const glowGradient = ctx.createRadialGradient(x, y, size * 0.5, x, y, size * 1.5);
-        glowGradient.addColorStop(0, 'rgba(0, 255, 255, 0.4)');  // Cyan core
-        glowGradient.addColorStop(0.5, 'rgba(255, 0, 255, 0.2)'); // Magenta mid
-        glowGradient.addColorStop(1, 'rgba(0, 255, 255, 0)');    // Fade out
-        ctx.fillStyle = glowGradient;
-        ctx.fill();
-        
-        // Neon border effect
-        ctx.strokeStyle = '#00FFFF';
-        ctx.lineWidth = 4;
-        ctx.stroke();
-        ctx.lineWidth = 2;
-        ctx.strokeStyle = '#FF00FF';
-        ctx.stroke();
-        
-        // Selection indicator with enhanced glow
-        ctx.fillStyle = '#00FFFF';
-        ctx.shadowColor = '#00FFFF';
-        ctx.shadowBlur = 20;
-        ctx.font = 'bold 24px Arial';
-        ctx.textAlign = 'center';
-        ctx.fillText('▼', x, y - size - 10);
-      }
+        ctx.restore()
 
-      // Add enhanced shadow for depth
-      ctx.shadowColor = 'rgba(0, 255, 255, 0.3)';
-      ctx.shadowBlur = 12;
-      ctx.shadowOffsetY = 2;
+        // Draw cursor tile without rotation
+        if (selectedTileIndex !== null && mousePosition) {
+          const selectedTile = nextTiles[selectedTileIndex]
+          
+          // Don't create a new object on every render
+          const rotatedTile = selectedTile // Use the tile directly since it already has the correct rotation
 
-      // Apply theme colors with enhanced contrast
-      if (tile?.isPlaced) {
-        if (isMatched) {
-          // Create gradient for matched tiles
-          const matchGradient = ctx.createRadialGradient(x, y, 0, x, y, size);
-          matchGradient.addColorStop(0, theme.colors.accent);
-          matchGradient.addColorStop(1, theme.colors.secondary);
-          ctx.fillStyle = matchGradient;
-        } else {
-          // Create gradient for normal tiles
-          const normalGradient = ctx.createRadialGradient(x, y, 0, x, y, size);
-          normalGradient.addColorStop(0, theme.colors.secondary);
-          normalGradient.addColorStop(1, theme.colors.background);
-          ctx.fillStyle = normalGradient;
+          ctx.globalAlpha = 0.6
+          drawHexagonWithColoredEdges({
+            ctx,
+            x: mousePosition.x,
+            y: mousePosition.y,
+            size: tileSize,
+            tile: rotatedTile,
+            isSelected: true,
+            settings,
+            theme,
+            selectedTileIndex,
+            animatingTiles,
+            isCursorTile: true,
+            showInfoBox: true
+          })
+          ctx.globalAlpha = 1.0
         }
-      }
-
-      // For rainbow tiles
-      if (tile?.isJoker) {
-        // Create rainbow gradient
-        const gradient = ctx.createLinearGradient(x - size, y - size, x + size, y + size);
-        gradient.addColorStop(0, '#ff0000');
-        gradient.addColorStop(0.2, '#ffff00');
-        gradient.addColorStop(0.4, '#00ff00');
-        gradient.addColorStop(0.6, '#00ffff');
-        gradient.addColorStop(0.8, '#0000ff');
-        gradient.addColorStop(1, '#ff00ff');
-        ctx.strokeStyle = gradient;
-        ctx.lineWidth = 6;
-      }
-
-      // Draw hexagon with rounded corners
-      ctx.beginPath()
-      points.forEach((point, i) => {
-        if (i === 0) ctx.moveTo(point[0], point[1])
-        else ctx.lineTo(point[0], point[1])
-      })
-      ctx.closePath()
-      ctx.fill()
-
-      // Reset shadow for edges
-      ctx.shadowColor = 'none'
-      ctx.shadowBlur = 0
-      ctx.shadowOffsetY = 0
-
-      // Draw edges
-      if (tile?.edges) {
-        for (let i = 0; i < 6; i++) {
-          const start = points[i]
-          const end = points[(i + 1) % 6]
-          
-          if (settings.isColorBlind) {
-            // In colorblind mode, use only black/white for edges
-            ctx.strokeStyle = isMatched ? '#FFFFFF' : '#888888'
-            ctx.lineWidth = isSelected ? 6 : 4  // Increased from 4:2
-          } else {
-            const color = tile.edges[i].color
-            
-            // Regular color mode with wider edges
-            if (tile.isJoker) {
-              // For joker tiles, use a solid color instead of gradient
-              ctx.strokeStyle = '#FFFFFF'
-              ctx.shadowColor = '#FFFFFF'
-              ctx.shadowBlur = 10
-            } else {
-              const gradient = ctx.createLinearGradient(start[0], start[1], end[0], end[1])
-              gradient.addColorStop(0, color)
-              gradient.addColorStop(1, color)
-              ctx.strokeStyle = gradient
-            }
-            ctx.lineWidth = isSelected ? 7 : 5  // Increased from 5:3
-          }
-          
-          ctx.beginPath()
-          ctx.moveTo(start[0], start[1])
-          ctx.lineTo(end[0], end[1])
-          ctx.stroke()
-        }
-
-        // Special joker indicator and number for joker tiles
-        if (tile.isJoker) {
-          // Draw star above the number
-          ctx.fillStyle = '#FFFFFF'
-          ctx.shadowColor = '#FFFFFF'
-          ctx.shadowBlur = 15
-          ctx.font = 'bold 20px Arial'
-          ctx.textAlign = 'center'
-          ctx.textBaseline = 'middle'
-          ctx.fillText('★', x, y - 12)  // Move star up
-
-          // Draw number below the star
-          ctx.shadowColor = 'rgba(0, 0, 0, 0.2)'
-          ctx.shadowBlur = 2
-          ctx.fillStyle = isSelected ? '#1a1a1a' : '#2d2d2d'
-          ctx.font = `bold ${isSelected ? 24 : 22}px Arial`
-          ctx.textAlign = 'center'
-          ctx.textBaseline = 'middle'
-          ctx.fillText(tile.value.toString(), x, y + 12)  // Move number down
-
-          // Show joker info when selected
-          if (isSelected) {
-            // Draw info box above tile
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.1)'
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)'
-            ctx.lineWidth = 1
-            const text = 'Matches any color'
-            const padding = 10
-            const boxWidth = ctx.measureText(text).width + padding * 2
-            const boxHeight = 30
-            const boxX = x - boxWidth / 2
-            const boxY = y - size * 2
-
-            // Draw box with rounded corners
-            ctx.beginPath()
-            ctx.roundRect(boxX, boxY, boxWidth, boxHeight, 5)
-            ctx.fill()
-            ctx.stroke()
-
-            // Draw description text
-            ctx.fillStyle = '#fff'
-            ctx.font = '14px Arial'
-            ctx.fillText(text, x, boxY + boxHeight/2)
-          }
-        } else if (tile.powerUp) {
-          // Define power-up specific colors and icons
-          const powerUpStyles = {
-            freeze: {
-              glow: '#00FFFF',
-              icon: '❄️'
-            },
-            colorShift: {
-              glow: '#FF00FF',
-              icon: '🎨'
-            },
-            multiplier: {
-              glow: '#FFD700',
-              icon: '✨'
-            }
-          };
-
-          const style = powerUpStyles[tile.powerUp.type];
-          
-          // Draw power-up icon above the number
-          ctx.fillStyle = '#FFFFFF';
-          ctx.shadowColor = style.glow;
-          ctx.shadowBlur = 15;
-          ctx.font = 'bold 20px Arial';
-          ctx.textAlign = 'center';
-          ctx.textBaseline = 'middle';
-          ctx.fillText(style.icon, x, y - 12);  // Move icon up
-
-          // Draw number below the icon
-          ctx.shadowColor = 'rgba(0, 0, 0, 0.2)';
-          ctx.shadowBlur = 2;
-          ctx.fillStyle = isSelected ? '#1a1a1a' : '#2d2d2d';
-          ctx.font = `bold ${isSelected ? 24 : 22}px Arial`;
-          ctx.textAlign = 'center';
-          ctx.textBaseline = 'middle';
-          ctx.fillText(tile.value.toString(), x, y + 12);  // Move number down
-
-          // Show power-up info when selected
-          if (isSelected) {
-            const descriptions = {
-              freeze: 'Freezes Timer (5s)',
-              colorShift: 'Changes Adjacent Colors',
-              multiplier: 'Double Points (15s)'
-            };
-
-            // Draw info box above tile
-            ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
-            ctx.strokeStyle = style.glow;
-            ctx.lineWidth = 2;
-            const text = descriptions[tile.powerUp.type];
-            const padding = 10;
-            const boxWidth = ctx.measureText(text).width + padding * 2;
-            const boxHeight = 30;
-            const boxX = x - boxWidth / 2;
-            const boxY = y - size * 2;
-
-            // Draw box with rounded corners and glow
-            ctx.shadowColor = style.glow;
-            ctx.shadowBlur = 10;
-            ctx.beginPath();
-            ctx.roundRect(boxX, boxY, boxWidth, boxHeight, 5);
-            ctx.fill();
-            ctx.stroke();
-
-            // Draw description text
-            ctx.fillStyle = '#FFFFFF';
-            ctx.shadowBlur = 2;
-            ctx.font = '14px Arial';
-            ctx.fillText(text, x, boxY + boxHeight/2);
-          }
-        } else if (tile.value > 0 && tile.type !== 'mirror') {  // Add check for non-mirror tiles
-          // Regular tile number
-          // Add dark outline for better contrast
-          ctx.strokeStyle = '#000000'
-          ctx.lineWidth = 3
-          ctx.shadowColor = '#000000'
-          ctx.shadowBlur = 4
-          ctx.font = 'bold 24px Arial'
-          ctx.textAlign = 'center'
-          ctx.textBaseline = 'middle'
-          
-          // Draw text stroke first (outline)
-          ctx.strokeText(tile.value.toString(), x, y)  // Use actual x, y for main grid
-          
-          // Then draw the bright text
-          ctx.fillStyle = '#FFFFFF' // Always use white for better visibility
-          ctx.shadowColor = '#00FFFF' // Cyan glow
-          ctx.shadowBlur = 8
-          ctx.fillText(tile.value.toString(), x, y)  // Use actual x, y for main grid
-          
-          // Reset shadow
-          ctx.shadowBlur = 0
-        }
-      }
-
-      // Draw accessibility overlay
-      if (tile && (settings.isColorBlind || settings.showEdgeNumbers)) {
-        drawAccessibilityOverlay(ctx, tile, x, y, size, settings)
-      }
-      // Add mirror tile indicator and visual effects
-      if (tile?.type === 'mirror') {
-        // Draw mirror symbol above the number
-        ctx.fillStyle = '#FFFFFF'
-        ctx.shadowColor = '#FFFFFF'
-        ctx.shadowBlur = 15
-        ctx.font = 'bold 20px Arial'
-        ctx.textAlign = 'center'
-        ctx.textBaseline = 'middle'
-        ctx.fillText('↔', x, y - 12)  // Use x,y coordinates for main board
-
-        // Draw number below the symbol
-        ctx.shadowColor = 'rgba(0, 0, 0, 0.2)'
-        ctx.shadowBlur = 2
-        ctx.fillStyle = isSelected ? '#1a1a1a' : '#2d2d2d'  // Use isSelected parameter
-        ctx.font = `bold ${isSelected ? 24 : 22}px Arial`
-        ctx.textAlign = 'center'
-        ctx.textBaseline = 'middle'
-        ctx.fillText(tile.value.toString(), x, y + 12)  // Use x,y coordinates for main board
-
-        // Show mirror info when selected (matching power-up info style)
-        if (isSelected) {  // Use isSelected parameter instead of selectedTileIndex
-          // Draw info box above tile
-          ctx.fillStyle = 'rgba(0, 0, 0, 0.8)'
-          ctx.strokeStyle = '#00FFFF'
-          ctx.lineWidth = 2
-          const text = 'Mirrors Adjacent Colors'
-          const padding = 10
-          const boxWidth = ctx.measureText(text).width + padding * 2
-          const boxHeight = 30
-          const boxX = x - boxWidth / 2
-          const boxY = y - size * 2  // Position relative to tile size
-
-          // Draw box with rounded corners and glow
-          ctx.shadowColor = '#00FFFF'
-          ctx.shadowBlur = 10
-          ctx.beginPath()
-          ctx.roundRect(boxX, boxY, boxWidth, boxHeight, 5)
-          ctx.fill()
-          ctx.stroke()
-
-          // Draw description text
-          ctx.fillStyle = '#FFFFFF'
-          ctx.shadowBlur = 2
-          ctx.font = '14px Arial'
-          ctx.fillText(text, x, boxY + boxHeight/2)
-
-          // Add arrow pointer like power-ups
-          ctx.beginPath()
-          ctx.moveTo(x - 8, boxY + boxHeight)
-          ctx.lineTo(x + 8, boxY + boxHeight)
-          ctx.lineTo(x, boxY + boxHeight + 8)
-          ctx.closePath()
-          ctx.fillStyle = '#00FFFF'
-          ctx.fill()
-        }
-      }
-
-      // Add scale animation for newly placed tiles
-      const animation = animatingTiles.find(
-        animTile => tile && animTile.q === tile.q && animTile.r === tile.r
-      );
-      
-      if (animation) {
-        ctx.save();
-        
-        if (animation.type === 'place') {
-          // Placement animation - scale effect
-          const progress = (Date.now() % 500) / 500;
-          const scale = 1 + Math.sin(progress * Math.PI) * 0.1;
-          ctx.translate(x, y);
-          ctx.scale(scale, scale);
-          ctx.translate(-x, -y);
-        } else if (animation.type === 'match') {
-          // Match animation - glow pulse
-          const progress = (Date.now() % 800) / 800;
-          const glowIntensity = Math.sin(progress * Math.PI * 2) * 10 + 15;
-          ctx.shadowColor = theme.colors.accent;
-          ctx.shadowBlur = glowIntensity;
-        }
-      }
-
-      if (animation) {
-        ctx.restore();
-      }
-
-      // Add glow effect for matches
-      if (isMatched) {
-        ctx.shadowColor = theme.colors.accent;
-        ctx.shadowBlur = 20;
-        ctx.beginPath();
-        points.forEach((point, i) => {
-          if (i === 0) ctx.moveTo(point[0], point[1]);
-          else ctx.lineTo(point[0], point[1]);
-        });
-        ctx.closePath();
-        ctx.stroke();
       }
     }
 
@@ -801,150 +463,20 @@ const Game: React.FC<GameProps> = ({
     const tileSize = 40
     const rows = 7
 
-    const draw = () => {
-      ctx.clearRect(0, 0, canvas.width, canvas.height)
-
-      if (!isGameOver || isLevelMode) {  // Don't show game over screen in level mode
-        // Save the current context state
-        ctx.save()
-        
-        // Move to center, rotate, then move back
-        ctx.translate(centerX, centerY);
-        ctx.rotate((rotationState.boardRotation * Math.PI) / 180);
-        ctx.translate(-centerX, -centerY);
-
-        // Draw grid with valid placement highlights
-        for (let q = -rows; q <= rows; q++) {
-          for (let r = Math.max(-cols, -q-cols); r <= Math.min(cols, -q+cols); r++) {
-            const s = -q - r
-            if (Math.max(Math.abs(q), Math.abs(r), Math.abs(s)) <= Math.floor(cols/2)) {
-              const { x, y } = hexToPixel(q, r, centerX, centerY, tileSize)
-              drawHexagonWithColoredEdges(x, y, tileSize, undefined, false)
-            }
-          }
-        }
-
-        // Draw all placed tiles without modifying their properties
-        placedTiles.forEach(tile => {
-          const { x, y } = hexToPixel(tile.q, tile.r, centerX, centerY, tileSize)
-          // Pass the original tile without any rotation modifications
-          drawHexagonWithColoredEdges(x, y, tileSize, tile, hasMatchingEdges(tile, placedTiles, settings.isColorBlind))
-        })
-
-        // Restore the context to its original state
-        ctx.restore()
-
-        // Draw cursor tile without rotation
-        if (selectedTileIndex !== null && mousePosition) {
-          ctx.globalAlpha = 0.6
-          drawHexagonWithColoredEdges(
-            mousePosition.x,
-            mousePosition.y,
-            tileSize,
-            nextTiles[selectedTileIndex],
-            false,
-            true
-          )
-          ctx.globalAlpha = 1.0
-        }
-      } else {
-        // Only show game over screen in non-level mode
-        // Dark overlay with slight red tint
-        ctx.fillStyle = 'rgba(25, 0, 0, 0.9)'
-        ctx.fillRect(0, 0, canvas.width, canvas.height)
-
-        // Game Over container
-        const containerWidth = 400
-        const containerHeight = 500
-        const containerX = (canvas.width - containerWidth) / 2
-        const containerY = (canvas.height - containerHeight) / 2
-
-        // Draw container with gradient background
-        const gradient = ctx.createLinearGradient(containerX, containerY, containerX, containerY + containerHeight)
-        gradient.addColorStop(0, '#2C0A1E')
-        gradient.addColorStop(1, '#1A0712')
-        ctx.fillStyle = gradient
-        ctx.roundRect(containerX, containerY, containerWidth, containerHeight, 15)
-        ctx.fill()
-
-        // Container border with glow
-        ctx.strokeStyle = '#FF4D6D'
-        ctx.lineWidth = 3
-        ctx.shadowColor = '#FF4D6D'
-        ctx.shadowBlur = 15
-        ctx.roundRect(containerX, containerY, containerWidth, containerHeight, 15)
-        ctx.stroke()
-        ctx.shadowBlur = 0
-
-        // Game Over text
-        ctx.font = 'bold 48px Arial'
-        ctx.fillStyle = '#FF8FA3'
-        ctx.textAlign = 'center'
-        ctx.fillText('GAME OVER', canvas.width / 2, containerY + 80)
-
-        // Final Score text
-        ctx.font = 'bold 32px Arial'
-        ctx.fillStyle = '#FF4D6D'
-        ctx.fillText('Final Score', canvas.width / 2, containerY + 180)
-        
-        // Score with glow
-        ctx.font = 'bold 56px Arial'
-        ctx.fillStyle = '#FFFFFF'
-        ctx.shadowColor = '#FF4D6D'
-        ctx.shadowBlur = 10
-        ctx.fillText(score.toString(), canvas.width / 2, containerY + 260)
-        ctx.shadowBlur = 0
-
-        // Draw button container last
-        const buttonContainerHeight = 100
-        const buttonContainerY = containerY + containerHeight - buttonContainerHeight
-
-        // Button container background
-        ctx.fillStyle = 'rgba(44, 10, 30, 0.95)'
-        ctx.beginPath()
-        ctx.roundRect(containerX, buttonContainerY, containerWidth, buttonContainerHeight, [0, 0, 15, 15])
-        ctx.fill()
-
-        // Play Again button
-        const buttonWidth = 200
-        const buttonHeight = 50
-        const buttonX = canvas.width / 2 - buttonWidth / 2
-        const buttonY = buttonContainerY + (buttonContainerHeight - buttonHeight) / 2
-
-        // Draw button with hover effect
-        ctx.fillStyle = '#FF4D6D'
-        ctx.shadowColor = '#FF4D6D'
-        ctx.shadowBlur = mousePosition && 
-          mousePosition.x >= buttonX && mousePosition.x <= buttonX + buttonWidth &&
-          mousePosition.y >= buttonY && mousePosition.y <= buttonY + buttonHeight ? 15 : 5
-        ctx.roundRect(buttonX, buttonY, buttonWidth, buttonHeight, 10)
-        ctx.fill()
-
-        // Button text
-        ctx.shadowBlur = 0
-        ctx.font = 'bold 24px Arial'
-        ctx.fillStyle = '#FFFFFF'
-        ctx.fillText('Play Again', canvas.width / 2, buttonY + buttonHeight/2 + 8)
-      }
-    }
-
     const handleClick = (event: MouseEvent) => {
       const rect = canvas.getBoundingClientRect();
       const mouseX = event.clientX - rect.left;
       const mouseY = event.clientY - rect.top;
 
       if (isGameOver) {
-        const containerHeight = 500
-        const buttonContainerHeight = 100
+        const buttonY = canvas.height / 2 + 100 // Position button below center
         const buttonWidth = 200
         const buttonHeight = 50
         const buttonX = canvas.width / 2 - buttonWidth / 2
-        const buttonY = (canvas.height - containerHeight) / 2 + containerHeight - buttonContainerHeight + (buttonContainerHeight - buttonHeight) / 2
 
         if (mouseX >= buttonX && mouseX <= buttonX + buttonWidth &&
             mouseY >= buttonY && mouseY <= buttonY + buttonHeight) {
-          // Reset game state
-          resetGame();
+          resetGame()
           return
         }
         return
@@ -1377,7 +909,7 @@ const Game: React.FC<GameProps> = ({
       canvas.removeEventListener('click', handleClick)
       canvas.removeEventListener('contextmenu', handleContextMenu)
     }
-  }, [placedTiles, nextTiles, selectedTileIndex, score, timeLeft, isGameOver, mousePosition, settings, rotationEnabled, rotationState.boardRotation])
+  }, [placedTiles, nextTiles, selectedTileIndex, score, timeLeft, isGameOver, mousePosition, settings, rotationEnabled, rotationState.boardRotation]) // Make sure these dependencies are necessary
 
   // Add power-up activation handler
   const activatePowerUp = (tile: PlacedTile) => {
