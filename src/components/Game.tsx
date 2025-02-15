@@ -368,14 +368,7 @@ const Game: React.FC<GameProps> = ({
             setRotationState(newState);
           },
           () => {
-            // Don't modify the edges during grid rotation
-            // The visual rotation is handled by the canvas transform
-            setPlacedTiles(prevTiles => 
-              prevTiles.map(tile => ({
-                ...tile,
-                edges: [...tile.edges] // Keep original edges, just create new reference
-              }))
-            );
+            // Don't update tiles at all - the visual rotation is handled by CSS transform
           }
         );
 
@@ -384,7 +377,7 @@ const Game: React.FC<GameProps> = ({
     );
 
     return cleanup;
-  }, [isGameOver, rotationEnabled, rotationState.boardRotation]); // Minimal dependencies
+  }, [isGameOver, rotationEnabled, rotationState.boardRotation]);
 
   // Main game effect
   useEffect(() => {

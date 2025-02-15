@@ -23,10 +23,21 @@ export const animateRotation = (
   onComplete: () => void
 ) => {
   const startTime = performance.now();
-  const duration = 1000; // 1 second animation
+  const duration = ROTATION_ANIMATION_DURATION;
   let animationFrame: number;
+  let isAnimating = true;
+  let lastRotation = currentRotation;
+  let lastUpdateTime = startTime;
 
   const animate = (currentTime: number) => {
+    if (!isAnimating) return;
+    
+    // Throttle updates to every 16ms (roughly 60fps)
+    if (currentTime - lastUpdateTime < 16) {
+      animationFrame = requestAnimationFrame(animate);
+      return;
+    }
+    
     const elapsed = currentTime - startTime;
     const progress = Math.min(elapsed / duration, 1);
     
@@ -34,25 +45,39 @@ export const animateRotation = (
     const eased = easeInOutCubic(progress);
     const newRotation = currentRotation + (180 * eased);
 
-    // Batch state updates
-    onStateUpdate({
-      boardRotation: newRotation,
-      showWarning: false,
-      showRotationText: false,
-      isRotating: progress < 1
-    });
+    // Only update if rotation has changed significantly
+    if (Math.abs(newRotation - lastRotation) > 0.5) {
+      lastRotation = newRotation;
+      lastUpdateTime = currentTime;
+      
+      onStateUpdate({
+        boardRotation: newRotation,
+        showWarning: false,
+        showRotationText: false,
+        isRotating: progress < 1
+      });
+    }
 
     if (progress < 1) {
       animationFrame = requestAnimationFrame(animate);
     } else {
+      isAnimating = false;
+      // Ensure final state is set exactly
+      onStateUpdate({
+        boardRotation: currentRotation + 180,
+        showWarning: false,
+        showRotationText: false,
+        isRotating: false
+      });
+      // Call onComplete without modifying tile state
       onComplete();
     }
   };
 
   animationFrame = requestAnimationFrame(animate);
 
-  // Return cleanup function
   return () => {
+    isAnimating = false;
     if (animationFrame) {
       cancelAnimationFrame(animationFrame);
     }
@@ -77,24 +102,14 @@ export const setupRotationTimer = (
     let warningTimeoutId: number;
     let intervalId: number;
 
-    // Use a more precise timing mechanism
-    const startTime = performance.now();
-    const scheduleNextRotation = () => {
-      const currentTime = performance.now();
-      const elapsed = currentTime - startTime;
-      const nextInterval = ROTATION_INTERVAL - (elapsed % ROTATION_INTERVAL);
-
-      intervalId = window.setTimeout(() => {
-        onWarning();
-        warningTimeoutId = window.setTimeout(onRotation, ROTATION_WARNING_DELAY);
-        scheduleNextRotation();
-      }, nextInterval);
-    };
-
-    scheduleNextRotation();
+    // Start the interval immediately, but the first warning will happen after ROTATION_INTERVAL
+    intervalId = window.setInterval(() => {
+      onWarning();
+      warningTimeoutId = window.setTimeout(onRotation, ROTATION_WARNING_DELAY);
+    }, ROTATION_INTERVAL);
 
     return () => {
-      clearTimeout(intervalId);
+      clearInterval(intervalId);
       clearTimeout(warningTimeoutId);
     };
   }
