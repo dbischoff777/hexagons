@@ -11,7 +11,7 @@ const ScorePopup: React.FC<ScorePopupProps> = ({ popup }) => {
       className="score-popup"
       data-type={popup.type}
       style={{
-        left: `${popup.x}px`,
+        left: `${popup.x}px`,  // Use pixel values since we calculated viewport coordinates
         top: `${popup.y}px`
       }}
     >

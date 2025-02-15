@@ -777,8 +777,8 @@ const Game: React.FC<GameProps> = ({
               const clearInfo = getFeedbackForClear(clearBonus);
               addScorePopup({
                 score: clearBonus,
-                x: canvasRef.current?.width ?? 0 / 2,
-                y: canvasRef.current?.height ?? 0 / 2 - 50,
+                x: canvas.width / 2,
+                y: canvas.height / 2 - 50,
                 emoji: clearInfo?.emoji ?? '✨',
                 text: clearInfo?.text ?? 'Clear!',
                 type: 'clear'
@@ -1025,7 +1025,21 @@ const Game: React.FC<GameProps> = ({
 
   // Modify the addScorePopup function to handle popup clearing and positioning better
   const addScorePopup = useCallback(({ score, x, y, emoji, text, type }: Omit<ScorePopupData, 'id'>) => {
-    const newPopup = createScorePopup({ score, x, y, emoji, text, type });
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    // Get canvas rect to calculate relative position
+    const canvasRect = canvas.getBoundingClientRect();
+    
+    // Create popup with position relative to viewport
+    const newPopup = createScorePopup({
+      score,
+      x: canvasRect.left + (x / canvas.width * 0.2) * canvasRect.width,  // Convert to viewport coordinates
+      y: canvasRect.top + (y / canvas.height * 0.8) * canvasRect.height,  // Convert to viewport coordinates
+      emoji,
+      text,
+      type
+    });
     
     setScorePopups(prev => {
       const filtered = prev.filter(p => p.type !== type);
