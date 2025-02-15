@@ -152,7 +152,10 @@
   letter-spacing: 2px;
 }
 
-.score, .timer {
+.score {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
   min-width: 200px;
   padding: 12px 20px;
   border-radius: 12px;
@@ -163,7 +166,6 @@
   flex-direction: column;
   align-items: center;
   gap: 6px;
-  position: relative;
   overflow: visible;
   box-shadow: 
     0 4px 20px rgba(0, 255, 159, 0.2),
@@ -192,7 +194,7 @@
   letter-spacing: 0.5px;
 }
 
-.score:hover, .timer:hover {
+.score:hover {
   transform: translateY(2px);
   border-color: rgba(0, 255, 159, 0.4);
   box-shadow: 
@@ -478,6 +480,8 @@
 }
 
 .timer-container {
+  position: fixed;
+  right: 50px;
   display: flex;
   flex-direction: column;
   align-items: center;
