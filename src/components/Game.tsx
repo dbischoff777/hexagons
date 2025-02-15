@@ -368,11 +368,12 @@ const Game: React.FC<GameProps> = ({
             setRotationState(newState);
           },
           () => {
-            // Batch the updates together
+            // Don't modify the edges during grid rotation
+            // The visual rotation is handled by the canvas transform
             setPlacedTiles(prevTiles => 
               prevTiles.map(tile => ({
                 ...tile,
-                edges: rotateTileEdges(tile.edges)
+                edges: [...tile.edges] // Keep original edges, just create new reference
               }))
             );
           }

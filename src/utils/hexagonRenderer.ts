@@ -87,7 +87,7 @@ export const drawHexagonWithColoredEdges = ({
   // Draw edges and special features
   if (tile?.edges) {
     drawEdges(ctx, tile, points, isSelected, settings, isMatched)
-    drawSpecialFeatures(ctx, tile, x, y, size, isSelected)
+    drawSpecialFeatures(ctx, tile, x, y, isSelected)
     
     // Show info box for cursor tile or selected tile in options
     if ((isCursorTile || showInfoBox) && isSelected) {
@@ -251,7 +251,6 @@ function drawSpecialFeatures(
   tile: PlacedTile,
   x: number,
   y: number,
-  size: number,
   isSelected: boolean
 ) {
   if (tile.isJoker) {
