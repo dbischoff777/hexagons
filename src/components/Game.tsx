@@ -2377,6 +2377,11 @@ const Game: React.FC<GameProps> = ({
     }
   }, [particleIntensity]);
 
+  // Add the context menu handler
+  const handleContextMenu = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+  }, []);
+
   return (
     <div
       className="game-container"
@@ -2384,6 +2389,7 @@ const Game: React.FC<GameProps> = ({
         background: backgroundGlow,
         transition: 'background 1s ease-in-out'
       }}
+      onContextMenu={handleContextMenu}  // Add this line
     >
       <div className="game-header">
         <LevelProgress progress={playerProgress} />

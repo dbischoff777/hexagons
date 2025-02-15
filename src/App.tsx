@@ -8,6 +8,7 @@ import { GameState } from './types'
 import { loadGameState, saveGameState } from './utils/gameStateUtils'
 import PageTransition from './components/PageTransition'
 import { getCurrentLevelInfo, getPlayerProgress, getNextLevelInfo, LEVEL_BLOCKS } from './utils/progressionUtils'
+import PreventContextMenu from './components/PreventContextMenu'
 
 interface CurrentGame {
   isLevelMode: boolean;
@@ -208,44 +209,48 @@ function App() {
   };
 
   return (
-    <AccessibilityProvider>
-      <PageTransition 
-        isExiting={isExiting}
-        onExitComplete={handleTransitionComplete}
-      >
-        {gameStarted ? (
-          <Game 
-            musicEnabled={musicEnabled} 
-            soundEnabled={soundEnabled}
-            timedMode={timedMode}
-            onGameOver={handleExitGame}
-            tutorial={tutorialMode}
-            onSkipTutorial={handleExitGame}
-            onExit={handleExitGame}
-            onStartGame={handleGameStart}
-            savedGameState={savedGameState}
-            isDailyChallenge={isDailyChallenge}
-            isLevelMode={true}
-            targetScore={currentGame?.targetScore}
-            currentBlock={currentGame?.currentBlock}
-            currentLevel={currentGame?.currentLevel}
-            onLevelComplete={handleLevelComplete}
-            showLevelComplete={showLevelComplete}
-            rotationEnabled={rotationEnabled}
-          />
-        ) : (
-          <StartPage 
-            onStartGame={handleStartPageGame}
-            onMusicToggle={handleMusicToggle}
-            onSoundToggle={handleSoundToggle}
-            musicEnabled={musicEnabled}
-            soundEnabled={soundEnabled}
-            rotationEnabled={rotationEnabled}
-            onRotationToggle={handleRotationToggle}
-          />
-        )}
-      </PageTransition>
-    </AccessibilityProvider>
+    <PreventContextMenu>
+      <AccessibilityProvider>
+        <PageTransition 
+          isExiting={isExiting}
+          onExitComplete={handleTransitionComplete}
+        >
+          <div className="app">
+            {gameStarted ? (
+              <Game 
+                musicEnabled={musicEnabled} 
+                soundEnabled={soundEnabled}
+                timedMode={timedMode}
+                onGameOver={handleExitGame}
+                tutorial={tutorialMode}
+                onSkipTutorial={handleExitGame}
+                onExit={handleExitGame}
+                onStartGame={handleGameStart}
+                savedGameState={savedGameState}
+                isDailyChallenge={isDailyChallenge}
+                isLevelMode={true}
+                targetScore={currentGame?.targetScore}
+                currentBlock={currentGame?.currentBlock}
+                currentLevel={currentGame?.currentLevel}
+                onLevelComplete={handleLevelComplete}
+                showLevelComplete={showLevelComplete}
+                rotationEnabled={rotationEnabled}
+              />
+            ) : (
+              <StartPage 
+                onStartGame={handleStartPageGame}
+                onMusicToggle={handleMusicToggle}
+                onSoundToggle={handleSoundToggle}
+                musicEnabled={musicEnabled}
+                soundEnabled={soundEnabled}
+                rotationEnabled={rotationEnabled}
+                onRotationToggle={handleRotationToggle}
+              />
+            )}
+          </div>
+        </PageTransition>
+      </AccessibilityProvider>
+    </PreventContextMenu>
   )
 }
 
