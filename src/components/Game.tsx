@@ -427,15 +427,17 @@ const Game: React.FC<GameProps> = ({
 
         // Draw cursor tile without rotation
         if (selectedTileIndex !== null && mousePosition) {
-          const selectedTile = nextTiles[selectedTileIndex]
+          const rect = canvas.getBoundingClientRect();
+          const scaleX = rect.width / canvas.width;
+          const scaleY = rect.height / canvas.height;
           
-          ctx.globalAlpha = 0.6
+          ctx.globalAlpha = 0.6;
           drawHexagonWithColoredEdges({
             ctx,
             x: mousePosition.x,
             y: mousePosition.y,
-            size: tileSize,
-            tile: selectedTile,
+            size: tileSize / Math.max(scaleX, scaleY), // Scale the tile size inversely
+            tile: nextTiles[selectedTileIndex],
             isSelected: true,
             settings,
             theme,
@@ -443,8 +445,8 @@ const Game: React.FC<GameProps> = ({
             animatingTiles,
             isCursorTile: true,
             showInfoBox: true
-          })
-          ctx.globalAlpha = 1.0
+          });
+          ctx.globalAlpha = 1.0;
         }
       }
     }
@@ -456,11 +458,13 @@ const Game: React.FC<GameProps> = ({
 
     const handleClick = (event: MouseEvent) => {
       const rect = canvas.getBoundingClientRect();
-      const mouseX = event.clientX - rect.left;
-      const mouseY = event.clientY - rect.top;
+      const scaleX = canvas.width / rect.width;
+      const scaleY = canvas.height / rect.height;
+      const mouseX = (event.clientX - rect.left) * scaleX;
+      const mouseY = (event.clientY - rect.top) * scaleY;
 
       if (isGameOver) {
-        const buttonY = canvas.height / 2 + 100 // Position button below center
+        const buttonY = canvas.height / 2 + 100
         const buttonWidth = 200
         const buttonHeight = 50
         const buttonX = canvas.width / 2 - buttonWidth / 2
@@ -479,22 +483,19 @@ const Game: React.FC<GameProps> = ({
       const nextPiecesWidth = 100;
       const nextPiecesHeight = 400;
 
-      // First check if click is within the next pieces container bounds
-      if (mouseX >= nextPiecesX && // Changed from nextPiecesX - nextPiecesWidth/2
-          mouseX <= nextPiecesX + nextPiecesWidth && // Changed from nextPiecesX + nextPiecesWidth/2
+      if (mouseX >= nextPiecesX && 
+          mouseX <= nextPiecesX + nextPiecesWidth && 
           mouseY >= nextPiecesStartY && 
           mouseY <= nextPiecesStartY + nextPiecesHeight) {
         
         nextTiles.forEach((tile, index) => {
-          const tileX = nextPiecesX + nextPiecesWidth/2; // Center of container
-          const tileY = nextPiecesStartY + (index * 120) + 60; // Center of each tile slot
+          const tileX = nextPiecesX + nextPiecesWidth/2;
+          const tileY = nextPiecesStartY + (index * 120) + 60;
           
-          // Calculate distance from click to tile center
           const dx = mouseX - tileX;
           const dy = mouseY - tileY;
           const distance = Math.sqrt(dx * dx + dy * dy);
           
-          // Only register click if within the tile's actual radius (40px)
           if (distance <= 40 && !tile.isPlaced) {
             setSelectedTileIndex(selectedTileIndex === index ? null : index);
             if (soundEnabled) {
@@ -892,12 +893,15 @@ const Game: React.FC<GameProps> = ({
     }
 
     const handleMouseMove = (event: MouseEvent) => {
-      const rect = canvas.getBoundingClientRect()
+      const rect = canvas.getBoundingClientRect();
+      const scaleX = canvas.width / rect.width;    // Calculate scale factor for X
+      const scaleY = canvas.height / rect.height;   // Calculate scale factor for Y
+      
       setMousePosition({
-        x: event.clientX - rect.left,
-        y: event.clientY - rect.top
-      })
-    }
+        x: (event.clientX - rect.left) * scaleX,   // Scale the X coordinate
+        y: (event.clientY - rect.top) * scaleY     // Scale the Y coordinate
+      });
+    };
 
     // Add the context menu event listener with the click handler
     canvas.addEventListener('mousemove', handleMouseMove)

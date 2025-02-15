@@ -180,19 +180,28 @@
   align-items: center;
   gap: min(20px, 2vh);
   width: 100%;
-  max-width: min(1200px, 90vw);
+  max-width: min(1200px, 95vw);
   margin: 0 auto;
   z-index: 1;
+  height: 100vh;
+  justify-content: center;
 }
 
 .game-board {
   position: relative;
   width: 100%;
-  max-width: min(1000px, 80vw);
-  height: min(800px, 80vh);
-  aspect-ratio: 1.25; /* 1000/800 */
+  max-width: min(1000px, 90vw);
+  height: min(800px, 85vh);
+  aspect-ratio: 1.25;
   transform-style: preserve-3d;
   will-change: transform;
+}
+
+/* Add responsive canvas sizing */
+.game-board canvas {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: contain;
 }
 
 /* Animation classes */
@@ -238,7 +247,7 @@
   letter-spacing: 3px;
   text-shadow: 0 0 15px #FFE900, 0 0 25px #FFE900;
   pointer-events: none;
-  z-index: 2;
+  z-index: 1000;
   padding: 15px 30px;
   background: rgba(0, 0, 0, 0.3);
   border-radius: 10px;
@@ -647,6 +656,7 @@
     0 0 10px rgba(0, 255, 159, 0.5),
     0 0 20px rgba(0, 255, 159, 0.3);
   letter-spacing: 2px;
+  z-index: 990;
 }
 
 :root {
@@ -740,4 +750,109 @@
 .score, .power-up-timer {
   position: fixed;
   pointer-events: none;
+}
+
+/* Update next tiles container positioning */
+.next-tiles-container {
+  position: absolute;
+  right: max(-150px, -15vw);
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: min(20px, 2vh);
+  z-index: 2;
+  width: min(120px, 12vw); /* Add fixed width container */
+}
+
+.next-tiles {
+  display: flex;
+  flex-direction: column;
+  gap: min(20px, 2vh);
+  width: 100%; /* Fill container width */
+}
+
+.next-tile {
+  width: 100%; /* Fill container width */
+  aspect-ratio: 1; /* Keep tiles square */
+  position: relative;
+  transition: transform 0.2s ease;
+}
+
+.next-tile canvas {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: contain;
+}
+
+.next-tile.selected {
+  transform: scale(1.1);
+  z-index: 3;
+}
+
+/* Update media queries for next tiles */
+@media (max-width: 1200px) {
+  .next-tiles-container {
+    right: max(-120px, -12vw);
+    width: min(100px, 10vw);
+  }
+}
+
+@media (max-width: 768px) {
+  .next-tiles-container {
+    right: max(-100px, -10vw);
+    width: min(80px, 8vw);
+    gap: min(15px, 1.5vh);
+  }
+  
+  .next-tiles {
+    gap: min(15px, 1.5vh);
+  }
+}
+
+/* Enhance portrait mode for next tiles */
+@media (orientation: portrait) {
+  .next-tiles-container {
+    position: relative;
+    right: 0;
+    top: 0;
+    transform: none;
+    flex-direction: row;
+    justify-content: center;
+    margin-top: min(20px, 2vh);
+    width: 100%;
+    max-width: min(400px, 90vw);
+  }
+  
+  .next-tiles {
+    flex-direction: row;
+    gap: min(15px, 1.5vw);
+    justify-content: center;
+  }
+  
+  .next-tile {
+    width: min(80px, 20vw);
+  }
+}
+
+/* Add better hover and focus states */
+.next-tile:hover {
+  transform: scale(1.05);
+}
+
+.next-tile:active {
+  transform: scale(0.95);
+}
+
+/* Add smooth transitions */
+.next-tile {
+  transition: all 0.2s ease-out;
+}
+
+.next-tile canvas {
+  transition: filter 0.2s ease-out;
+}
+
+.next-tile:hover canvas {
+  filter: brightness(1.1);
 }
