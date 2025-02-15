@@ -769,3 +769,22 @@ button:hover > *:first-child {
   transform: scale(1.05);
   box-shadow: 0 0 15px rgba(0, 255, 159, 0.3);
 }
+
+.version-number {
+  position: fixed;
+  bottom: 10px;
+  right: 10px;
+  font-size: 12px;
+  color: rgba(0, 255, 159, 0.6);
+  font-family: monospace;
+  padding: 4px 8px;
+  background: rgba(26, 26, 46, 0.6);
+  border-radius: 4px;
+  backdrop-filter: blur(4px);
+  z-index: 10;
+}
+
+.version-number:hover {
+  color: rgba(0, 255, 159, 0.9);
+  background: rgba(26, 26, 46, 0.8);
+}

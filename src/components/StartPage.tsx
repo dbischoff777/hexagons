@@ -14,6 +14,7 @@ import bulldogConfig from '../config/bulldogConfig.json'
 import CustomizeBuddyMenu from './CustomizeBuddyMenu'
 import SettingsModal from './SettingsModal'
 import PageTransition from './PageTransition'
+import { APP_VERSION } from '../constants/version'
 
 interface StartPageProps {
   onStartGame: (withTimer: boolean, isDailyChallenge?: boolean) => void
@@ -439,6 +440,10 @@ const StartPage: React.FC<StartPageProps> = ({
         onSoundToggle={onSoundToggle}
         onRotationToggle={onRotationToggle}
       />
+
+      <div className="version-number">
+        {APP_VERSION}
+      </div>
     </div>
   )
 }
