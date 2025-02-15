@@ -270,11 +270,8 @@ const Game: React.FC<GameProps> = ({
     }));
   }, []);
 
-  const updateParticleEffect = useCallback((intensity: number, duration: number = 2000) => {
+  const updateParticleEffect = useCallback((intensity: number) => {
     setParticleIntensity(intensity);
-    if (duration > 0) {
-      setTimeout(() => setParticleIntensity(0.3), duration);
-    }
   }, []);
 
   const playGameSound = useCallback((soundType: string) => {
@@ -329,7 +326,9 @@ const Game: React.FC<GameProps> = ({
 
   // Keep the effect that updates previousScore
   useEffect(() => {
-    setPreviousScore(score);
+    if (score !== previousScore) {
+      setPreviousScore(score);
+    }
   }, [score]);
 
   // Move addTileAnimation outside useEffect and memoize it
@@ -1493,47 +1492,43 @@ const Game: React.FC<GameProps> = ({
   const addScorePopup = useCallback(({ score, x, y, emoji, text, type }: Omit<ScorePopupData, 'id'>) => {
     const newPopup = createScorePopup({ score, x, y, emoji, text, type });
     
-    // First, clear any existing popup of the same type
     setScorePopups(prev => {
       const filtered = prev.filter(p => p.type !== type);
       return [...filtered, newPopup];
     });
 
-    // Play appropriate sound based on type
-    switch (type) {
-      case 'combo':
-        soundManager.playSound('combo');
-        break;
-      case 'clear':
-        soundManager.playSound('clear');
-        break;
-      case 'quick':
-        soundManager.playSound('quick');
-        break;
-      default:
-        soundManager.playSound('score');
+    if (soundEnabled) {
+      switch (type) {
+        case 'combo':
+          soundManager.playSound('combo');
+          break;
+        case 'clear':
+          soundManager.playSound('clear');
+          break;
+        case 'quick':
+          soundManager.playSound('quick');
+          break;
+        default:
+          soundManager.playSound('score');
+      }
     }
-
-    // Remove this specific popup after animation
-    // Longer duration for score type
-    const duration = type === 'score' ? 2000 : 800;
-    setTimeout(() => {
-      setScorePopups(prev => prev.filter(p => p.id !== newPopup.id));
-    }, duration);
-  }, []);
+  }, [soundEnabled]);
 
   // Update the cleanup effect
   useEffect(() => {
-    // Longer duration for score popups
-    const POPUP_DURATION = 2000;
+    const timeouts: number[] = [];
+    
+    scorePopups.forEach(popup => {
+      const duration = popup.type === 'score' ? 2000 : 800;
+      const timeout = setTimeout(() => {
+        setScorePopups(prev => prev.filter(p => p.id !== popup.id));
+      }, duration);
+      timeouts.push(timeout);
+    });
 
-    if (scorePopups.length > 0) {
-      const timer = setTimeout(() => {
-        setScorePopups([]);
-      }, POPUP_DURATION);
-
-      return () => clearTimeout(timer);
-    }
+    return () => {
+      timeouts.forEach(clearTimeout);
+    };
   }, [scorePopups]);
 
   // Add tutorial progress function
@@ -2355,6 +2350,16 @@ const Game: React.FC<GameProps> = ({
     setSelectedTileIndex(null);
   };
 
+  // Add a separate effect to handle particle reset
+  useEffect(() => {
+    if (particleIntensity !== 0.3) {
+      const timer = setTimeout(() => {
+        setParticleIntensity(0.3);
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [particleIntensity]);
+
   return (
     <div
       className="game-container"
@@ -2394,7 +2399,7 @@ const Game: React.FC<GameProps> = ({
           </span>
         </div>
         <div className="timer-container">
-          {timedMode && !isLevelMode && ( // Only show timer in timed mode and not level mode
+          {timedMode && !isLevelMode && (
             <div className={`timer ${
               timeLeft > INITIAL_TIME * 0.5 ? 'safe' : 
               timeLeft > INITIAL_TIME * 0.25 ? 'warning' : 
@@ -2403,18 +2408,18 @@ const Game: React.FC<GameProps> = ({
               Time: {formatTime(timeLeft)}
             </div>
           )}
-          <div className="power-up-indicator">
-            {powerUps.freeze.active && (
-              <div className="power-up-timer active">
-                ❄️ {powerUps.freeze.remainingTime}s
-              </div>
-            )}
-            {powerUps.multiplier.active && (
-              <div className="power-up-timer active">
-                ✨ {powerUps.multiplier.remainingTime}s
-              </div>
-            )}
-          </div>
+        </div>
+        <div className="power-up-indicator">
+          {powerUps.freeze.active && (
+            <div className="power-up-timer active" data-type="freeze">
+              ❄️ Time Freeze: {powerUps.freeze.remainingTime}s
+            </div>
+          )}
+          {powerUps.multiplier.active && (
+            <div className="power-up-timer active" data-type="multiplier">
+              ✨ Score x{powerUps.multiplier.value}: {powerUps.multiplier.remainingTime}s
+            </div>
+          )}
         </div>
       </div>
       {showCompanion && (
