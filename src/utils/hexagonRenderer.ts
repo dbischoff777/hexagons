@@ -25,20 +25,36 @@ interface HexagonRenderProps {
   isCursorTile?: boolean
 }
 
-const powerUpStyles = {
-  freeze: {
+// Add these type-specific constants at the top
+const TILE_STYLES = {
+  joker: {
+    glow: '#FFFFFF',
+    icon: '★',
+    text: 'Matches any color'
+  },
+  mirror: {
     glow: '#00FFFF',
-    icon: '❄️'
+    icon: '↔',
+    text: 'Mirrors Adjacent Colors'
   },
-  colorShift: {
-    glow: '#FF00FF',
-    icon: '🎨'
-  },
-  multiplier: {
-    glow: '#FFD700',
-    icon: '✨'
+  powerUp: {
+    freeze: {
+      glow: '#00FFFF',
+      icon: '❄️',
+      text: 'Freezes Timer (5s)'
+    },
+    colorShift: {
+      glow: '#FF00FF',
+      icon: '🎨',
+      text: 'Changes Adjacent Colors'
+    },
+    multiplier: {
+      glow: '#FFD700',
+      icon: '✨',
+      text: 'Double Points (15s)'
+    }
   }
-} as const
+} as const;
 
 // Add these animation keyframes at the top of the file
 const PULSE_ANIMATION = (time: number) => Math.sin(time / 200) * 0.2 + 0.4
@@ -95,22 +111,8 @@ export const drawHexagonWithColoredEdges = ({
     applyBaseStyles(ctx, tile, isMatched, theme, x, y, size);
     drawHexagonShape(ctx, points);
     drawEdges(ctx, tile, points, isSelected, settings, isMatched);
-    drawSpecialFeatures(ctx, tile, x, y, isSelected);
-    
-    if ((isCursorTile || showInfoBox) && isSelected) {
-      if (tile.isJoker) {
-        drawInfoBox(ctx, x, y, size, 'Matches any color', '#00FFFF');
-      } else if (tile.powerUp) {
-        const style = powerUpStyles[tile.powerUp.type];
-        const descriptions = {
-          freeze: 'Freezes Timer (5s)',
-          colorShift: 'Changes Adjacent Colors',
-          multiplier: 'Double Points (15s)'
-        };
-        drawInfoBox(ctx, x, y, size, descriptions[tile.powerUp.type], style.glow);
-      } else if (tile.type === 'mirror') {
-        drawInfoBox(ctx, x, y, size, 'Mirrors Adjacent Colors', '#00FFFF');
-      }
+    if (tile?.value > 0 || tile?.isJoker || tile?.powerUp || tile?.type === 'mirror') {
+      drawSpecialTile(ctx, x, y, size, tile, isSelected, showInfoBox && isSelected);
     }
   }
 
@@ -252,26 +254,130 @@ function drawEdges(
   }
 }
 
-function drawSpecialFeatures(
+// Update the drawSpecialTile function to handle each type separately
+function drawSpecialTile(
   ctx: CanvasRenderingContext2D,
-  tile: PlacedTile,
   x: number,
   y: number,
-  isSelected: boolean
+  size: number,
+  tile: PlacedTile,
+  isSelected: boolean,
+  showInfoBox: boolean
 ) {
   if (tile.isJoker) {
-    drawFeatureSymbol(ctx, x, y, '★')
-    drawFeatureValue(ctx, x, y, isSelected, tile.value)
-  } else if (tile.powerUp) {
-    const style = powerUpStyles[tile.powerUp.type]
-    drawFeatureSymbol(ctx, x, y, style.icon)
-    drawFeatureValue(ctx, x, y, isSelected, tile.value)
+    drawJokerTile(ctx, x, y, size, tile.value, isSelected, showInfoBox);
   } else if (tile.type === 'mirror') {
-    drawFeatureSymbol(ctx, x, y, '↔')
-    drawFeatureValue(ctx, x, y, isSelected, tile.value)
-  } else if (tile.value > 0) {
-    drawTileValue(ctx, x, y, tile.value, isSelected)
+    drawMirrorTile(ctx, x, y, size, tile.value, isSelected, showInfoBox);
+  } else if (tile.powerUp) {
+    drawPowerUpTile(ctx, x, y, size, tile.powerUp.type, tile.value, isSelected, showInfoBox);
+  } else {
+    drawTileValue(ctx, x, y, tile.value, isSelected);
   }
+}
+
+function drawJokerTile(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  size: number,
+  value: number,
+  isSelected: boolean,
+  showInfoBox: boolean
+) {
+  const style = TILE_STYLES.joker;
+  
+  // Draw star icon
+  ctx.fillStyle = style.glow;
+  ctx.shadowColor = style.glow;
+  ctx.shadowBlur = 15;
+  ctx.font = 'bold 20px Arial';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(style.icon, x, y - 12);
+
+  // Draw value
+  drawNumberBelow(ctx, x, y, value, isSelected);
+
+  // Draw info box if selected
+  if (showInfoBox) {
+    drawInfoBox(ctx, x, y, size, style.text, style.glow);
+  }
+}
+
+function drawMirrorTile(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  size: number,
+  value: number,
+  isSelected: boolean,
+  showInfoBox: boolean
+) {
+  const style = TILE_STYLES.mirror;
+  
+  // Draw mirror icon
+  ctx.fillStyle = style.glow;
+  ctx.shadowColor = style.glow;
+  ctx.shadowBlur = 15;
+  ctx.font = 'bold 20px Arial';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(style.icon, x, y - 12);
+
+  // Draw value
+  drawNumberBelow(ctx, x, y, value, isSelected);
+
+  // Draw info box if selected
+  if (showInfoBox) {
+    drawInfoBox(ctx, x, y, size, style.text, style.glow);
+  }
+}
+
+function drawPowerUpTile(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  size: number,
+  type: keyof typeof TILE_STYLES.powerUp,
+  value: number,
+  isSelected: boolean,
+  showInfoBox: boolean
+) {
+  const style = TILE_STYLES.powerUp[type];
+  
+  // Draw power-up icon
+  ctx.fillStyle = style.glow;
+  ctx.shadowColor = style.glow;
+  ctx.shadowBlur = 15;
+  ctx.font = 'bold 20px Arial';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(style.icon, x, y - 12);
+
+  // Draw value
+  drawNumberBelow(ctx, x, y, value, isSelected);
+
+  // Draw info box if selected
+  if (showInfoBox) {
+    drawInfoBox(ctx, x, y, size, style.text, style.glow);
+  }
+}
+
+// Helper function for drawing the number below icons
+function drawNumberBelow(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  value: number,
+  isSelected: boolean
+) {
+  ctx.shadowColor = 'rgba(0, 0, 0, 0.2)';
+  ctx.shadowBlur = 2;
+  ctx.fillStyle = isSelected ? '#1a1a1a' : '#2d2d2d';
+  ctx.font = `bold ${isSelected ? 24 : 22}px Arial`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(value.toString(), x, y + 12);
 }
 
 function handleAnimations(
@@ -322,39 +428,6 @@ function drawMatchGlow(
 }
 
 // Utility functions for drawing common elements
-function drawFeatureSymbol(
-  ctx: CanvasRenderingContext2D,
-  x: number,
-  y: number,
-  symbol: string
-) {
-  ctx.fillStyle = '#FFFFFF'
-  ctx.shadowColor = '#FFFFFF'
-  ctx.shadowBlur = 15
-  ctx.font = 'bold 20px Arial'
-  ctx.textAlign = 'center'
-  ctx.textBaseline = 'middle'
-  ctx.fillText(symbol, x, y - 12)
-}
-
-function drawFeatureValue(
-  ctx: CanvasRenderingContext2D,
-  x: number,
-  y: number,
-  isSelected: boolean,
-  value: number
-) {
-  if (value <= 0) return
-
-  ctx.shadowColor = 'rgba(0, 0, 0, 0.2)'
-  ctx.shadowBlur = 2
-  ctx.fillStyle = isSelected ? '#1a1a1a' : '#2d2d2d'
-  ctx.font = `bold ${isSelected ? 24 : 22}px Arial`
-  ctx.textAlign = 'center'
-  ctx.textBaseline = 'middle'
-  ctx.fillText(value.toString(), x, y + 12)
-}
-
 function drawInfoBox(
   ctx: CanvasRenderingContext2D,
   x: number,
