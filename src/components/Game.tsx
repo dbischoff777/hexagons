@@ -54,6 +54,9 @@ import {
 import { RotationState } from '../utils/rotationUtils';
 import { createInitialTile, createTiles } from '../utils/tileFactory';
 import '../styles/tiles.css';
+import ScorePopup from './ScorePopup';
+import { ScorePopupData } from '../types/scorePopup';
+import { createScorePopup } from '../utils/popupUtils';
 
 // Replace the DEBUG object at the top
 const DEBUG = {
@@ -177,15 +180,7 @@ const Game: React.FC<GameProps> = ({
   const [isGameOver, setIsGameOver] = useState<boolean>(false)
   const [selectedTileIndex, setSelectedTileIndex] = useState<number | null>(null)
   const [mousePosition, setMousePosition] = useState<{ x: number, y: number } | null>(null)
-  const [scorePopups, setScorePopups] = useState<{
-    score: number;
-    x: number;
-    y: number;
-    id: number;
-    emoji: string;
-    text: string;
-    type: 'score' | 'combo' | 'quick' | 'clear';
-  }[]>([])
+  const [scorePopups, setScorePopups] = useState<ScorePopupData[]>([]);
   const [powerUps, setPowerUps] = useState<PowerUpState>(
     savedGameState?.powerUps ?? {
       freeze: { active: false, remainingTime: 0 },
@@ -1504,32 +1499,13 @@ const Game: React.FC<GameProps> = ({
   };
 
   // Modify the addScorePopup function to handle popup clearing and positioning better
-  const addScorePopup = useCallback(({ score, x, y, emoji, text, type }: {
-    score: number;
-    x: number;
-    y: number;
-    emoji: string;
-    text: string;
-    type: 'score' | 'combo' | 'quick' | 'clear';
-  }) => {
-    const position = getPopupPosition(type, x, y);
-    const newPopupId = Date.now() + Math.random(); // Make ID more unique
+  const addScorePopup = useCallback(({ score, x, y, emoji, text, type }: Omit<ScorePopupData, 'id'>) => {
+    const newPopup = createScorePopup({ score, x, y, emoji, text, type });
     
     // First, clear any existing popup of the same type
     setScorePopups(prev => {
-      // Remove existing popups of the same type
       const filtered = prev.filter(p => p.type !== type);
-      
-      // Add the new popup
-      return [...filtered, {
-        score,
-        x: position.x,
-        y: position.y,
-        id: newPopupId,
-        emoji,
-        text,
-        type
-      }];
+      return [...filtered, newPopup];
     });
 
     // Play appropriate sound based on type
@@ -1549,26 +1525,9 @@ const Game: React.FC<GameProps> = ({
 
     // Remove this specific popup after animation
     setTimeout(() => {
-      setScorePopups(prev => prev.filter(p => p.id !== newPopupId));
+      setScorePopups(prev => prev.filter(p => p.id !== newPopup.id));
     }, 800);
   }, []);
-
-  // Update the getPopupPosition function to better space out popups
-  const getPopupPosition = (type: 'score' | 'combo' | 'quick' | 'clear', baseX: number, baseY: number) => {
-    const spacing = 100; // Base spacing between popups
-    switch (type) {
-      case 'score':
-        return { x: baseX, y: baseY - spacing };
-      case 'quick':
-        return { x: baseX - spacing * 1.5, y: baseY }; // Further left
-      case 'combo':
-        return { x: baseX + spacing * 1.5, y: baseY }; // Further right
-      case 'clear':
-        return { x: baseX, y: baseY + spacing }; // Lower
-      default:
-        return { x: baseX, y: baseY };
-    }
-  };
 
   // Update the cleanup effect
   useEffect(() => {
@@ -2186,8 +2145,8 @@ const Game: React.FC<GameProps> = ({
 
   // Consolidate grid clear functionality into a single function
   const handleGridClear = useCallback(() => {
-    //console.log('Setting lastAction for grid clear');
     setLastAction({ type: 'clear' });
+    
     // Calculate points
     const basePoints = 1000;
     const multiplier = powerUps.multiplier.active ? powerUps.multiplier.value : 1;
@@ -2204,13 +2163,17 @@ const Game: React.FC<GameProps> = ({
     playGameSound('gridClear');
     updateParticleEffect(1);
 
-    // Show feedback popup
-    const clearScore = clearPoints;
-    const feedback = getFeedbackForClear(clearScore);
+    // Get canvas center coordinates
+    const canvas = canvasRef.current;
+    const centerX = canvas ? canvas.width / 2 : window.innerWidth / 2;
+    const centerY = canvas ? canvas.height / 2 : window.innerHeight / 2;
+
+    // Show feedback popup at canvas center
+    const feedback = getFeedbackForClear(clearPoints);
     addScorePopup({
       score: clearPoints,
-      x: canvasRef.current?.width ?? 0 / 2,
-      y: canvasRef.current?.height ?? 0 / 2 - 50,
+      x: centerX,
+      y: centerY,
       emoji: feedback.emoji,
       text: feedback.text,
       type: 'clear'
@@ -2675,21 +2638,7 @@ const Game: React.FC<GameProps> = ({
       </div>
 
       {scorePopups.map(popup => (
-        <div
-          key={popup.id}
-          className="score-popup"
-          data-type={popup.type}
-          style={{
-            left: `${popup.x}px`,
-            top: `${popup.y}px`
-          }}
-        >
-          <span className="emoji">{popup.emoji}</span>
-          <div className="popup-content">
-            <div className="popup-text">{popup.text}</div>
-            <div className="popup-score">+{popup.score}</div>
-          </div>
-        </div>
+        <ScorePopup key={popup.id} popup={popup} />
       ))}
       {newAchievements.length > 0 && (
         <AchievementPopup
