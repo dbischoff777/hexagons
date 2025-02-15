@@ -35,7 +35,7 @@ import { Companion } from '../types/companion'
 import { COMPANIONS } from '../types/companion'
 import type { CompanionId } from '../types/companion'
 import UpgradeModal from './UpgradeModal'
-import { getInitialUpgradeState, purchaseUpgrade, getUpgradeEffect, saveUpgradeState } from '../utils/upgradeUtils'
+import { getInitialUpgradeState, purchaseUpgrade, saveUpgradeState } from '../utils/upgradeUtils'
 import { UpgradeState } from '../types/upgrades'
 import { unlockNextLevel, LevelCompletion } from '../utils/levelUtils'
 import './LevelCompleteOverlay.css'
@@ -50,6 +50,7 @@ import {
   getFeedbackForCombo,
   getRandomFeedback,
   getFeedbackForClear,
+  calculateScore,
 } from '../utils/matchingUtils';
 import { RotationState } from '../utils/rotationUtils';
 import { createInitialTile, createTiles } from '../utils/tileFactory';
@@ -324,10 +325,12 @@ const Game: React.FC<GameProps> = ({
     });
   }, [isLevelMode, targetScore, currentBlock, currentLevel, isDailyChallenge, score, isGameOver]);
 
-  // Keep the effect that updates previousScore
-  useEffect(() => {
-    if (score !== previousScore) {
+  // 1. Modify handleScoreChange to be more efficient
+  const handleScoreChange = useCallback((newScore: number) => {
+    // Only update if the score is actually different
+    if (newScore !== score) {
       setPreviousScore(score);
+      setScore(newScore);
     }
   }, [score]);
 
@@ -343,7 +346,7 @@ const Game: React.FC<GameProps> = ({
     }, type === 'place' ? 500 : type === 'match' ? 800 : 600);
   }, []);
 
-  // Update the rotation effect
+  // 3. Fix the rotation effect to prevent cascading updates
   useEffect(() => {
     if (!rotationEnabled || isGameOver || rotationState.isRotating) return;
 
@@ -364,11 +367,13 @@ const Game: React.FC<GameProps> = ({
             setRotationState(newState);
           },
           () => {
-            // Update tiles only after rotation is complete
-            setPlacedTiles(prevTiles => prevTiles.map(tile => ({
-              ...tile,
-              edges: rotateTileEdges(tile.edges)
-            })));
+            // Batch the updates together
+            setPlacedTiles(prevTiles => 
+              prevTiles.map(tile => ({
+                ...tile,
+                edges: rotateTileEdges(tile.edges)
+              }))
+            );
           }
         );
 
@@ -377,7 +382,7 @@ const Game: React.FC<GameProps> = ({
     );
 
     return cleanup;
-  }, [isGameOver, rotationEnabled, rotationState.isRotating, rotationState.boardRotation]);
+  }, [isGameOver, rotationEnabled, rotationState.boardRotation]); // Minimal dependencies
 
   // Main game effect
   useEffect(() => {
@@ -1028,7 +1033,7 @@ const Game: React.FC<GameProps> = ({
               });
               
               // Update score
-              setScore(prev => prev + mirrorPoints);
+              handleScoreChange(score + mirrorPoints);
               soundManager.playSound('mirror');
             }
           }
@@ -1081,7 +1086,7 @@ const Game: React.FC<GameProps> = ({
               type: 'score'
             });
             
-            setScore(prevScore => prevScore + basePoints);
+            handleScoreChange(score + basePoints);
             addTileAnimation(q, r, 'match');
             //console.log('Setting lastAction for match:', { type: 'match', value: matchCount * 5 });
             setLastAction({ type: 'match', value: matchCount * 5 });
@@ -1140,9 +1145,9 @@ const Game: React.FC<GameProps> = ({
                   type: 'quick'
                 });
 
-                setPreviousScore(score);
+                handleScoreChange(score + quickBonus);
                 setTimeout(() => {
-                  setScore(prevScore => prevScore + quickBonus);
+                  handleScoreChange(score + quickBonus);
                 }, 50);
               }, 200);
             }
@@ -1177,7 +1182,7 @@ const Game: React.FC<GameProps> = ({
                 text: comboInfo?.text ?? 'Combo!',
                 type: 'combo'
               });
-              setScore(prevScore => prevScore + comboBonus);
+              handleScoreChange(score + comboBonus);
               //console.log('Setting lastAction for combo:', { type: 'combo', value: combo.count });
               setLastAction({ type: 'combo', value: combo.count });
             }
@@ -1229,7 +1234,7 @@ const Game: React.FC<GameProps> = ({
               );
               const totalMatchScore = matchingTiles.reduce((sum, tile) => sum + tile.value, 0);
               const multiplier = matchingTiles.length;
-              const clearBonus = calculateScore(totalMatchScore * multiplier * 2);
+              const clearBonus = calculateScore(totalMatchScore * multiplier * 2, upgradeState, powerUps, combo);
               
               // Add clear bonus to total score
               newTotalScore += clearBonus;
@@ -1255,7 +1260,7 @@ const Game: React.FC<GameProps> = ({
             });
 
             // Update the score with the total including clear bonus
-            setScore(newTotalScore);
+            handleScoreChange(newTotalScore);
 
             // Update daily challenge objectives
             if (isDailyChallenge) {
@@ -1475,18 +1480,6 @@ const Game: React.FC<GameProps> = ({
       })
     }
   }, [combo.timer])
-
-  // Update score calculation to include combo multiplier
-  const calculateScore = (baseScore: number) => {
-    const scoreMultiplier = getUpgradeEffect(upgradeState, 'scoreMultiplier');
-    const matchBonus = getUpgradeEffect(upgradeState, 'matchBonus');
-    const comboBonus = getUpgradeEffect(upgradeState, 'comboBonus');
-    
-    const powerUpMultiplier = powerUps.multiplier.active ? powerUps.multiplier.value : 1;
-    const finalMultiplier = scoreMultiplier * powerUpMultiplier * (combo.multiplier + comboBonus);
-    
-    return Math.round((baseScore + matchBonus) * finalMultiplier);
-  };
 
   // Modify the addScorePopup function to handle popup clearing and positioning better
   const addScorePopup = useCallback(({ score, x, y, emoji, text, type }: Omit<ScorePopupData, 'id'>) => {
@@ -2134,41 +2127,63 @@ const Game: React.FC<GameProps> = ({
 
   // Consolidate grid clear functionality into a single function
   const handleGridClear = useCallback(() => {
-    setLastAction({ type: 'clear' });
-    
-    // Calculate points
+    // Batch all state updates together
     const basePoints = 1000;
-    const multiplier = powerUps.multiplier.active ? powerUps.multiplier.value : 1;
-    const clearPoints = basePoints * multiplier;
-    
-    // Update score
-    setScore(prevScore => prevScore + clearPoints);
+    const clearPoints = calculateScore(basePoints, upgradeState, powerUps, combo);
 
-    // Update statistics and award points
-    updateGridClears(1);
-    awardUpgradePoints(UPGRADE_POINT_REWARDS.clear.points);
-
-    // Visual and audio feedback
-    playGameSound('gridClear');
-    updateParticleEffect(1);
-
-    // Get canvas center coordinates
+    // Get canvas center coordinates once
     const canvas = canvasRef.current;
     const centerX = canvas ? canvas.width / 2 : window.innerWidth / 2;
     const centerY = canvas ? canvas.height / 2 : window.innerHeight / 2;
 
-    // Show feedback popup at canvas center
+    // Get feedback once
     const feedback = getFeedbackForClear(clearPoints);
-    addScorePopup({
-      score: clearPoints,
-      x: centerX,
-      y: centerY,
-      emoji: feedback.emoji,
-      text: feedback.text,
-      type: 'clear'
+
+    // Batch updates in a single function
+    const updateGameState = () => {
+      // Update score
+      handleScoreChange(score + clearPoints);
+      
+      // Update last action
+      setLastAction({ type: 'clear' });
+
+      // Update statistics
+      updateGridClears(1);
+      
+      // Add score popup
+      addScorePopup({
+        score: clearPoints,
+        x: centerX,
+        y: centerY,
+        emoji: feedback.emoji,
+        text: feedback.text,
+        type: 'clear'
+      });
+
+      // Award upgrade points
+      awardUpgradePoints(UPGRADE_POINT_REWARDS.clear.points);
+    };
+
+    // Execute all updates together
+    requestAnimationFrame(() => {
+      updateGameState();
+      
+      // Visual and audio feedback after state updates
+      playGameSound('gridClear');
+      updateParticleEffect(1);
     });
 
-  }, [powerUps.multiplier, playGameSound, updateParticleEffect, canvasRef]);
+  }, [
+    score,
+    upgradeState,
+    powerUps,
+    combo,
+    handleScoreChange,
+    playGameSound,
+    updateParticleEffect,
+    awardUpgradePoints,
+    addScorePopup
+  ]);
 
   // Modify the achievement handling code
   useEffect(() => {
@@ -2350,11 +2365,13 @@ const Game: React.FC<GameProps> = ({
     setSelectedTileIndex(null);
   };
 
-  // Add a separate effect to handle particle reset
+  // 4. Update the particle effect to prevent unnecessary updates
   useEffect(() => {
     if (particleIntensity !== 0.3) {
       const timer = setTimeout(() => {
-        setParticleIntensity(0.3);
+        requestAnimationFrame(() => {
+          setParticleIntensity(0.3);
+        });
       }, 2000);
       return () => clearTimeout(timer);
     }

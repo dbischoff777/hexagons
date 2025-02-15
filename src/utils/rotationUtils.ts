@@ -18,66 +18,52 @@ export const rotateTileEdges = (edges: { color: string }[]) => {
 
 // Modified animation function with better performance
 export const animateRotation = (
-  startRotation: number,
-  onRotationUpdate: (state: RotationState) => void,
+  currentRotation: number,
+  onStateUpdate: (state: RotationState) => void,
   onComplete: () => void
 ) => {
-  let animationFrameId: number;
-  let startTime: number | null = null;
-  const targetRotation = startRotation + 180;
-
-  // Use a more optimized easing function
-  const easeInOutCubic = (t: number): number => {
-    return t < 0.5
-      ? 4 * t * t * t
-      : 1 - Math.pow(-2 * t + 2, 3) / 2;
-  };
+  const startTime = performance.now();
+  const duration = 1000; // 1 second animation
+  let animationFrame: number;
 
   const animate = (currentTime: number) => {
-    if (!startTime) startTime = currentTime;
     const elapsed = currentTime - startTime;
-    const progress = Math.min(elapsed / ROTATION_ANIMATION_DURATION, 1);
-
-    // Use the optimized easing function
-    const easeProgress = easeInOutCubic(progress);
-
-    // Calculate rotation with minimal floating point operations
-    const currentRotation = startRotation + ((targetRotation - startRotation) * easeProgress);
+    const progress = Math.min(elapsed / duration, 1);
     
-    // Round to 2 decimal places to reduce jitter
-    const roundedRotation = Math.round(currentRotation * 100) / 100;
-    
-    // Update all rotation-related state at once
-    onRotationUpdate({
-      boardRotation: roundedRotation % 360,
+    // Use easing function for smooth rotation
+    const eased = easeInOutCubic(progress);
+    const newRotation = currentRotation + (180 * eased);
+
+    // Batch state updates
+    onStateUpdate({
+      boardRotation: newRotation,
       showWarning: false,
       showRotationText: false,
-      isRotating: true
+      isRotating: progress < 1
     });
 
     if (progress < 1) {
-      animationFrameId = requestAnimationFrame(animate);
+      animationFrame = requestAnimationFrame(animate);
     } else {
-      // Ensure we end exactly at target rotation
-      onRotationUpdate({
-        boardRotation: targetRotation % 360,
-        showWarning: false,
-        showRotationText: false,
-        isRotating: false
-      });
       onComplete();
     }
   };
 
-  // Use requestAnimationFrame for smoother animation
-  animationFrameId = requestAnimationFrame(animate);
+  animationFrame = requestAnimationFrame(animate);
 
   // Return cleanup function
   return () => {
-    if (animationFrameId) {
-      cancelAnimationFrame(animationFrameId);
+    if (animationFrame) {
+      cancelAnimationFrame(animationFrame);
     }
   };
+};
+
+// Easing function for smooth animation
+const easeInOutCubic = (t: number): number => {
+  return t < 0.5
+    ? 4 * t * t * t
+    : 1 - Math.pow(-2 * t + 2, 3) / 2;
 };
 
 // Function to setup rotation timer with improved performance

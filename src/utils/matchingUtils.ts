@@ -1,5 +1,8 @@
 import { PlacedTile } from '../types'
 import { DIRECTIONS, getAdjacentTiles } from './hexUtils'
+import { getUpgradeEffect } from '../utils/upgradeUtils'
+import { PowerUpState, ComboState } from '../types'
+import { UpgradeState } from '../types/upgrades';
 
 // Move feedback constants here
 export const SCORE_FEEDBACK = {
@@ -191,3 +194,19 @@ export const getFeedbackForClear = (clearScore: number) => {
   if (clearScore >= 25) return SCORE_FEEDBACK.CLEAR[1];
   return SCORE_FEEDBACK.CLEAR[0];
 }
+
+export const calculateScore = (
+  baseScore: number,
+  upgradeState: UpgradeState,
+  powerUps: PowerUpState,
+  combo: ComboState
+) => {
+  const scoreMultiplier = getUpgradeEffect(upgradeState, 'scoreMultiplier');
+  const matchBonus = getUpgradeEffect(upgradeState, 'matchBonus');
+  const comboBonus = getUpgradeEffect(upgradeState, 'comboBonus');
+  
+  const powerUpMultiplier = powerUps.multiplier.active ? powerUps.multiplier.value : 1;
+  const finalMultiplier = scoreMultiplier * powerUpMultiplier * (combo.multiplier + comboBonus);
+  
+  return Math.round((baseScore + matchBonus) * finalMultiplier);
+};
