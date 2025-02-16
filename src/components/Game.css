@@ -882,7 +882,7 @@
   width: calc(min(120px, 12vw) * 0.866);
   height: min(120px, 12vw);
   background: transparent;
-  border: 6px solid var(--theme-accent, rgba(0, 0, 0, 0.8));
+  border: 6px solid var(--theme-accent, rgba(0, 0, 0, 0));
   clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
   opacity: 0;
 }
