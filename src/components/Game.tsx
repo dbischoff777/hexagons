@@ -2231,7 +2231,8 @@ const Game: React.FC<GameProps> = ({
           </div>
           {rotationState.showRotationText && (
             <div className="rotation-text">
-              Rotation Incoming!
+              <span className="rotation-text-full">Rotation Incoming!</span>
+              <span className="rotation-text-short">Rotating!</span>
             </div>
           )}
         </div>

@@ -1,6 +1,6 @@
 // Constants
 export const ROTATION_WARNING_DELAY = 1500; // 1.5 seconds warning before rotation
-export const ROTATION_INTERVAL = 15000; // 5 seconds between rotations
+export const ROTATION_INTERVAL = 5000; // 5 seconds between rotations
 export const ROTATION_ANIMATION_DURATION = 1000; // 1 second for smooth rotation
 
 // Types
