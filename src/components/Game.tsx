@@ -520,11 +520,41 @@ const Game: React.FC<GameProps> = ({
     }
 
     const handleClick = (event: MouseEvent) => {
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+
       const rect = canvas.getBoundingClientRect();
       const scaleX = canvas.width / rect.width;
       const scaleY = canvas.height / rect.height;
       const mouseX = (event.clientX - rect.left) * scaleX;
       const mouseY = (event.clientY - rect.top) * scaleY;
+
+      // Use the next-tile canvas dimensions
+      const tileRadius = 40;      // From ctx.arc(50, 50, 40, 0, Math.PI * 2) in the tile canvas
+
+      // Calculate next tiles area based on the rendered tiles
+      nextTiles.forEach((tile, index) => {
+        const tileElement = document.querySelector(`.next-tile:nth-child(${index + 1}) canvas`);
+        if (tileElement) {
+          const tileBounds = tileElement.getBoundingClientRect();
+          const tileX = (tileBounds.left + tileBounds.width/2 - rect.left) * scaleX;
+          const tileY = (tileBounds.top + tileBounds.height/2 - rect.top) * scaleY;
+          
+          // Calculate distance from click to tile center
+          const dx = mouseX - tileX;
+          const dy = mouseY - tileY;
+          const distance = Math.sqrt(dx * dx + dy * dy);
+          
+          // Use the same radius as the drawn circle for click detection
+          if (distance <= tileRadius * (canvas.width / rect.width) && !tile.isPlaced) {
+            setSelectedTileIndex(selectedTileIndex === index ? null : index);
+            if (soundEnabled) {
+              soundManager.playSound('buttonClick');
+            }
+            return;
+          }
+        }
+      });
 
       if (isGameOver) {
         const buttonY = canvas.height / 2 + 100
@@ -538,35 +568,6 @@ const Game: React.FC<GameProps> = ({
           return
         }
         return
-      }
-
-      // Check if click is in next pieces area
-      const nextPiecesX = canvas.width - 150;
-      const nextPiecesStartY = canvas.height / 2 - 150;
-      const nextPiecesWidth = 100;
-      const nextPiecesHeight = 400;
-
-      if (mouseX >= nextPiecesX && 
-          mouseX <= nextPiecesX + nextPiecesWidth && 
-          mouseY >= nextPiecesStartY && 
-          mouseY <= nextPiecesStartY + nextPiecesHeight) {
-        
-        nextTiles.forEach((tile, index) => {
-          const tileX = nextPiecesX + nextPiecesWidth/2;
-          const tileY = nextPiecesStartY + (index * 120) + 60;
-          
-          const dx = mouseX - tileX;
-          const dy = mouseY - tileY;
-          const distance = Math.sqrt(dx * dx + dy * dy);
-          
-          if (distance <= 40 && !tile.isPlaced) {
-            setSelectedTileIndex(selectedTileIndex === index ? null : index);
-            if (soundEnabled) {
-              soundManager.playSound('buttonClick');
-            }
-            return;
-          }
-        });
       }
 
       // If a tile is selected and click is on the grid
