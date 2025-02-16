@@ -93,16 +93,26 @@ export const drawHexagonWithColoredEdges = ({
   showInfoBox = false,
   isCursorTile = false
 }: HexagonRenderProps) => {
+  // Check if parent element has grid-full class
+  const canvas = ctx.canvas;
+  const isGridFullAnimation = canvas.parentElement?.classList.contains('grid-full');
+
   ctx.save();
   const points = getPoints(x, y, size);
 
+  // Modify drawing based on animation state
+  if (isGridFullAnimation) {
+    ctx.globalAlpha = 0.8; // Make tiles slightly transparent during animation
+    ctx.filter = 'brightness(1.2)'; // Increase brightness during animation
+  }
+
   // Draw valid placement highlight
-  if (selectedTileIndex !== null) {
+  if (selectedTileIndex !== null && !isGridFullAnimation) {
     drawPlacementHighlight(ctx, points);
   }
 
   // Draw selection highlight
-  if (isSelected) {
+  if (isSelected && !isGridFullAnimation) {
     drawSelectionHighlight(ctx, points, x, y, size);
   }
 
@@ -117,7 +127,7 @@ export const drawHexagonWithColoredEdges = ({
   }
 
   // Handle animations
-  if (tile) {
+  if (tile && !isGridFullAnimation) {
     handleAnimations(ctx, tile, animatingTiles, x, y, theme);
   }
 

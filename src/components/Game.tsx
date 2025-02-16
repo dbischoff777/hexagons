@@ -266,6 +266,9 @@ const Game: React.FC<GameProps> = ({
   // Keep the state
   const [previousScore, setPreviousScore] = useState(0);
 
+  // At the top of the component, add wrapper ref
+  const wrapperRef = useRef<HTMLDivElement>(null);
+
   const awardUpgradePoints = useCallback((points: number) => {
     setUpgradeState(prev => ({
       ...prev,
@@ -606,10 +609,117 @@ const Game: React.FC<GameProps> = ({
               value: tile.hasBeenMatched ? matchScore : tile.value
             }));
             
-            // Update all states in one go
-            const feedback = getFeedbackForScore(basePoints);
+            // Improved grid full check with debug logging
+            const isGridFullNow = (() => {
+              // Count valid positions
+              let validPositions = 0;
+              let occupiedPositions = 0;
+              let validCoords: string[] = [];
+              let missingCoords: string[] = [];
+              
+              // Calculate the radius of the hexagonal grid
+              const radius = Math.floor(cols/2);
+              
+              // Check each position in the grid
+              for (let q = -radius; q <= radius; q++) {
+                // Calculate r bounds for this q
+                const r1 = Math.max(-radius, -q-radius);
+                const r2 = Math.min(radius, -q+radius);
+                
+                for (let r = r1; r <= r2; r++) {
+                  validPositions++;
+                  validCoords.push(`(${q},${r})`);
+                  
+                  if (updatedTiles.some(tile => tile.q === q && tile.r === r)) {
+                    occupiedPositions++;
+                  } else {
+                    missingCoords.push(`(${q},${r})`);
+                  }
+                }
+              }
+              
+              // Debug logging
+              const isComplete = validPositions === occupiedPositions && validPositions === 37; // Hexagonal grid with radius 3 should have 37 tiles
+              console.log('Grid full check:', {
+                totalTiles: updatedTiles.length,
+                expectedTiles: validPositions,
+                tiles: updatedTiles.map(t => `(${t.q},${t.r})`).sort(),
+                validPositions,
+                occupiedPositions,
+                validCoords: validCoords.sort(),
+                missingCoords,
+                isComplete,
+                radius,
+                cols
+              });
+              
+              return isComplete;
+            })();
+
+            if (isGridFullNow) {
+              console.log('Grid full condition met!');
+              const wrapper = wrapperRef.current;
+              
+              if (wrapper && !wrapper.classList.contains('grid-full')) {
+                // Store the current tiles before clearing
+                const currentTiles = [...placedTiles];
+                
+                console.log('Wrapper before:', wrapper.className);
+                wrapper.classList.remove('grid-full');
+                
+                // Force reflow
+                void wrapper.offsetWidth;
+                
+                wrapper.classList.add('grid-full');
+                console.log('Wrapper after:', wrapper.className);
+                
+                // Calculate score before any state updates
+                const matchingTiles = currentTiles.filter(tile => 
+                  hasMatchingEdges(tile, currentTiles, settings.isColorBlind)
+                );
+                const totalMatchScore = matchingTiles.reduce((sum, tile) => sum + tile.value, 0);
+                const multiplier = matchingTiles.length;
+                const clearBonus = calculateScore(totalMatchScore * multiplier * 2, upgradeState, powerUps, combo);
+                
+                // Batch our state updates
+                const newScore = score + clearBonus;
+                handleScoreChange(newScore);
+                
+                // Show clear bonus popup
+                const clearInfo = getFeedbackForClear(clearBonus);
+                addScorePopup({
+                  score: clearBonus,
+                  x: canvas.width / 2,
+                  y: canvas.height / 2 - 50,
+                  emoji: clearInfo?.emoji ?? '✨',
+                  text: clearInfo?.text ?? 'Clear!',
+                  type: 'clear'
+                });
+                
+                // Use a single timeout for clearing
+                setTimeout(() => {
+                  setPlacedTiles([]); // Clear the board
+                  
+                  // Force immediate canvas redraw
+                  const canvas = canvasRef.current;
+                  if (canvas) {
+                    const ctx = canvas.getContext('2d');
+                    if (ctx) {
+                      ctx.clearRect(0, 0, canvas.width, canvas.height);
+                      draw();
+                    }
+                  }
+                  
+                  // Schedule the new initial tile placement
+                  setTimeout(() => {
+                    wrapper?.classList.remove('grid-full');
+                    setPlacedTiles([createInitialTile()]);
+                  }, 50);
+                }, 1150);
+              }
+            }
             
-            // Group state updates
+            // Update all states
             setPlacedTiles(updatedTiles);
             handleScoreChange(score + basePoints);
             addTileAnimation(q, r, 'match');
@@ -619,7 +729,7 @@ const Game: React.FC<GameProps> = ({
               score: basePoints,
               x: canvas.width / 2,
               y: canvas.height / 2 - 100,
-              emoji: feedback.emoji,
+              emoji: getFeedbackForScore(basePoints).emoji,
               text: matchCount === 1 ? 'Edge Match!' : 'Multiple Matches!',
               type: 'score'
             });
@@ -2010,15 +2120,16 @@ const Game: React.FC<GameProps> = ({
       )}
       <div className="board-container">
         <div className="game-board">
-          <canvas 
-            ref={canvasRef} 
-            className={`
-              ${isGridFull(placedTiles, cols) ? 'grid-full' : ''}
-              ${rotationState.showWarning ? 'rotation-warning' : ''}
-              ${animatingTiles.length > 0 ? 'has-animations' : ''}
-            `}
-          />
-          {/* Power-up indicators inside game-board */}
+          <div ref={wrapperRef} className="canvas-wrapper">
+            <canvas 
+              ref={canvasRef} 
+              className={[
+                rotationState.showWarning && 'rotation-warning',
+                animatingTiles.length > 0 && 'has-animations'
+              ].filter(Boolean).join(' ')}
+            />
+          </div>
+          {/* Power-up indicators */}
           <div className="power-up-indicator">
             {powerUps.freeze.active && (
               <div className="power-up-timer active" data-type="freeze">
