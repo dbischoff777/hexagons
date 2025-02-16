@@ -1,51 +1,58 @@
 /* Tile container styles */
 .next-tiles-container {
-  width: 100px;  /* Match the width we defined */
-  min-height: 400px; /* Match the height we defined */
+  width: clamp(80px, 12vw, 100px);  /* Responsive but constrained width */
+  min-height: min(200px, 50vh); /* Responsive height */
   position: absolute;
-  right: 150px;
+  right: max(20px, 3vw); /* Minimum spacing from right edge */
   top: 50%;
   transform: translateY(-50%);
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: clamp(8px, 1.2vh, 15px);
   align-items: center;
-  pointer-events: all; /* Ensure container captures all clicks */
+  pointer-events: all;
+  border: 1px solid red;
+  /* Ensure container stays within game board */
+  max-width: 15%;
+  z-index: 10;
 }
 
 .next-tiles {
   display: flex;
   flex-direction: column;
-  gap: 30px;
+  gap: clamp(15px, 2.5vh, 30px);
   align-items: center;
-  margin-bottom: 20px;
+  margin-bottom: clamp(10px, 2vh, 20px);
 }
 
 .next-tile {
   position: relative;
-  width: 100px;
-  height: 100px;
+  width: clamp(60px, 10vw, 100px);
+  height: clamp(60px, 10vw, 100px);
   display: flex;
   justify-content: center;
   align-items: center;
   transition: all 0.2s ease;
 }
 
-.next-tile:hover {
-  transform: scale(1.05);
-}
-
-.next-tile.selected {
-  transform: scale(1.1);
-}
-
 .next-tile canvas {
+  width: 100%;
+  height: 100%;
   border-radius: 50%;
-  box-shadow: 0 0 15px rgba(0, 255, 159, 0.2);
+  box-shadow: 0 0 clamp(8px, 1.5vw, 15px) rgba(0, 255, 159, 0.2);
+  pointer-events: none;
+  border: 1px solid red; /* Keep for debugging */
 }
 
 .next-tile.selected canvas {
-  box-shadow: 0 0 25px rgba(0, 255, 159, 0.4);
+  box-shadow: 0 0 clamp(15px, 2vw, 25px) rgba(0, 255, 159, 0.4);
+}
+
+/* Position the undo button */
+.undo-button {
+  margin-top: auto;
+  width: 100%;
+  max-width: 90px;
 }
 
 /* Tile animations */
@@ -91,8 +98,8 @@
 .tile-matched, .tile-was-matched {
   filter: brightness(1.2);
   box-shadow: 
-    0 0 20px rgba(0, 255, 159, 0.4),
-    inset 0 0 10px rgba(0, 255, 159, 0.2);
+    0 0 clamp(10px, 2vw, 20px) rgba(0, 255, 159, 0.4),
+    inset 0 0 clamp(5px, 1vw, 10px) rgba(0, 255, 159, 0.2);
   transform-style: preserve-3d;
   will-change: transform;
 }
@@ -164,4 +171,4 @@
   100% {
     background-position: -100% -100%;
   }
-} 
+}
