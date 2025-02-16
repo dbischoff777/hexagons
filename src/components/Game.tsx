@@ -1993,18 +1993,6 @@ const Game: React.FC<GameProps> = ({
             </div>
           )}
         </div>
-        <div className="power-up-indicator">
-          {powerUps.freeze.active && (
-            <div className="power-up-timer active" data-type="freeze">
-              ❄️ Time Freeze: {powerUps.freeze.remainingTime}s
-            </div>
-          )}
-          {powerUps.multiplier.active && (
-            <div className="power-up-timer active" data-type="multiplier">
-              ✨ Score x{powerUps.multiplier.value}: {powerUps.multiplier.remainingTime}s
-            </div>
-          )}
-        </div>
       </div>
       {showCompanion && (
         <FrenchBulldog
@@ -2021,21 +2009,36 @@ const Game: React.FC<GameProps> = ({
         />
       )}
       <div className="board-container">
-        <canvas 
-          ref={canvasRef} 
-          className={`
-            game-board 
-            ${isGridFull(placedTiles, cols) ? 'grid-full' : ''}
-            ${rotationState.showWarning ? 'rotation-warning' : ''}
-            ${animatingTiles.length > 0 ? 'has-animations' : ''}
-          `}
-        />
-        {rotationState.showRotationText && (
-          <div className="rotation-text">
-            Rotation Incoming!
+        <div className="game-board">
+          <canvas 
+            ref={canvasRef} 
+            className={`
+              ${isGridFull(placedTiles, cols) ? 'grid-full' : ''}
+              ${rotationState.showWarning ? 'rotation-warning' : ''}
+              ${animatingTiles.length > 0 ? 'has-animations' : ''}
+            `}
+          />
+          {/* Power-up indicators inside game-board */}
+          <div className="power-up-indicator">
+            {powerUps.freeze.active && (
+              <div className="power-up-timer active" data-type="freeze">
+                ❄️ Time Freeze: {powerUps.freeze.remainingTime}s
+              </div>
+            )}
+            {powerUps.multiplier.active && (
+              <div className="power-up-timer active" data-type="multiplier">
+                ✨ Score x{powerUps.multiplier.value}: {powerUps.multiplier.remainingTime}s
+              </div>
+            )}
           </div>
-        )}
-
+          {rotationState.showRotationText && (
+            <div className="rotation-text">
+              Rotation Incoming!
+            </div>
+          )}
+        </div>
+        
+        {/* Other elements */}
         <div className="next-tiles-container">
           <div className="next-tiles">
             {nextTiles.map((tile, index) => (

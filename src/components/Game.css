@@ -113,9 +113,10 @@
 
 .score {
   position: fixed;
-  left: 50%;
-  transform: translateX(-50%);
-  min-width: min(200px, 20vw);
+  left: 2vw;
+  top: 7.3rem;
+  transform: none;
+  min-width: min(280px, 25vw);
   padding: min(12px, 1.5vh) min(20px, 2vw);
   border-radius: min(12px, 1.5vh);
   background: rgba(26, 26, 46, 0.95);
@@ -130,6 +131,7 @@
     0 4px 20px rgba(0, 255, 159, 0.2),
     0 0 30px rgba(0, 0, 0, 0.3);
   transition: all 0.3s ease;
+  z-index: 1;
 }
 
 /* Add labels above score and timer */
@@ -187,6 +189,7 @@
   justify-content: center;
 }
 
+/* game gird area with next tile options */
 .game-board {
   position: relative;
   width: 100%;
@@ -195,6 +198,7 @@
   aspect-ratio: 1.25;
   transform-style: preserve-3d;
   will-change: transform;
+  border: 1px solid red;
 }
 
 /* Add responsive canvas sizing */
@@ -255,62 +259,109 @@
   animation: warningText 1.4s ease-in-out forwards;
 }
 
-/* Adjust power-up indicator position */
+/* Power-up styles - enhanced visuals */
 .power-up-indicator {
-  position: fixed;
-  left: 50%;
-  top: min(30px, 4vh);
-  transform: translateX(min(150px, 15vw));
+  position: absolute;
+  right: 10px;
+  top: 10px;
   display: flex;
   flex-direction: column;
-  gap: min(10px, 1.5vh);
-  z-index: 2;
-  height: auto;
+  gap: 8px;
+  z-index: 100;
+}
+
+.power-up-timer[data-type="freeze"] {
+  position: absolute;
+  right: 0;
+  top: 0;
+  --glow-color: #00ffff;
+}
+
+.power-up-timer[data-type="multiplier"] {
+  position: absolute;
+  right: 0;
+  top: 50px;
+  --glow-color: #ffdd00;
 }
 
 .power-up-timer {
-  background: rgba(26, 26, 46, 0.95);
-  padding: min(5px, 0.7vh) min(10px, 1.2vw);
-  border-radius: min(5px, 0.7vh);
-  color: #00FFFF;
-  font-size: min(16px, 1.8vw);
   display: flex;
   align-items: center;
-  gap: 5px;
-  backdrop-filter: blur(8px);
-  border: 2px solid currentColor;
-  text-shadow: 0 0 10px currentColor;
-  box-shadow: 0 0 15px rgba(0, 255, 255, 0.2);
-  min-width: min(200px, 20vw);
-  justify-content: center;
-  margin-top: min(45px, 6vh);
-}
-
-.power-up-timer:first-child {
-  margin-top: 0;
-}
-
-.power-up-timer.active {
+  justify-content: flex-start;
+  gap: 8px;
+  background: rgba(13, 13, 23, 0.95);
+  padding: 10px 15px;
+  border-radius: 8px;
+  backdrop-filter: blur(10px);
+  border: 2px solid var(--glow-color, #00FF9F);
+  box-shadow: 
+    0 0 10px var(--glow-color, #00FF9F),
+    inset 0 0 15px rgba(0, 255, 159, 0.2);
+  min-width: 160px;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  color: #fff;
+  text-shadow: 0 0 8px var(--glow-color, #00FF9F);
+  transition: all 0.3s ease;
   animation: powerUpPulse 2s infinite;
+}
+
+.power-up-timer::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: 8px;
+  padding: 1px;
+  background: linear-gradient(
+    45deg,
+    transparent 40%,
+    var(--glow-color, #00FF9F),
+    transparent 60%
+  );
+  -webkit-mask: 
+    linear-gradient(#fff 0 0) content-box, 
+    linear-gradient(#fff 0 0);
+  mask: 
+    linear-gradient(#fff 0 0) content-box, 
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0.5;
+  animation: borderGlow 3s linear infinite;
 }
 
 @keyframes powerUpPulse {
   0%, 100% {
-    border-color: currentColor;
-    box-shadow: 0 0 15px rgba(0, 255, 255, 0.2);
+    transform: scale(1);
+    filter: brightness(1);
   }
   50% {
-    border-color: #00FFFF;
-    box-shadow: 0 0 20px rgba(0, 255, 255, 0.4);
+    transform: scale(1.02);
+    filter: brightness(1.1);
   }
 }
 
-.power-up-timer[data-type="freeze"] {
-  color: #40FFFF;
+@keyframes borderGlow {
+  0% {
+    background-position: 0% 50%;
+  }
+  100% {
+    background-position: 200% 50%;
+  }
 }
 
-.power-up-timer[data-type="multiplier"] {
-  color: #FFE135;
+/* Update responsive styles */
+@media (max-width: 768px) {
+  .power-up-timer[data-type="multiplier"] {
+    top: 45px;
+  }
+  
+  .power-up-timer {
+    padding: 8px 12px;
+    min-width: 140px;
+    font-size: 12px;
+  }
 }
 
 .power-up-guide {
@@ -680,16 +731,27 @@
   opacity: 0.9;
 }
 
-/* Update French Bulldog positioning specifically for the game context */
+/* Update French Bulldog positioning to align with level progress and score */
 .game-container .french-bulldog {
   position: absolute;
-  top: min(160px, 20vh) !important;
-  left: min(20px, 2vw);
+  top: calc(7.3rem + 8rem) !important;  /* Position below score */
+  left: 2vw;  /* Match level progress and score left position */
   z-index: 90;
   transform: none !important;
-  /* Scale the bulldog based on viewport */
   --bulldog-scale: min(1, calc(0.6 + 0.4 * (100vw / 1920)));
   transform: scale(var(--bulldog-scale)) !important;
+}
+
+/* Update bulldog abilities to align with bulldog */
+.bulldog-abilities {
+  position: absolute;
+  left: 2vw;  /* Match level progress and score left position */
+  top: calc(7.3rem + 16rem);  /* Position below bulldog */
+  display: flex;
+  flex-direction: column;
+  gap: clamp(4px, 0.8vh, 6px);
+  z-index: 10;
+  width: min(280px, 25vw);  /* Match level progress and score width */
 }
 
 /* Ensure speech bubble doesn't get cut off */
@@ -855,4 +917,26 @@
 
 .next-tile:hover canvas {
   filter: brightness(1.1);
+}
+
+/* Update media queries to match next-tiles-container */
+@media (max-width: 1200px) {
+  .power-up-indicator {
+    right: min(120px, 12vw);
+  }
+  
+  .power-up-timer {
+    width: min(100px, 10vw);
+  }
+}
+
+@media (max-width: 768px) {
+  .power-up-indicator {
+    right: min(100px, 10vw);
+  }
+  
+  .power-up-timer {
+    width: min(80px, 8vw);
+    font-size: min(12px, 1.4vw);
+  }
 }
