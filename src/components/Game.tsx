@@ -623,16 +623,22 @@ const Game: React.FC<GameProps> = ({
         if (isValidPosition && !isOccupied) {
           const selectedTile = nextTiles[selectedTileIndex]
           
-          // Create the new tile
+          // Inside handleClick where we create newTile
           let newTile: PlacedTile = { 
             ...selectedTile, 
             q, 
             r,
             value: 0,
             isPlaced: true,
-            type: 'normal',
-            hasBeenMatched: false  // Initialize as not matched
+            type: selectedTile.type || 'normal',  // Preserve the tile type
+            hasBeenMatched: false,
+            powerUp: selectedTile.powerUp  // Explicitly preserve the powerUp property
           }
+          console.log('Created new tile:', { 
+            newTile, 
+            hasPowerUp: !!newTile.powerUp,
+            powerUpType: newTile.powerUp?.type 
+          });
 
           // If it's a mirror tile, update its edges based on adjacent tiles
           if (newTile.type === 'mirror') {
@@ -657,16 +663,25 @@ const Game: React.FC<GameProps> = ({
             }
           }
           
-          // Inside handleClick where we create newPlacedTiles:
-
-          // First, create initial tiles with updated values
+          // Create initial tiles with updated values
           const initialPlacedTiles: PlacedTile[] = updateTileValues([...placedTiles, newTile]);
 
           // Then, in a separate step, mark matched tiles
-          const newPlacedTiles: PlacedTile[] = initialPlacedTiles.map((tile: PlacedTile): PlacedTile => ({
-            ...tile,
-            hasBeenMatched: tile.hasBeenMatched || hasMatchingEdges(tile, initialPlacedTiles, settings.isColorBlind)
-          }));
+          const newPlacedTiles: PlacedTile[] = initialPlacedTiles.map((tile: PlacedTile): PlacedTile => {
+            const updated = {
+              ...tile,
+              hasBeenMatched: tile.hasBeenMatched || hasMatchingEdges(tile, initialPlacedTiles, settings.isColorBlind),
+              powerUp: tile.powerUp
+            };
+            if (tile.q === q && tile.r === r) {
+              console.log('New tile in placedTiles:', { 
+                tile: updated, 
+                hasPowerUp: !!updated.powerUp,
+                powerUpType: updated.powerUp?.type 
+              });
+            }
+            return updated;
+          });
 
           // Get the updated tile with its correct value
           const updatedPlacedTile = newPlacedTiles.find(tile => tile.q === q && tile.r === r)!;
@@ -816,14 +831,23 @@ const Game: React.FC<GameProps> = ({
           // Update board with new tile
           setPlacedTiles(newPlacedTiles)
           
-          // Add this line to activate power-up if present
+          // Move power-up activation after tile placement
           if (selectedTile.powerUp) {
-            activatePowerUp(selectedTile)
+            // Find the newly placed tile in the updated tiles array
+            const placedPowerUpTile = newPlacedTiles.find(t => t.q === q && t.r === r);
+            console.log('Found power-up tile before activation:', {
+              found: !!placedPowerUpTile,
+              tile: placedPowerUpTile,
+              powerUpType: placedPowerUpTile?.powerUp?.type
+            });
+            if (placedPowerUpTile) {
+              activatePowerUp(placedPowerUpTile);
+            }
           }
           
           // Generate new tile for the used slot
           const newTiles = [...nextTiles]
-          newTiles[selectedTileIndex] = createTileWithRandomEdges(0, 0);  // Replace direct creation with a function call
+          newTiles[selectedTileIndex] = createTileWithRandomEdges(0, 0);
           setNextTiles(newTiles)
           setSelectedTileIndex(null)
 
@@ -1116,33 +1140,46 @@ const Game: React.FC<GameProps> = ({
 
   // Add power-up activation handler
   const activatePowerUp = (tile: PlacedTile) => {
-    if (!tile.powerUp) return
+    if (!tile.powerUp) {
+      console.log('No power-up found on tile:', tile);
+      return;
+    }
 
-    const { type } = tile.powerUp
-    soundManager.playSound('powerUp')
+    const { type } = tile.powerUp;
+    console.log('Activating power-up:', { type, tile });
+    soundManager.playSound('powerUp');
 
     switch (type) {
+      case 'colorShift':
+        // Get the current tiles from state to ensure we have the latest state
+        const currentTiles = [...placedTiles, tile]; // Include the new tile
+        const adjacentTiles = getAdjacentTiles(tile, currentTiles);
+        console.log('Color shift - adjacent tiles:', adjacentTiles);
+        const randomColor = COLORS[Math.floor(Math.random() * COLORS.length)];
+        
+        const updatedTiles = currentTiles.map(t => {
+          if (t.q === tile.q && t.r === tile.r) {
+            console.log('Preserving power-up tile:', tile);
+            return tile;
+          }
+          if (adjacentTiles.includes(t)) {
+            console.log('Updating adjacent tile color:', t);
+            return {
+              ...t,
+              edges: t.edges.map(() => ({ color: randomColor }))
+            }
+          }
+          return t;
+        });
+        
+        console.log('Final updated tiles:', updatedTiles);
+        setPlacedTiles(updatedTiles);
+        break;
       case 'freeze':
         setPowerUps(prev => ({
           ...prev,
           freeze: { active: true, remainingTime: tile.powerUp!.duration! }
         }))
-        break
-
-      case 'colorShift':
-        const adjacentTiles = getAdjacentTiles(tile, placedTiles)
-        const randomColor = COLORS[Math.floor(Math.random() * COLORS.length)]
-        const updatedTiles = placedTiles.map(t => {
-          if (adjacentTiles.includes(t)) {
-            return {
-              ...t,
-              edges: t.edges.map(() => ({ color: randomColor }))
-            }
-            return t
-          }
-          return t
-        })
-        setPlacedTiles(updatedTiles)
         break
 
       case 'multiplier':
