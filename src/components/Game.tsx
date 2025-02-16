@@ -507,6 +507,7 @@ const Game: React.FC<GameProps> = ({
             theme,
             selectedTileIndex,
             animatingTiles,
+            showInfoBox: true,  // Show info box for cursor tile
             isCursorTile: true
           });
           ctx.globalAlpha = 1;
