@@ -661,6 +661,31 @@ const Game: React.FC<GameProps> = ({
               const wrapper = wrapperRef.current;
               
               if (wrapper && !wrapper.classList.contains('grid-full')) {
+                // Add shockwave element
+                const shockwave = document.createElement('div');
+                shockwave.className = 'shockwave';
+                wrapper.appendChild(shockwave);
+                
+                // Add particles
+                for (let i = 0; i < 20; i++) {
+                  const particle = document.createElement('div');
+                  particle.className = 'particle';
+                  particle.style.setProperty('--x', Math.random() * 2 - 1 + '');
+                  particle.style.setProperty('--y', Math.random() * 2 - 1 + '');
+                  particle.style.left = '50%';
+                  particle.style.top = '50%';
+                  wrapper.appendChild(particle);
+                }
+                
+                // Clean up effects after animation
+                setTimeout(() => {
+                  wrapper.removeChild(shockwave);
+                  const particles = wrapper.getElementsByClassName('particle');
+                  while (particles.length > 0) {
+                    particles[0].remove();
+                  }
+                }, 1200);
+                
                 // Store the current tiles before clearing
                 const currentTiles = [...placedTiles];
                 

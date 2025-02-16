@@ -198,7 +198,6 @@
   aspect-ratio: 1.25;
   transform-style: preserve-3d;
   will-change: transform;
-  border: 1px solid red;
 }
 
 /* Add responsive canvas sizing */
@@ -948,43 +947,152 @@
 }
 
 .canvas-wrapper.grid-full {
-  animation: gridClear 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
   z-index: 1;
 }
 
+/* Primary flash effect */
 .canvas-wrapper.grid-full::before {
   content: '';
   position: absolute;
   inset: -20px;
   background: radial-gradient(
     circle at center,
-    rgba(0, 255, 159, 0.6) 0%,
-    rgba(0, 255, 159, 0.3) 30%,
+    rgba(0, 255, 159, 0.8) 0%,
+    rgba(0, 255, 159, 0.4) 30%,
     transparent 70%
   );
   pointer-events: none;
-  z-index: 0;
-  animation: gridClearOverlay 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 2;
+  animation: gridClearFlash 1.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Update animation durations to match */
+/* Energy waves effect */
+.canvas-wrapper.grid-full::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: 
+    repeating-conic-gradient(
+      from 0deg,
+      transparent 0deg,
+      rgba(0, 255, 159, 0.2) 10deg,
+      transparent 20deg
+    );
+  z-index: 1;
+  animation: energyWaves 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+  mix-blend-mode: screen;
+}
+
+/* Shockwave effect */
+.canvas-wrapper.grid-full .shockwave {
+  position: absolute;
+  inset: 0;
+  border: 2px solid rgba(0, 255, 159, 0.8);
+  border-radius: 50%;
+  animation: shockwave 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
 .canvas-wrapper.grid-full canvas {
   animation: gridClear 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+  filter: contrast(1.2) brightness(1.2);
 }
 
-.canvas-wrapper.grid-full::before {
-  content: '';
+@keyframes gridClear {
+  0% {
+    filter: brightness(1) saturate(1) blur(0) contrast(1);
+    transform: scale(1);
+  }
+  10% {
+    filter: brightness(3) saturate(2) blur(2px) contrast(1.2);
+    transform: scale(1.05) rotate(-1deg);
+  }
+  20% {
+    filter: brightness(4) saturate(2.5) blur(4px) contrast(1.4);
+    transform: scale(1.1) rotate(1deg);
+  }
+  30% {
+    filter: brightness(3.5) saturate(2.2) blur(3px) contrast(1.3);
+    transform: scale(1.08) rotate(-0.5deg);
+  }
+  100% {
+    filter: brightness(1) saturate(1) blur(0) contrast(1);
+    transform: scale(1);
+  }
+}
+
+@keyframes gridClearFlash {
+  0% {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  20% {
+    opacity: 1;
+    transform: scale(1.2);
+  }
+  40% {
+    opacity: 0.8;
+    transform: scale(1.1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(2);
+  }
+}
+
+@keyframes energyWaves {
+  0% {
+    opacity: 0;
+    transform: scale(0.8) rotate(0deg);
+  }
+  20% {
+    opacity: 1;
+    transform: scale(1.2) rotate(180deg);
+  }
+  40% {
+    opacity: 0.8;
+    transform: scale(1.1) rotate(360deg);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.5) rotate(720deg);
+  }
+}
+
+@keyframes shockwave {
+  0% {
+    transform: scale(0.8);
+    opacity: 1;
+    border-width: 2px;
+  }
+  100% {
+    transform: scale(2);
+    opacity: 0;
+    border-width: 1px;
+  }
+}
+
+/* Particle effects */
+.particle {
   position: absolute;
-  inset: -20px;
-  background: radial-gradient(
-    circle at center,
-    rgba(0, 255, 159, 0.6) 0%,
-    rgba(0, 255, 159, 0.3) 30%,
-    transparent 70%
-  );
+  width: 4px;
+  height: 4px;
+  background: rgba(0, 255, 159, 0.8);
+  border-radius: 50%;
   pointer-events: none;
-  z-index: 0;
-  animation: gridClearOverlay 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+  animation: particle 1s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
 
-/* Update the timeout in Game.tsx to match */
+@keyframes particle {
+  0% {
+    opacity: 1;
+    transform: scale(1) translate(0, 0);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0) translate(
+      calc(var(--x) * 100px),
+      calc(var(--y) * 100px)
+    );
+  }
+}
