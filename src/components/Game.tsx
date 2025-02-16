@@ -650,8 +650,8 @@ const Game: React.FC<GameProps> = ({
               const feedback = getFeedbackForScore(mirrorPoints);
               addScorePopup({
                 score: mirrorPoints,
-                x: q * tileSize + tileSize / 2,
-                y: r * tileSize + tileSize / 2 - 40,
+                x: (canvas.width / 2) * 0.2,  // Apply same horizontal scale factor as other popups
+                y: (canvas.height / 2 - 50) * 0.8,  // Apply same vertical scale factor as other popups
                 emoji: feedback.emoji,
                 text: 'Mirror Match!',
                 type: 'score'
