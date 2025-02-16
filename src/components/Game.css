@@ -940,3 +940,73 @@
     font-size: min(12px, 1.4vw);
   }
 }
+
+/* Cyberpunk undo button styling */
+.undo-button {
+  background: rgba(13, 13, 23, 0.95);
+  padding: 10px 20px;
+  border-radius: 8px;
+  backdrop-filter: blur(10px);
+  border: 2px solid #FF1177;
+  box-shadow: 
+    0 0 10px rgba(255, 17, 119, 0.3),
+    inset 0 0 15px rgba(255, 17, 119, 0.2);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  text-shadow: 0 0 8px #FF1177;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+
+.undo-button::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: 8px;
+  padding: 1px;
+  background: linear-gradient(
+    45deg,
+    transparent 40%,
+    #FF1177,
+    transparent 60%
+  );
+  -webkit-mask: 
+    linear-gradient(#fff 0 0) content-box, 
+    linear-gradient(#fff 0 0);
+  mask: 
+    linear-gradient(#fff 0 0) content-box, 
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0.5;
+  animation: borderGlow 3s linear infinite;
+}
+
+.undo-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 
+    0 0 15px rgba(255, 17, 119, 0.4),
+    inset 0 0 20px rgba(255, 17, 119, 0.3);
+  background: rgba(20, 20, 35, 0.95);
+}
+
+.undo-button:active {
+  transform: translateY(1px);
+}
+
+.undo-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  border-color: rgba(255, 17, 119, 0.3);
+  box-shadow: none;
+}
+
+.undo-button:disabled::before {
+  opacity: 0.2;
+}
