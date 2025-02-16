@@ -201,6 +201,23 @@ const getRingNumber = (q: number, r: number): number => {
   return Math.max(Math.abs(q), Math.abs(r), Math.abs(-q-r));
 };
 
+// Add the constant for grid clear points
+const GRID_CLEAR_POINTS = 1000;
+
+// Add the cleanup function
+const cleanupGridAnimations = (wrapper: HTMLElement) => {
+  // Remove the animation class
+  wrapper.classList.remove('grid-full');
+  
+  // Clean up CSS variables
+  wrapper.style.removeProperty('--theme-primary');
+  wrapper.style.removeProperty('--theme-accent');
+  
+  // Remove all animation elements
+  const elements = wrapper.querySelectorAll('.hex-ripple, .tile-flash');
+  elements.forEach((el: Element) => el.remove());
+};
+
 const Game: React.FC<GameProps> = ({ 
   musicEnabled, 
   soundEnabled, 
@@ -1930,10 +1947,20 @@ const Game: React.FC<GameProps> = ({
     }
   }, [combo.count]);
 
-  // Inside the grid clear handler
+  // Update the handleGridClear function
   const handleGridClear = () => {
     const wrapper = wrapperRef.current;
-    if (wrapper && !wrapper.classList.contains('grid-full')) {
+    const canvas = canvasRef.current;
+    
+    if (wrapper && canvas) {
+      // First clean up any existing animations
+      cleanupGridAnimations(wrapper);
+      
+      // Get scaling factors for animations
+      const rect = canvas.getBoundingClientRect();
+      const scaleX = rect.width / canvas.width;
+      const scaleY = rect.height / canvas.height;
+      
       wrapper.classList.add('grid-full');
       
       // Set theme colors as CSS variables
@@ -1947,16 +1974,81 @@ const Game: React.FC<GameProps> = ({
         wrapper.appendChild(ripple);
       }
       
+      // Create flash effects for each tile position
+      placedTiles.forEach(tile => {
+        const flash = document.createElement('div');
+        const ring = getRingNumber(tile.q, tile.r);
+        flash.className = `tile-flash ring-${ring}`;
+        
+        // Get canvas position
+        const { x: canvasX, y: canvasY } = hexToPixel(tile.q, tile.r, centerX, centerY, tileSize);
+        
+        // Convert to screen coordinates
+        const screenX = canvasX * scaleX;
+        const screenY = canvasY * scaleY;
+        
+        // Set position using transformed coordinates
+        flash.style.left = `${screenX}px`;
+        flash.style.top = `${screenY}px`;
+        
+        // Scale the flash effect size
+        const scaledSize = tileSize * scaleX;
+        flash.style.width = `${scaledSize}px`;
+        flash.style.height = `${scaledSize}px`;
+        
+        wrapper.appendChild(flash);
+      });
+
+      // Calculate grid clear points with combo multiplier
+      const gridClearPoints = GRID_CLEAR_POINTS * (combo.count > 0 ? combo.multiplier : 1);
+      
+      // Store current score before update
+      const previousScore = score;
+      
+      // Update score including any previous points
+      const newScore = previousScore + gridClearPoints;
+      setScore(newScore);
+      
+      // Update objectives if in daily challenge
+      if (isDailyChallenge) {
+        updateObjectives(0, combo.count, newScore);
+      }
+      
+      // Add score popup
+      addScorePopup({
+        score: gridClearPoints,
+        x: centerX,
+        y: centerY,
+        type: 'clear',
+        emoji: '✨',
+        text: 'Grid Clear!'
+      });
+
+      // Play sound effect
+      soundManager.playSound('gridClear');
+      
       // Clean up effects after animation
-      setTimeout(() => {
-        wrapper.classList.remove('grid-full');
-        wrapper.style.removeProperty('--theme-primary');
-        wrapper.style.removeProperty('--theme-accent');
-        const elements = wrapper.querySelectorAll('.hex-ripple');
-        elements.forEach((el: Element) => el.remove());
+      const cleanupTimeout = setTimeout(() => {
+        cleanupGridAnimations(wrapper);
+        
+        // Reset the grid after cleanup
+        setPlacedTiles([createInitialTile()]);
       }, 1200);
+
+      return () => clearTimeout(cleanupTimeout);
     }
   };
+
+  // Update the grid full check
+  useEffect(() => {
+    const checkGridFull = () => {
+      if (isGridFull(placedTiles, cols) && !isGameOver && !tutorialState.active) {
+        handleGridClear();
+      }
+    };
+
+    checkGridFull();
+  }, [placedTiles, cols, isGameOver, tutorialState.active]);
 
   // Modify the achievement handling code
   useEffect(() => {
