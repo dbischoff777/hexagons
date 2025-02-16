@@ -512,41 +512,6 @@ const Game: React.FC<GameProps> = ({
           ctx.globalAlpha = 1;
         }
       }
-
-      if (import.meta.env.DEV) {  // Only in development
-        // Draw grid coordinate debug info
-        ctx.font = '12px monospace';
-        ctx.fillStyle = 'yellow';
-        ctx.textAlign = 'center';
-        
-        for (let q = -rows; q <= rows; q++) {
-          for (let r = Math.max(-cols, -q-cols); r <= Math.min(cols, -q+cols); r++) {
-            const s = -q - r;
-            if (Math.max(Math.abs(q), Math.abs(r), Math.abs(s)) <= Math.floor(cols/2)) {
-              const { x, y } = hexToPixel(q, r, centerX, centerY, tileSize);
-              ctx.fillText(`(${q},${r})`, x, y);
-              
-              // Draw a small dot at the center of each hex
-              ctx.beginPath();
-              ctx.arc(x, y, 2, 0, Math.PI * 2);
-              ctx.fill();
-            }
-          }
-        }
-        
-        // Draw cursor position if available
-        if (mousePosition) {
-          ctx.fillStyle = 'red';
-          ctx.beginPath();
-          ctx.arc(mousePosition.x, mousePosition.y, 3, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.fillText(
-            `(${Math.round(mousePosition.x)},${Math.round(mousePosition.y)})`, 
-            mousePosition.x, 
-            mousePosition.y - 10
-          );
-        }
-      }
     }
 
     // First, create a helper function to calculate grid coordinates
@@ -607,40 +572,6 @@ const Game: React.FC<GameProps> = ({
       if (!canvas) return;
 
       const gridCalc = calculateGridCoordinates(event, canvas);
-      
-      // Format the output for better readability
-      if (import.meta.env.DEV) {
-        // Create a clean object structure without prototypes
-        const debugOutput = Object.create(null);
-        
-        // Add formatted properties
-        Object.assign(debugOutput, {
-          'Mouse Position': `(${gridCalc.mouseRaw.x}, ${gridCalc.mouseRaw.y})`,
-          'Center Point': `(${gridCalc.centerPoint.x}, ${gridCalc.centerPoint.y})`,
-          'Scale': Object.create(null, {
-            'CSS': { value: gridCalc.cssScale, enumerable: true },
-            'Canvas': { value: gridCalc.canvasScale, enumerable: true }
-          }),
-          'Adjusted': `(${gridCalc.adjusted.x}, ${gridCalc.adjusted.y})`,
-          'Rotated': `(${gridCalc.rotated.x}, ${gridCalc.rotated.y})`,
-          'Grid': Object.create(null, {
-            'Floating': { 
-              value: `(${gridCalc.floatingPoint.q}, ${gridCalc.floatingPoint.r}, ${gridCalc.floatingPoint.s})`,
-              enumerable: true 
-            },
-            'Snapped': { 
-              value: `(${gridCalc.gridCoords.q}, ${gridCalc.gridCoords.r}, ${gridCalc.gridCoords.s})`,
-              enumerable: true 
-            }
-          }),
-          'Pixel Position': `(${gridCalc.pixelPosition.x}, ${gridCalc.pixelPosition.y})`
-        });
-
-        // Use console.table for better visualization
-        console.group('Grid Calculation');
-        console.table(debugOutput);
-        console.groupEnd();
-      }
 
       // Use the next-tile canvas dimensions
       const tileRadius = 40;
@@ -2166,20 +2097,6 @@ const Game: React.FC<GameProps> = ({
   const handleContextMenu = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
   }, []);
-
-  // Add debug logging inside useEffect
-  useEffect(() => {
-    console.log('Grid validation:', {
-      validPositionsSet: new Set(VALID_POSITIONS.map(([q, r]) => `(${q},${r})`)),
-      tilesSet: new Set(placedTiles.map((t: PlacedTile) => `(${t.q},${t.r})`)),
-      missingTile: '(0,2)',
-      isInValidPositions: VALID_POSITIONS.some(([q, r]) => q === 0 && r === 2),
-      adjacentTiles: placedTiles.filter((t: PlacedTile) => 
-        (Math.abs(t.q) === 0 && Math.abs(t.r - 2) === 1) || 
-        (Math.abs(t.q - 0) === 1 && Math.abs(t.r - 2) <= 1)
-      ).map((t: PlacedTile) => `(${t.q},${t.r})`)
-    });
-  }, [placedTiles]);
 
   return (
     <div
