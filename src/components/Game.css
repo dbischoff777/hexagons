@@ -197,6 +197,7 @@
   transform-style: preserve-3d;
   will-change: transform;
   margin: 0 auto;
+  border: 1px solid red;
 }
 
 /* Add responsive canvas sizing */
@@ -318,12 +319,13 @@
 /* Power-up styles - enhanced visuals */
 .power-up-indicator {
   position: absolute;
-  right: 10px;
-  top: 10px;
+  right: min(10px, 1vw);
+  top: min(10px, 1vh);
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: min(8px, 0.8vh);
   z-index: 100;
+  width: min(200px, 20vw); /* Add max width that scales */
 }
 
 .power-up-timer[data-type="freeze"] {
@@ -336,7 +338,7 @@
 .power-up-timer[data-type="multiplier"] {
   position: absolute;
   right: 0;
-  top: 50px;
+  top: min(50px, 5vh);
   --glow-color: #ffdd00;
 }
 
@@ -344,21 +346,21 @@
   display: flex;
   align-items: center;
   justify-content: flex-start;
-  gap: 8px;
+  gap: min(8px, 0.8vh);
   background: rgba(13, 13, 23, 0.95);
-  padding: 10px 15px;
-  border-radius: 8px;
+  padding: min(10px, 1vh) min(15px, 1.5vw);
+  border-radius: min(8px, 0.8vh);
   backdrop-filter: blur(10px);
-  border: 2px solid var(--glow-color, #00FF9F);
+  border: min(2px, 0.2vh) solid var(--glow-color, #00FF9F);
   box-shadow: 
-    0 0 10px var(--glow-color, #00FF9F),
-    inset 0 0 15px rgba(0, 255, 159, 0.2);
-  min-width: 160px;
-  font-size: 14px;
+    0 0 min(10px, 1vh) var(--glow-color, #00FF9F),
+    inset 0 0 min(15px, 1.5vh) rgba(0, 255, 159, 0.2);
+  min-width: min(160px, 16vw);
+  font-size: min(14px, 1.4vh);
   font-weight: 600;
   letter-spacing: 0.5px;
   color: #fff;
-  text-shadow: 0 0 8px var(--glow-color, #00FF9F);
+  text-shadow: 0 0 min(8px, 0.8vh) var(--glow-color, #00FF9F);
   transition: all 0.3s ease;
   animation: powerUpPulse 2s infinite;
 }
@@ -410,13 +412,13 @@
 /* Update responsive styles */
 @media (max-width: 768px) {
   .power-up-timer[data-type="multiplier"] {
-    top: 45px;
+    top: min(45px, 4.5vh);
   }
   
   .power-up-timer {
-    padding: 8px 12px;
-    min-width: 140px;
-    font-size: 12px;
+    padding: min(8px, 0.8vh) min(12px, 1.2vw);
+    min-width: min(140px, 14vw);
+    font-size: min(12px, 1.2vh);
   }
 }
 
