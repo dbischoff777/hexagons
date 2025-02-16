@@ -765,9 +765,17 @@ const Game: React.FC<GameProps> = ({
             if (isGridFullNow) {
               console.log('Grid full condition met!');
               const wrapper = wrapperRef.current;
+              const canvas = canvasRef.current;
               
-              if (wrapper && !wrapper.classList.contains('grid-full')) {
+              if (wrapper && canvas && !wrapper.classList.contains('grid-full')) {
                 wrapper.classList.add('grid-full');
+                
+                // Get scaling factors
+                const rect = canvas.getBoundingClientRect();
+                const displayWidth = rect.width;
+                const displayHeight = rect.height;
+                const scaleX = displayWidth / canvas.width;
+                const scaleY = displayHeight / canvas.height;
                 
                 // Create ripple effects
                 for (let i = 1; i <= 3; i++) {
@@ -782,10 +790,21 @@ const Game: React.FC<GameProps> = ({
                   const flash = document.createElement('div');
                   flash.className = `tile-flash ring-${ring}`;
                   
-                  // Position the flash effect
-                  const { x, y } = hexToPixel(q, r, centerX, centerY, tileSize);
-                  flash.style.left = `${x}px`;
-                  flash.style.top = `${y}px`;
+                  // Get canvas position
+                  const { x: canvasX, y: canvasY } = hexToPixel(q, r, centerX, centerY, tileSize);
+                  
+                  // Convert to screen coordinates
+                  const screenX = canvasX * scaleX;
+                  const screenY = canvasY * scaleY;
+                  
+                  // Set position using transformed coordinates
+                  flash.style.left = `${screenX}px`;
+                  flash.style.top = `${screenY}px`;
+                  
+                  // Scale the flash effect size
+                  const scaledSize = tileSize * scaleX;
+                  flash.style.width = `${scaledSize}px`;
+                  flash.style.height = `${scaledSize}px`;
                   
                   wrapper.appendChild(flash);
                 });
