@@ -71,8 +71,9 @@ export const createTileWithRandomEdges = (q: number, r: number): PlacedTile => {
 }
 
 export const hexToPixel = (q: number, r: number, centerX: number, centerY: number, size: number) => {
-  const x = centerX + size * (3/2 * q)
-  const y = centerY + size * (Math.sqrt(3)/2 * q + Math.sqrt(3) * r)
+  const spacing = 1.1 // Increase spacing between tiles by 20%
+  const x = centerX + size * spacing * (3/2 * q)
+  const y = centerY + size * spacing * (Math.sqrt(3)/2 * q + Math.sqrt(3) * r)
   return { x, y }
 }
 
