@@ -71,10 +71,15 @@ export const createTileWithRandomEdges = (q: number, r: number): PlacedTile => {
 }
 
 export const hexToPixel = (q: number, r: number, centerX: number, centerY: number, size: number) => {
-  const spacing = 1.1 // Increase spacing between tiles by 20%
-  const x = centerX + size * spacing * (3/2 * q)
-  const y = centerY + size * spacing * (Math.sqrt(3)/2 * q + Math.sqrt(3) * r)
-  return { x, y }
+  const spacing = 1.1;
+  const hexWidth = size * spacing * 1.5;
+  const hexHeight = size * spacing * Math.sqrt(3);
+  
+  // Convert grid coordinates to pixel coordinates
+  const x = centerX + (q * hexWidth);
+  const y = centerY + (r * hexHeight + q * hexHeight/2);
+  
+  return { x, y };
 }
 
 export const DIRECTIONS = [

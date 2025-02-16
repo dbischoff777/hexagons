@@ -192,13 +192,11 @@
 /* game grid area with next tile options */
 .game-board {
   position: relative;
-  width: 100%;
-  max-width: min(1000px, 90vw);
-  height: min(800px, 85vh);
-  aspect-ratio: 1.25;
+  width: min(1000px, 90vw); /* Use CSS min() instead of transform */
+  height: calc(min(1000px, 90vw) * 0.8); /* Maintain 800/1000 aspect ratio */
   transform-style: preserve-3d;
   will-change: transform;
-  border: 1px solid red;
+  margin: 0 auto;
 }
 
 /* Add responsive canvas sizing */
@@ -207,6 +205,9 @@
   height: 100% !important;
   object-fit: contain;
   image-rendering: pixelated;
+  position: absolute;
+  top: 0;
+  left: 0;
 }
 
 /* Animation classes */

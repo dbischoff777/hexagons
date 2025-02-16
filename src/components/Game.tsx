@@ -495,58 +495,169 @@ const Game: React.FC<GameProps> = ({
 
         // Draw cursor tile without rotation
         if (selectedTileIndex !== null && mousePosition) {
-          const rect = canvas.getBoundingClientRect();
-          const scaleX = rect.width / canvas.width;
-          const scaleY = rect.height / canvas.height;
-          
           ctx.globalAlpha = 0.6;
           drawHexagonWithColoredEdges({
             ctx,
             x: mousePosition.x,
             y: mousePosition.y,
-            size: tileSize / Math.max(scaleX, scaleY), // Scale the tile size inversely
+            size: tileSize,
             tile: nextTiles[selectedTileIndex],
             isSelected: true,
             settings,
             theme,
             selectedTileIndex,
             animatingTiles,
-            isCursorTile: true,
-            showInfoBox: true
+            isCursorTile: true
           });
-          ctx.globalAlpha = 1.0;
+          ctx.globalAlpha = 1;
+        }
+      }
+
+      if (import.meta.env.DEV) {  // Only in development
+        // Draw grid coordinate debug info
+        ctx.font = '12px monospace';
+        ctx.fillStyle = 'yellow';
+        ctx.textAlign = 'center';
+        
+        for (let q = -rows; q <= rows; q++) {
+          for (let r = Math.max(-cols, -q-cols); r <= Math.min(cols, -q+cols); r++) {
+            const s = -q - r;
+            if (Math.max(Math.abs(q), Math.abs(r), Math.abs(s)) <= Math.floor(cols/2)) {
+              const { x, y } = hexToPixel(q, r, centerX, centerY, tileSize);
+              ctx.fillText(`(${q},${r})`, x, y);
+              
+              // Draw a small dot at the center of each hex
+              ctx.beginPath();
+              ctx.arc(x, y, 2, 0, Math.PI * 2);
+              ctx.fill();
+            }
+          }
+        }
+        
+        // Draw cursor position if available
+        if (mousePosition) {
+          ctx.fillStyle = 'red';
+          ctx.beginPath();
+          ctx.arc(mousePosition.x, mousePosition.y, 3, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillText(
+            `(${Math.round(mousePosition.x)},${Math.round(mousePosition.y)})`, 
+            mousePosition.x, 
+            mousePosition.y - 10
+          );
         }
       }
     }
 
+    // First, create a helper function to calculate grid coordinates
+    const calculateGridCoordinates = (event: MouseEvent, canvas: HTMLCanvasElement) => {
+      const rect = canvas.getBoundingClientRect();
+      
+      // Get the actual displayed dimensions after CSS transform
+      const displayWidth = rect.width;
+      const displayHeight = rect.height;
+      
+      // Convert screen coordinates to canvas space
+      const scaleX = canvas.width / displayWidth;
+      const scaleY = canvas.height / displayHeight;
+      
+      // Get mouse position in canvas coordinates
+      const mouseX = (event.clientX - rect.left) * scaleX;
+      const mouseY = (event.clientY - rect.top) * scaleY;
+      
+      // Adjust for center offset
+      const adjustedX = mouseX - centerX;
+      const adjustedY = mouseY - centerY;
+      
+      // Apply rotation
+      const angle = (-rotationState.boardRotation * Math.PI) / 180;
+      const rotatedX = adjustedX * Math.cos(angle) - adjustedY * Math.sin(angle);
+      const rotatedY = adjustedY * Math.cos(angle) + adjustedX * Math.sin(angle);
+      
+      // Calculate hex grid spacing
+      const spacing = 1.1;
+      const hexSize = tileSize * spacing;
+      
+      // Calculate floating point coordinates
+      const qf = rotatedX / (hexSize * 1.5);
+      const rf = (rotatedY - qf * hexSize * Math.sqrt(3)/2) / (hexSize * Math.sqrt(3));
+      const sf = -qf - rf;
+      
+      // Snap to nearest hex
+      const q = Math.round(qf);
+      const r = Math.round(rf);
+      const s = -q - r;
+
+      return {
+        mouseRaw: { x: mouseX, y: mouseY },
+        centerPoint: { x: centerX, y: centerY },
+        cssScale: scaleX,
+        canvasScale: canvas.width / displayWidth,
+        adjusted: { x: adjustedX, y: adjustedY },
+        rotated: { x: rotatedX, y: rotatedY },
+        floatingPoint: { q: qf, r: rf, s: sf },
+        gridCoords: { q, r, s },
+        pixelPosition: hexToPixel(q, r, centerX, centerY, tileSize)
+      };
+    };
+
+    // Then modify the handleClick function to use this helper
     const handleClick = (event: MouseEvent) => {
       const canvas = canvasRef.current;
       if (!canvas) return;
 
-      const rect = canvas.getBoundingClientRect();
-      const scaleX = canvas.width / rect.width;
-      const scaleY = canvas.height / rect.height;
-      const mouseX = (event.clientX - rect.left) * scaleX;
-      const mouseY = (event.clientY - rect.top) * scaleY;
+      const gridCalc = calculateGridCoordinates(event, canvas);
+      
+      // Format the output for better readability
+      if (import.meta.env.DEV) {
+        // Create a clean object structure without prototypes
+        const debugOutput = Object.create(null);
+        
+        // Add formatted properties
+        Object.assign(debugOutput, {
+          'Mouse Position': `(${gridCalc.mouseRaw.x}, ${gridCalc.mouseRaw.y})`,
+          'Center Point': `(${gridCalc.centerPoint.x}, ${gridCalc.centerPoint.y})`,
+          'Scale': Object.create(null, {
+            'CSS': { value: gridCalc.cssScale, enumerable: true },
+            'Canvas': { value: gridCalc.canvasScale, enumerable: true }
+          }),
+          'Adjusted': `(${gridCalc.adjusted.x}, ${gridCalc.adjusted.y})`,
+          'Rotated': `(${gridCalc.rotated.x}, ${gridCalc.rotated.y})`,
+          'Grid': Object.create(null, {
+            'Floating': { 
+              value: `(${gridCalc.floatingPoint.q}, ${gridCalc.floatingPoint.r}, ${gridCalc.floatingPoint.s})`,
+              enumerable: true 
+            },
+            'Snapped': { 
+              value: `(${gridCalc.gridCoords.q}, ${gridCalc.gridCoords.r}, ${gridCalc.gridCoords.s})`,
+              enumerable: true 
+            }
+          }),
+          'Pixel Position': `(${gridCalc.pixelPosition.x}, ${gridCalc.pixelPosition.y})`
+        });
+
+        // Use console.table for better visualization
+        console.group('Grid Calculation');
+        console.table(debugOutput);
+        console.groupEnd();
+      }
 
       // Use the next-tile canvas dimensions
-      const tileRadius = 40;      // From ctx.arc(50, 50, 40, 0, Math.PI * 2) in the tile canvas
+      const tileRadius = 40;
 
-      // Calculate next tiles area based on the rendered tiles
+      // Update next tiles click detection
       nextTiles.forEach((tile, index) => {
         const tileElement = document.querySelector(`.next-tile:nth-child(${index + 1}) canvas`);
         if (tileElement) {
           const tileBounds = tileElement.getBoundingClientRect();
-          const tileX = (tileBounds.left + tileBounds.width/2 - rect.left) * scaleX;
-          const tileY = (tileBounds.top + tileBounds.height/2 - rect.top) * scaleY;
+          const tileX = (tileBounds.left + tileBounds.width/2 - canvas.getBoundingClientRect().left) * gridCalc.canvasScale;
+          const tileY = (tileBounds.top + tileBounds.height/2 - canvas.getBoundingClientRect().top) * gridCalc.canvasScale;
           
-          // Calculate distance from click to tile center
-          const dx = mouseX - tileX;
-          const dy = mouseY - tileY;
+          const dx = gridCalc.mouseRaw.x - tileX;
+          const dy = gridCalc.mouseRaw.y - tileY;
           const distance = Math.sqrt(dx * dx + dy * dy);
           
-          // Use the same radius as the drawn circle for click detection
-          if (distance <= tileRadius * (canvas.width / rect.width) && !tile.isPlaced) {
+          if (distance <= tileRadius && !tile.isPlaced) {
             setSelectedTileIndex(selectedTileIndex === index ? null : index);
             if (soundEnabled) {
               soundManager.playSound('buttonClick');
@@ -556,38 +667,26 @@ const Game: React.FC<GameProps> = ({
         }
       });
 
+      // Handle game over state
       if (isGameOver) {
-        const buttonY = canvas.height / 2 + 100
-        const buttonWidth = 200
-        const buttonHeight = 50
-        const buttonX = canvas.width / 2 - buttonWidth / 2
+        const buttonY = canvas.height / 2 + 100;
+        const buttonWidth = 200;
+        const buttonHeight = 50;
+        const buttonX = canvas.width / 2 - buttonWidth / 2;
 
-        if (mouseX >= buttonX && mouseX <= buttonX + buttonWidth &&
-            mouseY >= buttonY && mouseY <= buttonY + buttonHeight) {
-          resetGame()
-          return
+        if (gridCalc.mouseRaw.x >= buttonX && gridCalc.mouseRaw.x <= buttonX + buttonWidth &&
+            gridCalc.mouseRaw.y >= buttonY && gridCalc.mouseRaw.y <= buttonY + buttonHeight) {
+          resetGame();
+          return;
         }
-        return
+        return;
       }
 
-      // If a tile is selected and click is on the grid
+      // Handle tile placement
       if (selectedTileIndex !== null) {
-        // Adjust click coordinates based on rotation
-        const adjustedX = mouseX - centerX
-        const adjustedY = mouseY - centerY
-        
-        // Apply inverse rotation to get true grid coordinates
-        const angle = (-rotationState.boardRotation * Math.PI) / 180
-        const rotatedX = adjustedX * Math.cos(angle) - adjustedY * Math.sin(angle)
-        const rotatedY = adjustedX * Math.sin(angle) + adjustedY * Math.cos(angle)
-        
-        // Calculate grid position using rotated coordinates
-        const q = Math.round((rotatedX) / (tileSize * 1.5))
-        const r = Math.round((rotatedY - q * tileSize * Math.sqrt(3)/2) / (tileSize * Math.sqrt(3)))
-        const s = -q - r
-
-        const isValidPosition = Math.max(Math.abs(q), Math.abs(r), Math.abs(s)) <= Math.floor(cols/2)
-        const isOccupied = placedTiles.some(tile => tile.q === q && tile.r === r)
+        const { q, r, s } = gridCalc.gridCoords;
+        const isValidPosition = Math.max(Math.abs(q), Math.abs(r), Math.abs(s)) <= Math.floor(cols/2);
+        const isOccupied = placedTiles.some(tile => tile.q === q && tile.r === r);
 
         if (isValidPosition && !isOccupied) {
           const selectedTile = nextTiles[selectedTileIndex]
@@ -966,8 +1065,8 @@ const Game: React.FC<GameProps> = ({
                 // Show congratulations modal
                 setShowLevelComplete({
                   ...completion,
-                  targetScore,
-                  bonusPoints,
+                  targetScore: targetScore, // Use the prop directly
+                  bonusPoints: bonusPoints,
                   message: 'Level Complete!',
                   isNextLevelUnlock: !!nextLevelInfo // Set based on whether next level exists
                 });
@@ -1038,13 +1137,20 @@ const Game: React.FC<GameProps> = ({
     }
 
     const handleMouseMove = (event: MouseEvent) => {
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+
       const rect = canvas.getBoundingClientRect();
-      const scaleX = canvas.width / rect.width;    // Calculate scale factor for X
-      const scaleY = canvas.height / rect.height;   // Calculate scale factor for Y
+      const cssScale = Math.min(1, (90 * window.innerWidth / 100) / 1000);
+      const canvasScale = canvas.width / (rect.width * cssScale);
+      
+      // Use the same coordinate conversion as in calculateGridCoordinates
+      const mouseX = (event.clientX - rect.left) * canvasScale;
+      const mouseY = (event.clientY - rect.top) * canvasScale;
       
       setMousePosition({
-        x: (event.clientX - rect.left) * scaleX,   // Scale the X coordinate
-        y: (event.clientY - rect.top) * scaleY     // Scale the Y coordinate
+        x: mouseX,
+        y: mouseY
       });
     };
 
