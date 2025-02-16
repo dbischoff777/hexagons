@@ -1141,12 +1141,18 @@ const Game: React.FC<GameProps> = ({
       if (!canvas) return;
 
       const rect = canvas.getBoundingClientRect();
-      const cssScale = Math.min(1, (90 * window.innerWidth / 100) / 1000);
-      const canvasScale = canvas.width / (rect.width * cssScale);
       
-      // Use the same coordinate conversion as in calculateGridCoordinates
-      const mouseX = (event.clientX - rect.left) * canvasScale;
-      const mouseY = (event.clientY - rect.top) * canvasScale;
+      // Get the actual displayed dimensions
+      const displayWidth = rect.width;
+      const displayHeight = rect.height;
+      
+      // Convert screen coordinates to canvas space
+      const scaleX = canvas.width / displayWidth;
+      const scaleY = canvas.height / displayHeight;
+      
+      // Get mouse position in canvas coordinates
+      const mouseX = (event.clientX - rect.left) * scaleX;
+      const mouseY = (event.clientY - rect.top) * scaleY;
       
       setMousePosition({
         x: mouseX,
