@@ -417,8 +417,19 @@
   
   .power-up-timer {
     padding: min(8px, 0.8vh) min(12px, 1.2vw);
-    min-width: min(140px, 14vw);
+    min-width: auto;
     font-size: min(12px, 1.2vh);
+  }
+
+  /* Hide power-up text description at smaller screens */
+  .power-up-timer .power-up-text {
+    display: none;
+  }
+
+  /* Keep icon and timer value visible */
+  .power-up-timer .power-up-icon,
+  .power-up-timer .timer-value {
+    display: inline-block;
   }
 }
 
@@ -725,7 +736,7 @@
 
 @media (max-width: 768px) {
   .power-up-indicator {
-    right: min(100px, 10vw);
+    right: min(100px, 15vw);
   }
   
   .power-up-timer {

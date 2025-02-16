@@ -2216,12 +2216,16 @@ const Game: React.FC<GameProps> = ({
           <div className="power-up-indicator">
             {powerUps.freeze.active && (
               <div className="power-up-timer active" data-type="freeze">
-                ❄️ Time Freeze: {powerUps.freeze.remainingTime}s
+                <span className="power-up-icon">❄️</span>
+                <span className="power-up-text">Time Freeze:</span>
+                <span className="timer-value">{powerUps.freeze.remainingTime}s</span>
               </div>
             )}
             {powerUps.multiplier.active && (
               <div className="power-up-timer active" data-type="multiplier">
-                ✨ Score x{powerUps.multiplier.value}: {powerUps.multiplier.remainingTime}s
+                <span className="power-up-icon">✨</span>
+                <span className="power-up-text">Score x{powerUps.multiplier.value}:</span>
+                <span className="timer-value">{powerUps.multiplier.remainingTime}s</span>
               </div>
             )}
           </div>
