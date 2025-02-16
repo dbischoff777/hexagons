@@ -144,6 +144,63 @@ const UPGRADE_POINT_REWARDS = {
   }
 };
 
+// Add at the top with other type definitions
+type GridPosition = [number, number];
+
+// Define the exact positions we expect in a radius 3 hexagonal grid
+const VALID_POSITIONS: GridPosition[] = [
+  // Center
+  [0, 0] as GridPosition,
+  // Inner ring (6 positions)
+  [0, -1] as GridPosition, 
+  [1, -1] as GridPosition, 
+  [1, 0] as GridPosition, 
+  [0, 1] as GridPosition, 
+  [-1, 1] as GridPosition, 
+  [-1, 0] as GridPosition,
+  // Middle ring (12 positions)
+  [0, -2] as GridPosition, 
+  [1, -2] as GridPosition, 
+  [2, -1] as GridPosition, 
+  [2, 0] as GridPosition, 
+  [1, 1] as GridPosition, 
+  [0, 2] as GridPosition,  // This position was missing in the tiles array
+  [-1, 2] as GridPosition, 
+  [-2, 1] as GridPosition, 
+  [-2, 0] as GridPosition, 
+  [-1, -1] as GridPosition, 
+  [-2, -1] as GridPosition, 
+  [-1, -2] as GridPosition,
+  // Outer ring (18 positions)
+  [0, -3] as GridPosition, 
+  [1, -3] as GridPosition, 
+  [2, -2] as GridPosition, 
+  [3, -1] as GridPosition, 
+  [3, 0] as GridPosition, 
+  [2, 1] as GridPosition,
+  [1, 2] as GridPosition, 
+  [0, 3] as GridPosition, 
+  [-1, 3] as GridPosition, 
+  [-2, 2] as GridPosition, 
+  [-3, 1] as GridPosition, 
+  [-3, 0] as GridPosition,
+  [-2, -2] as GridPosition, 
+  [-3, -1] as GridPosition, 
+  [-3, -2] as GridPosition, 
+  [-2, -3] as GridPosition, 
+  [-1, -3] as GridPosition, 
+  [-3, -3] as GridPosition
+].sort((a, b) => {
+  // Sort by q then r for consistent ordering
+  if (a[0] !== b[0]) return a[0] - b[0];
+  return a[1] - b[1];
+});
+
+// Add this helper function to get ring number for a position
+const getRingNumber = (q: number, r: number): number => {
+  return Math.max(Math.abs(q), Math.abs(r), Math.abs(-q-r));
+};
+
 const Game: React.FC<GameProps> = ({ 
   musicEnabled, 
   soundEnabled, 
@@ -164,7 +221,14 @@ const Game: React.FC<GameProps> = ({
   rotationEnabled
 }: GameProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null)
+  const wrapperRef = useRef<HTMLDivElement>(null);
+  
+  // Calculate center based on canvas size
+  const centerX = canvasRef.current ? canvasRef.current.width / 2 : 0;
+  const centerY = canvasRef.current ? canvasRef.current.height / 2 : 0;
+  
   const cols = 7
+  const rows = Math.floor(cols/2); // This matches our hexagonal grid radius
   const [upgradeState, setUpgradeState] = useState<UpgradeState>(getInitialUpgradeState());
   
   // Now initialize states that depend on createNewTile
@@ -266,8 +330,8 @@ const Game: React.FC<GameProps> = ({
   // Keep the state
   const [previousScore, setPreviousScore] = useState(0);
 
-  // At the top of the component, add wrapper ref
-  const wrapperRef = useRef<HTMLDivElement>(null);
+  // Add these calculations based on the canvas size
+  const tileSize = 40;
 
   const awardUpgradePoints = useCallback((points: number) => {
     setUpgradeState(prev => ({
@@ -454,11 +518,6 @@ const Game: React.FC<GameProps> = ({
         }
       }
     }
-
-    const centerX = canvas.width / 2 - 100
-    const centerY = canvas.height / 2
-    const tileSize = 40
-    const rows = 7
 
     const handleClick = (event: MouseEvent) => {
       const rect = canvas.getBoundingClientRect();
@@ -661,87 +720,35 @@ const Game: React.FC<GameProps> = ({
               const wrapper = wrapperRef.current;
               
               if (wrapper && !wrapper.classList.contains('grid-full')) {
-                // Add multiple shockwave rings
+                wrapper.classList.add('grid-full');
+                
+                // Create ripple effects
                 for (let i = 1; i <= 3; i++) {
-                  const shockwave = document.createElement('div');
-                  shockwave.className = `shockwave shockwave-${i}`;
-                  wrapper.appendChild(shockwave);
+                  const ripple = document.createElement('div');
+                  ripple.className = `hex-ripple ripple-${i}`;
+                  wrapper.appendChild(ripple);
                 }
                 
-                // Add circular particles
-                for (let i = 0; i < 24; i++) {
-                  const particle = document.createElement('div');
-                  particle.className = 'particle';
-                  const angle = (i * 15) % 360; // Evenly space particles in a circle
-                  const radius = 50 + Math.random() * 30; // Vary the starting radius
-                  particle.style.setProperty('--angle', `${angle}deg`);
-                  particle.style.setProperty('--radius', radius.toString());
-                  particle.style.left = '50%';
-                  particle.style.top = '50%';
-                  wrapper.appendChild(particle);
-                }
+                // Create flash effects for each tile position
+                VALID_POSITIONS.forEach(([q, r]) => {
+                  const ring = getRingNumber(q, r);
+                  const flash = document.createElement('div');
+                  flash.className = `tile-flash ring-${ring}`;
+                  
+                  // Position the flash effect
+                  const { x, y } = hexToPixel(q, r, centerX, centerY, tileSize);
+                  flash.style.left = `${x}px`;
+                  flash.style.top = `${y}px`;
+                  
+                  wrapper.appendChild(flash);
+                });
                 
                 // Clean up effects after animation
                 setTimeout(() => {
-                  const elements = wrapper.querySelectorAll('.shockwave, .particle');
+                  wrapper.classList.remove('grid-full');
+                  const elements = wrapper.querySelectorAll('.hex-ripple, .tile-flash');
                   elements.forEach(el => el.remove());
                 }, 1200);
-                
-                // Store the current tiles before clearing
-                const currentTiles = [...placedTiles];
-                
-                console.log('Wrapper before:', wrapper.className);
-                wrapper.classList.remove('grid-full');
-                
-                // Force reflow
-                void wrapper.offsetWidth;
-                
-                wrapper.classList.add('grid-full');
-                console.log('Wrapper after:', wrapper.className);
-                
-                // Calculate score before any state updates
-                const matchingTiles = currentTiles.filter(tile => 
-                  hasMatchingEdges(tile, currentTiles, settings.isColorBlind)
-                );
-                const totalMatchScore = matchingTiles.reduce((sum, tile) => sum + tile.value, 0);
-                const multiplier = matchingTiles.length;
-                const clearBonus = calculateScore(totalMatchScore * multiplier * 2, upgradeState, powerUps, combo);
-                
-                // Batch our state updates
-                const newScore = score + clearBonus;
-                handleScoreChange(newScore);
-                
-                // Show clear bonus popup
-                const clearInfo = getFeedbackForClear(clearBonus);
-                addScorePopup({
-                  score: clearBonus,
-                  x: canvas.width / 2,
-                  y: canvas.height / 2 - 50,
-                  emoji: clearInfo?.emoji ?? '✨',
-                  text: clearInfo?.text ?? 'Clear!',
-                  type: 'clear'
-                });
-                
-                // Use a single timeout for clearing
-                setTimeout(() => {
-                  setPlacedTiles([]); // Clear the board
-                  
-                  // Force immediate canvas redraw
-                  const canvas = canvasRef.current;
-                  if (canvas) {
-                    const ctx = canvas.getContext('2d');
-                    if (ctx) {
-                      ctx.clearRect(0, 0, canvas.width, canvas.height);
-                      draw();
-                    }
-                  }
-                  
-                  // Schedule the new initial tile placement
-                  setTimeout(() => {
-                    wrapper?.classList.remove('grid-full');
-                    setPlacedTiles([createInitialTile()]);
-                  }, 50);
-                }, 1150);
               }
             }
             
@@ -1822,65 +1829,41 @@ const Game: React.FC<GameProps> = ({
     }
   }, [combo.count]);
 
-  // Consolidate grid clear functionality into a single function
-  const handleGridClear = useCallback(() => {
-    // Batch all state updates together
-    const basePoints = 1000;
-    const clearPoints = calculateScore(basePoints, upgradeState, powerUps, combo);
-
-    // Get canvas center coordinates once
-    const canvas = canvasRef.current;
-    const centerX = canvas ? canvas.width / 2 : window.innerWidth / 2;
-    const centerY = canvas ? canvas.height / 2 : window.innerHeight / 2;
-
-    // Get feedback once
-    const feedback = getFeedbackForClear(clearPoints);
-
-    // Batch updates in a single function
-    const updateGameState = () => {
-      // Update score
-      handleScoreChange(score + clearPoints);
+  // Inside the grid clear handler
+  const handleGridClear = () => {
+    const wrapper = wrapperRef.current;
+    if (wrapper && !wrapper.classList.contains('grid-full')) {
+      wrapper.classList.add('grid-full');
       
-      // Update last action
-      setLastAction({ type: 'clear' });
-
-      // Update statistics
-      updateGridClears(1);
+      // Create ripple effects
+      for (let i = 1; i <= 3; i++) {
+        const ripple = document.createElement('div');
+        ripple.className = `hex-ripple ripple-${i}`;
+        wrapper.appendChild(ripple);
+      }
       
-      // Add score popup
-      addScorePopup({
-        score: clearPoints,
-        x: centerX,
-        y: centerY,
-        emoji: feedback.emoji,
-        text: feedback.text,
-        type: 'clear'
+      // Create flash effects for each tile position
+      VALID_POSITIONS.forEach(([q, r]) => {
+        const ring = getRingNumber(q, r);
+        const flash = document.createElement('div');
+        flash.className = `tile-flash ring-${ring}`;
+        
+        // Position based on hex grid coordinates
+        const x = q * 60 * 0.866;
+        const y = (r + q/2) * 60;
+        flash.style.left = `${x + wrapper.offsetWidth/2}px`;
+        flash.style.top = `${y + wrapper.offsetHeight/2}px`;
+        
+        wrapper.appendChild(flash);
       });
-
-      // Award upgrade points
-      awardUpgradePoints(UPGRADE_POINT_REWARDS.clear.points);
-    };
-
-    // Execute all updates together
-    requestAnimationFrame(() => {
-      updateGameState();
       
-      // Visual and audio feedback after state updates
-      playGameSound('gridClear');
-      updateParticleEffect(1);
-    });
-
-  }, [
-    score,
-    upgradeState,
-    powerUps,
-    combo,
-    handleScoreChange,
-    playGameSound,
-    updateParticleEffect,
-    awardUpgradePoints,
-    addScorePopup
-  ]);
+      setTimeout(() => {
+        wrapper.classList.remove('grid-full');
+        const elements = wrapper.querySelectorAll('.hex-ripple, .tile-flash');
+        elements.forEach((el: Element) => el.remove());
+      }, 1200);
+    }
+  };
 
   // Modify the achievement handling code
   useEffect(() => {
@@ -2078,6 +2061,20 @@ const Game: React.FC<GameProps> = ({
   const handleContextMenu = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
   }, []);
+
+  // Add debug logging inside useEffect
+  useEffect(() => {
+    console.log('Grid validation:', {
+      validPositionsSet: new Set(VALID_POSITIONS.map(([q, r]) => `(${q},${r})`)),
+      tilesSet: new Set(placedTiles.map((t: PlacedTile) => `(${t.q},${t.r})`)),
+      missingTile: '(0,2)',
+      isInValidPositions: VALID_POSITIONS.some(([q, r]) => q === 0 && r === 2),
+      adjacentTiles: placedTiles.filter((t: PlacedTile) => 
+        (Math.abs(t.q) === 0 && Math.abs(t.r - 2) === 1) || 
+        (Math.abs(t.q - 0) === 1 && Math.abs(t.r - 2) <= 1)
+      ).map((t: PlacedTile) => `(${t.q},${t.r})`)
+    });
+  }, [placedTiles]);
 
   return (
     <div
