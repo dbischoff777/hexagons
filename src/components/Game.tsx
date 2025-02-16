@@ -1835,6 +1835,10 @@ const Game: React.FC<GameProps> = ({
     if (wrapper && !wrapper.classList.contains('grid-full')) {
       wrapper.classList.add('grid-full');
       
+      // Set theme colors as CSS variables
+      wrapper.style.setProperty('--theme-primary', theme.colors.primary);
+      wrapper.style.setProperty('--theme-accent', theme.colors.accent);
+      
       // Create ripple effects
       for (let i = 1; i <= 3; i++) {
         const ripple = document.createElement('div');
@@ -1842,24 +1846,12 @@ const Game: React.FC<GameProps> = ({
         wrapper.appendChild(ripple);
       }
       
-      // Create flash effects for each tile position
-      VALID_POSITIONS.forEach(([q, r]) => {
-        const ring = getRingNumber(q, r);
-        const flash = document.createElement('div');
-        flash.className = `tile-flash ring-${ring}`;
-        
-        // Position based on hex grid coordinates
-        const x = q * 60 * 0.866;
-        const y = (r + q/2) * 60;
-        flash.style.left = `${x + wrapper.offsetWidth/2}px`;
-        flash.style.top = `${y + wrapper.offsetHeight/2}px`;
-        
-        wrapper.appendChild(flash);
-      });
-      
+      // Clean up effects after animation
       setTimeout(() => {
         wrapper.classList.remove('grid-full');
-        const elements = wrapper.querySelectorAll('.hex-ripple, .tile-flash');
+        wrapper.style.removeProperty('--theme-primary');
+        wrapper.style.removeProperty('--theme-accent');
+        const elements = wrapper.querySelectorAll('.hex-ripple');
         elements.forEach((el: Element) => el.remove());
       }, 1200);
     }
