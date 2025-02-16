@@ -206,6 +206,7 @@
   width: 100% !important;
   height: 100% !important;
   object-fit: contain;
+  image-rendering: pixelated;
 }
 
 /* Animation classes */
@@ -805,6 +806,9 @@
   position: relative;
   width: 100%;
   height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .canvas-wrapper.grid-full {
@@ -838,7 +842,7 @@
   width: calc(min(120px, 12vw) * 0.866);
   height: min(120px, 12vw);
   background: transparent;
-  border: 2px solid var(--theme-accent, rgba(0, 255, 159, 0.8));
+  border: 6px solid var(--theme-accent, rgba(0, 0, 0, 0.8));
   clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
   opacity: 0;
 }
