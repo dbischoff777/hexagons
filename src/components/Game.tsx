@@ -2248,6 +2248,64 @@ const Game: React.FC<GameProps> = ({
     e.preventDefault();
   }, []);
 
+  // Modify the handleKeyPress function to include number key handling
+  const handleKeyPress = useCallback((event: KeyboardEvent) => {
+    // Handle rotation keys
+    if (selectedTileIndex !== null) {
+      if (event.key.toLowerCase() === 'q') {
+        // Counter-clockwise rotation
+        soundManager.playSound('tileRotate');
+        setNextTiles(prev => {
+          const newTiles = [...prev];
+          newTiles[selectedTileIndex] = {
+            ...newTiles[selectedTileIndex],
+            edges: rotateTileEdges(newTiles[selectedTileIndex].edges, true)
+          };
+          return newTiles;
+        });
+      } else if (event.key.toLowerCase() === 'e') {
+        // Clockwise rotation
+        soundManager.playSound('tileRotate');
+        setNextTiles(prev => {
+          const newTiles = [...prev];
+          newTiles[selectedTileIndex] = {
+            ...newTiles[selectedTileIndex],
+            edges: rotateTileEdges(newTiles[selectedTileIndex].edges)
+          };
+          return newTiles;
+        });
+      }
+    }
+
+    // Handle tile selection keys (1-3)
+    if (['1', '2', '3'].includes(event.key)) {
+      const index = parseInt(event.key) - 1;
+      if (index >= 0 && index < nextTiles.length) {
+        // Only select if the tile hasn't been placed yet
+        if (!nextTiles[index].isPlaced) {
+          soundManager.playSound('buttonClick');
+          setSelectedTileIndex(selectedTileIndex === index ? null : index);
+
+          // Handle tutorial progression if needed
+          if (tutorialState.active) {
+            const currentStep = TUTORIAL_STEPS[tutorialState.currentStep];
+            if (currentStep.requiresAction === 'select') {
+              progressTutorial();
+            }
+          }
+        }
+      }
+    }
+  }, [selectedTileIndex, soundManager, nextTiles, tutorialState, progressTutorial]);
+
+  // Add this effect to handle keyboard events
+  useEffect(() => {
+    window.addEventListener('keydown', handleKeyPress);
+    return () => {
+      window.removeEventListener('keydown', handleKeyPress);
+    };
+  }, [handleKeyPress]);
+
   return (
     <div
       className="game-container"

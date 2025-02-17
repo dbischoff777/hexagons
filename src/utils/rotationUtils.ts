@@ -12,8 +12,18 @@ export interface RotationState {
 }
 
 // Helper function to rotate tile edges
-export const rotateTileEdges = (edges: { color: string }[]) => {
-  return [...edges.slice(-1), ...edges.slice(0, -1)];
+export const rotateTileEdges = (edges: { color: string }[], counterClockwise: boolean = false) => {
+  const newEdges = [...edges];
+  if (counterClockwise) {
+    // Move first edge to end for counter-clockwise rotation
+    const firstEdge = newEdges.shift();
+    if (firstEdge) newEdges.push(firstEdge);
+  } else {
+    // Move last edge to start for clockwise rotation
+    const lastEdge = newEdges.pop();
+    if (lastEdge) newEdges.unshift(lastEdge);
+  }
+  return newEdges;
 };
 
 // Modified animation function with better performance
