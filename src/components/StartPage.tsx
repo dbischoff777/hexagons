@@ -3,7 +3,6 @@ import './StartPage.css'
 import Game from './Game'
 import { loadGameState, clearSavedGame } from '../utils/gameStateUtils'
 import StatisticsPage from './StatisticsPage'
-import ConfirmModal from './ConfirmModal'
 import AchievementsView from './AchievementsView'
 import UnlockablesMenu from './UnlockablesMenu'
 import { setTheme, getPlayerProgress, setCompanion } from '../utils/progressionUtils'
@@ -17,6 +16,7 @@ import PageTransition from './PageTransition'
 import { APP_VERSION } from '../constants/version'
 import styles from '../styles/bubbleText.module.css'
 import HexagonGrid from './HexagonGrid'
+import SpringModal from './SpringModal'
 
 interface StartPageProps {
   onStartGame: (withTimer: boolean, isDailyChallenge?: boolean) => void
@@ -372,20 +372,38 @@ const StartPage: React.FC<StartPageProps> = ({
       </div>
 
       {showConfirmModal && (
-        <ConfirmModal
-          message="Starting a new game will erase your saved progress. Continue?"
-          onConfirm={() => {
-            clearSavedGame()
-            if (pendingGameMode !== null) {
-              onStartGame(pendingGameMode)
-            }
-            setShowConfirmModal(false)
-          }}
-          onCancel={() => {
+        <SpringModal
+          isOpen={showConfirmModal}
+          onClose={() => {
             setShowConfirmModal(false)
             setPendingGameMode(null)
           }}
-        />
+          title="Start New Game?"
+          message="Starting a new game will erase your saved progress. Continue?"
+          variant="danger"
+        >
+          <button 
+            className="level-complete__button"
+            onClick={() => {
+              setShowConfirmModal(false)
+              setPendingGameMode(null)
+            }}
+          >
+            CANCEL
+          </button>
+          <button 
+            className="level-complete__button level-complete__button--danger"
+            onClick={() => {
+              clearSavedGame()
+              if (pendingGameMode !== null) {
+                onStartGame(pendingGameMode)
+              }
+              setShowConfirmModal(false)
+            }}
+          >
+            START NEW GAME
+          </button>
+        </SpringModal>
       )}
 
       {showAchievements && (

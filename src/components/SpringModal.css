@@ -1,0 +1,139 @@
+.spring-modal__overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  opacity: 0;
+  backdrop-filter: blur(4px);
+  transition: opacity 0.2s ease-out;
+}
+
+.spring-modal__overlay.active {
+  opacity: 1;
+}
+
+.spring-modal__overlay.exit {
+  opacity: 0;
+}
+
+.spring-modal__content {
+  background: rgba(26, 26, 46, 0.95);
+  padding: 2rem;
+  border-radius: 1rem;
+  width: 90%;
+  max-width: 500px;
+  position: relative;
+  border: 2px solid rgba(0, 255, 159, 0.3);
+  box-shadow: 
+    0 4px 20px rgba(0, 255, 159, 0.2),
+    0 0 30px rgba(0, 0, 0, 0.3);
+  transform: scale(0.9);
+  opacity: 0;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.spring-modal__content.active {
+  transform: scale(1);
+  opacity: 1;
+}
+
+.spring-modal__content.exit {
+  transform: scale(0.9);
+  opacity: 0;
+}
+
+.spring-modal__header {
+  margin-bottom: 1rem;
+}
+
+.spring-modal__title {
+  color: #00FF9F;
+  font-size: 1.5rem;
+  margin: 0;
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  text-shadow: 0 0 10px rgba(0, 255, 159, 0.5);
+}
+
+.spring-modal__message {
+  color: #fff;
+  text-align: center;
+  margin-bottom: 2rem;
+  font-size: 1.1rem;
+  opacity: 0.9;
+}
+
+.spring-modal__body {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+}
+
+/* Add animation for children */
+.spring-modal__content > * {
+  animation: modalContentFade 0.3s ease-out forwards;
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+.spring-modal__content > *:nth-child(2) {
+  animation-delay: 0.1s;
+}
+
+.spring-modal__content > *:nth-child(3) {
+  animation-delay: 0.2s;
+}
+
+@keyframes modalContentFade {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Add danger variant styles */
+.spring-modal__content.danger {
+  border-color: rgba(255, 17, 119, 0.3);
+  box-shadow: 
+    0 4px 20px rgba(255, 17, 119, 0.2),
+    0 0 30px rgba(0, 0, 0, 0.3);
+}
+
+.spring-modal__content.danger .spring-modal__title {
+  color: #FF1177;
+  text-shadow: 0 0 10px rgba(255, 17, 119, 0.5);
+}
+
+.spring-modal__content.danger .spring-modal__message {
+  color: #ff6b9d;
+}
+
+/* Add pulsing animation for danger variant */
+@keyframes dangerPulse {
+  0% {
+    border-color: rgba(255, 17, 119, 0.3);
+    box-shadow: 
+      0 4px 20px rgba(255, 17, 119, 0.2),
+      0 0 30px rgba(0, 0, 0, 0.3);
+  }
+  50% {
+    border-color: rgba(255, 17, 119, 0.5);
+    box-shadow: 
+      0 4px 25px rgba(255, 17, 119, 0.3),
+      0 0 35px rgba(0, 0, 0, 0.3);
+  }
+  100% {
+    border-color: rgba(255, 17, 119, 0.3);
+    box-shadow: 
+      0 4px 20px rgba(255, 17, 119, 0.2),
+      0 0 30px rgba(0, 0, 0, 0.3);
+  }
+}
+
+.spring-modal__content.danger {
+  animation: dangerPulse 2s infinite;
+} 

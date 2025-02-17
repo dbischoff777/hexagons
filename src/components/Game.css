@@ -915,3 +915,21 @@
     transform: translate(-50%, -50%) scale(2.5);
   }
 }
+
+.level-complete__button--danger {
+  background: rgba(255, 17, 119, 0.1);
+  border-color: #FF1177;
+  color: #FF1177;
+  box-shadow: 
+    0 0 10px rgba(255, 17, 119, 0.2),
+    inset 0 0 15px rgba(255, 17, 119, 0.1);
+  text-shadow: 0 0 8px #FF1177;
+}
+
+.level-complete__button--danger:hover {
+  background: rgba(255, 17, 119, 0.2);
+  border-color: #FF1177;
+  box-shadow: 
+    0 0 15px rgba(255, 17, 119, 0.3),
+    inset 0 0 20px rgba(255, 17, 119, 0.2);
+}

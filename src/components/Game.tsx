@@ -60,6 +60,7 @@ import { ScorePopupData } from '../types/scorePopup';
 import { createScorePopup } from '../utils/popupUtils';
 import { drawHexagonWithColoredEdges } from '../utils/hexagonRenderer'
 import { formatScore } from '../utils/formatNumbers';
+import SpringModal from './SpringModal'
 
 // Replace the DEBUG object at the top
 const DEBUG = {
@@ -2622,26 +2623,26 @@ const Game: React.FC<GameProps> = ({
         </div>
       )}
       {showExitPrompt && (
-        <div className="level-complete__overlay">
-          <div className="level-complete__modal">
-            <h2 className="level-complete__title">Exit Game?</h2>
-            <p className="level-complete__message">Are you sure you want to exit? Your progress will be lost.</p>
-            <div className="level-complete__buttons">
-              <button 
-                className="level-complete__button"
-                onClick={() => setShowExitPrompt(false)}
-              >
-                CONTINUE PLAYING
-              </button>
-              <button 
-                className="level-complete__button level-complete__button--primary"
-                onClick={confirmExit}
-              >
-                EXIT GAME
-              </button>
-            </div>
-          </div>
-        </div>
+        <SpringModal
+          isOpen={showExitPrompt}
+          onClose={() => setShowExitPrompt(false)}
+          title="Exit Game?"
+          message="Are you sure you want to exit? Your progress will be lost."
+          variant="danger"
+        >
+          <button 
+            className="level-complete__button"
+            onClick={() => setShowExitPrompt(false)}
+          >
+            CONTINUE PLAYING
+          </button>
+          <button 
+            className="level-complete__button level-complete__button--danger"
+            onClick={confirmExit}
+          >
+            EXIT GAME
+          </button>
+        </SpringModal>
       )}
     </div>
   )
