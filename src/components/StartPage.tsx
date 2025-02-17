@@ -15,6 +15,7 @@ import CustomizeBuddyMenu from './CustomizeBuddyMenu'
 import SettingsModal from './SettingsModal'
 import PageTransition from './PageTransition'
 import { APP_VERSION } from '../constants/version'
+import styles from '../styles/bubbleText.module.css'
 
 interface StartPageProps {
   onStartGame: (withTimer: boolean, isDailyChallenge?: boolean) => void
@@ -226,7 +227,13 @@ const StartPage: React.FC<StartPageProps> = ({
   return (
     <div className="start-page">
       <div className="start-container">
-        <h1 className="game-title">HEXMATCH</h1>
+        <h1 className="game-title">
+          {"HEXMATCH".split("").map((letter, idx) => (
+            <span key={idx} className={styles.hoverText}>
+              {letter}
+            </span>
+          ))}
+        </h1>
         <p className="welcome-text">Match the edges, clear the grid, beat the clock!</p>
 
         <div className="game-menu-container">
