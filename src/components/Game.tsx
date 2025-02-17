@@ -351,6 +351,9 @@ const Game: React.FC<GameProps> = ({
   // Add these calculations based on the canvas size
   const tileSize = 40;
 
+  // Add this state to track the current grid position
+  const [currentGridPosition, setCurrentGridPosition] = useState<{ q: number, r: number }>({ q: 0, r: 0 });
+
   const awardUpgradePoints = useCallback((points: number) => {
     setUpgradeState(prev => ({
       ...prev,
@@ -2305,6 +2308,138 @@ const Game: React.FC<GameProps> = ({
       window.removeEventListener('keydown', handleKeyPress);
     };
   }, [handleKeyPress]);
+
+  // Helper function to find next valid position in the grid
+  const getNextGridPosition = useCallback((currentQ: number, currentR: number, direction: 'up' | 'down' | 'left' | 'right', rotation: number) => {
+    const isRotated = Math.abs(rotation % 360) >= 90 && Math.abs(rotation % 360) < 270;
+
+    // Keep the same direction
+    let effectiveDirection = direction;
+    if (isRotated) {
+      switch (direction) {
+        case 'up': effectiveDirection = 'up'; break;
+        case 'down': effectiveDirection = 'down'; break;
+        case 'left': effectiveDirection = 'left'; break;
+        case 'right': effectiveDirection = 'right'; break;
+      }
+    }
+
+    // Calculate next position based on effective direction
+    let nextQ = currentQ;
+    let nextR = currentR;
+
+    switch (effectiveDirection) {
+      case 'right':
+        nextQ += 1;
+        break;
+      case 'left':
+        nextQ -= 1;
+        break;
+      case 'up':
+        nextR -= 1;
+        break;
+      case 'down':
+        nextR += 1;
+        break;
+    }
+
+    // Calculate s-coordinate
+    const nextS = -nextQ - nextR;
+
+    // Validate position using the same bounds check as rendering
+    if (Math.max(Math.abs(nextQ), Math.abs(nextR), Math.abs(nextS)) <= Math.floor(cols/2)) {
+      // Check if position is occupied, considering rotation
+      const checkQ = isRotated ? -nextQ : nextQ;
+      const checkR = isRotated ? -nextR : nextR;
+      
+      const isOccupied = placedTiles.some(tile => 
+        tile.q === checkQ && tile.r === checkR
+      );
+
+      if (!isOccupied) {
+        return { q: nextQ, r: nextR };
+      }
+    }
+
+    // Return original position if new position is invalid
+    return { q: currentQ, r: currentR };
+  }, [cols, placedTiles]);
+
+  // Keep the moveTile function simple
+  const moveTile = useCallback((direction: 'up' | 'down' | 'left' | 'right') => {
+    if (selectedTileIndex === null) return;
+
+    const { q: nextQ, r: nextR } = getNextGridPosition(
+      currentGridPosition.q,
+      currentGridPosition.r,
+      direction,
+      rotationState.boardRotation
+    );
+
+    if (nextQ !== currentGridPosition.q || nextR !== currentGridPosition.r) {
+      setCurrentGridPosition({ q: nextQ, r: nextR });
+      const { x, y } = hexToPixel(nextQ, nextR, centerX, centerY, tileSize);
+      setMousePosition({ x, y });
+    }
+  }, [
+    selectedTileIndex,
+    currentGridPosition,
+    rotationState.boardRotation,
+    centerX,
+    centerY,
+    tileSize,
+    getNextGridPosition
+  ]);
+
+  // Reset grid position when selecting a new tile
+  useEffect(() => {
+    if (selectedTileIndex !== null) {
+      setCurrentGridPosition({ q: 0, r: 0 });
+      const { x, y } = hexToPixel(0, 0, centerX, centerY, tileSize);
+      setMousePosition({ x, y });
+    }
+  }, [selectedTileIndex, centerX, centerY, tileSize]);
+
+  // Add keyboard event listener
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (isGameOver) return;
+
+      switch (event.key) {
+        case 'ArrowUp':
+          event.preventDefault();
+          moveTile('up');
+          break;
+        case 'ArrowDown':
+          event.preventDefault();
+          moveTile('down');
+          break;
+        case 'ArrowLeft':
+          event.preventDefault();
+          moveTile('left');
+          break;
+        case 'ArrowRight':
+          event.preventDefault();
+          moveTile('right');
+          break;
+        case ' ': // Space bar
+        case 'Enter':
+          event.preventDefault();
+          if (selectedTileIndex !== null && mousePosition) {
+            // Simulate click at current position
+            const clickEvent = new MouseEvent('click', {
+              clientX: mousePosition.x,
+              clientY: mousePosition.y
+            });
+            canvasRef.current?.dispatchEvent(clickEvent);
+          }
+          break;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isGameOver, moveTile, selectedTileIndex, mousePosition]);
 
   return (
     <div
