@@ -61,6 +61,7 @@ import { createScorePopup } from '../utils/popupUtils';
 import { drawHexagonWithColoredEdges } from '../utils/hexagonRenderer'
 import { formatScore } from '../utils/formatNumbers';
 import SpringModal from './SpringModal'
+import { handleKeyboardPlacement } from '../utils/keyBindingsUtils'
 
 // Replace the DEBUG object at the top
 const DEBUG = {
@@ -589,11 +590,50 @@ const Game: React.FC<GameProps> = ({
     };
 
     // Then modify the handleClick function to use this helper
-    const handleClick = (event: MouseEvent) => {
+    const handleClick = (event: MouseEvent | KeyboardEvent) => {
       const canvas = canvasRef.current;
       if (!canvas) return;
 
-      const gridCalc = calculateGridCoordinates(event, canvas);
+      // Add check for spacebar/keyboard placement
+      const isKeyboardPlacement = event instanceof KeyboardEvent && 
+        (event.key === ' ' || event.key === 'Enter') &&
+        selectedTileIndex !== null && 
+        currentGridPosition;
+
+      // For keyboard placement, use current grid position
+      if (isKeyboardPlacement) {
+        const { q, r } = currentGridPosition;
+        const isValidPosition = Math.max(Math.abs(q), Math.abs(r), Math.abs(-q-r)) <= Math.floor(cols/2);
+        const isOccupied = placedTiles.some(tile => tile.q === q && tile.r === r);
+
+        if (isValidPosition && !isOccupied && selectedTileIndex !== null) {
+          // Create new tile at current grid position
+          const selectedTile = nextTiles[selectedTileIndex];
+          setPlacedTiles(prevTiles => [...prevTiles, {
+            ...selectedTile,
+            q,
+            r,
+            isPlaced: true,
+            type: selectedTile.type || 'normal',
+            value: 0
+          }]);
+
+          // Update next tiles
+          const newTiles = [...nextTiles];
+          newTiles[selectedTileIndex] = createTileWithRandomEdges(0, 0);
+          setNextTiles(newTiles);
+          setSelectedTileIndex(null);
+
+          if (soundEnabled) {
+            soundManager.playSound('tilePlaced');
+          }
+        }
+        return;
+      }
+
+      // Handle mouse placement (existing click logic)
+      const mouseEvent = event as MouseEvent;
+      const gridCalc = calculateGridCoordinates(mouseEvent, canvas);
 
       // Use the next-tile canvas dimensions
       const tileRadius = 40;
@@ -987,7 +1027,7 @@ const Game: React.FC<GameProps> = ({
             })))
           }
 
-          // Inside handleClick function, where we handle successful tile placement
+          // Inside handleClick where we handle successful tile placement
           if (isValidPosition && !isOccupied) {
             setPreviousState({
               placedTiles,
@@ -1169,12 +1209,12 @@ const Game: React.FC<GameProps> = ({
       canvas.removeEventListener('contextmenu', handleContextMenu)
     }
   }, [
-    placedTiles, 
-    nextTiles, 
-    selectedTileIndex, 
+      placedTiles,
+      nextTiles,
+      selectedTileIndex,
     mousePosition, 
-    isGameOver,
-    rotationState.boardRotation,
+      isGameOver,
+      rotationState.boardRotation,
     settings
   ]) // Removed dependencies that change too frequently
 
@@ -1414,8 +1454,8 @@ const Game: React.FC<GameProps> = ({
         startTime: loadGameState()?.startTime ?? Date.now(),
         timedMode,
         boardRotation: rotationState.boardRotation === 0 || rotationState.boardRotation === 180 ? rotationState.boardRotation : 0, // Ensure only valid rotations are saved
-        powerUps,
-        combo,
+      powerUps,
+      combo,
         audioSettings: {
           musicEnabled,
           soundEnabled
@@ -1498,7 +1538,7 @@ const Game: React.FC<GameProps> = ({
   const checkAchievements = ({
     tilesPlaced,
     comboCount,
-    score,
+      score,
     clearBonus
   }: {
     tilesPlaced: number;
@@ -2114,13 +2154,13 @@ const Game: React.FC<GameProps> = ({
       }
     }
   }, [
-    isLevelMode,
+      isLevelMode,
     isGameOver,
     score,
     currentBlock,
     currentLevel,
-    targetScore,
-    isLevelComplete,
+      targetScore,
+      isLevelComplete,
     handleGameAchievement,
     onLevelComplete
   ]);
@@ -2281,20 +2321,18 @@ const Game: React.FC<GameProps> = ({
     }
 
     // Handle tile selection keys (1-3)
-    if (['1', '2', '3'].includes(event.key)) {
-      const index = parseInt(event.key) - 1;
-      if (index >= 0 && index < nextTiles.length) {
-        // Only select if the tile hasn't been placed yet
-        if (!nextTiles[index].isPlaced) {
-          soundManager.playSound('buttonClick');
-          setSelectedTileIndex(selectedTileIndex === index ? null : index);
+    const tileIndex = parseInt(event.key) - 1;
+    if (tileIndex >= 0 && tileIndex < nextTiles.length) {
+      // Only select if the tile hasn't been placed yet
+      if (!nextTiles[tileIndex].isPlaced) {
+        soundManager.playSound('buttonClick');
+        setSelectedTileIndex(selectedTileIndex === tileIndex ? null : tileIndex);
 
-          // Handle tutorial progression if needed
-          if (tutorialState.active) {
-            const currentStep = TUTORIAL_STEPS[tutorialState.currentStep];
-            if (currentStep.requiresAction === 'select') {
-              progressTutorial();
-            }
+        // Handle tutorial progression if needed
+        if (tutorialState.active) {
+          const currentStep = TUTORIAL_STEPS[tutorialState.currentStep];
+          if (currentStep.requiresAction === 'select') {
+            progressTutorial();
           }
         }
       }
@@ -2400,7 +2438,7 @@ const Game: React.FC<GameProps> = ({
     }
   }, [selectedTileIndex, centerX, centerY, tileSize]);
 
-  // Add keyboard event listener
+  // Modify the handleKeyDown function
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (isGameOver) return;
@@ -2425,13 +2463,43 @@ const Game: React.FC<GameProps> = ({
         case ' ': // Space bar
         case 'Enter':
           event.preventDefault();
-          if (selectedTileIndex !== null && mousePosition) {
-            // Simulate click at current position
-            const clickEvent = new MouseEvent('click', {
-              clientX: mousePosition.x,
-              clientY: mousePosition.y
+          if (selectedTileIndex !== null) {
+            handleKeyboardPlacement({
+              currentGridPosition,
+              selectedTileIndex,
+              placedTiles,
+              nextTiles,
+              cols,
+              soundEnabled,
+              powerUps,
+              combo,
+              upgradeState,
+              centerX,
+              centerY,
+              boardRotation: rotationState.boardRotation,
+              settings,
+              onTilesUpdate: (updatedTiles) => {
+                setPlacedTiles(updatedTiles);
+              },
+              onPlacement: (newTile) => {
+                // Generate new tile for the used slot
+                const newTiles = [...nextTiles];
+                newTiles[selectedTileIndex] = createTileWithRandomEdges(0, 0);
+                setNextTiles(newTiles);
+                setSelectedTileIndex(null);
+                // Handle matches, combos, and other effects
+                handleTilePlacement(newTile, placedTiles);
+              },
+              onScoreUpdate: (newScore) => {
+                handleScoreChange(score + newScore);
+              },
+              onComboUpdate: (newComboState) => {
+                setCombo(newComboState);
+              },
+              addScorePopup: (popupData) => {
+                addScorePopup(popupData);
+              }
             });
-            canvasRef.current?.dispatchEvent(clickEvent);
           }
           break;
       }
@@ -2439,7 +2507,66 @@ const Game: React.FC<GameProps> = ({
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isGameOver, moveTile, selectedTileIndex, mousePosition]);
+  }, [
+    isGameOver,
+    moveTile,
+    currentGridPosition,
+    selectedTileIndex,
+    placedTiles,
+    nextTiles,
+    cols,
+    settings,
+    soundEnabled,
+    powerUps,
+    combo,
+    upgradeState,
+    centerX,
+    centerY,
+    handleScoreChange,
+    score,
+    addScorePopup,
+    rotationState.boardRotation
+  ]);
+
+  // Add a helper function to handle tile placement effects
+  const handleTilePlacement = (newTile: PlacedTile, updatedTiles: PlacedTile[]) => {
+    // Count matching edges
+    const adjacentTiles = getAdjacentTiles(newTile, updatedTiles);
+    let matchCount = 0;
+    
+    // Check each edge for matches
+    newTile.edges.forEach((edge: { color: string }, index: number) => {
+      const adjacentTile = adjacentTiles.find((t: PlacedTile) => 
+        getAdjacentDirection(newTile.q, newTile.r, t.q, t.r) === index
+      );
+      
+      if (adjacentTile) {
+        const adjacentEdgeIndex = (getAdjacentDirection(adjacentTile.q, adjacentTile.r, newTile.q, newTile.r) + 3) % 6;
+        if (edge.color === adjacentTile.edges[adjacentEdgeIndex].color) {
+          matchCount++;
+        }
+      }
+    });
+
+    if (matchCount > 0) {
+      // Handle matches, scoring, and effects
+      handleMatches(matchCount);
+      
+      // Add match animation
+      addTileAnimation(newTile.q, newTile.r, 'match');
+    }
+
+    // Check for grid full condition
+    if (isGridFull(updatedTiles, cols)) {
+      handleGridClear();
+    }
+
+    // Update tutorial state if needed
+    if (tutorialState.active) {
+      setTutorialState(prev => ({ ...prev, hasPlaced: true }));
+      progressTutorial();
+    }
+  };
 
   return (
     <div
