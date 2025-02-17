@@ -12,7 +12,12 @@ export const DEFAULT_KEY_BINDINGS: KeyBindings = {
   rotateCounterClockwise: 'q',
   selectTile1: '1',
   selectTile2: '2',
-  selectTile3: '3'
+  selectTile3: '3',
+  placeTile: ' ',
+  moveUp: 'arrowup',
+  moveDown: 'arrowdown',
+  moveLeft: 'arrowleft',
+  moveRight: 'arrowright'
 };
 
 const KEY_BINDINGS_STORAGE_KEY = 'hexagons-key-bindings';

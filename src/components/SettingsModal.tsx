@@ -21,7 +21,12 @@ const DEFAULT_KEY_BINDINGS: KeyBindings = {
   rotateCounterClockwise: 'q',
   selectTile1: '1',
   selectTile2: '2',
-  selectTile3: '3'
+  selectTile3: '3',
+  placeTile: ' ',
+  moveUp: 'arrowup',
+  moveDown: 'arrowdown',
+  moveLeft: 'arrowleft',
+  moveRight: 'arrowright'
 };
 
 const SettingsModal: React.FC<SettingsModalProps> = ({
@@ -33,12 +38,15 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
   onMusicToggle,
   onSoundToggle,
   onRotationToggle,
-  keyBindings = DEFAULT_KEY_BINDINGS,
+  keyBindings: providedBindings,
   onKeyBindingChange
 }) => {
   const { settings, updateSettings } = useAccessibility();
 
   if (!isOpen) return null;
+
+  // Merge provided bindings with defaults
+  const keyBindings = { ...DEFAULT_KEY_BINDINGS, ...providedBindings };
 
   return (
     <div className="settings-modal-overlay" onClick={onClose}>
@@ -115,6 +123,74 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
             <h3>Key Bindings</h3>
             <div className="settings-section">
               <div className="setting-item">
+                <label>Move Up</label>
+                <button 
+                  className="setting-button key-binding"
+                  onClick={() => {
+                    const handler = (e: KeyboardEvent) => {
+                      e.preventDefault();
+                      onKeyBindingChange({ moveUp: e.key.toLowerCase() });
+                      window.removeEventListener('keydown', handler);
+                    };
+                    window.addEventListener('keydown', handler);
+                  }}
+                >
+                  {keyBindings.moveUp === 'arrowup' ? '↑' : keyBindings.moveUp.toUpperCase()}
+                </button>
+              </div>
+              
+              <div className="setting-item">
+                <label>Move Down</label>
+                <button 
+                  className="setting-button key-binding"
+                  onClick={() => {
+                    const handler = (e: KeyboardEvent) => {
+                      e.preventDefault();
+                      onKeyBindingChange({ moveDown: e.key.toLowerCase() });
+                      window.removeEventListener('keydown', handler);
+                    };
+                    window.addEventListener('keydown', handler);
+                  }}
+                >
+                  {keyBindings.moveDown === 'arrowdown' ? '↓' : keyBindings.moveDown.toUpperCase()}
+                </button>
+              </div>
+              
+              <div className="setting-item">
+                <label>Move Left</label>
+                <button 
+                  className="setting-button key-binding"
+                  onClick={() => {
+                    const handler = (e: KeyboardEvent) => {
+                      e.preventDefault();
+                      onKeyBindingChange({ moveLeft: e.key.toLowerCase() });
+                      window.removeEventListener('keydown', handler);
+                    };
+                    window.addEventListener('keydown', handler);
+                  }}
+                >
+                  {keyBindings.moveLeft === 'arrowleft' ? '←' : keyBindings.moveLeft.toUpperCase()}
+                </button>
+              </div>
+              
+              <div className="setting-item">
+                <label>Move Right</label>
+                <button 
+                  className="setting-button key-binding"
+                  onClick={() => {
+                    const handler = (e: KeyboardEvent) => {
+                      e.preventDefault();
+                      onKeyBindingChange({ moveRight: e.key.toLowerCase() });
+                      window.removeEventListener('keydown', handler);
+                    };
+                    window.addEventListener('keydown', handler);
+                  }}
+                >
+                  {keyBindings.moveRight === 'arrowright' ? '→' : keyBindings.moveRight.toUpperCase()}
+                </button>
+              </div>
+
+              <div className="setting-item">
                 <label>Rotate Clockwise</label>
                 <button 
                   className="setting-button key-binding"
@@ -164,6 +240,22 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                   </button>
                 </div>
               ))}
+              <div className="setting-item">
+                <label>Place Tile</label>
+                <button 
+                  className="setting-button key-binding"
+                  onClick={() => {
+                    const handler = (e: KeyboardEvent) => {
+                      e.preventDefault();
+                      onKeyBindingChange({ placeTile: e.key.toLowerCase() });
+                      window.removeEventListener('keydown', handler);
+                    };
+                    window.addEventListener('keydown', handler);
+                  }}
+                >
+                  {(keyBindings?.placeTile || ' ') === ' ' ? 'SPACE' : (keyBindings?.placeTile || ' ').toUpperCase()}
+                </button>
+              </div>
             </div>
           </div>
         </div>

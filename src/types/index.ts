@@ -94,6 +94,11 @@ export interface KeyBindings {
   selectTile1: string;
   selectTile2: string;
   selectTile3: string;
+  placeTile: string;
+  moveUp: string;
+  moveDown: string;
+  moveLeft: string;
+  moveRight: string;
 }
 
 export interface GameSettings {

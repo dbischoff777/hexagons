@@ -61,7 +61,7 @@ import { createScorePopup } from '../utils/popupUtils';
 import { drawHexagonWithColoredEdges } from '../utils/hexagonRenderer'
 import { formatScore } from '../utils/formatNumbers';
 import SpringModal from './SpringModal'
-import { handleKeyboardPlacement } from '../utils/keyBindingsUtils'
+import { handleKeyboardPlacement, loadKeyBindings } from '../utils/keyBindingsUtils'
 
 // Replace the DEBUG object at the top
 const DEBUG = {
@@ -2443,25 +2443,27 @@ const Game: React.FC<GameProps> = ({
     const handleKeyDown = (event: KeyboardEvent) => {
       if (isGameOver) return;
 
-      switch (event.key) {
-        case 'ArrowUp':
+      // Load current key bindings
+      const currentBindings = loadKeyBindings();
+
+      switch (event.key.toLowerCase()) {
+        case currentBindings.moveUp:
           event.preventDefault();
           moveTile('up');
           break;
-        case 'ArrowDown':
+        case currentBindings.moveDown:
           event.preventDefault();
           moveTile('down');
           break;
-        case 'ArrowLeft':
+        case currentBindings.moveLeft:
           event.preventDefault();
           moveTile('left');
           break;
-        case 'ArrowRight':
+        case currentBindings.moveRight:
           event.preventDefault();
           moveTile('right');
           break;
-        case ' ': // Space bar
-        case 'Enter':
+        case currentBindings.placeTile:
           event.preventDefault();
           if (selectedTileIndex !== null) {
             handleKeyboardPlacement({
