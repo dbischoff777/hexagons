@@ -8,7 +8,7 @@ export const ACHIEVEMENTS: Omit<Achievement, 'currentProgress' | 'achieved' | 't
     description: 'Place your first 10 tiles',
     icon: '🎯',
     type: 'tiles',
-    requirement: 10,
+    requirement: 1,
   },
   {
     id: 'tiles_intermediate',

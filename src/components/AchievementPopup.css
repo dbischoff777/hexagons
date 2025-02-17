@@ -1,14 +1,13 @@
 .achievement-popup {
-  position: fixed;
-  bottom: -100px;
+  position: absolute;
+  bottom: 0;
   left: 50%;
-  transform: translateX(-50%);
+  transform: translate(-50%, 100%);
   background: rgba(26, 26, 46, 0.95);
   border: 2px solid #00FF9F;
-  border-radius: 8px;
-  padding: 20px;
-  min-width: 300px;
-  max-width: 400px;
+  border-radius: min(8px, 1vh);
+  padding: min(20px, 2vh);
+  width: min(400px, 90%);
   box-shadow: 0 0 20px rgba(0, 255, 159, 0.3);
   transition: all 0.3s ease-in-out;
   z-index: 1000;
@@ -19,63 +18,63 @@
 .achievement-popup-header {
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin-bottom: 12px;
+  gap: min(12px, 1.5vh);
+  margin-bottom: min(12px, 1.5vh);
 }
 
 .achievement-popup-icon {
-  font-size: 24px;
+  font-size: min(24px, 4vw);
   animation: bounce 0.5s ease-out;
 }
 
 .achievement-popup-title {
   color: #00FF9F;
   margin: 0;
-  font-size: 1.2em;
+  font-size: min(1.2em, 3.5vw);
   text-shadow: 0 0 10px rgba(0, 255, 159, 0.5);
 }
 
 .achievement-popup-desc {
   color: white;
-  margin: 8px 0;
-  font-size: 1.1em;
+  margin: min(8px, 1vh) 0;
+  font-size: min(1.1em, 3vw);
   font-weight: bold;
 }
 
 .achievement-popup-subdesc {
   color: #cccccc;
-  margin: 4px 0;
-  font-size: 0.9em;
+  margin: min(4px, 0.5vh) 0;
+  font-size: min(0.9em, 2.5vw);
   line-height: 1.4;
 }
 
 .achievement-popup.visible {
-  bottom: 20px;
+  transform: translate(-50%, -20%);
   opacity: 1;
   pointer-events: auto;
-  animation: slideUp 0.3s ease-out forwards, 
-             fadeOut 0.3s ease-in forwards 2.7s;
+  animation: achievementSlideUp 0.3s ease-out forwards, 
+             achievementFadeOut 0.3s ease-in forwards 2.7s;
 }
 
-@keyframes slideUp {
+@keyframes achievementSlideUp {
   from {
-    bottom: -100px;
+    transform: translate(-50%, 100%);
     opacity: 0;
   }
   to {
-    bottom: 20px;
+    transform: translate(-50%, -20%);
     opacity: 1;
   }
 }
 
-@keyframes fadeOut {
+@keyframes achievementFadeOut {
   from {
+    transform: translate(-50%, -20%);
     opacity: 1;
-    bottom: 20px;
   }
   to {
+    transform: translate(-50%, 100%);
     opacity: 0;
-    bottom: -100px;
   }
 }
 
