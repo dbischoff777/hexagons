@@ -11,7 +11,6 @@ import soundManager from '../utils/soundManager'
 import FrenchBulldog from './FrenchBulldog'
 import bulldogConfig from '../config/bulldogConfig.json'
 import CustomizeBuddyMenu from './CustomizeBuddyMenu'
-import SettingsModal from './SettingsModal'
 import PageTransition from './PageTransition'
 import { APP_VERSION } from '../constants/version'
 import styles from '../styles/bubbleText.module.css'
@@ -26,6 +25,7 @@ interface StartPageProps {
   soundEnabled: boolean
   rotationEnabled: boolean
   onRotationToggle: (enabled: boolean) => void
+  onOpenSettings: () => void
 }
 
 const PUPPY_PHRASES = [
@@ -95,12 +95,10 @@ const BUTTON_HOVER_PHRASES = {
 
 const StartPage: React.FC<StartPageProps> = ({
   onStartGame,
-  onMusicToggle,
-  onSoundToggle,
   musicEnabled,
   soundEnabled,
   rotationEnabled,
-  onRotationToggle
+  onOpenSettings
 }) => {
   const [showGameModes, setShowGameModes] = useState(false)
   const [showTutorial, setShowTutorial] = useState(false)
@@ -112,7 +110,6 @@ const StartPage: React.FC<StartPageProps> = ({
   const [showUnlockables, setShowUnlockables] = useState(false)
   const [showLevelRoadmap, setShowLevelRoadmap] = useState(false)
   const [showCustomize, setShowCustomize] = useState(false)
-  const [showSettings, setShowSettings] = useState(false)
   const playerProgress = getPlayerProgress()
   const [puppyPhrase, setPuppyPhrase] = useState(() => 
     PUPPY_PHRASES[Math.floor(Math.random() * PUPPY_PHRASES.length)]
@@ -302,7 +299,7 @@ const StartPage: React.FC<StartPageProps> = ({
                 </div>
                 <button 
                   className="settings-button-fixed"
-                  onClick={() => setShowSettings(true)}
+                  onClick={onOpenSettings}
                   onMouseEnter={() => handleButtonHover('settings')}
                 >
                   ⚙️ Settings
@@ -461,17 +458,6 @@ const StartPage: React.FC<StartPageProps> = ({
           </div>
         </div>
       )}
-
-      <SettingsModal
-        isOpen={showSettings}
-        onClose={() => setShowSettings(false)}
-        musicEnabled={musicEnabled}
-        soundEnabled={soundEnabled}
-        rotationEnabled={rotationEnabled}
-        onMusicToggle={onMusicToggle}
-        onSoundToggle={onSoundToggle}
-        onRotationToggle={onRotationToggle}
-      />
 
       <div className="version-number">
         {APP_VERSION}

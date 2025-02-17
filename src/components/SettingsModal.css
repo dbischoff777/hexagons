@@ -10,19 +10,25 @@
   align-items: center;
   z-index: 1000;
   backdrop-filter: blur(5px);
+  padding: clamp(10px, 2vh, 20px);
 }
 
 .settings-modal {
   background: linear-gradient(165deg, #1a1a2e, #16213e);
   border: 2px solid #00ff9f;
   border-radius: 15px;
-  padding: clamp(1.5rem, 3vh, 2.5rem);
+  padding: clamp(1rem, 2vh, 2rem);
   width: min(90vw, 800px);
   max-width: 800px;
+  max-height: 90vh;
+  overflow-y: auto;
   box-shadow: 
     0 0 30px rgba(0, 255, 159, 0.2),
     0 0 60px rgba(0, 0, 0, 0.4);
   animation: modalAppear 0.3s ease-out;
+  
+  scrollbar-width: thin;
+  scrollbar-color: #00ff9f #1a1a2e;
 }
 
 @keyframes modalAppear {
@@ -39,8 +45,8 @@
 .settings-modal h2 {
   color: #00ff9f;
   text-align: center;
-  margin-bottom: clamp(1.5rem, 3vh, 2.5rem);
-  font-size: clamp(1.4rem, 2.5vw, 1.8rem);
+  margin-bottom: clamp(1rem, 2vh, 2rem);
+  font-size: clamp(1.2rem, 4vw, 1.8rem);
   text-transform: uppercase;
   letter-spacing: 3px;
   text-shadow: 
@@ -73,14 +79,14 @@
 .settings-section {
   display: flex;
   flex-wrap: wrap;
-  gap: 1rem;
+  gap: clamp(0.5rem, 1vh, 1rem);
   margin-top: 0.5rem;
 }
 
 .settings-modal h3 {
   color: #00ff9f;
-  margin: 2rem 0 1rem;
-  font-size: 1.3rem;
+  margin: clamp(1rem, 2vh, 2rem) 0 clamp(0.5rem, 1vh, 1rem);
+  font-size: clamp(1rem, 3vw, 1.3rem);
   text-transform: uppercase;
   letter-spacing: 2px;
   padding-bottom: 0.5rem;
@@ -107,11 +113,11 @@
 
 .setting-item {
   flex: 1;
-  min-width: 250px;
+  min-width: min(250px, 90%);
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: clamp(0.8rem, 1.5vh, 1.2rem);
+  padding: clamp(0.5rem, 1vh, 1rem);
   background: rgba(0, 0, 0, 0.4);
   border-radius: 12px;
   border: 1px solid rgba(0, 255, 159, 0.15);
@@ -159,12 +165,12 @@
   background: linear-gradient(45deg, #00ff9f22, #00ffff22);
   border: 2px solid #00ff9f;
   color: #00ff9f;
-  padding: 0.7rem 1.3rem;
+  padding: clamp(0.5rem, 1vh, 0.7rem) clamp(0.8rem, 2vw, 1.3rem);
   border-radius: 8px;
   cursor: pointer;
-  font-size: 1rem;
+  font-size: clamp(0.9rem, 2.5vw, 1rem);
   transition: all 0.3s ease;
-  min-width: 100px;
+  min-width: clamp(80px, 20vw, 100px);
   text-align: center;
   position: relative;
   overflow: hidden;
@@ -204,6 +210,19 @@
   background: linear-gradient(45deg, #00ff9f66, #00ffff66);
 }
 
+.setting-button.key-binding {
+  min-width: 60px;
+  background: rgba(0, 255, 159, 0.1);
+}
+
+.setting-button.key-binding:hover {
+  background: rgba(0, 255, 159, 0.2);
+}
+
+.setting-button.key-binding:active {
+  background: rgba(0, 255, 159, 0.3);
+}
+
 .close-button {
   margin-top: 1rem;
   width: 100%;
@@ -223,4 +242,42 @@
   background: linear-gradient(45deg, #00ff9f66, #00ffff66);
   transform: scale(1.02);
   box-shadow: 0 0 15px rgba(0, 255, 159, 0.3);
+}
+
+.settings-group > div:not(:first-child) {
+  margin-top: clamp(1rem, 3vh, 2rem);
+}
+
+@media (max-height: 500px) {
+  .settings-modal {
+    margin: 10px 0;
+    max-height: calc(100vh - 20px);
+  }
+  
+  .settings-group {
+    gap: 0.5rem;
+  }
+  
+  .setting-item {
+    padding: 0.5rem;
+  }
+}
+
+/* Custom scrollbar for Webkit browsers */
+.settings-modal::-webkit-scrollbar {
+  width: 8px;
+}
+
+.settings-modal::-webkit-scrollbar-track {
+  background: #1a1a2e;
+  border-radius: 4px;
+}
+
+.settings-modal::-webkit-scrollbar-thumb {
+  background: #00ff9f44;
+  border-radius: 4px;
+}
+
+.settings-modal::-webkit-scrollbar-thumb:hover {
+  background: #00ff9f88;
 } 

@@ -1,6 +1,7 @@
 import React from 'react';
 import { useAccessibility } from '../contexts/AccessibilityContext';
 import './SettingsModal.css';
+import { KeyBindings } from '../types/index';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -11,7 +12,17 @@ interface SettingsModalProps {
   onMusicToggle: (enabled: boolean) => void;
   onSoundToggle: (enabled: boolean) => void;
   onRotationToggle: (enabled: boolean) => void;
+  keyBindings: KeyBindings;
+  onKeyBindingChange: (binding: Partial<KeyBindings>) => void;
 }
+
+const DEFAULT_KEY_BINDINGS: KeyBindings = {
+  rotateClockwise: 'e',
+  rotateCounterClockwise: 'q',
+  selectTile1: '1',
+  selectTile2: '2',
+  selectTile3: '3'
+};
 
 const SettingsModal: React.FC<SettingsModalProps> = ({
   isOpen,
@@ -21,7 +32,9 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
   rotationEnabled,
   onMusicToggle,
   onSoundToggle,
-  onRotationToggle
+  onRotationToggle,
+  keyBindings = DEFAULT_KEY_BINDINGS,
+  onKeyBindingChange
 }) => {
   const { settings, updateSettings } = useAccessibility();
 
@@ -82,7 +95,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                   className={`setting-button ${settings.isColorBlind ? 'active' : ''}`}
                   onClick={() => updateSettings({ isColorBlind: !settings.isColorBlind })}
                 >
-                  {settings.isColorBlind ? '��️ ON' : '👁️ OFF'}
+                  {settings.isColorBlind ? '👁️ ON' : '👁️ OFF'}
                 </button>
               </div>
 
@@ -95,6 +108,62 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                   {settings.showEdgeNumbers ? '🔢 ON' : '🔢 OFF'}
                 </button>
               </div>
+            </div>
+          </div>
+
+          <div>
+            <h3>Key Bindings</h3>
+            <div className="settings-section">
+              <div className="setting-item">
+                <label>Rotate Clockwise</label>
+                <button 
+                  className="setting-button key-binding"
+                  onClick={() => {
+                    const handler = (e: KeyboardEvent) => {
+                      e.preventDefault();
+                      onKeyBindingChange({ rotateClockwise: e.key.toLowerCase() });
+                      window.removeEventListener('keydown', handler);
+                    };
+                    window.addEventListener('keydown', handler);
+                  }}
+                >
+                  {keyBindings.rotateClockwise.toUpperCase()}
+                </button>
+              </div>
+              <div className="setting-item">
+                <label>Rotate Counter-Clockwise</label>
+                <button 
+                  className="setting-button key-binding"
+                  onClick={() => {
+                    const handler = (e: KeyboardEvent) => {
+                      e.preventDefault();
+                      onKeyBindingChange({ rotateCounterClockwise: e.key.toLowerCase() });
+                      window.removeEventListener('keydown', handler);
+                    };
+                    window.addEventListener('keydown', handler);
+                  }}
+                >
+                  {keyBindings.rotateCounterClockwise.toUpperCase()}
+                </button>
+              </div>
+              {[1, 2, 3].map(num => (
+                <div key={num} className="setting-item">
+                  <label>Select Next Tile {num}</label>
+                  <button 
+                    className="setting-button key-binding"
+                    onClick={() => {
+                      const handler = (e: KeyboardEvent) => {
+                        e.preventDefault();
+                        onKeyBindingChange({ [`selectTile${num}`]: e.key.toLowerCase() } as Partial<KeyBindings>);
+                        window.removeEventListener('keydown', handler);
+                      };
+                      window.addEventListener('keydown', handler);
+                    }}
+                  >
+                    {keyBindings[`selectTile${num}` as keyof KeyBindings].toUpperCase()}
+                  </button>
+                </div>
+              ))}
             </div>
           </div>
         </div>

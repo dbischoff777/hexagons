@@ -9,6 +9,9 @@ import { loadGameState, saveGameState } from './utils/gameStateUtils'
 import PageTransition from './components/PageTransition'
 import { getCurrentLevelInfo, getPlayerProgress, getNextLevelInfo, LEVEL_BLOCKS } from './utils/progressionUtils'
 import PreventContextMenu from './components/PreventContextMenu'
+import { KeyBindings } from './types/index'
+import { loadKeyBindings, saveKeyBindings } from './utils/keyBindingsUtils'
+import SettingsModal from './components/SettingsModal'
 
 interface CurrentGame {
   isLevelMode: boolean;
@@ -38,6 +41,8 @@ function App() {
     const savedState = loadGameState();
     return savedState?.audioSettings?.rotationEnabled ?? true;
   });
+  const [keyBindings, setKeyBindings] = useState<KeyBindings>(loadKeyBindings());
+  const [isSettingsOpen, setSettingsOpen] = useState(false);
 
   // Load saved game state on component mount
   useEffect(() => {
@@ -208,6 +213,19 @@ function App() {
     }
   };
 
+  const handleKeyBindingChange = (binding: Partial<KeyBindings>) => {
+    const newBindings = { ...keyBindings, ...binding };
+    setKeyBindings(newBindings);
+    saveKeyBindings(newBindings);
+  };
+
+  const handleOpenSettings = () => {
+    setSettingsOpen(true);
+    if (soundEnabled) {
+      soundManager.playSound('buttonClick');
+    }
+  };
+
   return (
     <PreventContextMenu>
       <AccessibilityProvider>
@@ -245,8 +263,21 @@ function App() {
                 soundEnabled={soundEnabled}
                 rotationEnabled={rotationEnabled}
                 onRotationToggle={handleRotationToggle}
+                onOpenSettings={handleOpenSettings}
               />
             )}
+            <SettingsModal
+              isOpen={isSettingsOpen}
+              onClose={() => setSettingsOpen(false)}
+              musicEnabled={musicEnabled}
+              soundEnabled={soundEnabled}
+              rotationEnabled={rotationEnabled}
+              onMusicToggle={handleMusicToggle}
+              onSoundToggle={handleSoundToggle}
+              onRotationToggle={handleRotationToggle}
+              keyBindings={keyBindings}
+              onKeyBindingChange={handleKeyBindingChange}
+            />
           </div>
         </PageTransition>
       </AccessibilityProvider>

@@ -86,4 +86,17 @@ export interface GameStatistics {
   longestCombo: number;
   lastPlayed: string;  // Make this required since we always provide a default
   fastestGameTime: number;
+}
+
+export interface KeyBindings {
+  rotateClockwise: string;
+  rotateCounterClockwise: string;
+  selectTile1: string;
+  selectTile2: string;
+  selectTile3: string;
+}
+
+export interface GameSettings {
+  keyBindings: KeyBindings;
+  // ... other existing settings
 } 
