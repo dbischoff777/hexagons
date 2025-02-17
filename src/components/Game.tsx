@@ -2262,6 +2262,8 @@ const Game: React.FC<GameProps> = ({
       <Particles 
         intensity={particleIntensity} 
         color={particleColor}
+        width={1000}   // Match your game board size
+        height={800}  // Match your game board size
       />
       {tutorialState.active ? (
         <div className="tutorial-buttons">

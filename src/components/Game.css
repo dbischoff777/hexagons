@@ -197,7 +197,6 @@
   transform-style: preserve-3d;
   will-change: transform;
   margin: 0 auto;
-  border: 1px solid red;
 }
 
 /* Add responsive canvas sizing */

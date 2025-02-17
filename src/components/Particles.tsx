@@ -4,11 +4,19 @@ import './Particles.css'
 interface ParticlesProps {
   intensity?: number  // 0-1 scale for particle density
   color?: string     // Primary color of particles
+  width?: number    // Add width prop
+  height?: number   // Add height prop
 }
+
+const MAX_PARTICLES = 369;  // Maximum number of particles regardless of intensity
+const BASE_PARTICLES = 200; // Base number of particles at 0.5 intensity
+const DEPTH = 2;
 
 const Particles: React.FC<ParticlesProps> = ({ 
   intensity = 0.5,
-  color = '#00FF9F' 
+  color = '#00FF9F',
+  width = 800,      // Default width
+  height = 800      // Default height
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null)
 
@@ -19,16 +27,66 @@ const Particles: React.FC<ParticlesProps> = ({
     const ctx = canvas.getContext('2d')
     if (!ctx) return
 
-    // Set canvas size
-    const resizeCanvas = () => {
-      if (!canvas) return
-      canvas.width = window.innerWidth
-      canvas.height = window.innerHeight
-    }
-    resizeCanvas()
-    window.addEventListener('resize', resizeCanvas)
+    // Set fixed canvas size based on props
+    canvas.width = width
+    canvas.height = height
 
-    // Particle class
+    // Calculate radius constants here where we have access to width
+    const MIN_RADIUS = width * 0.1  // 10% of width for inner radius
+    const MAX_RADIUS = width * 0.4  // 40% of width for outer radius
+
+    // Helper function to adjust color brightness
+    const adjustColor = (hex: string, factor: number): string => {
+      // Remove the # if present
+      hex = hex.replace('#', '');
+      
+      // Convert to RGB
+      const r = parseInt(hex.substring(0, 2), 16);
+      const g = parseInt(hex.substring(2, 4), 16);
+      const b = parseInt(hex.substring(4, 6), 16);
+      
+      // Adjust each component
+      const adjustedR = Math.min(255, Math.max(0, Math.round(r * factor)));
+      const adjustedG = Math.min(255, Math.max(0, Math.round(g * factor)));
+      const adjustedB = Math.min(255, Math.max(0, Math.round(b * factor)));
+      
+      // Convert back to hex
+      return '#' + 
+        adjustedR.toString(16).padStart(2, '0') +
+        adjustedG.toString(16).padStart(2, '0') +
+        adjustedB.toString(16).padStart(2, '0');
+    };
+
+    // Create darker and brighter variants of the base color
+    const darkColor = adjustColor(color, 0.6);   // 60% brightness
+    const brightColor = adjustColor(color, 1.4); // 140% brightness
+
+    const getGradientStop = (ratio: number): string => {
+      ratio = Math.min(Math.max(ratio, 0), 1);
+
+      const c0 = darkColor.match(/.{1,2}/g)!.map(
+        oct => parseInt(oct, 16) * (1 - ratio)
+      );
+      const c1 = brightColor.match(/.{1,2}/g)!.map(
+        oct => parseInt(oct, 16) * ratio
+      );
+      const ci = [0, 1, 2].map(i => Math.min(Math.round(c0[i] + c1[i]), 255));
+      const color = ci
+        .reduce((a, v) => (a << 8) + v, 0)
+        .toString(16)
+        .padStart(6, "0");
+
+      return `#${color}`;
+    };
+
+    const calculateColor = (x: number): string => {
+      const maxDiff = MAX_RADIUS * 2;
+      const distance = x + MAX_RADIUS;
+      const ratio = distance / maxDiff;
+      return getGradientStop(ratio);
+    };
+
+    // Particle class with enhanced properties
     class Particle {
       x: number
       y: number
@@ -36,84 +94,195 @@ const Particles: React.FC<ParticlesProps> = ({
       speedX: number
       speedY: number
       opacity: number
-      canvasWidth: number
-      canvasHeight: number
+      angle: number
+      rotationSpeed: number
+      orbitRadius: number
+      centerX: number
+      centerY: number
+      pulseSpeed: number
+      pulseAmount: number
+      initialSize: number
+      cycleOffset: number
+      cycleSpeed: number
+      color: string
 
-      constructor(canvasWidth: number, canvasHeight: number) {
-        this.canvasWidth = canvasWidth
-        this.canvasHeight = canvasHeight
-        this.x = Math.random() * this.canvasWidth
-        this.y = Math.random() * this.canvasHeight
-        this.size = Math.random() * 3 + 1
-        this.speedX = Math.random() * 2 - 1
-        this.speedY = Math.random() * 2 - 1
-        this.opacity = Math.random() * 0.5 + 0.2
+      constructor() {
+        // Set center to middle of canvas
+        this.centerX = width / 2
+        this.centerY = height / 2
+        
+        // Create two layers of particles
+        const isOuterLayer = Math.random() > 0.8
+        
+        // Calculate radius based on layer
+        const minR = isOuterLayer ? MIN_RADIUS / 2 : MIN_RADIUS
+        const maxR = isOuterLayer ? MAX_RADIUS * 2 : MAX_RADIUS
+        this.orbitRadius = Math.random() * (maxR - minR) + minR
+        
+        // Random angle for circular motion
+        this.angle = Math.random() * Math.PI * 2
+        
+        // Calculate position with depth
+        const x = Math.cos(this.angle) * this.orbitRadius
+        const y = Math.sin(this.angle) * this.orbitRadius
+        const z = Math.random() * DEPTH * (isOuterLayer ? 10 : 1)
+        
+        // Apply perspective to size based on z
+        const perspective = 1 + (z / (DEPTH * 10))
+        
+        // Set initial position
+        this.x = this.centerX + x * perspective
+        this.y = this.centerY + y * perspective
+        
+        // Calculate color based on x position
+        this.color = calculateColor(x)
+        
+        // Size based on layer and perspective
+        const baseSize = isOuterLayer ? 1 : 2
+        this.initialSize = baseSize * perspective
+        this.size = this.initialSize
+        
+        // Adjust opacity based on layer
+        this.opacity = isOuterLayer ? 
+          Math.random() * 0.3 + 0.1 : 
+          Math.random() * 0.5 + 0.3
+        
+        // Slower movement for outer particles
+        this.cycleOffset = Math.random() * Math.PI * 2
+        this.cycleSpeed = (Math.random() * 0.0005 + 0.0002) * 
+                          (Math.random() < 0.5 ? 1 : -1) * 
+                          (isOuterLayer ? 0.5 : 1)
+        
+        // Rotation speed based on radius
+        this.rotationSpeed = (Math.random() * 0.001 + 0.0005) * 
+                            (Math.random() < 0.5 ? 1 : -1) * 
+                            (isOuterLayer ? 0.3 : 1)
+        
+        // Pulsing effect properties
+        this.pulseSpeed = Math.random() * 0.05 + 0.02
+        this.pulseAmount = Math.random() * 0.5 + 0.5
+        
+        // Small random movement (reduced for outer particles)
+        const movementFactor = 1 - (Math.sqrt(x * x + y * y) / (Math.min(width, height) * 0.8)) * 0.7
+        this.speedX = (Math.random() - 0.5) * 0.3 * movementFactor
+        this.speedY = (Math.random() - 0.5) * 0.3 * movementFactor
       }
 
       update() {
-        this.x += this.speedX
-        this.y += this.speedY
+        // Update cycle position
+        this.cycleOffset += this.cycleSpeed
+        
+        // Calculate base orbital position
+        const orbitX = Math.cos(this.angle) * this.orbitRadius
+        const orbitY = Math.sin(this.angle) * this.orbitRadius
+        
+        // Add cyclic movement
+        const cycleX = Math.cos(this.cycleOffset) * (this.orbitRadius * 0.1)
+        const cycleY = Math.sin(this.cycleOffset) * (this.orbitRadius * 0.1)
+        
+        // Combine movements
+        this.x = this.centerX + orbitX + cycleX
+        this.y = this.centerY + orbitY + cycleY
+        
+        // Update rotation
+        this.angle += this.rotationSpeed
+        
+        // Pulsing size effect with minimum size
+        const minSize = 0.5
+        const pulsePhase = (Date.now() * this.pulseSpeed + this.cycleOffset) % (Math.PI * 2)
+        this.size = Math.max(
+          minSize,
+          this.initialSize + Math.sin(pulsePhase) * this.pulseAmount
+        )
 
-        // Wrap around screen
-        if (this.x > this.canvasWidth) this.x = 0
-        if (this.x < 0) this.x = this.canvasWidth
-        if (this.y > this.canvasHeight) this.y = 0
-        if (this.y < 0) this.y = this.canvasHeight
+        // Update opacity with smooth variation
+        const opacityPhase = (Date.now() * 0.001 + this.cycleOffset) % (Math.PI * 2)
+        const baseFactor = Math.sin(opacityPhase) * 0.2 + 0.8
+        const distanceFactor = 1 - (Math.sqrt(orbitX * orbitX + orbitY * orbitY) / (Math.min(width, height) * 0.8))
+        this.opacity = baseFactor * (0.3 + distanceFactor * 0.7)
       }
 
-      draw(ctx: CanvasRenderingContext2D, color: string) {
+      draw(ctx: CanvasRenderingContext2D) {
         ctx.beginPath()
+        
+        const minRadius = 0.4
+        const gradient = ctx.createRadialGradient(
+          this.x, this.y, minRadius,
+          this.x, this.y, Math.max(this.size, minRadius)
+        )
+        
+        gradient.addColorStop(0, `${this.color}${Math.floor(this.opacity * 255).toString(16).padStart(2, '0')}`)
+        gradient.addColorStop(1, `${this.color}00`)
+        
+        ctx.fillStyle = gradient
         ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2)
-        ctx.fillStyle = `${color}${Math.floor(this.opacity * 255).toString(16).padStart(2, '0')}`
         ctx.fill()
       }
     }
 
-    // Create particles
-    const particleCount = Math.floor(100 * intensity)
+    // Calculate optimal particle count based on screen size and intensity
+    const calculateParticleCount = () => {
+      // Base calculation using intensity
+      const baseCount = Math.floor(BASE_PARTICLES * intensity)
+      
+      // Scale based on canvas size (fewer particles for smaller areas)
+      const areaFactor = (width * height) / (800 * 800)
+      const scaledCount = Math.floor(baseCount * areaFactor)
+      
+      // Ensure we don't exceed maximum particles
+      return Math.min(scaledCount, MAX_PARTICLES)
+    }
+
+    // Create particles with limited count
+    const particleCount = calculateParticleCount()
     const particles = Array.from(
       { length: particleCount }, 
-      () => new Particle(canvas.width, canvas.height)
+      () => new Particle()
     )
 
-    // Animation loop
+    // Optimize animation loop
+    let animationFrameId: number
     const animate = () => {
       if (!ctx || !canvas) return
-      ctx.clearRect(0, 0, canvas.width, canvas.height)
       
+      // Create motion blur effect with faster fade
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.2)' // Increased alpha for faster fade
+      ctx.fillRect(0, 0, width, height)
+      
+      // Update and draw particles
       particles.forEach(particle => {
         particle.update()
-        particle.draw(ctx, color)
+        particle.draw(ctx)
       })
 
-      requestAnimationFrame(animate)
+      animationFrameId = requestAnimationFrame(animate)
     }
 
+    // Clear canvas before starting animation
+    ctx.fillStyle = 'black'
+    ctx.fillRect(0, 0, width, height)
     animate()
 
-    // Handle window resize
-    const handleResize = () => {
-      if (!canvas) return
-      resizeCanvas()
-      // Update particles with new canvas dimensions
-      particles.forEach(particle => {
-        particle.canvasWidth = canvas.width
-        particle.canvasHeight = canvas.height
-      })
-    }
-
-    window.addEventListener('resize', handleResize)
-
+    // Proper cleanup
     return () => {
-      window.removeEventListener('resize', resizeCanvas)
-      window.removeEventListener('resize', handleResize)
+      if (animationFrameId) {
+        cancelAnimationFrame(animationFrameId)
+      }
     }
-  }, [intensity, color])
+  }, [intensity, color, width, height])
 
   return (
     <canvas 
       ref={canvasRef} 
       className="particles-canvas"
+      style={{
+        position: 'absolute',
+        width: `${width}px`,
+        height: `${height}px`,
+        left: '50%',
+        top: '50%',
+        transform: 'translate(-50%, -50%)'
+      }}
     />
   )
 }

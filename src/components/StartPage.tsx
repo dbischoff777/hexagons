@@ -16,6 +16,7 @@ import SettingsModal from './SettingsModal'
 import PageTransition from './PageTransition'
 import { APP_VERSION } from '../constants/version'
 import styles from '../styles/bubbleText.module.css'
+import HexagonGrid from './HexagonGrid'
 
 interface StartPageProps {
   onStartGame: (withTimer: boolean, isDailyChallenge?: boolean) => void
@@ -226,6 +227,12 @@ const StartPage: React.FC<StartPageProps> = ({
 
   return (
     <div className="start-page">
+      <HexagonGrid 
+        color="#00FF9F"
+        size={30}
+        gap={4}
+        hover={true}
+      />
       <div className="start-container">
         <h1 className="game-title">
           {"HEXMATCH".split("").map((letter, idx) => (
