@@ -11,21 +11,33 @@ export const SCORE_FEEDBACK = {
     { emoji: '✨💫', text: 'Nice!' },
     { emoji: '💎✨', text: 'Good!' },
     { emoji: '👍💫', text: 'Cool!' },
+    { emoji: '🌟✨', text: 'Neat!' },
+    { emoji: '💫⭐', text: 'Smooth!' },
+    { emoji: '✨🎯', text: 'Got it!' },
   ],
   MEDIUM: [
     { emoji: '🌟💫', text: 'Great!' },
     { emoji: '💫⭐', text: 'Awesome!' },
     { emoji: '⭐✨', text: 'Sweet!' },
+    { emoji: '🎯💫', text: 'Skillful!' },
+    { emoji: '✨🌟', text: 'Brilliant!' },
+    { emoji: '💫🎯', text: 'Well done!' },
   ],
   HIGH: [
     { emoji: '🔥⚡', text: 'Amazing!' },
     { emoji: '⚡💥', text: 'Fantastic!' },
     { emoji: '💥🔥', text: 'Incredible!' },
+    { emoji: '⚡🌟', text: 'Spectacular!' },
+    { emoji: '🔥💫', text: 'Outstanding!' },
+    { emoji: '💥⭐', text: 'Phenomenal!' },
   ],
   EPIC: [
     { emoji: '🌈✨', text: 'EPIC!' },
     { emoji: '👑💫', text: 'LEGENDARY!' },
     { emoji: '💎✨', text: 'BRILLIANT!' },
+    { emoji: '🌟⚡', text: 'MAGNIFICENT!' },
+    { emoji: '💥🌈', text: 'SPECTACULAR!' },
+    { emoji: '👑🔥', text: 'UNSTOPPABLE!' },
   ],
   
   // Combos
@@ -38,15 +50,19 @@ export const SCORE_FEEDBACK = {
     { emoji: '💥⚡', text: '7x COMBO!' },
     { emoji: '👑✨', text: '8x COMBO!' },
     { emoji: '🌈💫', text: 'MEGA COMBO!' },
+    { emoji: '🎯🔥', text: 'ULTRA COMBO!' },
+    { emoji: '💎🌈', text: 'SUPREME COMBO!' },
   ],
   
   // Grid clears
   CLEAR: [
-    { emoji: '🎪✨', text: 'CLEAR!' },         // Default clear
-    { emoji: '🎮💫', text: 'GOOD CLEAR!' },    // 25+ points
-    { emoji: '🎯⚡', text: 'GREAT CLEAR!' },   // 50+ points
-    { emoji: '🏆💫', text: 'AMAZING CLEAR!' }, // 75+ points
-    { emoji: '👑✨', text: 'EPIC CLEAR!' },    // 100+ points
+    { emoji: '🎪✨', text: 'CLEAR!' },           // Default clear
+    { emoji: '🎮💫', text: 'GOOD CLEAR!' },      // 25+ points
+    { emoji: '🎯⚡', text: 'GREAT CLEAR!' },     // 50+ points
+    { emoji: '🏆💫', text: 'AMAZING CLEAR!' },   // 75+ points
+    { emoji: '👑✨', text: 'EPIC CLEAR!' },      // 100+ points
+    { emoji: '🌈💥', text: 'PERFECT CLEAR!' },   // 125+ points
+    { emoji: '💎🔥', text: 'ULTIMATE CLEAR!' },  // 150+ points
   ] as const,
   
   // Quick placements
@@ -54,6 +70,9 @@ export const SCORE_FEEDBACK = {
     { emoji: '⚡💨', text: 'QUICK!' },
     { emoji: '💨✨', text: 'SWIFT!' },
     { emoji: '🚀💫', text: 'SPEEDY!' },
+    { emoji: '⚡🎯', text: 'RAPID!' },
+    { emoji: '💨⭐', text: 'LIGHTNING!' },
+    { emoji: '🚀⚡', text: 'BLAZING!' },
   ]
 } as const;
 
