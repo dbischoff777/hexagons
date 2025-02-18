@@ -37,7 +37,12 @@ const createMirrorTile = (basePosition: { q: number, r: number }): PlacedTile =>
   return {
     ...createTileWithRandomEdges(basePosition.q, basePosition.r),
     isPlaced: false,
-    type: 'mirror' as const
+    type: 'mirror' as const,
+    mirrorEffect: {
+      glowColor: '#00FFFF',
+      pulseRate: 1.5,
+      reflectionAngle: Math.random() * 360
+    }
   };
 };
 

@@ -138,7 +138,6 @@ export const updateTileValues = (tiles: PlacedTile[]): PlacedTile[] => {
     
     // For joker tiles, count all adjacent tiles
     if (newTile.isJoker) {
-      // Count all adjacent tiles when placing a joker
       return true;
     }
     // For tiles adjacent to a joker
@@ -146,35 +145,10 @@ export const updateTileValues = (tiles: PlacedTile[]): PlacedTile[] => {
       return true;
     }
     
-    // Handle mirror tiles
-    if (newTile.type === 'mirror' || t.type === 'mirror') {
-      let matchCount = 0;
-      if (newTile.type === 'mirror') {
-        DIRECTIONS.forEach((_, i) => {
-          const oppTile = tiles.find(ot => 
-            ot.q === newTile.q + DIRECTIONS[i].q && 
-            ot.r === newTile.r + DIRECTIONS[i].r
-          );
-          if (oppTile && newTile.edges[i].color === oppTile.edges[(i + 3) % 6].color) {
-            matchCount++;
-          }
-        });
-      }
-      
-      if (t.type === 'mirror') {
-        DIRECTIONS.forEach((_, i) => {
-          const oppTile = tiles.find(ot => 
-            ot.q === t.q + DIRECTIONS[i].q && 
-            ot.r === t.r + DIRECTIONS[i].r
-          );
-          if (oppTile && t.edges[i].color === oppTile.edges[(i + 3) % 6].color) {
-            matchCount++;
-          }
-        });
-      }
-      
-      // Mirror tiles need at least 2 matches
-      return matchCount >= 2;
+    // For mirror tiles, find highest value adjacent tile
+    if (newTile.type === 'mirror') {
+      // Mirror tile matches with everything
+      return true;
     }
     
     // Check if edges match for regular tiles
@@ -184,11 +158,10 @@ export const updateTileValues = (tiles: PlacedTile[]): PlacedTile[] => {
   
   return tiles.map(tile => {
     let matches = 0;
-    let matchingEdges = 0;
-
-    // For joker tiles, count all adjacent tiles
+    
+    // For joker tiles, count all adjacent tiles regardless of matches
     if (tile.isJoker) {
-      DIRECTIONS.forEach((dir) => {
+      DIRECTIONS.forEach(dir => {
         const neighborTile = tiles.find(t => 
           t.q === tile.q + dir.q && t.r === tile.r + dir.r
         );
@@ -207,10 +180,6 @@ export const updateTileValues = (tiles: PlacedTile[]): PlacedTile[] => {
           const oppositeEdge = (i + 3) % 6;
           const isMatching = tile.edges[i].color === neighborTile.edges[oppositeEdge].color;
 
-          if (tile.type === 'mirror' && isMatching) {
-            matchingEdges++;
-          }
-
           if (isMatching || neighborTile.isJoker) {
             matches++;
           }
@@ -218,11 +187,6 @@ export const updateTileValues = (tiles: PlacedTile[]): PlacedTile[] => {
       });
     }
 
-    // For mirror tiles, only award points if there are 2+ matching edges
-    if (tile.type === 'mirror' && matchingEdges >= 2) {
-      matches = matchingEdges * 2;
-    }
-    
     const hasMatches = matches > 0;
     const isNewlyPlacedTile = tile.q === newTile.q && tile.r === newTile.r;
     const isMatchingAdjacent = adjacentMatchingTiles.some(t => t.q === tile.q && t.r === tile.r);

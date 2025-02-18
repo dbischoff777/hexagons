@@ -1,4 +1,4 @@
-import { PlacedTile } from '../types'
+import { PlacedTile, MirrorEffect } from '../types'
 import { AccessibilitySettings } from '../types/accessibility'
 import { drawAccessibilityOverlay } from './accessibilityUtils'
 
@@ -30,12 +30,12 @@ const TILE_STYLES = {
   joker: {
     glow: '#FFFFFF',
     icon: '★',
-    text: 'Matches any color'
+    text: 'Matches Any Tile'
   },
   mirror: {
     glow: '#00FFFF',
     icon: '↔',
-    text: 'Mirrors Adjacent Colors'
+    text: 'Mirrors Adjacent Tiles'
   },
   powerUp: {
     freeze: {
@@ -134,6 +134,33 @@ export const drawHexagonWithColoredEdges = ({
   // Add match glow
   if (isMatched) {
     drawMatchGlow(ctx, points, theme);
+  }
+
+  // Add mirror visual effects
+  if (tile?.type === 'mirror' && isMirrorTile(tile)) {
+    // Add shimmer effect
+    const shimmerOpacity = Math.sin(Date.now() / 1000 * tile.mirrorEffect.pulseRate) * 0.3 + 0.7;
+    ctx.strokeStyle = tile.mirrorEffect.glowColor;
+    ctx.globalAlpha = shimmerOpacity;
+    ctx.lineWidth = 3;
+    ctx.stroke();
+    
+    // Add reflection line
+    ctx.beginPath();
+    const angle = tile.mirrorEffect.reflectionAngle * Math.PI / 180;
+    ctx.moveTo(
+      x + Math.cos(angle) * size,
+      y + Math.sin(angle) * size
+    );
+    ctx.lineTo(
+      x - Math.cos(angle) * size,
+      y - Math.sin(angle) * size
+    );
+    ctx.strokeStyle = '#FFFFFF';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    
+    ctx.restore();
   }
 
   ctx.restore();
@@ -501,4 +528,9 @@ function drawTileValue(
   ctx.fillText(value.toString(), x, y)
   
   ctx.shadowBlur = 0
+}
+
+// Add this type guard function
+function isMirrorTile(tile: PlacedTile): tile is PlacedTile & { mirrorEffect: MirrorEffect } {
+  return tile.type === 'mirror' && tile.mirrorEffect !== undefined;
 } 

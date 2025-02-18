@@ -31,6 +31,12 @@ export interface PowerUp {
   active: boolean;
 }
 
+export interface MirrorEffect {
+  glowColor: string;
+  pulseRate: number;
+  reflectionAngle: number;
+}
+
 export interface PlacedTile extends Tile {
   isPlaced: boolean
   isJoker?: boolean  // Rainbow tile
@@ -40,6 +46,7 @@ export interface PlacedTile extends Tile {
   powerUp?: PowerUp
   temporaryColorMatch?: boolean
   hasBeenMatched?: boolean
+  mirrorEffect?: MirrorEffect;  // Add this for mirror tiles
 }
 
 export interface PowerUpState {
