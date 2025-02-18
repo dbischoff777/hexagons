@@ -140,33 +140,3 @@
     transform: scale(1.05);
   }
 }
-
-/* Mirror tile styles */
-.tile-mirror {
-  position: relative;
-}
-
-.tile-mirror::before {
-  content: '';
-  position: absolute;
-  inset: -2px;
-  border-radius: inherit;
-  background: linear-gradient(135deg, 
-    rgba(255, 255, 255, 0.2),
-    rgba(255, 255, 255, 0.05)
-  );
-  z-index: -1;
-  animation: mirrorShine 3s ease-in-out infinite;
-}
-
-@keyframes mirrorShine {
-  0% {
-    background-position: -100% -100%;
-  }
-  50% {
-    background-position: 200% 200%;
-  }
-  100% {
-    background-position: -100% -100%;
-  }
-}
