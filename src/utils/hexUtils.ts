@@ -1,4 +1,7 @@
 import { Tile, PlacedTile, Edge } from "../types/index"
+import { getPowerUpColor } from './themeUtils'
+import { DEFAULT_SCHEME } from './colorSchemes'
+import { SeasonalTheme } from '../types/progression'
 
 export const COLORS = [
   '#FF1177',  // Neon pink
@@ -9,12 +12,6 @@ export const COLORS = [
   '#4D4DFF'   // Neon blue
 ]
 
-export const POWER_UP_COLORS = {
-  freeze: '#00FFFF',    // Neon cyan
-  multiplier: '#FFE900', // Neon yellow
-  colorShift: '#FF1177'  // Neon pink
-} as const;
-
 export const getRandomColor = () => COLORS[Math.floor(Math.random() * COLORS.length)]
 
 export const getAdjacentTiles = (tile: Tile, allTiles: PlacedTile[]): PlacedTile[] => {
@@ -24,7 +21,12 @@ export const getAdjacentTiles = (tile: Tile, allTiles: PlacedTile[]): PlacedTile
   )
 }
 
-export const createTileWithRandomEdges = (q: number, r: number): PlacedTile => {
+export const createTileWithRandomEdges = (
+  q: number, 
+  r: number, 
+  colorScheme = DEFAULT_SCHEME,
+  theme?: SeasonalTheme
+): PlacedTile => {
   // Power-up spawn chances (in percentage)
   const POWER_UP_CHANCES = {
     freeze: 5,     // 5% chance
@@ -65,7 +67,7 @@ export const createTileWithRandomEdges = (q: number, r: number): PlacedTile => {
   // Create the edges based on whether it's a power-up tile
   let edges: Edge[];
   if (powerUp) {
-    const color = POWER_UP_COLORS[powerUp.type];
+    const color = getPowerUpColor(powerUp.type, colorScheme, theme);
     edges = Array(6).fill(null).map(() => ({ color }));
   } else {
     edges = Array(6).fill(null).map(() => ({
