@@ -1,11 +1,10 @@
 import { KeyBindings } from '../types';
 import { PlacedTile, PowerUpState, ComboState } from '../types';
-import { hasMatchingEdges, updateTileValues, calculateScore } from './matchingUtils';
 import { SoundManager } from './soundManager';
-import { getAdjacentTiles, getAdjacentDirection } from './hexUtils';
 import { UpgradeState } from '../types/upgrades';
-import { ScorePopupData, PopupType } from '../types/scorePopup';
+import { ScorePopupData } from '../types/scorePopup';
 import { isGridFull } from '../utils/gameUtils';
+import { processPlacementMatches, processGridClearMatches } from './matchingUtils';
 
 export const DEFAULT_KEY_BINDINGS: KeyBindings = {
   rotateClockwise: 'e',
@@ -77,21 +76,16 @@ export const handleKeyboardPlacement = ({
   // Adjust coordinates based on board rotation
   let { q, r } = currentGridPosition;
   if (Math.abs(boardRotation % 360) >= 90 && Math.abs(boardRotation % 360) < 270) {
-    // Board is rotated 180 degrees, invert coordinates
     q = -q;
     r = -r;
   }
 
   const s = -q - r;
-
-  // Validate position
   const isValidPosition = Math.max(Math.abs(q), Math.abs(r), Math.abs(s)) <= Math.floor(cols/2);
   const isOccupied = placedTiles.some(tile => tile.q === q && tile.r === r);
 
   if (isValidPosition && !isOccupied) {
     const selectedTile = nextTiles[selectedTileIndex];
-    
-    // Create new tile with adjusted coordinates
     const newTile: PlacedTile = {
       ...selectedTile,
       q,
@@ -103,58 +97,26 @@ export const handleKeyboardPlacement = ({
       powerUp: selectedTile.powerUp
     };
 
-    // Create initial tiles with updated values
-    const initialPlacedTiles: PlacedTile[] = updateTileValues([...placedTiles, newTile]);
+    // Check for quick placement
+    const now = Date.now();
+    const timeSinceLastPlacement = now - combo.lastPlacementTime;
+    const quickPlacement = timeSinceLastPlacement < 2000;
 
-    // Then, in a separate step, mark matched tiles
-    const updatedTiles: PlacedTile[] = initialPlacedTiles.map((tile: PlacedTile): PlacedTile => {
-      return {
-        ...tile,
-        hasBeenMatched: tile.hasBeenMatched || hasMatchingEdges(tile, initialPlacedTiles, settings.isColorBlind),
-        powerUp: tile.powerUp
-      };
-    });
+    // Process matches using centralized logic
+    const { matchCount, updatedTiles, matchScore, comboState } = processPlacementMatches(
+      newTile,
+      placedTiles,
+      settings,
+      upgradeState,
+      powerUps,
+      combo,
+      quickPlacement
+    );
 
-    // Update all tiles in the game
+    // Update tiles
     onTilesUpdate(updatedTiles);
 
-    // Get the updated tile with its correct value
-    const updatedPlacedTile = updatedTiles.find(tile => tile.q === q && tile.r === r)!;
-    
-    // Count matching edges
-    const adjacentTiles = getAdjacentTiles(updatedPlacedTile, updatedTiles);
-    let matchCount = 0;
-    
-    // Check each edge for matches
-    updatedPlacedTile.edges.forEach((edge: { color: string }, index: number) => {
-      const adjacentTile = adjacentTiles.find((t: PlacedTile) => 
-        getAdjacentDirection(updatedPlacedTile.q, updatedPlacedTile.r, t.q, t.r) === index
-      );
-      
-      if (adjacentTile) {
-        const adjacentEdgeIndex = (getAdjacentDirection(adjacentTile.q, adjacentTile.r, updatedPlacedTile.q, updatedPlacedTile.r) + 3) % 6;
-        if (edge.color === adjacentTile.edges[adjacentEdgeIndex].color) {
-          matchCount++;
-        }
-      }
-    });
-
     if (matchCount > 0) {
-      const basePoints = matchCount * 5;
-      const matchScore = calculateScore(basePoints, upgradeState, powerUps, combo);
-
-      // Update combo
-      const now = Date.now();
-      const timeSinceLastPlacement = now - combo.lastPlacementTime;
-      const quickPlacement = timeSinceLastPlacement < 2000;
-
-      const newComboState: ComboState = {
-        count: quickPlacement ? combo.count + 1 : 1,
-        timer: 3,
-        multiplier: quickPlacement ? combo.multiplier * 1.5 : 1,
-        lastPlacementTime: now
-      };
-
       // Add score popup for matches
       addScorePopup({
         score: matchScore,
@@ -162,7 +124,7 @@ export const handleKeyboardPlacement = ({
         y: centerY - 100,
         emoji: '✨',
         text: matchCount === 1 ? 'Edge Match!' : 'Multiple Matches!',
-        type: 'score' as PopupType
+        type: 'score'
       });
 
       // Handle quick placement bonus
@@ -174,50 +136,40 @@ export const handleKeyboardPlacement = ({
           y: centerY + 25,
           emoji: '⚡',
           text: 'Quick!',
-          type: 'quick' as PopupType
+          type: 'quick'
         });
         onScoreUpdate(matchScore + quickBonus);
       } else {
         onScoreUpdate(matchScore);
       }
 
-      onComboUpdate(newComboState);
+      onComboUpdate(comboState);
     }
 
-    // Check for grid-full bonus only if the grid is actually full
+    // Check for grid-full bonus
     if (isGridFull(updatedTiles, cols)) {
-      const matchingTiles = updatedTiles.filter((tile: PlacedTile) => 
-        checkForMatches(tile, updatedTiles, settings)
-      );
+      const matchingTiles = processGridClearMatches(updatedTiles, settings);
 
-      // If we have matching tiles and the grid is full, handle the grid-full bonus
       if (matchingTiles.length > 0) {
-        // Play match sound
         if (soundEnabled) {
-          const soundManager = SoundManager.getInstance();
-          soundManager.playSound('match');
+          SoundManager.getInstance().playSound('match');
         }
 
-        // Add score popup for grid-full bonus
-        const gridBonus = 1000; // Base grid clear bonus
+        const gridBonus = 1000;
         addScorePopup({
           score: gridBonus,
           x: centerX,
           y: centerY,
           emoji: '🎯',
           text: 'Grid Clear!',
-          type: 'clear' as PopupType
+          type: 'clear'
         });
 
-        // Update score
         onScoreUpdate(gridBonus);
-
-        // Update combo for grid clear
         onComboUpdate({
-          ...combo,
-          count: combo.count + 1,
-          multiplier: combo.multiplier * 1.5,
-          lastPlacementTime: Date.now()
+          ...comboState,
+          count: comboState.count + 1,
+          multiplier: comboState.multiplier * 1.5
         });
       }
     }
@@ -231,16 +183,6 @@ export const handleKeyboardPlacement = ({
       }
     }
 
-    // Call the placement callback with the updated tiles
     onPlacement(newTile);
   }
-};
-
-// Add helper function to check for matches
-export const checkForMatches = (
-  tile: PlacedTile, 
-  placedTiles: PlacedTile[], 
-  settings: { isColorBlind: boolean }
-): boolean => {
-  return hasMatchingEdges(tile, placedTiles, settings.isColorBlind);
 }; 

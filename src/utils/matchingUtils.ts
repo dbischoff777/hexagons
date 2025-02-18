@@ -261,3 +261,84 @@ export const handleTileMatches = (
     score: finalScore
   };
 };
+
+// Add this new interface at the top
+interface MatchResult {
+  matchCount: number;
+  updatedTiles: PlacedTile[];
+  matchScore: number;
+  comboState: ComboState;
+}
+
+// Add this new function to centralize keyboard placement matching logic
+export const processPlacementMatches = (
+  newTile: PlacedTile,
+  allTiles: PlacedTile[],
+  settings: { isColorBlind: boolean },
+  upgradeState: UpgradeState,
+  powerUps: PowerUpState,
+  combo: ComboState,
+  quickPlacement: boolean
+): MatchResult => {
+  // Create initial tiles with updated values
+  const updatedTiles = updateTileValues([...allTiles, newTile]);
+
+  // Mark matched tiles
+  const tilesWithMatches = updatedTiles.map((tile: PlacedTile): PlacedTile => ({
+    ...tile,
+    hasBeenMatched: hasMatchingEdges(tile, updatedTiles, settings.isColorBlind),
+    powerUp: tile.powerUp
+  }));
+
+  // Get the updated tile with its correct value
+  const updatedPlacedTile = tilesWithMatches.find(tile => 
+    tile.q === newTile.q && tile.r === newTile.r
+  )!;
+
+  // Count matching edges
+  const adjacentTiles = getAdjacentTiles(updatedPlacedTile, tilesWithMatches);
+  let matchCount = 0;
+
+  // Check each edge for matches
+  updatedPlacedTile.edges.forEach((edge: { color: string }, index: number) => {
+    const adjacentTile = adjacentTiles.find((t: PlacedTile) => 
+      getAdjacentDirection(updatedPlacedTile.q, updatedPlacedTile.r, t.q, t.r) === index
+    );
+    
+    if (adjacentTile) {
+      const adjacentEdgeIndex = (getAdjacentDirection(adjacentTile.q, adjacentTile.r, updatedPlacedTile.q, updatedPlacedTile.r) + 3) % 6;
+      if (edge.color === adjacentTile.edges[adjacentEdgeIndex].color) {
+        matchCount++;
+      }
+    }
+  });
+
+  // Calculate score and combo
+  const basePoints = matchCount * 5;
+  const matchScore = calculateScore(basePoints, upgradeState, powerUps, combo);
+
+  // Update combo state
+  const newComboState: ComboState = {
+    count: quickPlacement ? combo.count + 1 : 1,
+    timer: 3,
+    multiplier: quickPlacement ? combo.multiplier * 1.5 : 1,
+    lastPlacementTime: Date.now()
+  };
+
+  return {
+    matchCount,
+    updatedTiles: tilesWithMatches,
+    matchScore,
+    comboState: newComboState
+  };
+};
+
+// Add this helper function to check for grid clear matches
+export const processGridClearMatches = (
+  tiles: PlacedTile[],
+  settings: { isColorBlind: boolean }
+): PlacedTile[] => {
+  return tiles.filter((tile: PlacedTile) => 
+    hasMatchingEdges(tile, tiles, settings.isColorBlind)
+  );
+};
