@@ -3,6 +3,7 @@ import { HexPuzzlePiece, drawHexImageTile, createHexPuzzle } from '../utils/hexI
 import { hexToPixel } from '../utils/hexUtils';
 import { loadAndTileSvg } from '../utils/svgTileUtils';
 import './HexPuzzleMode.css';
+import SpringModal from './SpringModal';
 
 interface HexPuzzleModeProps {
   imageSrc: string;
@@ -14,11 +15,17 @@ const HexPuzzleMode: React.FC<HexPuzzleModeProps> = ({ imageSrc, onComplete, onE
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [pieces, setPieces] = useState<HexPuzzlePiece[]>([]);
   const [image, setImage] = useState<HTMLImageElement | null>(null);
-  const [selectedPiece, setSelectedPiece] = useState<number | null>(null);
   const [hoverPiece, setHoverPiece] = useState<number | null>(null);
   const [isCompleted, setIsCompleted] = useState(false);
   const [completionEffect, setCompletionEffect] = useState(0);
-  const [isDebug] = useState(true);
+  const [isPuzzleStarted, setIsPuzzleStarted] = useState(false);
+  const [allTileOptions, setAllTileOptions] = useState<HexPuzzlePiece[]>([]);
+  const [visibleTileOptions, setVisibleTileOptions] = useState<HexPuzzlePiece[]>([]);
+  const [selectedTileIndex, setSelectedTileIndex] = useState<number | null>(null);
+  const [clickedGridPosition, setClickedGridPosition] = useState<{ q: number, r: number } | null>(null);
+  const [showExitModal, setShowExitModal] = useState(false);
+  const [showCompletionModal, setShowCompletionModal] = useState(false);
+  const [cursorPosition, setCursorPosition] = useState<{ x: number, y: number } | null>(null);
   
   const tileSize = 40; // Same as main game
   const canvasWidth = 1200;
@@ -34,12 +41,17 @@ const HexPuzzleMode: React.FC<HexPuzzleModeProps> = ({ imageSrc, onComplete, onE
         img.onload = () => {
           setImage(img);
           
-          // Use createHexPuzzle with the loaded image
-          const puzzlePieces = createHexPuzzle(
-            img,    // Pass the image directly
-            tileSize
-          );
+          // Create puzzle pieces
+          const puzzlePieces = createHexPuzzle(img, tileSize);
           
+          // Initialize all tile options with shuffled pieces
+          const shuffledPieces = [...puzzlePieces].sort(() => Math.random() - 0.5);
+          setAllTileOptions(shuffledPieces);
+          
+          // Set first 3 pieces as visible options
+          setVisibleTileOptions(shuffledPieces.slice(0, 3));
+          
+          // Keep pieces in their correct positions initially for preview
           setPieces(puzzlePieces);
         };
 
@@ -57,21 +69,18 @@ const HexPuzzleMode: React.FC<HexPuzzleModeProps> = ({ imageSrc, onComplete, onE
   // Handle canvas click
   const handleCanvasClick = (event: React.MouseEvent<HTMLCanvasElement>) => {
     const canvas = canvasRef.current;
-    if (!canvas) return;
+    if (!canvas || !isPuzzleStarted) return;
 
     const rect = canvas.getBoundingClientRect();
     const x = event.clientX - rect.left;
     const y = event.clientY - rect.top;
-    const clickedPiece = findPieceAtPosition(x, y);
+    const gridPosition = findGridPosition(x, y);
 
-    if (clickedPiece !== null) {
-      if (selectedPiece === null) {
-        setSelectedPiece(clickedPiece);
-      } else {
-        // Swap pieces
-        swapPieces(selectedPiece, clickedPiece);
-        setSelectedPiece(null);
-      }
+    if (selectedTileIndex !== null && gridPosition) {
+      // Try to place the selected tile
+      placeTileOnGrid(selectedTileIndex, gridPosition);
+      setSelectedTileIndex(null);
+      setClickedGridPosition(null);
     }
   };
 
@@ -102,23 +111,6 @@ const HexPuzzleMode: React.FC<HexPuzzleModeProps> = ({ imageSrc, onComplete, onE
     return null;
   };
 
-  // Swap pieces
-  const swapPieces = (index1: number, index2: number) => {
-    setPieces(prevPieces => {
-      const newPieces = [...prevPieces];
-      const temp = newPieces[index1].currentPosition;
-      newPieces[index1].currentPosition = newPieces[index2].currentPosition;
-      newPieces[index2].currentPosition = temp;
-      
-      // Check if puzzle is solved
-      if (isPuzzleSolved(newPieces)) {
-        handlePuzzleCompletion();
-      }
-      
-      return newPieces;
-    });
-  };
-
   // Check if puzzle is solved
   const isPuzzleSolved = (currentPieces: HexPuzzlePiece[]): boolean => {
     return currentPieces.every(piece => 
@@ -131,6 +123,7 @@ const HexPuzzleMode: React.FC<HexPuzzleModeProps> = ({ imageSrc, onComplete, onE
   const handlePuzzleCompletion = () => {
     setIsCompleted(true);
     setCompletionEffect(1);
+    setShowCompletionModal(true);
     
     // Animate completion effect
     const startTime = Date.now();
@@ -143,9 +136,6 @@ const HexPuzzleMode: React.FC<HexPuzzleModeProps> = ({ imageSrc, onComplete, onE
       
       if (progress < 1) {
         requestAnimationFrame(animate);
-      } else {
-        // Call onComplete after animation
-        setTimeout(onComplete, 500);
       }
     };
     
@@ -163,7 +153,7 @@ const HexPuzzleMode: React.FC<HexPuzzleModeProps> = ({ imageSrc, onComplete, onE
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // Draw base grid first
+    // Draw base grid first with game-style hexagons
     const validPositions = [
       [0, 0], [1, -1], [1, 0], [0, 1], [-1, 1], [-1, 0], [0, -1],
       [2, -2], [2, -1], [2, 0], [1, 1], [0, 2], [-1, 2], [-2, 1],
@@ -173,11 +163,13 @@ const HexPuzzleMode: React.FC<HexPuzzleModeProps> = ({ imageSrc, onComplete, onE
       [-3, 3], [2, -3]
     ];
 
-    // Draw empty grid cells
+    // Draw grid cells with image
     validPositions.forEach(([q, r]) => {
       const { x, y } = hexToPixel(q, r, centerX, centerY, tileSize);
       
       ctx.save();
+      
+      // Draw hex cell background
       ctx.beginPath();
       for (let i = 0; i < 6; i++) {
         const angle = (i * Math.PI) / 3;
@@ -187,63 +179,136 @@ const HexPuzzleMode: React.FC<HexPuzzleModeProps> = ({ imageSrc, onComplete, onE
         else ctx.lineTo(pointX, pointY);
       }
       ctx.closePath();
-      ctx.fillStyle = 'rgba(26, 26, 46, 0.5)';
-      ctx.fill();
-      ctx.strokeStyle = isDebug ? 'rgba(255, 0, 0, 0.5)' : 'rgba(0, 255, 159, 0.2)';
-      ctx.stroke();
-      ctx.restore();
-    });
 
-    // Draw placed pieces
-    pieces.forEach((piece, index) => {
-      const { x, y } = hexToPixel(
-        piece.currentPosition.q,
-        piece.currentPosition.r,
-        centerX,
-        centerY,
-        tileSize
+      // Fill with game-style gradient
+      const gradient = ctx.createRadialGradient(
+        x, y, 0,
+        x, y, tileSize
       );
+      gradient.addColorStop(0, 'rgba(26, 26, 46, 0.8)');
+      gradient.addColorStop(1, 'rgba(26, 26, 46, 0.4)');
+      ctx.fillStyle = gradient;
+      ctx.fill();
 
-      const isSelected = index === selectedPiece;
-      const isHovered = index === hoverPiece;
+      // Add inner glow
+      ctx.strokeStyle = 'rgba(0, 255, 159, 0.1)';
+      ctx.lineWidth = 2;
+      ctx.stroke();
 
-      ctx.save();
-      if (isSelected || isHovered) {
-        ctx.shadowColor = isSelected ? '#00FF9F' : 'rgba(0, 255, 159, 0.5)';
-        ctx.shadowBlur = 15;
+      // Draw the image section for this hex
+      const correctPiece = pieces.find(p => 
+        p.correctPosition.q === q && p.correctPosition.r === r
+      );
+      if (correctPiece) {
+        drawHexImageTile(
+          ctx,
+          image,
+          correctPiece,
+          x,
+          y,
+          tileSize,
+        );
       }
 
-      drawHexImageTile(
-        ctx, 
-        image, 
-        piece, 
-        x, 
-        y, 
-        tileSize,
-        false // Remove debug flag
-      );
+      // Draw hex border with game style
+      ctx.strokeStyle = 'rgba(0, 255, 159, 0.2)';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+
       ctx.restore();
     });
 
-    // Draw dragged piece last (if any)
-    if (selectedPiece !== null) {
-      const piece = pieces[selectedPiece];
-      const { x, y } = hexToPixel(
-        piece.currentPosition.q,
-        piece.currentPosition.r,
-        centerX,
-        centerY,
-        tileSize
-      );
+    // Draw placed pieces on top with slight transparency
+    if (isPuzzleStarted) {
+      pieces.forEach(piece => {
+        if (piece.currentPosition.q !== -10) { // Only draw placed pieces
+          const { x, y } = hexToPixel(
+            piece.currentPosition.q,
+            piece.currentPosition.r,
+            centerX,
+            centerY,
+            tileSize
+          );
 
-      ctx.save();
-      ctx.globalAlpha = 0.8;
-      drawHexImageTile(ctx, image, piece, x, y, tileSize, false);
-      ctx.restore();
+          ctx.save();
+
+          // Add glow effect for correctly placed pieces
+          const isCorrectlyPlaced = 
+            piece.currentPosition.q === piece.correctPosition.q && 
+            piece.currentPosition.r === piece.correctPosition.r;
+
+          if (isCorrectlyPlaced) {
+            // Add stronger matched tile effects
+            ctx.shadowColor = 'rgba(0, 255, 159, 0.6)';
+            ctx.shadowBlur = 20;
+            
+            // Add stronger radial glow
+            const gradient = ctx.createRadialGradient(
+              x, y, 0,
+              x, y, tileSize * 1.2
+            );
+            gradient.addColorStop(0, 'rgba(0, 255, 159, 0.3)');
+            gradient.addColorStop(0.6, 'rgba(0, 255, 159, 0.1)');
+            gradient.addColorStop(1, 'transparent');
+            ctx.fillStyle = gradient;
+            ctx.fill();
+
+            // Add pulsing animation
+            const pulseScale = 1 + Math.sin(Date.now() * 0.004) * 0.05;
+            ctx.translate(x, y);
+            ctx.scale(pulseScale, pulseScale);
+            ctx.translate(-x, -y);
+
+            // Increase brightness more
+            ctx.filter = 'brightness(1.3)';
+            
+            // Add second glow layer
+            ctx.strokeStyle = 'rgba(0, 255, 159, 0.4)';
+            ctx.lineWidth = 3;
+            ctx.stroke();
+          } else {
+            ctx.globalAlpha = 0.8; // Make unmatched pieces slightly transparent
+          }
+
+          drawHexImageTile(
+            ctx,
+            image,
+            piece,
+            x,
+            y,
+            tileSize,
+          );
+
+          ctx.restore();
+        }
+      });
     }
 
     if (isCompleted) {
       drawCompletionEffects(ctx, centerX, centerY, canvas.width, canvas.height);
+    }
+
+    // Draw preview at cursor position if tile is selected
+    if (isPuzzleStarted && selectedTileIndex !== null && cursorPosition) {
+      const selectedTile = visibleTileOptions[selectedTileIndex];
+      
+      ctx.save();
+      ctx.globalAlpha = 0.6;
+      
+      // Add glow effect
+      ctx.shadowColor = 'rgba(0, 255, 159, 0.4)';
+      ctx.shadowBlur = 15;
+      
+      // Draw at cursor position, centered
+      drawHexImageTile(
+        ctx,
+        image,
+        selectedTile,
+        cursorPosition.x,  // No offset needed, drawHexImageTile handles centering
+        cursorPosition.y,
+        tileSize
+      );
+      ctx.restore();
     }
   };
 
@@ -290,45 +355,240 @@ const HexPuzzleMode: React.FC<HexPuzzleModeProps> = ({ imageSrc, onComplete, onE
     
     animate();
     return () => cancelAnimationFrame(animationFrameId);
-  }, [pieces, image, selectedPiece, hoverPiece, isCompleted, completionEffect]);
+  }, [pieces, image, hoverPiece, isCompleted, completionEffect]);
+
+  // Add helper to find grid position
+  const findGridPosition = (x: number, y: number) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return null;
+
+    const centerX = canvas.width / 2;
+    const centerY = canvas.height / 2;
+
+    // Get all valid positions
+    const validPositions: [number, number][] = [
+      [0, 0], [1, -1], [1, 0], [0, 1], [-1, 1], [-1, 0], [0, -1],
+      [2, -2], [2, -1], [2, 0], [1, 1], [0, 2], [-1, 2], [-2, 1],
+      [-2, 0], [0, -2], [1, -2], [-2, 2], [-1, -1], [3, -3], [3, -2],
+      [3, -1], [2, 1], [1, 2], [0, 3], [-3, 2], [-3, 1], [-3, 0],
+      [-1, -2], [-1, 3], [-2, -1], [0, -3], [1, -3], [3, 0], [-2, 3],
+      [-3, 3], [2, -3]
+    ];
+
+    // Find closest hex position
+    let closestDist = Infinity;
+    let closestPos = null;
+
+    validPositions.forEach(([q, r]) => {
+      const hexPos = hexToPixel(q, r, centerX, centerY, tileSize);
+      const dist = Math.sqrt(Math.pow(x - hexPos.x, 2) + Math.pow(y - hexPos.y, 2));
+      if (dist < closestDist && dist < tileSize) {
+        closestDist = dist;
+        closestPos = { q, r };
+      }
+    });
+
+    return closestPos;
+  };
+
+  // Add function to place tile on grid
+  const placeTileOnGrid = (tileIndex: number, position: { q: number, r: number } | null) => {
+    if (!position) return;
+
+    const selectedTile = visibleTileOptions[tileIndex];
+    const isCorrectPlacement = 
+      position.q === selectedTile.correctPosition.q && 
+      position.r === selectedTile.correctPosition.r;
+    
+    if (isCorrectPlacement) {
+      // Create the new tile with the target position
+      const newTile: HexPuzzlePiece = {
+        ...selectedTile,
+        currentPosition: position,
+        correctPosition: selectedTile.correctPosition,
+        isSolved: true
+      };
+
+      // Update pieces array with new tile
+      setPieces(prevPieces => {
+        const newPieces = [...prevPieces];
+        
+        // Find if there's already a piece at this position
+        const existingIndex = newPieces.findIndex(p => 
+          p.currentPosition.q === position.q && 
+          p.currentPosition.r === position.r
+        );
+
+        if (existingIndex >= 0) {
+          // Replace existing piece
+          newPieces[existingIndex] = newTile;
+        } else {
+          // Add new piece
+          newPieces.push(newTile);
+        }
+
+        // Check if puzzle is solved
+        if (isPuzzleSolved(newPieces)) {
+          handlePuzzleCompletion();
+        }
+
+        return newPieces;
+      });
+
+      // Update tile options
+      setAllTileOptions(prev => {
+        const newOptions = prev.filter(t => t.id !== selectedTile.id);
+        return newOptions;
+      });
+
+      // Update visible options
+      setVisibleTileOptions(prev => {
+        const newVisible = [...prev];
+        newVisible.splice(tileIndex, 1);
+        // Add next tile from remaining options if available
+        if (allTileOptions.length > prev.length) {
+          const nextTile = allTileOptions.find(t => 
+            !prev.some(p => p.id === t.id) && t.id !== selectedTile.id
+          );
+          if (nextTile) {
+            newVisible.push(nextTile);
+          }
+        }
+        return newVisible;
+      });
+    } else {
+      // For incorrect placement, rotate the visible options
+      setVisibleTileOptions(prev => {
+        const newVisible = [...prev];
+        const [removedTile] = newVisible.splice(tileIndex, 1);
+        newVisible.push(removedTile);
+        return newVisible;
+      });
+    }
+  };
 
   return (
     <div className="hex-puzzle-mode">
-      <div className="puzzle-container">
-        <canvas
-          ref={canvasRef}
-          width={canvasWidth}
-          height={canvasHeight}
-          onClick={handleCanvasClick}
-          onMouseMove={(e) => {
-            const canvas = canvasRef.current;
-            if (!canvas) return;
-            const rect = canvas.getBoundingClientRect();
-            const x = e.clientX - rect.left;
-            const y = e.clientY - rect.top;
-            setHoverPiece(findPieceAtPosition(x, y));
+      <canvas
+        ref={canvasRef}
+        width={canvasWidth}
+        height={canvasHeight}
+        onClick={handleCanvasClick}
+        onMouseMove={(e) => {
+          const canvas = canvasRef.current;
+          if (!canvas) return;
+          const rect = canvas.getBoundingClientRect();
+          const x = e.clientX - rect.left;
+          const y = e.clientY - rect.top;
+          setCursorPosition({ x, y });
+          setHoverPiece(findPieceAtPosition(x, y));
+        }}
+        onMouseLeave={() => setCursorPosition(null)}
+        style={{ maxWidth: '100%', height: 'auto' }}
+      />
+      
+      {!isPuzzleStarted ? (
+        <button 
+          className="start-button"
+          onClick={() => {
+            setPieces(prevPieces => 
+              prevPieces.map((piece, index) => ({
+                ...piece,
+                currentPosition: { 
+                  q: -10,
+                  r: index
+                },
+                isSolved: false
+              }))
+            );
+            setIsPuzzleStarted(true);
           }}
-          style={{ maxWidth: '100%', height: 'auto' }}
-        />
-        
-        {/* Add debug view of original image */}
-        <div className="debug-view">
-          {image && (
-            <img 
-              src={image.src} 
-              alt="Original"
-              style={{ 
-                width: '440px',
-                height: '485px',
-                border: '1px solid red'
-              }}
-            />
-          )}
+        >
+          Start Puzzle
+        </button>
+      ) : (
+        <div className="next-tiles-container">
+          <div className="next-tiles">
+            {visibleTileOptions.map((tile, index) => (
+              <div 
+                key={tile.id}
+                className={`next-tile ${selectedTileIndex === index ? 'selected' : ''}`}
+                onClick={() => {
+                  setSelectedTileIndex(index);
+                  setClickedGridPosition(null);
+                }}
+              >
+                <canvas
+                  ref={el => {
+                    if (el && image) {
+                      const ctx = el.getContext('2d');
+                      if (ctx) {
+                        drawHexImageTile(
+                          ctx,
+                          image,
+                          tile,
+                          tileSize,
+                          tileSize,
+                          tileSize
+                        );
+                      }
+                    }
+                  }}
+                  width={tileSize * 2}
+                  height={tileSize * 2}
+                />
+              </div>
+            ))}
+          </div>
         </div>
-      </div>
-      <button className="exit-button" onClick={onExit}>
+      )}
+
+      <button className="exit-button" onClick={() => setShowExitModal(true)}>
         Exit Puzzle
       </button>
+
+      {/* Exit Confirmation Modal */}
+      <SpringModal
+        isOpen={showExitModal}
+        onClose={() => setShowExitModal(false)}
+        title="Exit Puzzle"
+        message="Are you sure you want to exit? Your progress will be lost."
+        variant="danger"
+      >
+        <button 
+          className="modal-button cancel" 
+          onClick={() => setShowExitModal(false)}
+        >
+          Stay
+        </button>
+        <button 
+          className="modal-button confirm" 
+          onClick={onExit}
+        >
+          Exit
+        </button>
+      </SpringModal>
+
+      {/* Completion Modal */}
+      <SpringModal
+        isOpen={showCompletionModal}
+        onClose={() => {
+          setShowCompletionModal(false);
+          onComplete();
+        }}
+        title="Puzzle Completed!"
+        message="Congratulations! You've completed the puzzle!"
+      >
+        <button 
+          className="modal-button confirm" 
+          onClick={() => {
+            setShowCompletionModal(false);
+            onComplete();
+          }}
+        >
+          Continue
+        </button>
+      </SpringModal>
     </div>
   );
 };

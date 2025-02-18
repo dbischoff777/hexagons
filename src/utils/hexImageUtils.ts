@@ -75,7 +75,6 @@ export const drawHexImageTile = (
   x: number,
   y: number,
   size: number,
-  debug = false
 ) => {
   ctx.save();
 

@@ -7,10 +7,21 @@
   align-items: center;
   background: #1a1a2e;
   overflow: hidden;
+  padding: clamp(10px, 2vh, 20px);
 }
 
 .hex-puzzle-mode canvas {
   cursor: pointer;
+  /* Only scale down when viewport is too small */
+  @media (max-width: 1200px), (max-height: 800px) {
+    max-width: min(100vh - 100px, 100vw - 100px);
+    max-height: min(100vh - 100px, 100vw - 100px);
+    width: auto;
+    height: auto; 
+  }
+  object-fit: contain;
+  transform-origin: center;
+  transition: transform 0.2s ease;
 }
 
 .exit-button {
@@ -60,4 +71,142 @@
   border: 1px solid rgba(255, 0, 0, 0.3);
   padding: 10px;
   background: rgba(0, 0, 0, 0.2);
+}
+
+.next-tiles-container {
+  width: clamp(80px, 12vw, 100px);
+  min-height: min(200px, 50vh);
+  position: absolute;
+  right: max(20px, 3vw);
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: clamp(8px, 1.2vh, 15px);
+  align-items: center;
+  pointer-events: all;
+  max-width: 15%;
+  z-index: 10;
+  background: rgba(26, 26, 46, 0.95);
+  padding: clamp(10px, 2vh, 20px);
+  border-radius: clamp(10px, 2vw, 20px);
+  border: 2px solid rgba(0, 255, 159, 0.3);
+  box-shadow: 
+    0 4px 20px rgba(0, 255, 159, 0.2),
+    0 0 30px rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(10px);
+}
+
+.next-tiles {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(5px, 2.5vh, 10px);
+  align-items: center;
+  margin-bottom: clamp(10px, 2vh, 20px);
+}
+
+.next-tile {
+  position: relative;
+  width: clamp(60px, 10vw, 100px);
+  height: clamp(60px, 10vw, 100px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  background: rgba(26, 26, 46, 0.95);
+  border-radius: 50%;
+  border: 2px solid rgba(0, 255, 159, 0.2);
+  box-shadow: 
+    0 4px 20px rgba(0, 255, 159, 0.1),
+    0 0 30px rgba(0, 0, 0, 0.3);
+}
+
+.next-tile:hover {
+  transform: translateY(-2px);
+  border-color: rgba(0, 255, 159, 0.4);
+  box-shadow: 
+    0 6px 25px rgba(0, 255, 159, 0.2),
+    0 0 35px rgba(0, 0, 0, 0.4);
+}
+
+.next-tile.selected {
+  transform: translateY(-2px) scale(1.05);
+  border-color: rgba(0, 255, 159, 0.6);
+  box-shadow: 
+    0 8px 30px rgba(0, 255, 159, 0.3),
+    0 0 40px rgba(0, 0, 0, 0.5);
+}
+
+.next-tile canvas {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  pointer-events: none;
+  transition: all 0.2s ease;
+}
+
+/* Add tile animations */
+@keyframes tilePlace {
+  0% {
+    transform: scale(1.3) rotate(-10deg);
+    filter: brightness(2);
+  }
+  50% {
+    transform: scale(0.9) rotate(5deg);
+  }
+  100% {
+    transform: scale(1) rotate(0);
+    filter: brightness(1);
+  }
+}
+
+.tile-placed {
+  animation: tilePlace 0.3s ease-out;
+}
+
+.start-button {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  padding: 15px 30px;
+  font-size: 24px;
+  background: rgba(0, 255, 159, 0.2);
+  border: 2px solid #00FF9F;
+  color: #00FF9F;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.start-button:hover {
+  background: rgba(0, 255, 159, 0.3);
+  transform: translate(-50%, -50%) scale(1.05);
+  box-shadow: 0 0 20px rgba(0, 255, 159, 0.4);
+}
+
+.modal-button {
+  padding: 10px 20px;
+  border-radius: 4px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.modal-button.cancel {
+  background: rgba(0, 255, 159, 0.1);
+  border: 2px solid #00FF9F;
+  color: #00FF9F;
+}
+
+.modal-button.cancel:hover {
+  background: rgba(0, 255, 159, 0.2);
+  box-shadow: 0 0 15px rgba(0, 255, 159, 0.3);
+}
+
+.modal-button.confirm {
+  background: rgba(255, 17, 119, 0.1);
+  border: 2px solid #FF1177;
+  color: #FF1177;
 } 
