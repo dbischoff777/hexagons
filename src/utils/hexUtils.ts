@@ -1,4 +1,4 @@
-import { Tile, PlacedTile } from "../types/index"
+import { Tile, PlacedTile, Edge } from "../types/index"
 
 export const COLORS = [
   '#FF1177',  // Neon pink
@@ -8,6 +8,12 @@ export const COLORS = [
   //'#FF00FF',  // Neon magenta
   '#4D4DFF'   // Neon blue
 ]
+
+export const POWER_UP_COLORS = {
+  freeze: '#00FFFF',    // Neon cyan
+  multiplier: '#FFE900', // Neon yellow
+  colorShift: '#FF1177'  // Neon pink
+} as const;
 
 export const getRandomColor = () => COLORS[Math.floor(Math.random() * COLORS.length)]
 
@@ -56,12 +62,21 @@ export const createTileWithRandomEdges = (q: number, r: number): PlacedTile => {
   // Determine if this should be a joker tile (5% chance)
   const isJoker = !isMirror && Math.random() < 0.05; // Don't make both mirror and joker
 
+  // Create the edges based on whether it's a power-up tile
+  let edges: Edge[];
+  if (powerUp) {
+    const color = POWER_UP_COLORS[powerUp.type];
+    edges = Array(6).fill(null).map(() => ({ color }));
+  } else {
+    edges = Array(6).fill(null).map(() => ({
+      color: COLORS[Math.floor(Math.random() * COLORS.length)]
+    }));
+  }
+
   return {
     q,
     r,
-    edges: Array(6).fill(null).map(() => ({
-      color: COLORS[Math.floor(Math.random() * COLORS.length)]
-    })),
+    edges,
     isPlaced: false,
     value: 0,
     type: isMirror ? 'mirror' : 'normal',
