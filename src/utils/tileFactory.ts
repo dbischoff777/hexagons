@@ -1,4 +1,4 @@
-import { PlacedTile, PowerUpType, Edge } from '../types';
+import { PlacedTile, PowerUpType } from '../types';
 import { createTileWithRandomEdges } from './hexUtils';
 import { getUpgradeEffect } from './upgradeUtils';
 import { UpgradeState } from '../types/upgrades';

@@ -123,6 +123,26 @@ export const hasMatchingEdges = (
  * Updates the value of each tile based on its matching edges
  */
 export const updateTileValues = (tiles: PlacedTile[]): PlacedTile[] => {
+  // Find the newly placed tile (the last one in the array)
+  const newTile = tiles[tiles.length - 1];
+  
+  // Get adjacent tiles that have matching edges with the new tile
+  const adjacentMatchingTiles = tiles.filter(t => {
+    if (t === newTile) return false; // Skip the new tile itself
+    
+    // Check if adjacent
+    if (Math.abs(t.q - newTile.q) > 1 || Math.abs(t.r - newTile.r) > 1) return false;
+    
+    // Check if any edges match
+    const direction = DIRECTIONS.findIndex(dir => 
+      dir.q === t.q - newTile.q && dir.r === t.r - newTile.r
+    );
+    if (direction === -1) return false;
+    
+    const oppositeDirection = (direction + 3) % 6;
+    return newTile.edges[direction].color === t.edges[oppositeDirection].color;
+  });
+  
   return tiles.map(tile => {
     let matches = 0;
     let matchingEdges = 0;
@@ -157,12 +177,21 @@ export const updateTileValues = (tiles: PlacedTile[]): PlacedTile[] => {
       matches = matchingEdges * 2; // Double points for mirror matches
     }
     
+    const hasMatches = matches > 0;
+    const isNewlyPlacedTile = tile.q === newTile.q && tile.r === newTile.r;
+    const isMatchingAdjacent = adjacentMatchingTiles.some(t => t.q === tile.q && t.r === tile.r);
+    
     return {
       ...tile,
-      value: matches > 0 ? matches : 0
+      value: hasMatches ? (
+        isNewlyPlacedTile ? 1 : // New tile starts at 1
+        isMatchingAdjacent ? tile.value + 1 : // Only increment adjacent tiles with matching edges
+        tile.value // Keep other tiles' values
+      ) : 0,
+      hasBeenMatched: hasMatches
     };
   });
-}
+};
 
 /**
  * Gets feedback text and emoji based on score value
