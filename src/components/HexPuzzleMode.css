@@ -1,0 +1,63 @@
+.hex-puzzle-mode {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #1a1a2e;
+  overflow: hidden;
+}
+
+.hex-puzzle-mode canvas {
+  cursor: pointer;
+}
+
+.exit-button {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  padding: 10px 20px;
+  background: rgba(255, 17, 119, 0.1);
+  border: 2px solid #FF1177;
+  color: #FF1177;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: all 0.3s ease;
+}
+
+.exit-button:hover {
+  background: rgba(255, 17, 119, 0.2);
+  box-shadow: 0 0 15px rgba(255, 17, 119, 0.3);
+}
+
+/* Add completion overlay */
+.hex-puzzle-mode.completed::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(circle, rgba(0, 255, 159, 0.1) 0%, rgba(26, 26, 46, 0) 70%);
+  animation: pulseOverlay 2s ease-in-out infinite;
+}
+
+@keyframes pulseOverlay {
+  0% { opacity: 0.3; }
+  50% { opacity: 0.6; }
+  100% { opacity: 0.3; }
+}
+
+.puzzle-container {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+}
+
+.debug-view {
+  border: 1px solid rgba(255, 0, 0, 0.3);
+  padding: 10px;
+  background: rgba(0, 0, 0, 0.2);
+} 

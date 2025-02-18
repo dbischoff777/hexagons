@@ -818,3 +818,25 @@ button:hover > *:first-child {
     padding: clamp(0.5rem, 1.5vh, 0.8rem);
   }
 }
+
+.mode-button.puzzle {
+  background: linear-gradient(45deg, #9C27B0, #673AB7);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  color: white;
+}
+
+.mode-button.puzzle:hover {
+  background: linear-gradient(45deg, #BA68C8, #7E57C2);
+  transform: translateY(-2px);
+  box-shadow: 0 0 20px rgba(156, 39, 176, 0.3);
+}
+
+.mode-button.puzzle .mode-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.mode-button.puzzle svg {
+  font-size: 1.2em;
+}

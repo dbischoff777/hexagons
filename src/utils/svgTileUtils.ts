@@ -103,9 +103,13 @@ export const generateGameGridTiles = (
 ): HexTileData[] => {
   const tiles: HexTileData[] = [];
   
-  // Calculate center offset
-  const centerX = gridRadius * hexSize * Math.sqrt(3);
-  const centerY = gridRadius * hexSize * 1.5;
+  // Calculate dimensions for 440x485 target
+  const targetWidth = 440;
+  const targetHeight = 485;
+  
+  // Calculate center offset based on target dimensions
+  const centerX = targetWidth / 2;
+  const centerY = targetHeight / 2;
   
   // Generate tiles in a hexagonal pattern
   for (let q = -gridRadius; q <= gridRadius; q++) {
@@ -113,6 +117,7 @@ export const generateGameGridTiles = (
     const r2 = Math.min(gridRadius, -q + gridRadius);
     
     for (let r = r1; r <= r2; r++) {
+      // Update position calculation to match our target dimensions
       const x = centerX + hexSize * (Math.sqrt(3) * q + Math.sqrt(3)/2 * r);
       const y = centerY + hexSize * (3./2 * r);
       
@@ -137,11 +142,7 @@ export const loadAndTileSvg = async (
   try {
     const response = await fetch(svgUrl);
     const svgText = await response.text();
-    
-    const parser = new DOMParser();
-    const svgDoc = parser.parseFromString(svgText, 'image/svg+xml');
-    const svgElement = svgDoc.documentElement;
-    
+        
     const tiles = generateGameGridTiles(gridRadius, hexSize);
     return createTiledSvg(svgText, tiles);
   } catch (error) {

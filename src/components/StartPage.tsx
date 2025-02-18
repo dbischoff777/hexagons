@@ -16,9 +16,14 @@ import { APP_VERSION } from '../constants/version'
 import styles from '../styles/bubbleText.module.css'
 import HexagonGrid from './HexagonGrid'
 import SpringModal from './SpringModal'
+import { FaPuzzlePiece } from 'react-icons/fa'
 
 interface StartPageProps {
-  onStartGame: (withTimer: boolean, isDailyChallenge?: boolean) => void
+  onStartGame: (
+    withTimer: boolean, 
+    isDailyChallenge?: boolean,
+    isPuzzleMode?: boolean
+  ) => void
   onMusicToggle: (enabled: boolean) => void
   onSoundToggle: (enabled: boolean) => void
   musicEnabled: boolean
@@ -38,7 +43,9 @@ const PUPPY_PHRASES = [
   "*wiggles excitedly* Time for hexagon fun! 🔷",
   "*happy zoomies* Let's beat your record! ⭐",
   "*curious sniff* What level shall we try? 🎪",
-  "*puppy eyes* Can we play together? 💫"
+  "*puppy eyes* Can we play together? 💫",
+  "*curious head tilt* Ready to solve a puzzle? 🧩",
+  "*excited tail wag* Let's piece it together! ✨",
 ];
 
 const BUTTON_HOVER_PHRASES = {
@@ -90,6 +97,10 @@ const BUTTON_HOVER_PHRASES = {
   settings: [
     "*curious tilt* Want to adjust something? ⚙️",
     "*helpful pose* I can help with settings! 🔧",
+  ],
+  puzzle: [
+    "*curious head tilt* Ready to solve a puzzle? 🧩",
+    "*excited tail wag* Let's piece it together! ✨",
   ],
 };
 
@@ -154,12 +165,14 @@ const StartPage: React.FC<StartPageProps> = ({
     return () => document.removeEventListener('mousemove', handleMouseMove)
   }, [])
 
-  const handleNewGame = (timedMode: boolean) => {
+  const handleNewGame = (timedMode: boolean, isDailyChallenge?: boolean, isPuzzleMode?: boolean) => {
+    console.log('handleNewGame called with:', { timedMode, isDailyChallenge, isPuzzleMode });
     if (hasSavedGame) {
       setShowConfirmModal(true)
       setPendingGameMode(timedMode)
     } else {
-      onStartGame(timedMode, undefined)
+      console.log('Calling onStartGame with:', { timedMode, isDailyChallenge, isPuzzleMode });
+      onStartGame(timedMode, isDailyChallenge, isPuzzleMode)
     }
   }
 
@@ -309,7 +322,7 @@ const StartPage: React.FC<StartPageProps> = ({
               <div className="mode-selection">
                 <button 
                   className="mode-button timed" 
-                  onClick={() => handleNewGame(true)}
+                  onClick={() => handleNewGame(true, undefined, undefined)}
                   onMouseEnter={() => handleButtonHover('timed')}
                 >
                   <span className="mode-title">⏱️ TIMED MODE</span>
@@ -318,7 +331,7 @@ const StartPage: React.FC<StartPageProps> = ({
                 
                 <button 
                   className="mode-button zen" 
-                  onClick={() => handleNewGame(false)}
+                  onClick={() => handleNewGame(false, undefined, undefined)}
                   onMouseEnter={() => handleButtonHover('zen')}
                 >
                   <span className="mode-title">🍃 ZEN MODE</span>
@@ -336,11 +349,24 @@ const StartPage: React.FC<StartPageProps> = ({
 
                 <button 
                   className="mode-button daily" 
-                  onClick={() => handleNewGame(false)}
+                  onClick={() => handleNewGame(false, true, undefined)}
                   onMouseEnter={() => handleButtonHover('daily')}
                 >
                   <span className="mode-title">📅 DAILY CHALLENGE</span>
                   <span className="mode-desc">New puzzles every day!</span>
+                </button>
+
+                <button 
+                  className="mode-button puzzle"
+                  onClick={() => onStartGame(false, false, true)}
+                  onMouseEnter={() => handleButtonHover('puzzle')}
+                >
+                  <div className="mode-title">
+                    <FaPuzzlePiece /> Puzzle Mode
+                  </div>
+                  <div className="mode-desc">
+                    Solve the hex image puzzle!
+                  </div>
                 </button>
 
                 <button 

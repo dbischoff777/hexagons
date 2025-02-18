@@ -10,28 +10,30 @@ export interface HexPuzzlePiece {
 }
 
 export const createHexPuzzle = (
-  imageWidth: number,
-  imageHeight: number,
+  image: HTMLImageElement,
   hexSize: number
 ): HexPuzzlePiece[] => {
-  const pieces: HexPuzzlePiece[] = [];
+  // Scale image to our target size (440x485)
+  const targetWidth = 440;
+  const targetHeight = 485;
   
-  const scaleFactor = 1;
-  const adjustedHexSize = hexSize * scaleFactor;
-  
-  const width = adjustedHexSize * 2;
-  const height = adjustedHexSize * Math.sqrt(3);
-  
-  const centerX = imageWidth / 2;
-  const centerY = imageHeight / 2;
-  
-  const pixelFromAxial = (q: number, r: number) => {
-    const x = adjustedHexSize * (1.7 * q);
-    const y = adjustedHexSize * (Math.sqrt(3)/2 * q + Math.sqrt(3) * r);
-    return { x, y };
-  };
+  // Create temp canvas for scaled image
+  const tempCanvas = document.createElement('canvas');
+  tempCanvas.width = targetWidth;
+  tempCanvas.height = targetHeight;
+  const tempCtx = tempCanvas.getContext('2d')!;
+  tempCtx.drawImage(image, 0, 0, targetWidth, targetHeight);
 
-  // Keep the same valid positions
+  // Calculate grid dimensions to fit the image
+  const gridWidth = targetWidth;
+  const gridHeight = targetHeight;
+  
+  // Calculate hex spacing to fit the entire image
+  const hexSpacingX = gridWidth / (6 * 1.5); // Divide by max width in hex coordinates
+  const hexSpacingY = gridHeight / (7 * Math.sqrt(3)); // Divide by max height in hex coordinates
+  const effectiveHexSize = Math.min(hexSpacingX, hexSpacingY);
+
+  const pieces: HexPuzzlePiece[] = [];
   const validPositions = [
     // Center
     [0, 0],
@@ -45,26 +47,20 @@ export const createHexPuzzle = (
     [-3, 2], [-3, 1], [-3, 0], [-1, -2], [-1, 3], [-2, -1],
     [0, -3], [1, -3], [3, 0], [-2, 3], [-3, 3], [2, -3]
   ];
-
-  const overlap = 1;
-
+  
   validPositions.forEach(([q, r], index) => {
-    const { x, y } = pixelFromAxial(q, r);
+    // Calculate position using the effective hex size
+    const x = gridWidth/2 + (q * effectiveHexSize * 1.5);
+    const y = gridHeight/2 + (r * effectiveHexSize * Math.sqrt(3) + q * effectiveHexSize * Math.sqrt(3)/2);
     
-    const sourceX = centerX + x - width/2;
-    const sourceY = centerY + y - height/2;
-
-    const sectionWidth = width * overlap;
-    const sectionHeight = height * overlap;
-
     pieces.push({
       id: index,
       correctPosition: { q, r },
       currentPosition: { q, r },
-      sourceX: Math.max(0, Math.min(imageWidth - sectionWidth, sourceX)),
-      sourceY: Math.max(0, Math.min(imageHeight - sectionHeight, sourceY)),
-      width: sectionWidth,
-      height: sectionHeight,
+      sourceX: x - effectiveHexSize,
+      sourceY: y - effectiveHexSize,
+      width: effectiveHexSize * 2,
+      height: effectiveHexSize * 2,
       isSolved: true
     });
   });
@@ -83,6 +79,7 @@ export const drawHexImageTile = (
 ) => {
   ctx.save();
 
+  // Create hex clip path
   ctx.beginPath();
   for (let i = 0; i < 6; i++) {
     const angle = (i * Math.PI) / 3;
@@ -93,40 +90,22 @@ export const drawHexImageTile = (
   }
   ctx.closePath();
 
-  if (debug) {
-    ctx.strokeStyle = 'rgba(255, 0, 0, 0.5)';
-    ctx.lineWidth = 2;
-    ctx.stroke();
-
-    ctx.fillStyle = 'red';
-    ctx.beginPath();
-    ctx.arc(x, y, 3, 0, Math.PI * 2);
-    ctx.fill();
-
-    ctx.fillStyle = 'white';
-    ctx.font = '12px Arial';
-    ctx.textAlign = 'center';
-    ctx.fillText(`${tile.correctPosition.q},${tile.correctPosition.r}`, x, y - 10);
-    ctx.fillText(`#${tile.id}`, x, y + 10);
-
-    ctx.fillStyle = 'yellow';
-    ctx.font = '10px Arial';
-    ctx.fillText(`src: ${Math.round(tile.sourceX)},${Math.round(tile.sourceY)}`, x, y + 25);
-  }
-
+  // Apply clip path
   ctx.clip();
-  ctx.globalAlpha = 1.0;
-  
+
+  // Draw the image section
+  const scale = 1.05; // Add slight overlap to prevent gaps
+  const scaledSize = size * 2 * scale;
   ctx.drawImage(
     image,
     tile.sourceX,
     tile.sourceY,
     tile.width,
     tile.height,
-    x - size,
-    y - size,
-    size * 2,
-    size * 2
+    x - scaledSize/2,
+    y - scaledSize/2,
+    scaledSize,
+    scaledSize
   );
 
   ctx.restore();

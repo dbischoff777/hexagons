@@ -12,6 +12,8 @@ import PreventContextMenu from './components/PreventContextMenu'
 import { KeyBindings } from './types/index'
 import { loadKeyBindings, saveKeyBindings } from './utils/keyBindingsUtils'
 import SettingsModal from './components/SettingsModal'
+import HexPuzzleMode from './components/HexPuzzleMode'
+import frenchBulldogSvg from './assets/images/frenchie.svg'
 
 interface CurrentGame {
   isLevelMode: boolean;
@@ -43,6 +45,7 @@ function App() {
   });
   const [keyBindings, setKeyBindings] = useState<KeyBindings>(loadKeyBindings());
   const [isSettingsOpen, setSettingsOpen] = useState(false);
+  const [isPuzzleMode, setIsPuzzleMode] = useState(false);
 
   // Load saved game state on component mount
   useEffect(() => {
@@ -91,27 +94,16 @@ function App() {
   };
 
   // Handler for StartPage component
-  const handleStartPageGame = (withTimer: boolean, isDailyChallenge?: boolean) => {
-    // Get current level info based on player progress
-    const progress = getPlayerProgress();
-    const { currentBlock, currentLevel } = getCurrentLevelInfo(progress.points);
-    
-    // Get next level's target score
-    const nextLevel = getNextLevelInfo(currentBlock, currentLevel, LEVEL_BLOCKS);
-    const effectiveTargetScore = nextLevel?.pointsRequired ?? 10000;
-    
-    // Set current game state
-    setCurrentGame({
-      isLevelMode: true,
-      targetScore: effectiveTargetScore,
-      currentBlock,
-      currentLevel
-    });
-    
-    setGameStarted(true);
+  const handleStartGame = (
+    withTimer: boolean, 
+    isDailyChallenge?: boolean,
+    isPuzzleMode?: boolean
+  ) => {
+    console.log('Starting game with:', { withTimer, isDailyChallenge, isPuzzleMode });
     setTimedMode(withTimer);
+    setIsPuzzleMode(!!isPuzzleMode);
     setIsDailyChallenge(!!isDailyChallenge);
-    setSavedGameState(null);
+    setGameStarted(true);
   };
 
   const handleLevelComplete = (isComplete: boolean) => {
@@ -235,28 +227,43 @@ function App() {
         >
           <div className="app">
             {gameStarted ? (
-              <Game 
-                musicEnabled={musicEnabled} 
-                soundEnabled={soundEnabled}
-                timedMode={timedMode}
-                onGameOver={handleExitGame}
-                tutorial={tutorialMode}
-                onSkipTutorial={handleExitGame}
-                onExit={handleExitGame}
-                onStartGame={handleGameStart}
-                savedGameState={savedGameState}
-                isDailyChallenge={isDailyChallenge}
-                isLevelMode={true}
-                targetScore={currentGame?.targetScore}
-                currentBlock={currentGame?.currentBlock}
-                currentLevel={currentGame?.currentLevel}
-                onLevelComplete={handleLevelComplete}
-                showLevelComplete={showLevelComplete}
-                rotationEnabled={rotationEnabled}
-              />
+              isPuzzleMode ? (
+                <HexPuzzleMode
+                  imageSrc={frenchBulldogSvg}
+                  onComplete={() => {
+                    soundManager.playSound('achievement');
+                    setGameStarted(false);
+                    setIsPuzzleMode(false);
+                  }}
+                  onExit={() => {
+                    setGameStarted(false);
+                    setIsPuzzleMode(false);
+                  }}
+                />
+              ) : (
+                <Game 
+                  musicEnabled={musicEnabled} 
+                  soundEnabled={soundEnabled}
+                  timedMode={timedMode}
+                  onGameOver={handleExitGame}
+                  tutorial={tutorialMode}
+                  onSkipTutorial={handleExitGame}
+                  onExit={handleExitGame}
+                  onStartGame={handleGameStart}
+                  savedGameState={savedGameState}
+                  isDailyChallenge={isDailyChallenge}
+                  isLevelMode={true}
+                  targetScore={currentGame?.targetScore}
+                  currentBlock={currentGame?.currentBlock}
+                  currentLevel={currentGame?.currentLevel}
+                  onLevelComplete={handleLevelComplete}
+                  showLevelComplete={showLevelComplete}
+                  rotationEnabled={rotationEnabled}
+                />
+              )
             ) : (
               <StartPage 
-                onStartGame={handleStartPageGame}
+                onStartGame={handleStartGame}
                 onMusicToggle={handleMusicToggle}
                 onSoundToggle={handleSoundToggle}
                 musicEnabled={musicEnabled}
