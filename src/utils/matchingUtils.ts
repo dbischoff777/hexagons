@@ -342,3 +342,38 @@ export const processGridClearMatches = (
     hasMatchingEdges(tile, tiles, settings.isColorBlind)
   );
 };
+
+// Add this new function to handle grid clear effects
+export const handleGridClearEffects = (
+  tiles: PlacedTile[],
+  settings: { isColorBlind: boolean },
+  combo: ComboState
+): {
+  matchingTiles: PlacedTile[];
+  gridBonus: number;
+  newComboState: ComboState;
+} => {
+  const matchingTiles = processGridClearMatches(tiles, settings);
+  const gridBonus = 1000; // Base grid clear bonus
+
+  const newComboState = {
+    ...combo,
+    count: combo.count + 1,
+    multiplier: combo.multiplier * 1.5,
+    lastPlacementTime: Date.now()
+  };
+
+  return {
+    matchingTiles,
+    gridBonus,
+    newComboState
+  };
+};
+
+// Add this function to handle sound effects for matches
+export const shouldPlayMatchSound = (
+  matchCount: number,
+  isGridClear: boolean = false
+): boolean => {
+  return matchCount > 0 || isGridClear;
+};

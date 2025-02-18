@@ -51,6 +51,9 @@ import {
   getRandomFeedback,
   getFeedbackForClear,
   calculateScore,
+  handleTileMatches, 
+  handleGridClearEffects, 
+  shouldPlayMatchSound
 } from '../utils/matchingUtils';
 import { RotationState } from '../utils/rotationUtils';
 import { createInitialTile, createTiles } from '../utils/tileFactory';
@@ -2514,24 +2517,16 @@ const Game: React.FC<GameProps> = ({
   ]);
 
   // Add a helper function to handle tile placement effects
-  const handleTilePlacement = (newTile: PlacedTile, updatedTiles: PlacedTile[]) => {
-    // Count matching edges
-    const adjacentTiles = getAdjacentTiles(newTile, updatedTiles);
-    let matchCount = 0;
-    
-    // Check each edge for matches
-    newTile.edges.forEach((edge: { color: string }, index: number) => {
-      const adjacentTile = adjacentTiles.find((t: PlacedTile) => 
-        getAdjacentDirection(newTile.q, newTile.r, t.q, t.r) === index
-      );
-      
-      if (adjacentTile) {
-        const adjacentEdgeIndex = (getAdjacentDirection(adjacentTile.q, adjacentTile.r, newTile.q, newTile.r) + 3) % 6;
-        if (edge.color === adjacentTile.edges[adjacentEdgeIndex].color) {
-          matchCount++;
-        }
-      }
-    });
+  const handleTilePlacement = (newTile: PlacedTile, currentTiles: PlacedTile[]) => {
+    // Use centralized matching logic
+    const { matchCount, updatedTiles, score: matchScore } = handleTileMatches(
+      newTile,
+      currentTiles,
+      settings,
+      upgradeState,
+      powerUps,
+      combo
+    );
 
     if (matchCount > 0) {
       // Handle matches, scoring, and effects
@@ -2539,11 +2534,25 @@ const Game: React.FC<GameProps> = ({
       
       // Add match animation
       addTileAnimation(newTile.q, newTile.r, 'match');
+
+      // Play match sound if enabled
+      if (soundEnabled && shouldPlayMatchSound(matchCount)) {
+        soundManager.playSound('match');
+      }
     }
 
     // Check for grid full condition
     if (isGridFull(updatedTiles, cols)) {
-      handleGridClear();
+      const { matchingTiles, gridBonus, newComboState } = handleGridClearEffects(
+        updatedTiles,
+        settings,
+        combo
+      );
+
+      if (matchingTiles.length > 0) {
+        handleGridClear();
+        setCombo(newComboState);
+      }
     }
 
     // Update tutorial state if needed

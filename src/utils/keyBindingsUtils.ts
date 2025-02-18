@@ -4,7 +4,7 @@ import { SoundManager } from './soundManager';
 import { UpgradeState } from '../types/upgrades';
 import { ScorePopupData } from '../types/scorePopup';
 import { isGridFull } from '../utils/gameUtils';
-import { processPlacementMatches, processGridClearMatches } from './matchingUtils';
+import { processPlacementMatches, handleGridClearEffects, shouldPlayMatchSound } from './matchingUtils';
 
 export const DEFAULT_KEY_BINDINGS: KeyBindings = {
   rotateClockwise: 'e',
@@ -148,14 +148,17 @@ export const handleKeyboardPlacement = ({
 
     // Check for grid-full bonus
     if (isGridFull(updatedTiles, cols)) {
-      const matchingTiles = processGridClearMatches(updatedTiles, settings);
+      const { matchingTiles, gridBonus, newComboState } = handleGridClearEffects(
+        updatedTiles,
+        settings,
+        comboState
+      );
 
       if (matchingTiles.length > 0) {
-        if (soundEnabled) {
+        if (soundEnabled && shouldPlayMatchSound(0, true)) {
           SoundManager.getInstance().playSound('match');
         }
 
-        const gridBonus = 1000;
         addScorePopup({
           score: gridBonus,
           x: centerX,
@@ -166,11 +169,7 @@ export const handleKeyboardPlacement = ({
         });
 
         onScoreUpdate(gridBonus);
-        onComboUpdate({
-          ...comboState,
-          count: comboState.count + 1,
-          multiplier: comboState.multiplier * 1.5
-        });
+        onComboUpdate(newComboState);
       }
     }
 
@@ -178,7 +177,7 @@ export const handleKeyboardPlacement = ({
     if (soundEnabled) {
       const soundManager = SoundManager.getInstance();
       soundManager.playSound('tilePlaced');
-      if (matchCount > 0) {
+      if (shouldPlayMatchSound(matchCount)) {
         soundManager.playSound('match');
       }
     }
