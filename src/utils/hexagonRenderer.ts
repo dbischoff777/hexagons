@@ -432,7 +432,6 @@ function drawMatchGlow(
     else ctx.lineTo(point[0], point[1])
   })
   ctx.closePath()
-  ctx.stroke()
 }
 
 // Utility functions for drawing common elements
