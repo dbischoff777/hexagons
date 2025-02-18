@@ -1375,7 +1375,7 @@ const Game: React.FC<GameProps> = ({
 
   // Update the cleanup effect
   useEffect(() => {
-    const timeouts: number[] = [];
+    const timeouts: NodeJS.Timeout[] = [];  // Change type from number[] to NodeJS.Timeout[]
     
     scorePopups.forEach(popup => {
       const duration = popup.type === 'score' ? 2000 : 800;
