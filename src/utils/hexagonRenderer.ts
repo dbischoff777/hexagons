@@ -34,7 +34,7 @@ const TILE_STYLES = {
   },
   mirror: {
     glow: '#00FFFF',
-    icon: '↔',
+    icon: '⇄',
     text: 'Mirrors Adjacent Tiles'
   },
   powerUp: {
@@ -173,18 +173,24 @@ function drawSelectionHighlight(
   })
   ctx.closePath()
   
-  const glowGradient = ctx.createRadialGradient(x, y, size * 0.5, x, y, size * 1.5)
-  glowGradient.addColorStop(0, 'rgba(0, 255, 255, 0.4)')
-  glowGradient.addColorStop(0.5, 'rgba(255, 0, 255, 0.2)')
-  glowGradient.addColorStop(1, 'rgba(0, 255, 255, 0)')
-  ctx.fillStyle = glowGradient
+  // Enhanced multi-layer glow effect inspired by CodePen example
+  const innerGlow = ctx.createRadialGradient(x, y, size * 0.2, x, y, size * 1.5)
+  innerGlow.addColorStop(0, 'rgba(0, 255, 255, 0.6)')
+  innerGlow.addColorStop(0.3, 'rgba(255, 0, 255, 0.3)')
+  innerGlow.addColorStop(0.6, 'rgba(0, 255, 255, 0.2)')
+  innerGlow.addColorStop(1, 'rgba(0, 0, 0, 0)')
+  ctx.fillStyle = innerGlow
   ctx.fill()
   
-  ctx.strokeStyle = '#00FFFF'
-  ctx.lineWidth = 4
+  // Pulsing outer stroke
+  const pulseIntensity = PULSE_ANIMATION(Date.now())
+  ctx.strokeStyle = `rgba(0, 255, 255, ${0.8 + pulseIntensity * 0.2})`
+  ctx.lineWidth = 3
   ctx.stroke()
-  ctx.lineWidth = 2
-  ctx.strokeStyle = '#FF00FF'
+  
+  // Inner stroke with different color
+  ctx.strokeStyle = `rgba(255, 0, 255, ${0.6 + pulseIntensity * 0.4})`
+  ctx.lineWidth = 1.5
   ctx.stroke()
 }
 
@@ -197,20 +203,33 @@ function applyBaseStyles(
   y: number,
   size: number
 ) {
-  ctx.shadowColor = 'rgba(0, 255, 255, 0.3)'
-  ctx.shadowBlur = 12
-  ctx.shadowOffsetY = 2
+  // Enhanced shadow and lighting effects
+  ctx.shadowColor = 'rgba(0, 255, 255, 0.4)'
+  ctx.shadowBlur = 15
+  ctx.shadowOffsetY = 3
 
   if (tile?.isPlaced) {
     if (isMatched) {
-      const matchGradient = ctx.createRadialGradient(x, y, 0, x, y, size)
-      matchGradient.addColorStop(0, theme.colors.accent)
-      matchGradient.addColorStop(1, theme.colors.secondary)
+      // Enhanced matched tile gradient with more vibrant colors
+      const matchGradient = ctx.createRadialGradient(
+        x, y - size/3, size/6,  // Inner circle
+        x, y, size * 1.3        // Outer circle
+      )
+      matchGradient.addColorStop(0, `${theme.colors.accent}FF`)
+      matchGradient.addColorStop(0.4, `${theme.colors.accent}CC`)
+      matchGradient.addColorStop(0.7, `${theme.colors.secondary}99`)
+      matchGradient.addColorStop(1, `${theme.colors.secondary}44`)
       ctx.fillStyle = matchGradient
     } else {
-      const normalGradient = ctx.createRadialGradient(x, y, 0, x, y, size)
-      normalGradient.addColorStop(0, theme.colors.secondary)
-      normalGradient.addColorStop(1, theme.colors.background)
+      // Enhanced normal tile gradient with better lighting
+      const normalGradient = ctx.createRadialGradient(
+        x, y - size/3, size/8,  // Inner circle
+        x, y + size/6, size     // Outer circle
+      )
+      normalGradient.addColorStop(0, `${theme.colors.secondary}FF`)
+      normalGradient.addColorStop(0.5, `${theme.colors.background}EE`)
+      normalGradient.addColorStop(0.8, `${theme.colors.background}99`)
+      normalGradient.addColorStop(1, `${theme.colors.background}44`)
       ctx.fillStyle = normalGradient
     }
   }
@@ -404,15 +423,28 @@ function handleAnimations(
     ctx.save()
     
     if (animation.type === 'place') {
+      // Enhanced placement animation with scale and glow
       const progress = (Date.now() % 500) / 500
-      const scale = 1 + Math.sin(progress * Math.PI) * 0.1
+      const scale = 1 + Math.sin(progress * Math.PI) * 0.15
+      const glow = Math.sin(progress * Math.PI) * 15
+      
+      ctx.shadowColor = theme.colors.accent
+      ctx.shadowBlur = 10 + glow
+      
       ctx.translate(x, y)
       ctx.scale(scale, scale)
       ctx.translate(-x, -y)
     } else if (animation.type === 'match') {
+      // Enhanced match animation with pulsing glow
       const glowIntensity = GLOW_ANIMATION(Date.now())
       ctx.shadowColor = theme.colors.accent
       ctx.shadowBlur = glowIntensity
+      
+      // Add subtle rotation
+      const rotateAmount = Math.sin(Date.now() / 400) * 0.05
+      ctx.translate(x, y)
+      ctx.rotate(rotateAmount)
+      ctx.translate(-x, -y)
     }
     
     ctx.restore()
