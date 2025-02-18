@@ -687,7 +687,7 @@ const Game: React.FC<GameProps> = ({
         if (isValidPosition && !isOccupied) {
           const selectedTile = nextTiles[selectedTileIndex]
           
-          // Inside handleClick where we create newTile
+          // Create new tile with original coordinates
           let newTile: PlacedTile = { 
             ...selectedTile, 
             q, 
@@ -698,6 +698,12 @@ const Game: React.FC<GameProps> = ({
             hasBeenMatched: false,
             powerUp: selectedTile.powerUp  // Explicitly preserve the powerUp property
           }
+
+          // If board is rotated 180 degrees, only rotate the edges
+          if (Math.abs(rotationState.boardRotation % 360) === 180) {
+            newTile.edges = [...newTile.edges.slice(3), ...newTile.edges.slice(0, 3)];
+          }
+
           console.log('Created new tile:', { 
             newTile, 
             hasPowerUp: !!newTile.powerUp,

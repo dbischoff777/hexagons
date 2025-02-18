@@ -86,7 +86,7 @@ export const handleKeyboardPlacement = ({
 
   if (isValidPosition && !isOccupied) {
     const selectedTile = nextTiles[selectedTileIndex];
-    const newTile: PlacedTile = {
+    let newTile: PlacedTile = {
       ...selectedTile,
       q,
       r,
@@ -96,6 +96,11 @@ export const handleKeyboardPlacement = ({
       hasBeenMatched: false,
       powerUp: selectedTile.powerUp
     };
+
+    // If board is rotated 180 degrees, only rotate the edges
+    if (Math.abs(boardRotation % 360) === 180) {
+      newTile.edges = [...newTile.edges.slice(3), ...newTile.edges.slice(0, 3)];
+    }
 
     // Check for quick placement
     const now = Date.now();
