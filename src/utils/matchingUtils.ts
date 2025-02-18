@@ -1,5 +1,5 @@
 import { PlacedTile } from '../types'
-import { DIRECTIONS, getAdjacentTiles } from './hexUtils'
+import { DIRECTIONS, getAdjacentDirection, getAdjacentTiles, updateMirrorTileEdges } from './hexUtils'
 import { getUpgradeEffect } from '../utils/upgradeUtils'
 import { PowerUpState, ComboState } from '../types'
 import { UpgradeState } from '../types/upgrades';
@@ -209,4 +209,55 @@ export const calculateScore = (
   const finalMultiplier = scoreMultiplier * powerUpMultiplier * (combo.multiplier + comboBonus);
   
   return Math.round((baseScore + matchBonus) * finalMultiplier);
+};
+
+export const handleTileMatches = (
+  newTile: PlacedTile,
+  allTiles: PlacedTile[],
+  settings: { isColorBlind: boolean },
+  upgradeState: UpgradeState,
+  powerUps: PowerUpState,
+  combo: ComboState
+): {
+  matchCount: number;
+  updatedTiles: PlacedTile[];
+  score: number;
+} => {
+  // Get adjacent tiles
+  const adjacentTiles = getAdjacentTiles(newTile, allTiles);
+  let matchCount = 0;
+
+  // Check each edge for matches
+  newTile.edges.forEach((edge: { color: string }, index: number) => {
+    const adjacentTile = adjacentTiles.find((t: PlacedTile) => 
+      getAdjacentDirection(newTile.q, newTile.r, t.q, t.r) === index
+    );
+    
+    if (adjacentTile) {
+      const adjacentEdgeIndex = (getAdjacentDirection(adjacentTile.q, adjacentTile.r, newTile.q, newTile.r) + 3) % 6;
+      if (edge.color === adjacentTile.edges[adjacentEdgeIndex].color || 
+          newTile.isJoker || adjacentTile.isJoker) {
+        matchCount++;
+      }
+    }
+  });
+
+  // Handle mirror tile special case
+  if (newTile.type === 'mirror') {
+    const { points } = updateMirrorTileEdges(newTile, allTiles);
+    matchCount = Math.floor(points / 5); // Convert points back to match count
+  }
+
+  // Update all tiles with new values
+  const updatedTiles = updateTileValues([...allTiles, newTile]);
+
+  // Calculate score
+  const baseScore = matchCount * 5;
+  const finalScore = calculateScore(baseScore, upgradeState, powerUps, combo);
+
+  return {
+    matchCount,
+    updatedTiles,
+    score: finalScore
+  };
 };

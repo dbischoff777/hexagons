@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, useCallback, useMemo } from 'react'
 import { PowerUpState, ComboState, GameState, PlacedTile } from '../types/index'
-import { createTileWithRandomEdges, hexToPixel, getAdjacentTiles, getAdjacentPositions, getAdjacentDirection, COLORS, updateMirrorTileEdges } from '../utils/hexUtils'
+import { createTileWithRandomEdges, hexToPixel, getAdjacentTiles, getAdjacentDirection, COLORS, updateMirrorTileEdges } from '../utils/hexUtils'
 import { INITIAL_TIME, formatTime, isGridFull } from '../utils/gameUtils'
 import { SoundManager } from '../utils/soundManager'
 import './Game.css'
@@ -1796,23 +1796,6 @@ const Game: React.FC<GameProps> = ({
         }));
         break;
 
-      case 'colorSync':
-        // Temporarily make adjacent tiles match colors
-        setPlacedTiles(prev => {
-          const newTiles = [...prev];
-          newTiles.forEach(tile => {
-            const adjacentPositions = getAdjacentPositions(tile.q, tile.r);
-            const hasAdjacentTiles = adjacentPositions.some(pos => 
-              newTiles.some(t => t.q === pos.q && t.r === pos.r)
-            );
-            if (hasAdjacentTiles) {
-              tile.temporaryColorMatch = true;
-            }
-          });
-          return newTiles;
-        });
-        break;
-
       case 'comboExtend':
         // Extend the current combo timer
         setCombo(prev => ({
@@ -1908,7 +1891,7 @@ const Game: React.FC<GameProps> = ({
     setShowCompanion(!!progress.selectedCompanion);
   }, []);
 
-  // Add this effect to handle temporary color matches
+  // Remove the temporary color match effect
   useEffect(() => {
     const clearColorMatches = () => {
       setPlacedTiles(prev => 
