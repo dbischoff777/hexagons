@@ -1,6 +1,7 @@
 import { PlacedTile } from '../types'
 import { AccessibilitySettings } from '../types/accessibility'
 import { drawAccessibilityOverlay } from './accessibilityUtils'
+import { getPowerUpColor } from './themeUtils'
 
 interface HexagonRenderProps {
   ctx: CanvasRenderingContext2D
@@ -122,7 +123,7 @@ export const drawHexagonWithColoredEdges = ({
     drawHexagonShape(ctx, points);
     drawEdges(ctx, tile, points, isSelected, settings, isMatched);
     if (tile?.value > 0 || tile?.isJoker || tile?.powerUp || tile?.type === 'mirror') {
-      drawSpecialTile(ctx, x, y, size, tile, isSelected, showInfoBox && isSelected);
+      drawSpecialTile(ctx, x, y, size, tile, isSelected, showInfoBox && isSelected, theme);
     }
   }
 
@@ -291,17 +292,25 @@ function drawSpecialTile(
   size: number,
   tile: PlacedTile,
   isSelected: boolean,
-  showInfoBox: boolean
+  showInfoBox: boolean,
+  theme: HexagonRenderProps['theme']
 ) {
+  const shimmerIntensity = Math.sin(Date.now() / 500) * 0.2 + 0.8;
+  ctx.save();
+  ctx.shadowBlur = 20;
+  ctx.globalAlpha = shimmerIntensity;
+  
   if (tile.isJoker) {
-    drawJokerTile(ctx, x, y, size, tile.value, isSelected, showInfoBox);
+    drawJokerTile(ctx, x, y, size, tile.value, isSelected, showInfoBox, theme);
   } else if (tile.type === 'mirror') {
-    drawMirrorTile(ctx, x, y, size, tile.value, isSelected, showInfoBox);
+    drawMirrorTile(ctx, x, y, size, tile.value, isSelected, showInfoBox, theme);
   } else if (tile.powerUp) {
-    drawPowerUpTile(ctx, x, y, size, tile.powerUp.type, tile.value, isSelected, showInfoBox);
+    drawPowerUpTile(ctx, x, y, size, tile.powerUp.type, tile.value, isSelected, showInfoBox, theme);
   } else {
     drawTileValue(ctx, x, y, tile.value, isSelected);
   }
+  
+  ctx.restore();
 }
 
 function drawJokerTile(
@@ -311,25 +320,45 @@ function drawJokerTile(
   size: number,
   value: number,
   isSelected: boolean,
-  showInfoBox: boolean
+  showInfoBox: boolean,
+  theme: HexagonRenderProps['theme']
 ) {
   const style = TILE_STYLES.joker;
+  const time = Date.now();
   
-  // Draw star icon
-  ctx.fillStyle = style.glow;
-  ctx.shadowColor = style.glow;
-  ctx.shadowBlur = 15;
-  ctx.font = 'bold 20px Arial';
+  // Rainbow glow effect using theme colors
+  const themeColors = [
+    theme.colors.primary,
+    theme.colors.secondary,
+    theme.colors.accent
+  ];
+  const colorIndex = Math.floor((time / 500) % themeColors.length);
+  ctx.shadowColor = themeColors[colorIndex];
+  ctx.shadowBlur = 15 + Math.sin(time / 200) * 5;
+  
+  // Particle effect with theme colors
+  for (let i = 0; i < 6; i++) {
+    const angle = (time / 1000 + i * Math.PI / 3);
+    const particleX = x + Math.cos(angle) * (size / 4);
+    const particleY = y - 12 + Math.sin(angle) * (size / 4);
+    const particleColor = themeColors[(colorIndex + i) % themeColors.length];
+    ctx.fillStyle = `${particleColor}${Math.floor(Math.sin(time / 200 + i) * 20 + 40).toString(16)}`;
+    ctx.beginPath();
+    ctx.arc(particleX, particleY, 2, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Draw star with theme-based glow
+  ctx.fillStyle = theme.colors.primary;
+  ctx.font = 'bold 24px Arial';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.fillText(style.icon, x, y - 12);
 
-  // Draw value
   drawNumberBelow(ctx, x, y, value, isSelected);
 
-  // Draw info box if selected
   if (showInfoBox) {
-    drawInfoBox(ctx, x, y, size, style.text, style.glow);
+    drawInfoBox(ctx, x, y, size, style.text, theme.colors.accent);
   }
 }
 
@@ -340,23 +369,53 @@ function drawMirrorTile(
   size: number,
   value: number,
   isSelected: boolean,
-  showInfoBox: boolean
+  showInfoBox: boolean,
+  theme: HexagonRenderProps['theme']
 ) {
   const style = TILE_STYLES.mirror;
+  const time = Date.now();
   
-  // Draw mirror icon
-  ctx.fillStyle = '#FFFFFF'; // Simple white color
-  ctx.font = 'bold 20px Arial';
+  // Energy field effect using theme colors
+  const gradient = ctx.createRadialGradient(x, y - 12, 0, x, y - 12, size / 2);
+  gradient.addColorStop(0, `${theme.colors.accent}33`);
+  gradient.addColorStop(0.5, `${theme.colors.secondary}22`);
+  gradient.addColorStop(1, `${theme.colors.primary}00`);
+  
+  ctx.fillStyle = gradient;
+  ctx.beginPath();
+  ctx.arc(x, y - 12, size / 2, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Rotating glow effect with theme colors
+  const rotationAngle = time / 1000;
+  ctx.save();
+  ctx.translate(x, y - 12);
+  ctx.rotate(rotationAngle);
+  
+  for (let i = 0; i < 3; i++) {
+    const angle = (i * Math.PI * 2) / 3;
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.lineTo(Math.cos(angle) * size/3, Math.sin(angle) * size/3);
+    ctx.strokeStyle = `${theme.colors.accent}${Math.floor(Math.sin(time / 200 + i) * 20 + 40).toString(16)}`;
+    ctx.lineWidth = 2;
+    ctx.stroke();
+  }
+  ctx.restore();
+
+  // Draw the mirror icon with theme-based glow
+  ctx.shadowColor = theme.colors.accent;
+  ctx.shadowBlur = 15 + Math.sin(time / 200) * 5;
+  ctx.fillStyle = theme.colors.primary;
+  ctx.font = 'bold 24px Arial';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.fillText(style.icon, x, y - 12);
 
-  // Draw value
   drawNumberBelow(ctx, x, y, value, isSelected);
 
-  // Draw info box if selected
   if (showInfoBox) {
-    drawInfoBox(ctx, x, y, size, style.text, style.glow);
+    drawInfoBox(ctx, x, y, size, style.text, theme.colors.accent);
   }
 }
 
@@ -368,25 +427,59 @@ function drawPowerUpTile(
   type: keyof typeof TILE_STYLES.powerUp,
   value: number,
   isSelected: boolean,
-  showInfoBox: boolean
+  showInfoBox: boolean,
+  theme: HexagonRenderProps['theme']
 ) {
   const style = TILE_STYLES.powerUp[type];
+  const time = Date.now();
   
-  // Draw power-up icon
-  ctx.fillStyle = style.glow;
-  ctx.shadowColor = style.glow;
-  ctx.shadowBlur = 15;
-  ctx.font = 'bold 20px Arial';
+  // Get power-up color based on type and theme
+  const powerUpColor = getPowerUpColor(type, undefined, {
+    colors: theme.colors,
+    id: '',
+    name: '',
+    description: '',
+    startDate: '',
+    endDate: '',
+    icon: ''
+  });
+  
+  // Pulsing energy field with theme-aware colors
+  const pulseSize = size/2 + Math.sin(time / 300) * size/8;
+  const gradient = ctx.createRadialGradient(x, y - 12, 0, x, y - 12, pulseSize);
+  gradient.addColorStop(0, `${powerUpColor}44`);
+  gradient.addColorStop(0.5, `${theme.colors.secondary}22`);
+  gradient.addColorStop(1, `${theme.colors.background}00`);
+  
+  ctx.fillStyle = gradient;
+  ctx.beginPath();
+  ctx.arc(x, y - 12, pulseSize, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Orbiting particles with theme colors
+  for (let i = 0; i < 8; i++) {
+    const angle = time / 1000 + (i * Math.PI / 4);
+    const orbitX = x + Math.cos(angle) * (size/3);
+    const orbitY = (y - 12) + Math.sin(angle) * (size/3);
+    ctx.fillStyle = `${powerUpColor}${Math.floor(Math.sin(time / 200 + i) * 20 + 40).toString(16)}`;
+    ctx.beginPath();
+    ctx.arc(orbitX, orbitY, 2, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Draw the power-up icon with theme-aware glow
+  ctx.shadowColor = powerUpColor;
+  ctx.shadowBlur = 15 + Math.sin(time / 200) * 5;
+  ctx.fillStyle = theme.colors.primary;
+  ctx.font = 'bold 24px Arial';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.fillText(style.icon, x, y - 12);
 
-  // Draw value
   drawNumberBelow(ctx, x, y, value, isSelected);
 
-  // Draw info box if selected
   if (showInfoBox) {
-    drawInfoBox(ctx, x, y, size, style.text, style.glow);
+    drawInfoBox(ctx, x, y, size, style.text, powerUpColor);
   }
 }
 

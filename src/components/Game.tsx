@@ -2787,7 +2787,7 @@ const Game: React.FC<GameProps> = ({
                           ctx.font = 'bold 20px Arial';
                           ctx.textAlign = 'center';
                           ctx.textBaseline = 'middle';
-                          ctx.fillText('↔', 50, 38);
+                          ctx.fillText('⇄', 50, 38);
 
                           // Draw number below the symbol
                           ctx.shadowColor = 'rgba(0, 0, 0, 0.2)';
