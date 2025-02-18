@@ -421,11 +421,9 @@ const Game: React.FC<GameProps> = ({
 
   // 1. Modify handleScoreChange to be more efficient
   const handleScoreChange = useCallback((newScore: number) => {
-    // Only update if the score is actually different
-    if (newScore !== score) {
-      setPreviousScore(score);
-      setScore(newScore);
-    }
+    // Always set previous score before updating current score
+    setPreviousScore(score);
+    setScore(newScore);
   }, [score]);
 
   // Move addTileAnimation outside useEffect and memoize it
