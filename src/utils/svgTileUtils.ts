@@ -141,50 +141,43 @@ export const generateGameGridTiles = (
   return tiles;
 };
 
-const normalizeSvgColors = (svgString: string): string => {
+const normalizeAndCleanSvg = (svgText: string): string => {
   const parser = new DOMParser();
-  const svgDoc = parser.parseFromString(svgString, 'image/svg+xml');
+  const svgDoc = parser.parseFromString(svgText, 'image/svg+xml');
   const svgElement = svgDoc.documentElement;
 
-  // Function to ensure elements have explicit color attributes
-  const normalizeElement = (element: Element) => {
-    // First, handle any style-based fill properties
-    const style = element.getAttribute('style');
-    if (style) {
-      // Extract fill color from style if present
-      const fillMatch = style.match(/fill:\s*([^;]+)/);
-      if (fillMatch) {
-        element.setAttribute('fill', fillMatch[1]);
-      }
-      // Remove all fill-related styles
-      element.setAttribute('style', style
-        .replace(/fill:[^;]+;?/g, '')
-        .replace(/fill-opacity:[^;]+;?/g, '')
-        .replace(/fill-rule:[^;]+;?/g, '')
-      );
-    }
+  // Function to process elements
+  const processElement = (element: Element) => {
+    // Remove style attributes
+    element.removeAttribute('style');
 
-    // Set fill attribute if not present or empty
-    if (!element.hasAttribute('fill') || 
-        element.getAttribute('fill') === '' || 
-        element.getAttribute('fill') === 'none') {
+    // Get fill color
+    const fill = element.getAttribute('fill');
+    const fillOpacity = element.getAttribute('fill-opacity');
+    const stroke = element.getAttribute('stroke');
+
+    // Check if element is effectively white or transparent
+    const isWhiteOrTransparent = 
+      (fill === '#FFFFFF' || fill === '#FFF' || fill === 'white' || fill === 'none') &&
+      (!stroke || stroke === 'none') &&
+      (!fillOpacity || parseFloat(fillOpacity) < 0.1);
+
+    if (isWhiteOrTransparent) {
+      // Remove white/transparent elements
+      element.remove();
+    } else {
+      // Normalize non-white elements to solid black
       element.setAttribute('fill', '#000000');
-    }
-
-    // Ensure fill-opacity is 1
-    element.setAttribute('fill-opacity', '1');
-
-    // Remove any stroke unless explicitly needed
-    if (!element.hasAttribute('stroke') || element.getAttribute('stroke') === '') {
+      element.setAttribute('fill-opacity', '1');
       element.setAttribute('stroke', 'none');
     }
   };
 
-  // Process all elements including the root SVG
-  normalizeElement(svgElement);
+  // Process all elements including the root
+  processElement(svgElement);
   const elements = svgElement.getElementsByTagName('*');
   for (let i = 0; i < elements.length; i++) {
-    normalizeElement(elements[i]);
+    processElement(elements[i]);
   }
 
   return new XMLSerializer().serializeToString(svgDoc);
@@ -199,11 +192,11 @@ export const loadAndTileSvg = async (
     const response = await fetch(svgUrl);
     const svgText = await response.text();
     
-    // Normalize SVG colors before tiling
-    const normalizedSvg = normalizeSvgColors(svgText);
+    // Normalize and clean the SVG before processing
+    const cleanedSvg = normalizeAndCleanSvg(svgText);
     
     const tiles = generateGameGridTiles(gridRadius, hexSize);
-    return createTiledSvg(normalizedSvg, tiles);
+    return createTiledSvg(cleanedSvg, tiles);
   } catch (error) {
     console.error('Error loading or processing SVG:', error);
     throw error;

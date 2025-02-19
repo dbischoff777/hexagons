@@ -384,56 +384,6 @@ const HexPuzzleMode: React.FC<HexPuzzleModeProps> = ({ onComplete, onExit }) => 
     { text: "Different Spot!", emojis: "🔄 ✨" }
   ];
 
-  // Add this helper function at the top level of the component
-  const hasSignificantContent = (
-    piece: HexPuzzlePiece,
-    img: HTMLImageElement,
-    threshold: number = 0.9 // 90% threshold for considering a tile empty
-  ): boolean => {
-    // Create a temporary canvas for analysis
-    const tempCanvas = document.createElement('canvas');
-    const tempCtx = tempCanvas.getContext('2d');
-    if (!tempCtx) return true; // Default to keeping the piece if we can't analyze
-
-    // Set canvas size to tile size
-    tempCanvas.width = tileSize * 2;
-    tempCanvas.height = tileSize * 2;
-
-    // Draw the tile
-    tempCtx.save();
-    tempCtx.translate(tileSize, tileSize);
-    drawHexImageTile(tempCtx, img, piece, 0, 0, tileSize);
-    tempCtx.restore();
-
-    // Get image data
-    const imageData = tempCtx.getImageData(0, 0, tempCanvas.width, tempCanvas.height);
-    const data = imageData.data;
-
-    let whitePixels = 0;
-    let totalPixels = 0;
-
-    // Check each pixel
-    for (let i = 0; i < data.length; i += 4) {
-      const r = data[i];
-      const g = data[i + 1];
-      const b = data[i + 2];
-      const a = data[i + 3];
-
-      // Only count pixels with significant alpha
-      if (a > 200) {
-        totalPixels++;
-        
-        // Check if pixel is close to white
-        if (r > 240 && g > 240 && b > 240) {
-          whitePixels++;
-        }
-      }
-    }
-
-    // Return true if the piece has non-white content
-    return totalPixels > 0 && (whitePixels / totalPixels) <= threshold;
-  };
-
   // Add state for tracking significant pieces
   const [totalSignificantPieces, setTotalSignificantPieces] = useState(0);
   const [placedSignificantPieces, setPlacedSignificantPieces] = useState(0);
@@ -480,32 +430,37 @@ const HexPuzzleMode: React.FC<HexPuzzleModeProps> = ({ onComplete, onExit }) => 
             setVisibleTileOptions([]);
             setPieces([]);
             
-            // Initialize with new pieces
-            const emptyPieces = puzzlePieces.filter(piece => !hasSignificantContent(piece, scaledImage));
-            const significantPieces = puzzlePieces.filter(piece => hasSignificantContent(piece, scaledImage));
+            // Get only the unsolved (significant) pieces for tile options
+            const significantPieces = puzzlePieces.filter(piece => {
+              const isSignificant = !piece.isSolved;
+              console.debug(`Filtering piece ${piece.id}:`, {
+                position: `q:${piece.correctPosition.q}, r:${piece.correctPosition.r}`,
+                isSolved: piece.isSolved,
+                isSignificant
+              });
+              return isSignificant;
+            });
             
-            // Initialize all tile options with shuffled significant pieces
+            console.debug('Filtered pieces:', {
+              total: puzzlePieces.length,
+              significant: significantPieces.length,
+              solved: puzzlePieces.filter(p => p.isSolved).length
+            });
+            
+            // Initialize tile options with ONLY significant pieces
             const shuffledPieces = [...significantPieces].sort(() => Math.random() - 0.5);
             setAllTileOptions(shuffledPieces);
             
-            // Set first 3 pieces as visible options
+            // Set first 3 significant pieces as visible options
             setVisibleTileOptions(shuffledPieces.slice(0, 3));
-            
-            // Initialize pieces
-            setPieces([
-              ...emptyPieces.map(piece => ({
-                ...piece,
-                currentPosition: piece.correctPosition,
-                isSolved: false
-              })),
-              ...significantPieces.map(piece => ({
-                ...piece,
-                currentPosition: piece.correctPosition,
-                isSolved: false
-              }))
-            ]);
 
+            // Initialize all pieces (including empty ones that are already solved)
+            setPieces(puzzlePieces);
+
+            // Set total significant pieces count
             setTotalSignificantPieces(significantPieces.length);
+            setPlacedSignificantPieces(0);
+
           } catch (error) {
             console.error('Error creating puzzle:', error);
           }
@@ -680,26 +635,44 @@ const HexPuzzleMode: React.FC<HexPuzzleModeProps> = ({ onComplete, onExit }) => 
           // Use theme color for the glow
           const glowColor = isColorBlind ? colors[2] : theme.colors.primary;
           
-          // Add outer glow
+          // Add outer glow with increased intensity
           ctx.shadowColor = glowColor;
-          ctx.shadowBlur = 15;
+          ctx.shadowBlur = 20;  // Increased from 15
           
-          // Add radial gradient highlight
+          // Draw hex outline with glow
+          ctx.beginPath();
+          for (let i = 0; i < 6; i++) {
+            const angle = (i * Math.PI) / 3;
+            const pointX = x + tileSize * Math.cos(angle);
+            const pointY = y + tileSize * Math.sin(angle);
+            if (i === 0) ctx.moveTo(pointX, pointY);
+            else ctx.lineTo(pointX, pointY);
+          }
+          ctx.closePath();
+          
+          // Add radial gradient highlight with adjusted opacities
           const highlightGradient = ctx.createRadialGradient(
             x, y, 0,
             x, y, tileSize * 1.2
           );
-          highlightGradient.addColorStop(0, `${glowColor}33`); // 20% opacity
-          highlightGradient.addColorStop(0.6, `${glowColor}1A`); // 10% opacity
+          highlightGradient.addColorStop(0, `${glowColor}4D`);  // 30% opacity
+          highlightGradient.addColorStop(0.4, `${glowColor}33`); // 20% opacity
+          highlightGradient.addColorStop(0.8, `${glowColor}1A`); // 10% opacity
           highlightGradient.addColorStop(1, 'transparent');
           
           ctx.fillStyle = highlightGradient;
           ctx.fill();
           
-          // Add bright border
-          ctx.strokeStyle = `${glowColor}CC`; // 80% opacity
-          ctx.lineWidth = 2;
+          // Add bright border with pulsing effect
+          const time = Date.now() * 0.001; // Convert to seconds
+          const pulseIntensity = 0.7 + 0.3 * Math.sin(time * 2); // Pulse between 0.7 and 1.0
+          
+          ctx.strokeStyle = `${glowColor}${Math.floor(pulseIntensity * 255).toString(16).padStart(2, '0')}`; // Dynamic opacity
+          ctx.lineWidth = 3;
           ctx.stroke();
+          
+          // Reset shadow
+          ctx.shadowBlur = 0;
         }
       }
     });
