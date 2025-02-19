@@ -662,6 +662,38 @@ const HexPuzzleMode: React.FC<HexPuzzleModeProps> = ({ onComplete, onExit }) => 
           tileSize
         );
         ctx.globalAlpha = 1.0;
+
+        // Add highlight effect for correctly placed pieces
+        const isCorrectlyPlaced = 
+          piece.currentPosition.q === piece.correctPosition.q && 
+          piece.currentPosition.r === piece.correctPosition.r &&
+          piece.isSolved; // Add this condition to ensure it's a solved piece
+
+        if (isCorrectlyPlaced) {
+          // Use theme color for the glow
+          const glowColor = isColorBlind ? colors[2] : theme.colors.primary;
+          
+          // Add outer glow
+          ctx.shadowColor = glowColor;
+          ctx.shadowBlur = 15;
+          
+          // Add radial gradient highlight
+          const highlightGradient = ctx.createRadialGradient(
+            x, y, 0,
+            x, y, tileSize * 1.2
+          );
+          highlightGradient.addColorStop(0, `${glowColor}33`); // 20% opacity
+          highlightGradient.addColorStop(0.6, `${glowColor}1A`); // 10% opacity
+          highlightGradient.addColorStop(1, 'transparent');
+          
+          ctx.fillStyle = highlightGradient;
+          ctx.fill();
+          
+          // Add bright border
+          ctx.strokeStyle = `${glowColor}CC`; // 80% opacity
+          ctx.lineWidth = 2;
+          ctx.stroke();
+        }
       }
     });
 
@@ -781,7 +813,8 @@ const HexPuzzleMode: React.FC<HexPuzzleModeProps> = ({ onComplete, onExit }) => 
         if (pieceIndex !== -1) {
           newPieces[pieceIndex] = {
             ...selectedTile,
-            currentPosition: position
+            currentPosition: position,
+            isSolved: true
           };
         }
         return newPieces;
