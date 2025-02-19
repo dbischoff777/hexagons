@@ -74,6 +74,56 @@ const HexPuzzleMode: React.FC<HexPuzzleModeProps> = ({ imageSrc, onComplete, onE
     }
   };
 
+  // Add this helper function at the top level of the component
+  const hasSignificantContent = (
+    piece: HexPuzzlePiece,
+    img: HTMLImageElement,
+    threshold: number = 0.9 // 90% threshold for considering a tile empty
+  ): boolean => {
+    // Create a temporary canvas for analysis
+    const tempCanvas = document.createElement('canvas');
+    const tempCtx = tempCanvas.getContext('2d');
+    if (!tempCtx) return true; // Default to keeping the piece if we can't analyze
+
+    // Set canvas size to tile size
+    tempCanvas.width = tileSize * 2;
+    tempCanvas.height = tileSize * 2;
+
+    // Draw the tile
+    tempCtx.save();
+    tempCtx.translate(tileSize, tileSize);
+    drawHexImageTile(tempCtx, img, piece, 0, 0, tileSize);
+    tempCtx.restore();
+
+    // Get image data
+    const imageData = tempCtx.getImageData(0, 0, tempCanvas.width, tempCanvas.height);
+    const data = imageData.data;
+
+    let whitePixels = 0;
+    let totalPixels = 0;
+
+    // Check each pixel
+    for (let i = 0; i < data.length; i += 4) {
+      const r = data[i];
+      const g = data[i + 1];
+      const b = data[i + 2];
+      const a = data[i + 3];
+
+      // Only count pixels with significant alpha
+      if (a > 200) {
+        totalPixels++;
+        
+        // Check if pixel is close to white
+        if (r > 240 && g > 240 && b > 240) {
+          whitePixels++;
+        }
+      }
+    }
+
+    // Return true if the piece has non-white content
+    return totalPixels > 0 && (whitePixels / totalPixels) <= threshold;
+  };
+
   // Load image and initialize puzzle
   useEffect(() => {
     const loadImage = async () => {
@@ -84,23 +134,32 @@ const HexPuzzleMode: React.FC<HexPuzzleModeProps> = ({ imageSrc, onComplete, onE
         img.onload = () => {
           setImage(img);
           
+          // Create temporary canvas for analysis
+          const tempCanvas = document.createElement('canvas');
+          const tempCtx = tempCanvas.getContext('2d');
+          if (!tempCtx) return;
+          
           // Create puzzle pieces
           const puzzlePieces = createHexPuzzle(img, tileSize);
           
-          // Initialize all tile options with shuffled pieces
-          const shuffledPieces = [...puzzlePieces].sort(() => Math.random() - 0.5);
+          // Filter out pieces without significant content
+          const significantPieces = puzzlePieces.filter(piece => 
+            hasSignificantContent(piece, img)
+          );
+          
+          // Initialize all tile options with shuffled significant pieces
+          const shuffledPieces = [...significantPieces].sort(() => Math.random() - 0.5);
           setAllTileOptions(shuffledPieces);
           
           // Set first 3 pieces as visible options
           setVisibleTileOptions(shuffledPieces.slice(0, 3));
           
           // Initialize pieces in their correct positions for preview
-          const initialPieces = puzzlePieces.map(piece => ({
+          setPieces(significantPieces.map(piece => ({
             ...piece,
             currentPosition: piece.correctPosition,
             isSolved: false
-          }));
-          setPieces(initialPieces);
+          })));
         };
 
         const svgBlob = new Blob([tiledSvg], { type: 'image/svg+xml' });
