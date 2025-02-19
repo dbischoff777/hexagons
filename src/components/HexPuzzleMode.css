@@ -106,21 +106,6 @@
   }
 }
 
-/* Add subtle scan lines effect */
-.hex-puzzle-mode::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: repeating-linear-gradient(
-    0deg,
-    transparent,
-    rgba(0, 255, 159, 0.03) 2px,
-    transparent 4px
-  );
-  pointer-events: none;
-  z-index: 1;
-}
-
 .hex-puzzle-mode canvas {
   cursor: pointer;
   /* Only scale down when viewport is too small */
