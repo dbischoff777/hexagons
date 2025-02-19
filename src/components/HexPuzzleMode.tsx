@@ -12,6 +12,7 @@ import PreventContextMenu from './PreventContextMenu';
 import { useAccessibility } from '../contexts/AccessibilityContext';
 import { DEFAULT_SCHEME } from '../utils/colorSchemes';
 import { getTheme } from '../utils/progressionUtils';
+import { updateStatistics } from '../utils/gameStateUtils';
 
 interface HexPuzzleModeProps {
   imageSrc: string;
@@ -127,6 +128,14 @@ const HexPuzzleMode: React.FC<HexPuzzleModeProps> = ({ imageSrc, onComplete, onE
   // Add state for tracking significant pieces
   const [totalSignificantPieces, setTotalSignificantPieces] = useState(0);
   const [placedSignificantPieces, setPlacedSignificantPieces] = useState(0);
+
+  // Add state for tracking completion statistics
+  const [startTime, setStartTime] = useState<number | null>(null);
+  const [completionStats, setCompletionStats] = useState({
+    timeTaken: 0,
+    totalPieces: 0,
+    score: 0
+  });
 
   // Load image and initialize puzzle
   useEffect(() => {
@@ -476,14 +485,34 @@ const HexPuzzleMode: React.FC<HexPuzzleModeProps> = ({ imageSrc, onComplete, onE
 
       // Check if all significant pieces have been placed correctly
       if (placedSignificantPieces + 1 === totalSignificantPieces) {
+        const endTime = Date.now();
+        const timeTaken = startTime ? (endTime - startTime) / 1000 : 0;
+        
+        const finalScore = score + SCORING.gridClear;
+        
+        // Calculate completion statistics - remove emptyPieces
+        setCompletionStats({
+          timeTaken,
+          totalPieces: totalSignificantPieces, // Only count significant pieces
+          score: finalScore
+        });
+
+        // Update game statistics with correct properties
+        updateStatistics({
+          highScore: finalScore,
+          totalPlayTime: Math.round(timeTaken),
+          gamesPlayed: 1, // Use gamesPlayed instead of gamesCompleted
+          lastPlayed: new Date().toISOString()
+        });
+
         // Trigger completion
         setScore(prevScore => {
-          const finalScore = prevScore + SCORING.gridClear;
+          const updatedScore = prevScore + SCORING.gridClear;
           
           // Add completion bonus to player progress
           const updatedProgress = {
             ...playerProgress,
-            experience: playerProgress.experience + Math.floor(finalScore / 50)
+            experience: playerProgress.experience + Math.floor(updatedScore / 50)
           };
           
           // Check for level up
@@ -495,19 +524,18 @@ const HexPuzzleMode: React.FC<HexPuzzleModeProps> = ({ imageSrc, onComplete, onE
           
           setPlayerProgress(updatedProgress);
           
-          return finalScore;
+          return updatedScore;
         });
         
         setIsCompleted(true);
         setCompletionEffect(1);
         setShowCompletionModal(true);
-        
         // Start completion animation
-        const startTime = Date.now();
+        const animStartTime = Date.now();
         const duration = 2000;
         
         const animate = () => {
-          const elapsed = Date.now() - startTime;
+          const elapsed = Date.now() - animStartTime;
           const progress = Math.min(elapsed / duration, 1);
           setCompletionEffect(progress);
           
@@ -759,6 +787,7 @@ const HexPuzzleMode: React.FC<HexPuzzleModeProps> = ({ imageSrc, onComplete, onE
                 }))
               );
               setIsPuzzleStarted(true);
+              setStartTime(Date.now());
             }}
           >
             Start Puzzle
@@ -818,7 +847,22 @@ const HexPuzzleMode: React.FC<HexPuzzleModeProps> = ({ imageSrc, onComplete, onE
             onComplete();
           }}
           title="Puzzle Completed!"
-          message="Congratulations! You've completed the puzzle!"
+          message={
+            <div className="completion-stats">
+              <div className="completion-stat">
+                <label>Time</label>
+                <span>{Math.floor(completionStats.timeTaken / 60)}m {Math.round(completionStats.timeTaken % 60)}s</span>
+              </div>
+              <div className="completion-stat">
+                <label>Score</label>
+                <span>{completionStats.score}</span>
+              </div>
+              <div className="completion-stat">
+                <label>Pieces Placed</label>
+                <span>{completionStats.totalPieces}</span>
+              </div>
+            </div>
+          }
         >
           <button 
             className="modal-button confirm"

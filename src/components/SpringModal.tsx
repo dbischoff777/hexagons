@@ -5,9 +5,9 @@ interface SpringModalProps {
   isOpen: boolean
   onClose: () => void
   title: string
-  message?: string
-  children?: React.ReactNode
+  message: string | React.ReactElement
   variant?: 'default' | 'danger'
+  children?: React.ReactNode
 }
 
 const SpringModal: React.FC<SpringModalProps> = ({
