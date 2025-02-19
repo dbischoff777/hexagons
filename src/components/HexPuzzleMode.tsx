@@ -13,6 +13,8 @@ import { useAccessibility } from '../contexts/AccessibilityContext';
 import { DEFAULT_SCHEME } from '../utils/colorSchemes';
 import { getTheme } from '../utils/progressionUtils';
 import { updateStatistics } from '../utils/gameStateUtils';
+import ScorePopup from './ScorePopup';
+import { ScorePopupData } from '../types/scorePopup';
 
 interface HexPuzzleModeProps {
   imageSrc: string;
@@ -75,6 +77,20 @@ const HexPuzzleMode: React.FC<HexPuzzleModeProps> = ({ imageSrc, onComplete, onE
     }
   };
 
+  // Add this array at the top of the component
+  const PLACEMENT_MESSAGES = [
+    { text: "Perfect!", emojis: "✨ 🎯" },
+    { text: "Excellent!", emojis: "🌟 ⭐" },
+    { text: "Great Move!", emojis: "💫 ✨" },
+    { text: "Spot On!", emojis: "🎯 ✨" },
+    { text: "Brilliant!", emojis: "💫 🌟" },
+    { text: "Amazing!", emojis: "⭐ ✨" },
+    { text: "Fantastic!", emojis: "🌟 💫" },
+    { text: "Well Done!", emojis: "✨ ⭐" },
+    { text: "Superb!", emojis: "🎯 💫" },
+    { text: "Outstanding!", emojis: "⭐ 🌟" }
+  ];
+
   // Add this helper function at the top level of the component
   const hasSignificantContent = (
     piece: HexPuzzlePiece,
@@ -136,6 +152,9 @@ const HexPuzzleMode: React.FC<HexPuzzleModeProps> = ({ imageSrc, onComplete, onE
     totalPieces: 0,
     score: 0
   });
+
+  // Add state for score popups
+  const [scorePopups, setScorePopups] = useState<ScorePopupData[]>([]);
 
   // Load image and initialize puzzle
   useEffect(() => {
@@ -422,6 +441,8 @@ const HexPuzzleMode: React.FC<HexPuzzleModeProps> = ({ imageSrc, onComplete, onE
     if (!position) return;
 
     const selectedTile = visibleTileOptions[tileIndex];
+    const canvas = gameCanvasRef.current;
+    if (!canvas) return;
     
     // Check if placement is correct
     const isCorrectPlacement = 
@@ -429,6 +450,43 @@ const HexPuzzleMode: React.FC<HexPuzzleModeProps> = ({ imageSrc, onComplete, onE
       position.r === selectedTile.correctPosition.r;
 
     if (isCorrectPlacement) {
+      // Get the position for the popup
+      const rect = canvas.getBoundingClientRect();
+      const { x, y } = hexToPixel(
+        position.q,
+        position.r,
+        canvas.width/2,
+        canvas.height/2,
+        tileSize
+      );
+      
+      // Convert canvas coordinates to screen coordinates
+      const scaleX = rect.width / canvas.width;
+      const scaleY = rect.height / canvas.height;
+      const screenX = rect.left + (x * scaleX);
+      const screenY = rect.top + (y * scaleY);
+
+      // Get random message
+      const message = PLACEMENT_MESSAGES[Math.floor(Math.random() * PLACEMENT_MESSAGES.length)];
+
+      // Add score popup
+      const popup: ScorePopupData = {
+        id: Date.now(),
+        x: screenX,
+        y: screenY,
+        score: SCORING.correctPlacement,
+        text: message.text,
+        emoji: message.emojis,
+        type: "score"
+      };
+
+      setScorePopups(prev => [...prev, popup]);
+
+      // Remove popup after animation
+      setTimeout(() => {
+        setScorePopups(prev => prev.filter(p => p.id !== popup.id));
+      }, 2000);
+
       // Update placed pieces count
       setPlacedSignificantPieces(prev => prev + 1);
 
@@ -874,6 +932,11 @@ const HexPuzzleMode: React.FC<HexPuzzleModeProps> = ({ imageSrc, onComplete, onE
             Continue
           </button>
         </SpringModal>
+
+        {/* Add score popups */}
+        {scorePopups.map(popup => (
+          <ScorePopup key={popup.id} popup={popup} />
+        ))}
       </div>
     </PreventContextMenu>
   );
