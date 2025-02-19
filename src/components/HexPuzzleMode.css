@@ -232,6 +232,8 @@
   border-radius: 50%;
   pointer-events: none;
   transform: scale(var(--scale));
+  box-shadow: 0 0 clamp(8px, 1.5vw, 15px) rgba(0, 255, 159, 0.2);
+  pointer-events: none;
   transition: transform 0.2s ease;
 }
 
