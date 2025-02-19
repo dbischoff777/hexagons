@@ -19,6 +19,7 @@ import frenchie from '../assets/images/frenchie.svg';
 import frenchie2 from '../assets/images/frenchie2.svg';
 import unicorn from '../assets/images/unicorn.jpg';
 import spaceman from '../assets/images/spaceman.svg';
+import spacegirl from '../assets/images/spacegirl.svg';
 
 // Define an interface for puzzle images
 interface PuzzleImage {
@@ -59,6 +60,12 @@ const PUZZLE_IMAGES: PuzzleImage[] = [
     id: 'spaceman',
     src: spaceman,
     name: 'Spaceman',
+    difficulty: 'hard',
+  },
+  {
+    id: 'spacegirl',
+    src: spacegirl,
+    name: 'Spacegirl',
     difficulty: 'hard',
   },
 ];
