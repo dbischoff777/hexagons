@@ -672,4 +672,20 @@
   font-size: 0.875rem;
   opacity: 0.8;
   line-height: 1.4;
+}
+
+/* Add to your existing CSS */
+.loading-placeholder {
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 0.7; }
 } 

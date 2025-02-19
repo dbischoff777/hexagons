@@ -50,12 +50,64 @@ interface HexPuzzleModeProps {
   onExit: () => void;
 }
 
+// Add this helper function near the top of the file
+const createNormalizedSvgUrl = (svgUrl: string): Promise<string> => {
+  return fetch(svgUrl)
+    .then(response => response.text())
+    .then(svgText => {
+      const parser = new DOMParser();
+      const svgDoc = parser.parseFromString(svgText, 'image/svg+xml');
+      const svgElement = svgDoc.documentElement;
+
+      // Normalize colors in the SVG
+      const normalizeElement = (element: Element) => {
+        element.removeAttribute('style');
+        element.setAttribute('fill', '#000000');
+        element.setAttribute('fill-opacity', '1');
+        element.setAttribute('stroke', 'none');
+      };
+
+      // Process all elements including the root
+      normalizeElement(svgElement);
+      const elements = svgElement.getElementsByTagName('*');
+      for (let i = 0; i < elements.length; i++) {
+        normalizeElement(elements[i]);
+      }
+
+      // Create a blob URL for the normalized SVG
+      const normalizedSvg = new XMLSerializer().serializeToString(svgDoc);
+      const blob = new Blob([normalizedSvg], { type: 'image/svg+xml' });
+      return URL.createObjectURL(blob);
+    });
+};
+
+// Update the PuzzleSelector component
 const PuzzleSelector: React.FC<{
   onSelect: (puzzle: PuzzleImage) => void;
   theme: any;
   isColorBlind: boolean;
   colors: string[];
 }> = ({ onSelect, theme, isColorBlind, colors }) => {
+  const [normalizedUrls, setNormalizedUrls] = useState<Record<string, string>>({});
+
+  // Create normalized URLs for all puzzle images
+  useEffect(() => {
+    const loadNormalizedUrls = async () => {
+      const urls: Record<string, string> = {};
+      for (const puzzle of PUZZLE_IMAGES) {
+        urls[puzzle.id] = await createNormalizedSvgUrl(puzzle.src);
+      }
+      setNormalizedUrls(urls);
+    };
+
+    loadNormalizedUrls();
+
+    // Cleanup blob URLs on unmount
+    return () => {
+      Object.values(normalizedUrls).forEach(url => URL.revokeObjectURL(url));
+    };
+  }, []);
+
   return (
     <div className="puzzle-selector">
       <h2>Select a Puzzle</h2>
@@ -70,7 +122,11 @@ const PuzzleSelector: React.FC<{
             } as React.CSSProperties}
           >
             <div className="puzzle-preview">
-              <img src={puzzle.src} alt={puzzle.name} />
+              {normalizedUrls[puzzle.id] ? (
+                <img src={normalizedUrls[puzzle.id]} alt={puzzle.name} />
+              ) : (
+                <div className="loading-placeholder" />
+              )}
             </div>
             <div className="puzzle-info">
               <h3>{puzzle.name}</h3>
