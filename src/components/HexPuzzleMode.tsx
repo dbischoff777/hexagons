@@ -321,18 +321,29 @@ const HexPuzzleMode: React.FC<HexPuzzleModeProps> = ({ onComplete, onExit }) => 
   const [particleIntensity] = useState(0.5);
   const particleColor = isColorBlind ? colors[2] : theme.colors.primary;
 
-  const tileSize = 40; // Same as main game
-  const canvasWidth = 800; // Smaller initial size
-  const canvasHeight = 800; // Square canvas for better centering
+  // Update the tile size and canvas dimensions
+  const tileSize = 35; // Optimal hex size for 440x485 image
+  const canvasWidth = 1000; // Increased to accommodate the larger grid
+  const canvasHeight = 1000; // Keep square for better centering
 
-  // Add at the top of the component, outside any effects
+  // Update valid positions to match the axial coordinate system
   const validPositions: [number, number][] = [
-    [0, 0], [1, -1], [1, 0], [0, 1], [-1, 1], [-1, 0], [0, -1],
-    [2, -2], [2, -1], [2, 0], [1, 1], [0, 2], [-1, 2], [-2, 1],
-    [-2, 0], [0, -2], [1, -2], [-2, 2], [-1, -1], [3, -3], [3, -2],
-    [3, -1], [2, 1], [1, 2], [0, 3], [-3, 2], [-3, 1], [-3, 0],
-    [-1, -2], [-1, 3], [-2, -1], [0, -3], [1, -3], [3, 0], [-2, 3],
-    [-3, 3], [2, -3]
+    // Center
+    [0, 0],
+    // First ring
+    [1, 0], [0, 1], [-1, 1], [-1, 0], [0, -1], [1, -1],
+    // Second ring
+    [2, 0], [1, 1], [0, 2], [-1, 2], [-2, 2], [-2, 1],
+    [-2, 0], [-1, -1], [0, -2], [1, -2], [2, -2], [2, -1],
+    // Third ring
+    [3, 0], [2, 1], [1, 2], [0, 3], [-1, 3], [-2, 3],
+    [-3, 3], [-3, 2], [-3, 1], [-3, 0], [-2, -1], [-1, -2],
+    [0, -3], [1, -3], [2, -3], [3, -3], [3, -2], [3, -1],
+    // Fourth ring (complete)
+    [4, 0], [3, 1], [2, 2], [1, 3], [0, 4], [-1, 4],
+    [-2, 4], [-3, 4], [-4, 4], [-4, 3], [-4, 2], [-4, 1],
+    [-4, 0], [-3, -1], [-2, -2], [-1, -3], [0, -4], [1, -4],
+    [2, -4], [3, -4], [4, -4], [4, -3], [4, -2], [4, -1]
   ];
 
   // Add scoring constants

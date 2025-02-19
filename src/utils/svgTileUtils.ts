@@ -193,7 +193,7 @@ const normalizeSvgColors = (svgString: string): string => {
 export const loadAndTileSvg = async (
   svgUrl: string, 
   hexSize: number, 
-  gridRadius: number = 3
+  gridRadius: number = 4  // Use 4 rings for optimal coverage
 ): Promise<string> => {
   try {
     const response = await fetch(svgUrl);
