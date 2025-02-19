@@ -9,6 +9,9 @@ import { PlayerProgress } from '../types/progression';
 import { getPlayerProgress } from '../utils/progressionUtils';
 import Particles from './Particles';
 import PreventContextMenu from './PreventContextMenu';
+import { useAccessibility } from '../contexts/AccessibilityContext';
+import { DEFAULT_SCHEME } from '../utils/colorSchemes';
+import { getTheme } from '../utils/progressionUtils';
 
 interface HexPuzzleModeProps {
   imageSrc: string;
@@ -32,8 +35,20 @@ const HexPuzzleMode: React.FC<HexPuzzleModeProps> = ({ imageSrc, onComplete, onE
   const [showCompletionModal, setShowCompletionModal] = useState(false);
   const [playerProgress, setPlayerProgress] = useState<PlayerProgress>(() => getPlayerProgress());
   const [score, setScore] = useState(0);
-  const [particleIntensity, setParticleIntensity] = useState(0.5);
-  const [particleColor, setParticleColor] = useState('#00FF9F');
+  // Get accessibility settings
+  const { settings } = useAccessibility();
+  const isColorBlind = settings.isColorBlind;
+  const currentScheme = DEFAULT_SCHEME;
+
+  // Get theme from player progress
+  const progress = getPlayerProgress();
+  const theme = getTheme(progress.selectedTheme || 'default');
+
+  // Use color scheme based on accessibility settings
+  const colors = isColorBlind ? currentScheme.colors : DEFAULT_SCHEME.colors;
+  // Update particle color to use theme or colorblind colors
+  const [particleIntensity] = useState(0.5);
+  const particleColor = isColorBlind ? colors[2] : theme.colors.primary;
 
   const tileSize = 40; // Same as main game
   const canvasWidth = 800; // Smaller initial size
@@ -147,6 +162,11 @@ const HexPuzzleMode: React.FC<HexPuzzleModeProps> = ({ imageSrc, onComplete, onE
     ctx.scale(0.8, 0.8);
     ctx.translate(-centerX, -centerY);
 
+    // Update hex cell colors
+    const hexColor = isColorBlind ? colors[2] : theme.colors.primary;
+    const hexBorderColor = `rgba(${hexColor}, 0.2)`;
+    const hexGlowColor = `rgba(${hexColor}, 0.1)`;
+
     // Draw grid and base image
     validPositions.forEach(([q, r]) => {
       const { x, y } = hexToPixel(q, r, centerX, centerY, tileSize);
@@ -173,12 +193,12 @@ const HexPuzzleMode: React.FC<HexPuzzleModeProps> = ({ imageSrc, onComplete, onE
       ctx.fill();
 
       // Add inner glow
-      ctx.strokeStyle = 'rgba(0, 255, 159, 0.1)';
+      ctx.strokeStyle = hexGlowColor;
       ctx.lineWidth = 2;
       ctx.stroke();
 
       // Draw hex border with game style
-      ctx.strokeStyle = 'rgba(0, 255, 159, 0.2)';
+      ctx.strokeStyle = hexBorderColor;
       ctx.lineWidth = 1;
       ctx.stroke();
 
@@ -201,7 +221,7 @@ const HexPuzzleMode: React.FC<HexPuzzleModeProps> = ({ imageSrc, onComplete, onE
     });
 
     ctx.restore();
-  }, [image, pieces, isPuzzleStarted]);
+  }, [image, pieces, isPuzzleStarted, isColorBlind, colors, theme]);
 
   // Update the game animation to only draw when needed
   useEffect(() => {
@@ -296,7 +316,7 @@ const HexPuzzleMode: React.FC<HexPuzzleModeProps> = ({ imageSrc, onComplete, onE
         cancelAnimationFrame(animationId);
       }
     };
-  }, [pieces, selectedTileIndex, cursorPosition, isPuzzleStarted, isCompleted, image]);
+  }, [pieces, selectedTileIndex, cursorPosition, isPuzzleStarted, isCompleted, image, isColorBlind, colors, theme]);
 
   // Add helper to find grid position
   const findGridPosition = (x: number, y: number) => {
@@ -466,7 +486,7 @@ const HexPuzzleMode: React.FC<HexPuzzleModeProps> = ({ imageSrc, onComplete, onE
 
     // Add selection indicator
     if (isSelected) {
-      ctx.strokeStyle = '#00FF9F';
+      ctx.strokeStyle = 'rgba(0, 255, 159, 0.8)';
       ctx.lineWidth = 3;
       ctx.beginPath();
       ctx.arc(50, 50, 42, 0, Math.PI * 2);
@@ -512,7 +532,7 @@ const HexPuzzleMode: React.FC<HexPuzzleModeProps> = ({ imageSrc, onComplete, onE
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillStyle = `rgba(255, 255, 255, ${completionEffect})`;
-    ctx.shadowColor = '#00FF9F';
+    ctx.shadowColor = 'rgba(0, 255, 159, 0.8)';
     ctx.shadowBlur = 20;
     ctx.fillText('Puzzle Completed!', centerX, centerY);
     
@@ -540,9 +560,12 @@ const HexPuzzleMode: React.FC<HexPuzzleModeProps> = ({ imageSrc, onComplete, onE
       piece.currentPosition.q === piece.correctPosition.q && 
       piece.currentPosition.r === piece.correctPosition.r;
 
+    // Update colors for selected pieces and effects
+    const primaryColor = isColorBlind ? colors[2] : theme.colors.primary;
+    
     if (isCorrectlyPlaced) {
       // Add stronger matched tile effects
-      ctx.shadowColor = 'rgba(0, 255, 159, 0.6)';
+      ctx.shadowColor = `rgba(${primaryColor}, 0.6)`;
       ctx.shadowBlur = 20;
       
       // Add stronger radial glow
@@ -560,7 +583,7 @@ const HexPuzzleMode: React.FC<HexPuzzleModeProps> = ({ imageSrc, onComplete, onE
       ctx.filter = 'brightness(1.3)';
       
       // Add second glow layer
-      ctx.strokeStyle = 'rgba(0, 255, 159, 0.4)';
+      ctx.strokeStyle = `rgba(${primaryColor}, 0.4)`;
       ctx.lineWidth = 3;
       ctx.stroke();
     } else {
@@ -571,9 +594,28 @@ const HexPuzzleMode: React.FC<HexPuzzleModeProps> = ({ imageSrc, onComplete, onE
     ctx.restore();
   };
 
+  // Apply theme colors to CSS variables
+  useEffect(() => {
+    const root = document.documentElement;
+    root.style.setProperty('--background-gradient', `linear-gradient(180deg, 
+      ${theme.colors.background}F2 0%,
+      ${theme.colors.background}FA 100%
+    )`);
+    root.style.setProperty('--primary-color', theme.colors.primary);
+    root.style.setProperty('--secondary-color', theme.colors.secondary);
+    root.style.setProperty('--accent-color', theme.colors.accent);
+  }, [theme]);
+
   return (
     <PreventContextMenu>
-      <div className="hex-puzzle-mode">
+      <div 
+        className="hex-puzzle-mode"
+        style={{
+          '--hex-color': isColorBlind ? colors[2] : theme.colors.primary,
+          '--accent-color': isColorBlind ? colors[0] : theme.colors.accent,
+          '--background-dark': `${theme.colors.background}99`,
+        } as React.CSSProperties}
+      >
         <div className="particles-container">
           <Particles 
             intensity={particleIntensity}
