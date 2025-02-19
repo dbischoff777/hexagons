@@ -4,6 +4,9 @@ import { hexToPixel } from '../utils/hexUtils';
 import { loadAndTileSvg } from '../utils/svgTileUtils';
 import './HexPuzzleMode.css';
 import SpringModal from './SpringModal';
+import LevelProgress from './LevelProgress';
+import { PlayerProgress } from '../types/progression';
+import { getPlayerProgress } from '../utils/progressionUtils';
 
 interface HexPuzzleModeProps {
   imageSrc: string;
@@ -25,6 +28,8 @@ const HexPuzzleMode: React.FC<HexPuzzleModeProps> = ({ imageSrc, onComplete, onE
   const [cursorPosition, setCursorPosition] = useState<{ x: number, y: number } | null>(null);
   const [showExitModal, setShowExitModal] = useState(false);
   const [showCompletionModal, setShowCompletionModal] = useState(false);
+  const [playerProgress, setPlayerProgress] = useState<PlayerProgress>(() => getPlayerProgress());
+  const [score, setScore] = useState(0);
 
   const tileSize = 40; // Same as main game
   const canvasWidth = 800; // Smaller initial size
@@ -39,6 +44,16 @@ const HexPuzzleMode: React.FC<HexPuzzleModeProps> = ({ imageSrc, onComplete, onE
     [-1, -2], [-1, 3], [-2, -1], [0, -3], [1, -3], [3, 0], [-2, 3],
     [-3, 3], [2, -3]
   ];
+
+  // Add scoring constants
+  const SCORING = {
+    correctPlacement: 100,
+    gridClear: 1000,
+    combo: {
+      base: 50,
+      multiplier: 1.5
+    }
+  };
 
   // Load image and initialize puzzle
   useEffect(() => {
@@ -105,47 +120,6 @@ const HexPuzzleMode: React.FC<HexPuzzleModeProps> = ({ imageSrc, onComplete, onE
       placeTileOnGrid(selectedTileIndex, gridPosition);
       setSelectedTileIndex(null);
     }
-  };
-
-  // Check if puzzle is solved
-  const isPuzzleSolved = (currentPieces: HexPuzzlePiece[]): boolean => {
-    // Count how many pieces are correctly placed
-    let correctlyPlacedCount = 0;
-    validPositions.forEach(([q, r]) => {
-      const piece = currentPieces.find(p => 
-        p.currentPosition.q === q && 
-        p.currentPosition.r === r &&
-        p.correctPosition.q === q &&
-        p.correctPosition.r === r
-      );
-      if (piece) correctlyPlacedCount++;
-    });
-
-    // Puzzle is solved when all positions have correct pieces
-    return correctlyPlacedCount === validPositions.length;
-  };
-
-  // Add completion handler
-  const handlePuzzleCompletion = () => {
-    setIsCompleted(true);
-    setCompletionEffect(1);
-    setShowCompletionModal(true);
-    
-    // Animate completion effect
-    const startTime = Date.now();
-    const duration = 2000; // 2 seconds
-    
-    const animate = () => {
-      const elapsed = Date.now() - startTime;
-      const progress = Math.min(elapsed / duration, 1);
-      setCompletionEffect(progress);
-      
-      if (progress < 1) {
-        requestAnimationFrame(animate);
-      }
-    };
-    
-    requestAnimationFrame(animate);
   };
 
   // Update the background canvas useEffect
@@ -344,80 +318,124 @@ const HexPuzzleMode: React.FC<HexPuzzleModeProps> = ({ imageSrc, onComplete, onE
     return closestPos;
   };
 
-  // Add function to place tile on grid
+  // Update placeTileOnGrid to handle scoring
   const placeTileOnGrid = (tileIndex: number, position: { q: number, r: number } | null) => {
     if (!position) return;
 
     const selectedTile = visibleTileOptions[tileIndex];
+    
+    // Check if placement is correct
     const isCorrectPlacement = 
       position.q === selectedTile.correctPosition.q && 
       position.r === selectedTile.correctPosition.r;
-    
+
+    // Update pieces state
+    setPieces(prevPieces => {
+      const newPieces = [...prevPieces];
+      const pieceIndex = newPieces.findIndex(p => p.id === selectedTile.id);
+      if (pieceIndex !== -1) {
+        newPieces[pieceIndex] = {
+          ...selectedTile,
+          currentPosition: position
+        };
+      }
+      return newPieces;
+    });
+
+    // Handle scoring
     if (isCorrectPlacement) {
-      // Create the new tile with the target position
-      const newTile: HexPuzzlePiece = {
-        ...selectedTile,
-        currentPosition: position,
-        correctPosition: selectedTile.correctPosition,
-        isSolved: true
-      };
-
-      // Update pieces array with new tile
-      setPieces(prevPieces => {
-        const newPieces = [...prevPieces];
+      setScore(prevScore => {
+        const newScore = prevScore + SCORING.correctPlacement;
         
-        // Find if there's already a piece at this position
-        const existingIndex = newPieces.findIndex(p => 
-          p.currentPosition.q === position.q && 
-          p.currentPosition.r === position.r
-        );
-
-        if (existingIndex >= 0) {
-          // Replace existing piece
-          newPieces[existingIndex] = newTile;
-        } else {
-          // Add new piece
-          newPieces.push(newTile);
+        // Update player progress
+        const updatedProgress = {
+          ...playerProgress,
+          experience: playerProgress.experience + Math.floor(newScore / 100)
+        };
+        
+        // Check if player leveled up
+        if (updatedProgress.experience >= playerProgress.experienceToNext) {
+          updatedProgress.level += 1;
+          updatedProgress.experience -= playerProgress.experienceToNext;
+          updatedProgress.experienceToNext = Math.floor(playerProgress.experienceToNext * 1.5);
         }
-
-        // Check if puzzle is solved
-        if (isPuzzleSolved(newPieces)) {
-          handlePuzzleCompletion();
-        }
-
-        return newPieces;
-      });
-
-      // Update tile options
-      setAllTileOptions((prev: HexPuzzlePiece[]) => {
-        const newOptions = prev.filter((t: HexPuzzlePiece) => t.id !== selectedTile.id);
-        return newOptions;
-      });
-
-      // Update visible options
-      setVisibleTileOptions((prev: HexPuzzlePiece[]) => {
-        const newVisible = [...prev];
-        newVisible.splice(tileIndex, 1);
-        // Add next tile from remaining options if available
-        if (allTileOptions.length > prev.length) {
-          const nextTile = allTileOptions.find((t: HexPuzzlePiece) => 
-            !prev.some((p: HexPuzzlePiece) => p.id === t.id) && t.id !== selectedTile.id
-          );
-          if (nextTile) {
-            newVisible.push(nextTile);
-          }
-        }
-        return newVisible;
-      });
-    } else {
-      // For incorrect placement, rotate the visible options
-      setVisibleTileOptions(prev => {
-        const newVisible = [...prev];
-        const [removedTile] = newVisible.splice(tileIndex, 1);
-        newVisible.push(removedTile);
-        return newVisible;
+        
+        setPlayerProgress(updatedProgress);
+        
+        return newScore;
       });
     }
+
+    // Check if grid is complete
+    const isGridComplete = pieces.every(piece => 
+      piece.currentPosition.q === piece.correctPosition.q &&
+      piece.currentPosition.r === piece.correctPosition.r
+    );
+
+    if (isGridComplete) {
+      setScore(prevScore => {
+        const finalScore = prevScore + SCORING.gridClear;
+        
+        // Add completion bonus to player progress
+        const updatedProgress = {
+          ...playerProgress,
+          experience: playerProgress.experience + Math.floor(finalScore / 50)
+        };
+        
+        // Check for level up
+        if (updatedProgress.experience >= playerProgress.experienceToNext) {
+          updatedProgress.level += 1;
+          updatedProgress.experience -= playerProgress.experienceToNext;
+          updatedProgress.experienceToNext = Math.floor(playerProgress.experienceToNext * 1.5);
+        }
+        
+        setPlayerProgress(updatedProgress);
+        
+        return finalScore;
+      });
+      
+      setIsCompleted(true);
+      setCompletionEffect(1);
+      setShowCompletionModal(true);
+      
+      // Start completion animation
+      const startTime = Date.now();
+      const duration = 2000;
+      
+      const animate = () => {
+        const elapsed = Date.now() - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        setCompletionEffect(progress);
+        
+        if (progress < 1) {
+          requestAnimationFrame(animate);
+        }
+      };
+      
+      requestAnimationFrame(animate);
+    }
+
+    // Update visible tiles
+    setAllTileOptions((prev: HexPuzzlePiece[]) => {
+      const newOptions = prev.filter((t: HexPuzzlePiece) => t.id !== selectedTile.id);
+      return newOptions;
+    });
+
+    // Update visible options
+    setVisibleTileOptions((prev: HexPuzzlePiece[]) => {
+      const newVisible = [...prev];
+      newVisible.splice(tileIndex, 1);
+      // Add next tile from remaining options if available
+      if (allTileOptions.length > prev.length) {
+        const nextTile = allTileOptions.find((t: HexPuzzlePiece) => 
+          !prev.some((p: HexPuzzlePiece) => p.id === t.id) && t.id !== selectedTile.id
+        );
+        if (nextTile) {
+          newVisible.push(nextTile);
+        }
+      }
+      return newVisible;
+    });
   };
 
   // Draw next tile options
@@ -551,6 +569,10 @@ const HexPuzzleMode: React.FC<HexPuzzleModeProps> = ({ imageSrc, onComplete, onE
 
   return (
     <div className="hex-puzzle-mode">
+      <LevelProgress progress={playerProgress} />
+      <div className="score" data-label="Score">
+        <div className="score-value">{score}</div>
+      </div>
       <div className="hex-puzzle-board-container">
         <div className="hex-puzzle-game-board">
           <div className="hex-puzzle-canvas-wrapper">
