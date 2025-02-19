@@ -17,11 +17,8 @@ import ScorePopup from './ScorePopup';
 import { ScorePopupData } from '../types/scorePopup';
 import frenchie from '../assets/images/frenchie.svg';
 import frenchie2 from '../assets/images/frenchie2.svg';
-import unicorn from '../assets/images/unicorn.svg';
+import unicorn from '../assets/images/unicorn.jpg';
 import spaceman from '../assets/images/spaceman.svg';
-import spacegirl from '../assets/images/spacegirl.svg';
-import mushroom from '../assets/images/mushroom.svg';
-import bridge from '../assets/images/bridge.svg';
 
 // Define an interface for puzzle images
 interface PuzzleImage {
@@ -30,6 +27,7 @@ interface PuzzleImage {
   name: string;
   difficulty: 'easy' | 'medium' | 'hard';
   description?: string;
+  type?: 'jpg' | 'svg';
 }
 
 // Create an array of available puzzle images
@@ -39,43 +37,28 @@ const PUZZLE_IMAGES: PuzzleImage[] = [
     src: frenchie,
     name: 'French Bulldog',
     difficulty: 'easy',
-    description: 'A cute French Bulldog portrait'
+    description: 'A cute French Bulldog portrait',
+    type: 'svg'
   },
   {
     id: 'frenchie2',
     src: frenchie2,
     name: 'French Bulldog 2',
     difficulty: 'medium',
-    description: 'Another adorable Frenchie'
+    description: 'Another adorable Frenchie',
+    type: 'svg'
   },
   {
     id: 'unicorn',
     src: unicorn,
     name: 'Unicorn',
     difficulty: 'hard',
+    type: 'jpg'
   },
   {
     id: 'spaceman',
     src: spaceman,
     name: 'Spaceman',
-    difficulty: 'hard',
-  },
-  {
-    id: 'spacegirl',
-    src: spacegirl,
-    name: 'Spacegirl',
-    difficulty: 'hard',
-  },
-  {
-    id: 'mushroom',
-    src: mushroom,
-    name: 'Mushroom',
-    difficulty: 'hard',
-  },
-  {
-    id: 'bridge',
-    src: bridge,
-    name: 'Bridge',
     difficulty: 'hard',
   },
 ];
@@ -138,14 +121,22 @@ const PuzzleSelector: React.FC<{
     const loadNormalizedUrls = async () => {
       const urls: Record<string, string> = {};
       for (const puzzle of PUZZLE_IMAGES) {
-        urls[puzzle.id] = await createNormalizedSvgUrl(puzzle.src);
+        if (puzzle.type === 'svg') {
+          urls[puzzle.id] = await createNormalizedSvgUrl(puzzle.src);
+        } else {
+          urls[puzzle.id] = puzzle.src; // Use JPG directly
+        }
       }
       setNormalizedUrls(urls);
     };
 
     loadNormalizedUrls();
     return () => {
-      Object.values(normalizedUrls).forEach(url => URL.revokeObjectURL(url));
+      Object.values(normalizedUrls).forEach(url => {
+        if (url.startsWith('blob:')) {
+          URL.revokeObjectURL(url);
+        }
+      });
     };
   }, []);
 
@@ -295,8 +286,6 @@ const HexPuzzleMode: React.FC<HexPuzzleModeProps> = ({ onComplete, onExit }) => 
   const gameCanvasRef = useRef<HTMLCanvasElement>(null);
   const [pieces, setPieces] = useState<HexPuzzlePiece[]>([]);
   const [image, setImage] = useState<HTMLImageElement | null>(null);
-  const [isCompleted, setIsCompleted] = useState(false);
-  const [completionEffect, setCompletionEffect] = useState(0);
   const [isPuzzleStarted, setIsPuzzleStarted] = useState(false);
   const [allTileOptions, setAllTileOptions] = useState<HexPuzzlePiece[]>([]);
   const [visibleTileOptions, setVisibleTileOptions] = useState<HexPuzzlePiece[]>([]);
@@ -454,63 +443,117 @@ const HexPuzzleMode: React.FC<HexPuzzleModeProps> = ({ onComplete, onExit }) => 
   const [scorePopups, setScorePopups] = useState<ScorePopupData[]>([]);
 
   // Add state to track current puzzle
-  const [currentPuzzle, setCurrentPuzzle] = useState<PuzzleImage>(PUZZLE_IMAGES[0]);
+  const [currentPuzzle, setCurrentPuzzle] = useState<PuzzleImage | null>(null);
   const [selectedPuzzle, setSelectedPuzzle] = useState<PuzzleImage | null>(null);
 
   // Load image and initialize puzzle
   useEffect(() => {
+    if (!currentPuzzle || !isPuzzleStarted) return;
+
     const loadImage = async () => {
       try {
-        const tiledSvg = await loadAndTileSvg(currentPuzzle.src, tileSize, 3);
-        const img = new Image();
-        
-        img.onload = () => {
-          setImage(img);
-          
-          // Create puzzle pieces
-          const puzzlePieces = createHexPuzzle(img, tileSize);
-          
-          // Separate empty and non-empty pieces
-          const emptyPieces = puzzlePieces.filter(piece => !hasSignificantContent(piece, img));
-          const significantPieces = puzzlePieces.filter(piece => hasSignificantContent(piece, img));
-          
-          // Initialize all tile options with shuffled significant pieces
-          const shuffledPieces = [...significantPieces].sort(() => Math.random() - 0.5);
-          setAllTileOptions(shuffledPieces);
-          
-          // Set first 3 pieces as visible options
-          setVisibleTileOptions(shuffledPieces.slice(0, 3));
-          
-          // Initialize pieces - empty pieces are placed but not marked as solved
-          setPieces([
-            ...emptyPieces.map(piece => ({
-              ...piece,
-              currentPosition: piece.correctPosition,
-              isSolved: false
-            })),
-            ...significantPieces.map(piece => ({
-              ...piece,
-              currentPosition: piece.correctPosition,
-              isSolved: false
-            }))
-          ]);
+        let imageUrl;
+        if (currentPuzzle.type === 'svg') {
+          const tiledSvg = await loadAndTileSvg(currentPuzzle.src, tileSize, 3);
+          const svgBlob = new Blob([tiledSvg], { type: 'image/svg+xml' });
+          imageUrl = URL.createObjectURL(svgBlob);
+        } else {
+          imageUrl = currentPuzzle.src;
+        }
 
-          // Store the count of significant pieces for completion check
-          setTotalSignificantPieces(significantPieces.length);
+        const img = new Image();
+        img.onload = async () => {
+          try {
+            // Create puzzle pieces and get scaled image
+            const { pieces: puzzlePieces, scaledImage } = await createHexPuzzle(img, tileSize);
+            setImage(scaledImage);
+            
+            // Clear any existing pieces and options
+            setAllTileOptions([]);
+            setVisibleTileOptions([]);
+            setPieces([]);
+            
+            // Initialize with new pieces
+            const emptyPieces = puzzlePieces.filter(piece => !hasSignificantContent(piece, scaledImage));
+            const significantPieces = puzzlePieces.filter(piece => hasSignificantContent(piece, scaledImage));
+            
+            // Initialize all tile options with shuffled significant pieces
+            const shuffledPieces = [...significantPieces].sort(() => Math.random() - 0.5);
+            setAllTileOptions(shuffledPieces);
+            
+            // Set first 3 pieces as visible options
+            setVisibleTileOptions(shuffledPieces.slice(0, 3));
+            
+            // Initialize pieces
+            setPieces([
+              ...emptyPieces.map(piece => ({
+                ...piece,
+                currentPosition: piece.correctPosition,
+                isSolved: false
+              })),
+              ...significantPieces.map(piece => ({
+                ...piece,
+                currentPosition: piece.correctPosition,
+                isSolved: false
+              }))
+            ]);
+
+            setTotalSignificantPieces(significantPieces.length);
+          } catch (error) {
+            console.error('Error creating puzzle:', error);
+          }
         };
 
-        const svgBlob = new Blob([tiledSvg], { type: 'image/svg+xml' });
-        const url = URL.createObjectURL(svgBlob);
-        img.src = url;
+        img.src = imageUrl;
       } catch (error) {
-        console.error('Error loading or processing SVG:', error);
+        console.error('Error loading or processing image:', error);
       }
     };
 
     loadImage();
-  }, [currentPuzzle.src, tileSize]);
+  }, [currentPuzzle, isPuzzleStarted, tileSize]);
 
-  // Handle canvas click
+  // Update the pixelToHex function
+  const pixelToHex = (x: number, y: number, centerX: number, centerY: number, size: number) => {
+    // Convert to relative coordinates from center
+    const relX = (x - centerX) / size;
+    const relY = (y - centerY) / size;
+
+    // Convert to axial coordinates using flat-topped hex formula
+    const q = (2/3 * relX);
+    const r = (-1/3 * relX + Math.sqrt(3)/3 * relY);
+
+    // Use cube coordinates for better rounding
+    let rx = q;
+    let ry = r;
+    let rz = -rx-ry;
+
+    // Round cube coordinates
+    let x_round = Math.round(rx);
+    let y_round = Math.round(ry);
+    let z_round = Math.round(rz);
+
+    // Fix rounding errors
+    const x_diff = Math.abs(x_round - rx);
+    const y_diff = Math.abs(y_round - ry);
+    const z_diff = Math.abs(z_round - rz);
+
+    if (x_diff > y_diff && x_diff > z_diff) {
+      x_round = -y_round-z_round;
+    } else if (y_diff > z_diff) {
+      y_round = -x_round-z_round;
+    } else {
+      z_round = -x_round-y_round;
+    }
+
+    // Convert back to axial coordinates
+    return {
+      q: x_round,
+      r: y_round
+    };
+  };
+
+  // Update the handleCanvasClick function
   const handleCanvasClick = (event: React.MouseEvent<HTMLCanvasElement>) => {
     const canvas = gameCanvasRef.current;
     if (!canvas || !isPuzzleStarted) return;
@@ -525,45 +568,45 @@ const HexPuzzleMode: React.FC<HexPuzzleModeProps> = ({ onComplete, onExit }) => 
     const x = (event.clientX - rect.left) * scaleX;
     const y = (event.clientY - rect.top) * scaleY;
     
-    // Adjust for context scaling and translation
-    const adjustedX = (x - canvas.width/2) / 0.8 + canvas.width/2;
-    const adjustedY = (y - canvas.height/2) / 0.8 + canvas.height/2;
-    
-    const gridPosition = findGridPosition(adjustedX, adjustedY);
+    // Convert pixel coordinates to hex coordinates
+    const gridPosition = pixelToHex(
+      x,
+      y,
+      canvas.width/2,
+      canvas.height/2,
+      tileSize // Remove the 0.8 scale factor
+    );
 
-    if (selectedTileIndex !== null && gridPosition) {
+    // Check if the position is valid
+    const isValidPosition = validPositions.some(([q, r]) => 
+      q === gridPosition.q && r === gridPosition.r
+    );
+
+    if (selectedTileIndex !== null && isValidPosition) {
       placeTileOnGrid(selectedTileIndex, gridPosition);
       setSelectedTileIndex(null);
     }
   };
 
-  // Update the background canvas useEffect
+  // Background canvas - draw grid and image pieces together
   useEffect(() => {
     const canvas = backgroundCanvasRef.current;
-    if (!canvas || !image) return;
+    if (!canvas) return;
 
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    // Clear and set background
-    ctx.fillStyle = 'transparent';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    const centerX = canvas.width / 2;
-    const centerY = canvas.height / 2;
-
-    // Apply scaling
     ctx.save();
-    ctx.translate(centerX, centerY);
-    ctx.scale(0.8, 0.8);
-    ctx.translate(-centerX, -centerY);
+    ctx.clearRect(0, 0, canvasWidth, canvasHeight);
 
-    // Update hex cell colors
-    const hexColor = isColorBlind ? colors[2] : theme.colors.primary;
-    const hexBorderColor = `rgba(${hexColor}, 0.2)`;
-    const hexGlowColor = `rgba(${hexColor}, 0.1)`;
+    // Calculate center position
+    const centerX = canvasWidth / 2;
+    const centerY = canvasHeight / 2;
 
-    // Draw grid and base image
+    // Update hex cell colors with darker values
+    const hexBorderColor = `rgba(255, 255, 255, 0.15)`;
+    const hexGlowColor = `rgba(255, 255, 255, 0.05)`;
+
     validPositions.forEach(([q, r]) => {
       const { x, y } = hexToPixel(q, r, centerX, centerY, tileSize);
       
@@ -571,7 +614,7 @@ const HexPuzzleMode: React.FC<HexPuzzleModeProps> = ({ onComplete, onExit }) => 
       const piece = pieces.find(p => 
         p.correctPosition.q === q && p.correctPosition.r === r
       );
-      
+
       // Draw hex cell background and grid
       ctx.beginPath();
       for (let i = 0; i < 6; i++) {
@@ -583,13 +626,13 @@ const HexPuzzleMode: React.FC<HexPuzzleModeProps> = ({ onComplete, onExit }) => 
       }
       ctx.closePath();
 
-      // Regular background for all tiles
+      // Darker background for all tiles
       const gradient = ctx.createRadialGradient(
         x, y, 0,
         x, y, tileSize
       );
-      gradient.addColorStop(0, 'rgba(26, 26, 46, 0.8)');
-      gradient.addColorStop(1, 'rgba(26, 26, 46, 0.4)');
+      gradient.addColorStop(0, 'rgba(26, 26, 46, 0.9)');
+      gradient.addColorStop(1, 'rgba(26, 26, 46, 0.6)');
       ctx.fillStyle = gradient;
       ctx.fill();
 
@@ -603,22 +646,29 @@ const HexPuzzleMode: React.FC<HexPuzzleModeProps> = ({ onComplete, onExit }) => 
       ctx.lineWidth = 1;
       ctx.stroke();
 
-      // Draw the base image
-      if (piece) {
+      // Draw the image piece if it exists
+      if (image && piece) {
         if (isPuzzleStarted && !piece.isSolved) {
           ctx.globalAlpha = 0.4;
         } else {
           ctx.globalAlpha = 1.0;
         }
-        drawHexImageTile(ctx, image, piece, x, y, tileSize);
+        drawHexImageTile(
+          ctx,
+          image,
+          piece,
+          x,
+          y,
+          tileSize
+        );
         ctx.globalAlpha = 1.0;
       }
     });
 
     ctx.restore();
-  }, [image, pieces, isPuzzleStarted, isColorBlind, colors, theme]);
+  }, [image, pieces, isPuzzleStarted, tileSize, canvasWidth, canvasHeight]);
 
-  // Update the game animation to only draw when needed
+  // Game canvas - draw only active/selected pieces
   useEffect(() => {
     const canvas = gameCanvasRef.current;
     if (!canvas || !image) return;
@@ -626,116 +676,49 @@ const HexPuzzleMode: React.FC<HexPuzzleModeProps> = ({ onComplete, onExit }) => 
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    // Draw once immediately
-    const drawGame = () => {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.save();
+    ctx.clearRect(0, 0, canvasWidth, canvasHeight);
 
-      const centerX = canvas.width / 2;
-      const centerY = canvas.height / 2;
+    // Draw preview at cursor position if tile is selected
+    if (selectedTileIndex !== null && cursorPosition) {
+      const selectedTile = visibleTileOptions[selectedTileIndex];
+      if (selectedTile) {
+        ctx.save();
+        
+        ctx.globalAlpha = 0.8;
+        ctx.shadowColor = 'rgba(0, 255, 159, 0.6)';
+        ctx.shadowBlur = 25;
+        
+        // Draw at cursor position
+        drawHexImageTile(
+          ctx,
+          image,
+          selectedTile,
+          cursorPosition.x,
+          cursorPosition.y,
+          tileSize
+        );
 
-      ctx.save();
-      ctx.translate(centerX, centerY);
-      ctx.scale(0.8, 0.8);
-      ctx.translate(-centerX, -centerY);
-
-      // Only draw active pieces and preview
-      if (isPuzzleStarted) {
-        // Draw placed pieces
-        pieces.forEach(piece => {
-          if (piece.currentPosition.q !== -10) {
-            drawActivePiece(ctx, piece, centerX, centerY);
-          }
-        });
-
-        // Draw preview at cursor position if tile is selected
-        if (selectedTileIndex !== null && cursorPosition) {
-          const selectedTile = visibleTileOptions[selectedTileIndex];
-          
-          ctx.save();
-          
-          ctx.globalAlpha = 0.8;
-          ctx.shadowColor = 'rgba(0, 255, 159, 0.6)';
-          ctx.shadowBlur = 25;
-          
-          // Draw at cursor position
-          drawHexImageTile(
-            ctx,
-            image!,
-            selectedTile,
-            cursorPosition.x,
-            cursorPosition.y,
-            tileSize
-          );
-
-          // Add hex outline
-          ctx.strokeStyle = 'rgba(0, 255, 159, 0.8)';
-          ctx.lineWidth = 2;
-          ctx.beginPath();
-          for (let i = 0; i < 6; i++) {
-            const angle = (i * Math.PI) / 3;
-            const pointX = cursorPosition.x + tileSize * Math.cos(angle);
-            const pointY = cursorPosition.y + tileSize * Math.sin(angle);
-            if (i === 0) ctx.moveTo(pointX, pointY);
-            else ctx.lineTo(pointX, pointY);
-          }
-          ctx.closePath();
-          ctx.stroke();
-          
-          ctx.restore();
+        // Add hex outline
+        ctx.strokeStyle = 'rgba(0, 255, 159, 0.8)';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        for (let i = 0; i < 6; i++) {
+          const angle = (i * Math.PI) / 3;
+          const pointX = cursorPosition.x + tileSize * Math.cos(angle);
+          const pointY = cursorPosition.y + tileSize * Math.sin(angle);
+          if (i === 0) ctx.moveTo(pointX, pointY);
+          else ctx.lineTo(pointX, pointY);
         }
+        ctx.closePath();
+        ctx.stroke();
+        
+        ctx.restore();
       }
-
-      if (isCompleted) {
-        drawCompletionEffects(ctx, centerX, centerY, canvas.width, canvas.height);
-      }
-
-      ctx.restore();
-    };
-
-    // Draw immediately
-    drawGame();
-
-    // Only set up animation frame for completion effect
-    let animationId: number | null = null;
-    if (isCompleted) {
-      const animate = () => {
-        drawGame();
-        animationId = requestAnimationFrame(animate);
-      };
-      animationId = requestAnimationFrame(animate);
     }
 
-    // Cleanup
-    return () => {
-      if (animationId !== null) {
-        cancelAnimationFrame(animationId);
-      }
-    };
-  }, [pieces, selectedTileIndex, cursorPosition, isPuzzleStarted, isCompleted, image, isColorBlind, colors, theme]);
-
-  // Add helper to find grid position
-  const findGridPosition = (x: number, y: number) => {
-    const canvas = gameCanvasRef.current;
-    if (!canvas) return null;
-
-    const centerX = canvas.width / 2;
-    const centerY = canvas.height / 2;
-
-    // Find closest hex position
-    let closestDist = Infinity;
-    let closestPos = null;
-
-    validPositions.forEach(([q, r]) => {
-      const hexPos = hexToPixel(q, r, centerX, centerY, tileSize);
-      const dist = Math.sqrt(Math.pow(x - hexPos.x, 2) + Math.pow(y - hexPos.y, 2));
-      if (dist < closestDist && dist < tileSize) {
-        closestDist = dist;
-        closestPos = { q, r };
-      }
-    });
-
-    return closestPos;
-  };
+    ctx.restore();
+  }, [image, selectedTileIndex, cursorPosition, visibleTileOptions]);
 
   // Update placeTileOnGrid to track significant piece placement
   const placeTileOnGrid = (tileIndex: number, position: { q: number, r: number } | null) => {
@@ -902,24 +885,8 @@ const HexPuzzleMode: React.FC<HexPuzzleModeProps> = ({ onComplete, onExit }) => 
           return updatedScore;
         });
         
-        setIsCompleted(true);
-        setCompletionEffect(1);
+        setIsPuzzleStarted(false);
         setShowCompletionModal(true);
-        // Start completion animation
-        const animStartTime = Date.now();
-        const duration = 2000;
-        
-        const animate = () => {
-          const elapsed = Date.now() - animStartTime;
-          const progress = Math.min(elapsed / duration, 1);
-          setCompletionEffect(progress);
-          
-          if (progress < 1) {
-            requestAnimationFrame(animate);
-          }
-        };
-        
-        requestAnimationFrame(animate);
       }
     } else {
       // Get random wrong placement message
@@ -998,94 +965,6 @@ const HexPuzzleMode: React.FC<HexPuzzleModeProps> = ({ onComplete, onExit }) => 
       ctx.fill();
     }
 
-    ctx.restore();
-  };
-
-  // Add completion effects helper
-  const drawCompletionEffects = (
-    ctx: CanvasRenderingContext2D,
-    centerX: number,
-    centerY: number,
-    width: number,
-    height: number
-  ) => {
-    ctx.save();
-    
-    // Draw glow
-    const gradient = ctx.createRadialGradient(
-      centerX, centerY, 0,
-      centerX, centerY, width / 2
-    );
-    gradient.addColorStop(0, `rgba(0, 255, 159, ${0.2 * completionEffect})`);
-    gradient.addColorStop(1, 'rgba(26, 26, 46, 0)');
-    ctx.fillStyle = gradient;
-    ctx.fillRect(0, 0, width, height);
-
-    // Draw text
-    ctx.font = 'bold 48px Arial';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillStyle = `rgba(255, 255, 255, ${completionEffect})`;
-    ctx.shadowColor = 'rgba(0, 255, 159, 0.8)';
-    ctx.shadowBlur = 20;
-    ctx.fillText('Puzzle Completed!', centerX, centerY);
-    
-    ctx.restore();
-  };
-
-  const drawActivePiece = (
-    ctx: CanvasRenderingContext2D, 
-    piece: HexPuzzlePiece,
-    centerX: number,
-    centerY: number
-  ) => {
-    const { x, y } = hexToPixel(
-      piece.currentPosition.q,
-      piece.currentPosition.r,
-      centerX,
-      centerY,
-      tileSize
-    );
-
-    ctx.save();
-
-    // Add glow effect for correctly placed pieces and solved pieces (including empty tiles)
-    const isCorrectlyPlaced = 
-      piece.currentPosition.q === piece.correctPosition.q && 
-      piece.currentPosition.r === piece.correctPosition.r;
-
-    // Update colors for selected pieces and effects
-    const primaryColor = isColorBlind ? colors[2] : theme.colors.primary;
-    
-    // Highlight both correctly placed and solved pieces (empty tiles are marked as solved)
-    if (isCorrectlyPlaced || piece.isSolved) {
-      // Add stronger matched tile effects
-      ctx.shadowColor = primaryColor;
-      ctx.shadowBlur = 20;
-      
-      // Add stronger radial glow
-      const gradient = ctx.createRadialGradient(
-        x, y, 0,
-        x, y, tileSize * 1.2
-      );
-      gradient.addColorStop(0, 'rgba(0, 255, 159, 0.3)');
-      gradient.addColorStop(0.6, 'rgba(0, 255, 159, 0.1)');
-      gradient.addColorStop(1, 'transparent');
-      ctx.fillStyle = gradient;
-      ctx.fill();
-
-      // Increase brightness
-      ctx.filter = 'brightness(1.3)';
-      
-      // Add second glow layer
-      ctx.strokeStyle = 'rgba(0, 255, 159, 0.4)';
-      ctx.lineWidth = 3;
-      ctx.stroke();
-    } else {
-      ctx.globalAlpha = 0.8;
-    }
-
-    drawHexImageTile(ctx, image!, piece, x, y, tileSize);
     ctx.restore();
   };
 
