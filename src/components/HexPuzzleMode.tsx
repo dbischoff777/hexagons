@@ -17,6 +17,11 @@ import ScorePopup from './ScorePopup';
 import { ScorePopupData } from '../types/scorePopup';
 import frenchie from '../assets/images/frenchie.svg';
 import frenchie2 from '../assets/images/frenchie2.svg';
+import unicorn from '../assets/images/unicorn.svg';
+import spaceman from '../assets/images/spaceman.svg';
+import spacegirl from '../assets/images/spacegirl.svg';
+import mushroom from '../assets/images/mushroom.svg';
+import bridge from '../assets/images/bridge.svg';
 
 // Define an interface for puzzle images
 interface PuzzleImage {
@@ -42,7 +47,37 @@ const PUZZLE_IMAGES: PuzzleImage[] = [
     name: 'French Bulldog 2',
     difficulty: 'medium',
     description: 'Another adorable Frenchie'
-  }
+  },
+  {
+    id: 'unicorn',
+    src: unicorn,
+    name: 'Unicorn',
+    difficulty: 'hard',
+  },
+  {
+    id: 'spaceman',
+    src: spaceman,
+    name: 'Spaceman',
+    difficulty: 'hard',
+  },
+  {
+    id: 'spacegirl',
+    src: spacegirl,
+    name: 'Spacegirl',
+    difficulty: 'hard',
+  },
+  {
+    id: 'mushroom',
+    src: mushroom,
+    name: 'Mushroom',
+    difficulty: 'hard',
+  },
+  {
+    id: 'bridge',
+    src: bridge,
+    name: 'Bridge',
+    difficulty: 'hard',
+  },
 ];
 
 interface HexPuzzleModeProps {
@@ -81,6 +116,11 @@ const createNormalizedSvgUrl = (svgUrl: string): Promise<string> => {
     });
 };
 
+// Add these interfaces at the top of the file
+interface PuzzleFilter {
+  difficulty: 'all' | 'easy' | 'medium' | 'hard';
+}
+
 // Update the PuzzleSelector component
 const PuzzleSelector: React.FC<{
   onSelect: (puzzle: PuzzleImage) => void;
@@ -89,6 +129,9 @@ const PuzzleSelector: React.FC<{
   colors: string[];
 }> = ({ onSelect, theme, isColorBlind, colors }) => {
   const [normalizedUrls, setNormalizedUrls] = useState<Record<string, string>>({});
+  const [filter, setFilter] = useState<PuzzleFilter>({ difficulty: 'all' });
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 6; // Adjust based on screen size
 
   // Create normalized URLs for all puzzle images
   useEffect(() => {
@@ -101,45 +144,148 @@ const PuzzleSelector: React.FC<{
     };
 
     loadNormalizedUrls();
-
-    // Cleanup blob URLs on unmount
     return () => {
       Object.values(normalizedUrls).forEach(url => URL.revokeObjectURL(url));
     };
   }, []);
 
+  // Filter and paginate puzzles
+  const filteredPuzzles = PUZZLE_IMAGES.filter(puzzle => {
+    return filter.difficulty === 'all' || puzzle.difficulty === filter.difficulty;
+  });
+
+  const totalPages = Math.ceil(filteredPuzzles.length / itemsPerPage);
+  const paginatedPuzzles = filteredPuzzles.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
+  // Handle keyboard navigation
+  const handleKeyNavigation = (e: React.KeyboardEvent) => {
+    switch (e.key) {
+      case 'ArrowLeft':
+        setCurrentPage(prev => Math.max(1, prev - 1));
+        break;
+      case 'ArrowRight':
+        setCurrentPage(prev => Math.min(totalPages, prev + 1));
+        break;
+      case 'Home':
+        setCurrentPage(1);
+        break;
+      case 'End':
+        setCurrentPage(totalPages);
+        break;
+    }
+  };
+
   return (
-    <div className="puzzle-selector">
-      <h2>Select a Puzzle</h2>
-      <div className="puzzle-grid">
-        {PUZZLE_IMAGES.map((puzzle) => (
-          <div 
+    <div 
+      className="puzzle-selector"
+      role="region" 
+      aria-label="Puzzle Selection Menu"
+      onKeyDown={handleKeyNavigation}
+    >
+      <h2 className="puzzle-selector-title">Select a Puzzle</h2>
+      
+      <div className="puzzle-filters">
+        <div className="difficulty-filters" role="radiogroup" aria-label="Filter by difficulty">
+          {['all', 'easy', 'medium', 'hard'].map((difficulty) => (
+            <button
+              key={difficulty}
+              className={`difficulty-filter ${filter.difficulty === difficulty ? 'active' : ''}`}
+              onClick={() => {
+                setFilter({ difficulty: difficulty as PuzzleFilter['difficulty'] });
+                setCurrentPage(1);
+              }}
+              aria-pressed={filter.difficulty === difficulty}
+            >
+              {difficulty.charAt(0).toUpperCase() + difficulty.slice(1)}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Show results summary */}
+      <div className="results-summary" aria-live="polite">
+        {filteredPuzzles.length === 0 ? (
+          <p>No puzzles found matching your criteria</p>
+        ) : (
+          <p>Showing {paginatedPuzzles.length} of {filteredPuzzles.length} puzzles</p>
+        )}
+      </div>
+
+      <div 
+        className="puzzle-grid"
+        role="list"
+        aria-label="Available Puzzles"
+      >
+        {paginatedPuzzles.map((puzzle) => (
+          <button 
             key={puzzle.id}
             className="puzzle-card"
             onClick={() => onSelect(puzzle)}
+            onKeyPress={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                onSelect(puzzle);
+              }
+            }}
             style={{
               '--card-glow': isColorBlind ? colors[2] : theme.colors.primary
             } as React.CSSProperties}
+            role="listitem"
+            aria-label={`${puzzle.name} - ${puzzle.difficulty} difficulty${puzzle.description ? ` - ${puzzle.description}` : ''}`}
           >
-            <div className="puzzle-preview">
+            <div className="puzzle-preview" aria-hidden="true">
               {normalizedUrls[puzzle.id] ? (
-                <img src={normalizedUrls[puzzle.id]} alt={puzzle.name} />
+                <img 
+                  src={normalizedUrls[puzzle.id]} 
+                  alt=""
+                  loading="lazy"
+                />
               ) : (
                 <div className="loading-placeholder" />
               )}
             </div>
             <div className="puzzle-info">
               <h3>{puzzle.name}</h3>
-              <span className={`difficulty ${puzzle.difficulty}`}>
+              <span 
+                className={`difficulty ${puzzle.difficulty}`}
+                aria-label={`Difficulty: ${puzzle.difficulty}`}
+              >
                 {puzzle.difficulty.charAt(0).toUpperCase() + puzzle.difficulty.slice(1)}
               </span>
               {puzzle.description && (
                 <p>{puzzle.description}</p>
               )}
             </div>
-          </div>
+          </button>
         ))}
       </div>
+
+      {/* Add pagination controls */}
+      {totalPages > 1 && (
+        <div className="pagination-controls" role="navigation" aria-label="Puzzle pages">
+          <button
+            onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+            disabled={currentPage === 1}
+            aria-label="Previous page"
+          >
+            ←
+          </button>
+          
+          <span aria-label={`Page ${currentPage} of ${totalPages}`}>
+            {currentPage} / {totalPages}
+          </span>
+          
+          <button
+            onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+            disabled={currentPage === totalPages}
+            aria-label="Next page"
+          >
+            →
+          </button>
+        </div>
+      )}
     </div>
   );
 };
