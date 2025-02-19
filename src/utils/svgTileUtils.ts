@@ -58,7 +58,7 @@ export const createTiledSvg = (
   const svgDoc = parser.parseFromString(originalSvg, 'image/svg+xml');
   const svgElement = svgDoc.documentElement;
   
-  // Create a new SVG with the same dimensions
+  // Create a new SVG
   const newSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
   newSvg.setAttribute('width', svgElement.getAttribute('width') || '');
   newSvg.setAttribute('height', svgElement.getAttribute('height') || '');
@@ -69,7 +69,6 @@ export const createTiledSvg = (
   
   // Create tiles
   tiles.forEach((tile, index) => {
-    // Create clip path
     const clipPath = document.createElementNS('http://www.w3.org/2000/svg', 'clipPath');
     clipPath.setAttribute('id', `hex-clip-${index}`);
     
@@ -78,21 +77,29 @@ export const createTiledSvg = (
     clipPath.appendChild(path);
     defs.appendChild(clipPath);
     
-    // Create tile group
     const group = document.createElementNS('http://www.w3.org/2000/svg', 'g');
     group.setAttribute('clip-path', `url(#hex-clip-${index})`);
     
-    // Clone original SVG content
+    // Clone and normalize content
     const content = svgElement.cloneNode(true) as SVGElement;
     content.removeAttribute('width');
     content.removeAttribute('height');
+    
+    // Force black color on all elements
+    const elements = content.getElementsByTagName('*');
+    for (let i = 0; i < elements.length; i++) {
+      const element = elements[i];
+      element.removeAttribute('style');
+      element.setAttribute('fill', '#000000');
+      element.setAttribute('fill-opacity', '1');
+      element.setAttribute('stroke', 'none');
+    }
     
     group.appendChild(content);
     newSvg.appendChild(group);
   });
   
   newSvg.insertBefore(defs, newSvg.firstChild);
-  
   return new XMLSerializer().serializeToString(newSvg);
 };
 
@@ -134,6 +141,55 @@ export const generateGameGridTiles = (
   return tiles;
 };
 
+const normalizeSvgColors = (svgString: string): string => {
+  const parser = new DOMParser();
+  const svgDoc = parser.parseFromString(svgString, 'image/svg+xml');
+  const svgElement = svgDoc.documentElement;
+
+  // Function to ensure elements have explicit color attributes
+  const normalizeElement = (element: Element) => {
+    // First, handle any style-based fill properties
+    const style = element.getAttribute('style');
+    if (style) {
+      // Extract fill color from style if present
+      const fillMatch = style.match(/fill:\s*([^;]+)/);
+      if (fillMatch) {
+        element.setAttribute('fill', fillMatch[1]);
+      }
+      // Remove all fill-related styles
+      element.setAttribute('style', style
+        .replace(/fill:[^;]+;?/g, '')
+        .replace(/fill-opacity:[^;]+;?/g, '')
+        .replace(/fill-rule:[^;]+;?/g, '')
+      );
+    }
+
+    // Set fill attribute if not present or empty
+    if (!element.hasAttribute('fill') || 
+        element.getAttribute('fill') === '' || 
+        element.getAttribute('fill') === 'none') {
+      element.setAttribute('fill', '#000000');
+    }
+
+    // Ensure fill-opacity is 1
+    element.setAttribute('fill-opacity', '1');
+
+    // Remove any stroke unless explicitly needed
+    if (!element.hasAttribute('stroke') || element.getAttribute('stroke') === '') {
+      element.setAttribute('stroke', 'none');
+    }
+  };
+
+  // Process all elements including the root SVG
+  normalizeElement(svgElement);
+  const elements = svgElement.getElementsByTagName('*');
+  for (let i = 0; i < elements.length; i++) {
+    normalizeElement(elements[i]);
+  }
+
+  return new XMLSerializer().serializeToString(svgDoc);
+};
+
 export const loadAndTileSvg = async (
   svgUrl: string, 
   hexSize: number, 
@@ -142,9 +198,12 @@ export const loadAndTileSvg = async (
   try {
     const response = await fetch(svgUrl);
     const svgText = await response.text();
-        
+    
+    // Normalize SVG colors before tiling
+    const normalizedSvg = normalizeSvgColors(svgText);
+    
     const tiles = generateGameGridTiles(gridRadius, hexSize);
-    return createTiledSvg(svgText, tiles);
+    return createTiledSvg(normalizedSvg, tiles);
   } catch (error) {
     console.error('Error loading or processing SVG:', error);
     throw error;

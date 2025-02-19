@@ -15,14 +15,80 @@ import { getTheme } from '../utils/progressionUtils';
 import { updateStatistics } from '../utils/gameStateUtils';
 import ScorePopup from './ScorePopup';
 import { ScorePopupData } from '../types/scorePopup';
+import frenchie from '../assets/images/frenchie.svg';
+import frenchie2 from '../assets/images/frenchie2.svg';
+
+// Define an interface for puzzle images
+interface PuzzleImage {
+  id: string;
+  src: string;
+  name: string;
+  difficulty: 'easy' | 'medium' | 'hard';
+  description?: string;
+}
+
+// Create an array of available puzzle images
+const PUZZLE_IMAGES: PuzzleImage[] = [
+  {
+    id: 'frenchie1',
+    src: frenchie,
+    name: 'French Bulldog',
+    difficulty: 'easy',
+    description: 'A cute French Bulldog portrait'
+  },
+  {
+    id: 'frenchie2',
+    src: frenchie2,
+    name: 'French Bulldog 2',
+    difficulty: 'medium',
+    description: 'Another adorable Frenchie'
+  }
+];
 
 interface HexPuzzleModeProps {
-  imageSrc: string;
   onComplete: () => void;
   onExit: () => void;
 }
 
-const HexPuzzleMode: React.FC<HexPuzzleModeProps> = ({ imageSrc, onComplete, onExit }) => {
+const PuzzleSelector: React.FC<{
+  onSelect: (puzzle: PuzzleImage) => void;
+  theme: any;
+  isColorBlind: boolean;
+  colors: string[];
+}> = ({ onSelect, theme, isColorBlind, colors }) => {
+  return (
+    <div className="puzzle-selector">
+      <h2>Select a Puzzle</h2>
+      <div className="puzzle-grid">
+        {PUZZLE_IMAGES.map((puzzle) => (
+          <div 
+            key={puzzle.id}
+            className="puzzle-card"
+            onClick={() => onSelect(puzzle)}
+            style={{
+              '--card-glow': isColorBlind ? colors[2] : theme.colors.primary
+            } as React.CSSProperties}
+          >
+            <div className="puzzle-preview">
+              <img src={puzzle.src} alt={puzzle.name} />
+            </div>
+            <div className="puzzle-info">
+              <h3>{puzzle.name}</h3>
+              <span className={`difficulty ${puzzle.difficulty}`}>
+                {puzzle.difficulty.charAt(0).toUpperCase() + puzzle.difficulty.slice(1)}
+              </span>
+              {puzzle.description && (
+                <p>{puzzle.description}</p>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+const HexPuzzleMode: React.FC<HexPuzzleModeProps> = ({ onComplete, onExit }) => {
   const backgroundCanvasRef = useRef<HTMLCanvasElement>(null);
   const gameCanvasRef = useRef<HTMLCanvasElement>(null);
   const [pieces, setPieces] = useState<HexPuzzlePiece[]>([]);
@@ -174,11 +240,15 @@ const HexPuzzleMode: React.FC<HexPuzzleModeProps> = ({ imageSrc, onComplete, onE
   // Add state for score popups
   const [scorePopups, setScorePopups] = useState<ScorePopupData[]>([]);
 
+  // Add state to track current puzzle
+  const [currentPuzzle, setCurrentPuzzle] = useState<PuzzleImage>(PUZZLE_IMAGES[0]);
+  const [selectedPuzzle, setSelectedPuzzle] = useState<PuzzleImage | null>(null);
+
   // Load image and initialize puzzle
   useEffect(() => {
     const loadImage = async () => {
       try {
-        const tiledSvg = await loadAndTileSvg(imageSrc, tileSize, 3);
+        const tiledSvg = await loadAndTileSvg(currentPuzzle.src, tileSize, 3);
         const img = new Image();
         
         img.onload = () => {
@@ -225,7 +295,7 @@ const HexPuzzleMode: React.FC<HexPuzzleModeProps> = ({ imageSrc, onComplete, onE
     };
 
     loadImage();
-  }, [imageSrc, tileSize]);
+  }, [currentPuzzle.src, tileSize]);
 
   // Handle canvas click
   const handleCanvasClick = (event: React.MouseEvent<HTMLCanvasElement>) => {
@@ -818,6 +888,12 @@ const HexPuzzleMode: React.FC<HexPuzzleModeProps> = ({ imageSrc, onComplete, onE
     root.style.setProperty('--accent-color', theme.colors.accent);
   }, [theme]);
 
+  // Update puzzle start logic
+  const handlePuzzleSelect = (puzzle: PuzzleImage) => {
+    setSelectedPuzzle(puzzle);
+    setCurrentPuzzle(puzzle);
+  };
+
   return (
     <PreventContextMenu>
       <div className="particles-container">
@@ -836,105 +912,128 @@ const HexPuzzleMode: React.FC<HexPuzzleModeProps> = ({ imageSrc, onComplete, onE
           '--background-dark': `${theme.colors.background}99`,
         } as React.CSSProperties}
       >
-        <LevelProgress progress={playerProgress} />
-        <div className="score" data-label="Score">
-          <div className="score-value">{score}</div>
-        </div>
-        <div className="hex-puzzle-board-container">
-          <div className="hex-puzzle-game-board">
-            <div className="hex-puzzle-canvas-wrapper">
-              <canvas
-                ref={backgroundCanvasRef}
-                width={canvasWidth}
-                height={canvasHeight}
-              />
-              <canvas
-                ref={gameCanvasRef}
-                width={canvasWidth}
-                height={canvasHeight}
-                onClick={handleCanvasClick}
-                onMouseMove={(e) => {
-                  const canvas = gameCanvasRef.current;
-                  if (!canvas) return;
-                  const rect = canvas.getBoundingClientRect();
-                  
-                  // Get the actual displayed dimensions
-                  const displayWidth = rect.width;
-                  const displayHeight = rect.height;
-                  
-                  // Convert screen coordinates to canvas space
-                  const scaleX = canvas.width / displayWidth;
-                  const scaleY = canvas.height / displayHeight;
-                  
-                  // Get mouse position in canvas coordinates
-                  const mouseX = (e.clientX - rect.left) * scaleX;
-                  const mouseY = (e.clientY - rect.top) * scaleY;
-
-                  // Adjust for the canvas scale transformation
-                  const adjustedX = mouseX;
-                  const adjustedY = mouseY;
-                  
-                  setCursorPosition({
-                    x: adjustedX,
-                    y: adjustedY
-                  });
-                }}
-                onMouseLeave={() => setCursorPosition(null)}
-              />
-            </div>
-          </div>
-        </div>
-
-        {!isPuzzleStarted ? (
-          <button 
-            className="hex-puzzle-start-button"
-            onClick={() => {
-              setPieces(prevPieces => 
-                prevPieces.map((piece, index) => ({
-                  ...piece,
-                  currentPosition: { 
-                    q: -10,
-                    r: index
-                  },
-                  isSolved: false
-                }))
-              );
-              setIsPuzzleStarted(true);
-              setStartTime(Date.now());
-            }}
-          >
-            Start Puzzle
-          </button>
+        {!selectedPuzzle ? (
+          // Show puzzle selector if no puzzle is selected
+          <PuzzleSelector 
+            onSelect={handlePuzzleSelect}
+            theme={theme}
+            isColorBlind={isColorBlind}
+            colors={colors}
+          />
         ) : (
-          <div className="hex-puzzle-next-tiles-container">
-            <div className="hex-puzzle-next-tiles">
-              {visibleTileOptions.map((tile, index) => (
-                <div 
-                  key={tile.id}
-                  className={`hex-puzzle-next-tile ${selectedTileIndex === index ? 'selected' : ''}`}
-                  onClick={() => setSelectedTileIndex(selectedTileIndex === index ? null : index)}
-                >
+          // Show puzzle game once puzzle is selected
+          <>
+            <LevelProgress progress={playerProgress} />
+            <div className="score" data-label="Score">
+              <div className="score-value">{score}</div>
+            </div>
+            <div className="hex-puzzle-board-container">
+              <div className="hex-puzzle-game-board">
+                <div className="hex-puzzle-canvas-wrapper">
                   <canvas
-                    width={100}
-                    height={100}
-                    ref={el => {
-                      if (el) {
-                        const ctx = el.getContext('2d');
-                        if (ctx) {
-                          ctx.clearRect(0, 0, 100, 100);
-                          drawNextTileOption(ctx, tile, selectedTileIndex === index);
-                        }
-                      }
+                    ref={backgroundCanvasRef}
+                    width={canvasWidth}
+                    height={canvasHeight}
+                  />
+                  <canvas
+                    ref={gameCanvasRef}
+                    width={canvasWidth}
+                    height={canvasHeight}
+                    onClick={handleCanvasClick}
+                    onMouseMove={(e) => {
+                      const canvas = gameCanvasRef.current;
+                      if (!canvas) return;
+                      const rect = canvas.getBoundingClientRect();
+                      
+                      // Get the actual displayed dimensions
+                      const displayWidth = rect.width;
+                      const displayHeight = rect.height;
+                      
+                      // Convert screen coordinates to canvas space
+                      const scaleX = canvas.width / displayWidth;
+                      const scaleY = canvas.height / displayHeight;
+                      
+                      // Get mouse position in canvas coordinates
+                      const mouseX = (e.clientX - rect.left) * scaleX;
+                      const mouseY = (e.clientY - rect.top) * scaleY;
+
+                      // Adjust for the canvas scale transformation
+                      const adjustedX = mouseX;
+                      const adjustedY = mouseY;
+                      
+                      setCursorPosition({
+                        x: adjustedX,
+                        y: adjustedY
+                      });
                     }}
+                    onMouseLeave={() => setCursorPosition(null)}
                   />
                 </div>
-              ))}
+              </div>
             </div>
-          </div>
-        )}
 
-        <button className="hex-puzzle-exit-button" onClick={() => setShowExitModal(true)}>
-          Exit Puzzle
+            {!isPuzzleStarted ? (
+              <button 
+                className="hex-puzzle-start-button"
+                onClick={() => {
+                  setPieces(prevPieces => 
+                    prevPieces.map((piece, index) => ({
+                      ...piece,
+                      currentPosition: { 
+                        q: -10,
+                        r: index
+                      },
+                      isSolved: false
+                    }))
+                  );
+                  setIsPuzzleStarted(true);
+                  setStartTime(Date.now());
+                }}
+              >
+                Start Puzzle
+              </button>
+            ) : (
+              <div className="hex-puzzle-next-tiles-container">
+                <div className="hex-puzzle-next-tiles">
+                  {visibleTileOptions.map((tile, index) => (
+                    <div 
+                      key={tile.id}
+                      className={`hex-puzzle-next-tile ${selectedTileIndex === index ? 'selected' : ''}`}
+                      onClick={() => setSelectedTileIndex(selectedTileIndex === index ? null : index)}
+                    >
+                      <canvas
+                        width={100}
+                        height={100}
+                        ref={el => {
+                          if (el) {
+                            const ctx = el.getContext('2d');
+                            if (ctx) {
+                              ctx.clearRect(0, 0, 100, 100);
+                              drawNextTileOption(ctx, tile, selectedTileIndex === index);
+                            }
+                          }
+                        }}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </>
+        )}
+        
+        <button 
+          className="hex-puzzle-exit-button" 
+          onClick={() => {
+            if (isPuzzleStarted) {
+              setShowExitModal(true);
+            } else {
+              // If we're in selection screen, exit directly
+              onExit();
+            }
+          }}
+        >
+          Exit {isPuzzleStarted ? 'Puzzle' : 'Mode'}
         </button>
 
         {/* Modals */}

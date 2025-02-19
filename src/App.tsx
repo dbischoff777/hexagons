@@ -13,7 +13,6 @@ import { KeyBindings } from './types/index'
 import { loadKeyBindings, saveKeyBindings } from './utils/keyBindingsUtils'
 import SettingsModal from './components/SettingsModal'
 import HexPuzzleMode from './components/HexPuzzleMode'
-import frenchBulldogSvg from './assets/images/frenchie.svg'
 
 interface CurrentGame {
   isLevelMode: boolean;
@@ -229,7 +228,6 @@ function App() {
             {gameStarted ? (
               isPuzzleMode ? (
                 <HexPuzzleMode
-                  imageSrc={frenchBulldogSvg}
                   onComplete={() => {
                     soundManager.playSound('achievement');
                     setGameStarted(false);
