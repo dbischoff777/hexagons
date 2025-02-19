@@ -70,11 +70,17 @@ const HexPuzzleMode: React.FC<HexPuzzleModeProps> = ({ imageSrc, onComplete, onE
   // Add scoring constants
   const SCORING = {
     correctPlacement: 100,
-    gridClear: 1000,
+    gridClear: 4000,
     combo: {
       base: 50,
       multiplier: 1.5
     }
+  };
+
+  // Add XP constants similar to Game.tsx
+  const XP_REWARDS = {
+    correctPlacement: 100,
+    puzzleCompletion: 500
   };
 
   // Add this array at the top of the component
@@ -89,6 +95,18 @@ const HexPuzzleMode: React.FC<HexPuzzleModeProps> = ({ imageSrc, onComplete, onE
     { text: "Well Done!", emojis: "✨ ⭐" },
     { text: "Superb!", emojis: "🎯 💫" },
     { text: "Outstanding!", emojis: "⭐ 🌟" }
+  ];
+
+  // Add wrong placement messages array
+  const WRONG_PLACEMENT_MESSAGES = [
+    { text: "Not Quite!", emojis: "❌ 🤔" },
+    { text: "Try Again!", emojis: "💫 🎯" },
+    { text: "Almost!", emojis: "👀 ✨" },
+    { text: "Keep Trying!", emojis: "💪 ⚡" },
+    { text: "Wrong Spot!", emojis: "🔄 💭" },
+    { text: "Misplaced!", emojis: "🎲 🔍" },
+    { text: "Not There!", emojis: "❓ 💫" },
+    { text: "Different Spot!", emojis: "🔄 ✨" }
   ];
 
   // Add this helper function at the top level of the component
@@ -444,32 +462,32 @@ const HexPuzzleMode: React.FC<HexPuzzleModeProps> = ({ imageSrc, onComplete, onE
     const canvas = gameCanvasRef.current;
     if (!canvas) return;
     
+    // Get the position for the popup
+    const rect = canvas.getBoundingClientRect();
+    const { x, y } = hexToPixel(
+      position.q,
+      position.r,
+      canvas.width/2,
+      canvas.height/2,
+      tileSize
+    );
+    
+    // Convert canvas coordinates to screen coordinates
+    const scaleX = rect.width / canvas.width;
+    const scaleY = rect.height / canvas.height;
+    const screenX = rect.left + (x * scaleX);
+    const screenY = rect.top + (y * scaleY);
+
     // Check if placement is correct
     const isCorrectPlacement = 
       position.q === selectedTile.correctPosition.q && 
       position.r === selectedTile.correctPosition.r;
 
     if (isCorrectPlacement) {
-      // Get the position for the popup
-      const rect = canvas.getBoundingClientRect();
-      const { x, y } = hexToPixel(
-        position.q,
-        position.r,
-        canvas.width/2,
-        canvas.height/2,
-        tileSize
-      );
-      
-      // Convert canvas coordinates to screen coordinates
-      const scaleX = rect.width / canvas.width;
-      const scaleY = rect.height / canvas.height;
-      const screenX = rect.left + (x * scaleX);
-      const screenY = rect.top + (y * scaleY);
-
-      // Get random message
+      // Get random success message
       const message = PLACEMENT_MESSAGES[Math.floor(Math.random() * PLACEMENT_MESSAGES.length)];
 
-      // Add score popup
+      // Add success popup
       const popup: ScorePopupData = {
         id: Date.now(),
         x: screenX,
@@ -503,14 +521,14 @@ const HexPuzzleMode: React.FC<HexPuzzleModeProps> = ({ imageSrc, onComplete, onE
         return newPieces;
       });
 
-      // Handle scoring for correct placement
+      // Handle scoring and XP for correct placement
       setScore(prevScore => {
         const newScore = prevScore + SCORING.correctPlacement;
         
-        // Update player progress
+        // Update player progress with XP reward
         const updatedProgress = {
           ...playerProgress,
-          experience: playerProgress.experience + Math.floor(newScore / 100)
+          experience: playerProgress.experience + XP_REWARDS.correctPlacement
         };
         
         // Check if player leveled up
@@ -518,10 +536,27 @@ const HexPuzzleMode: React.FC<HexPuzzleModeProps> = ({ imageSrc, onComplete, onE
           updatedProgress.level += 1;
           updatedProgress.experience -= playerProgress.experienceToNext;
           updatedProgress.experienceToNext = Math.floor(playerProgress.experienceToNext * 1.5);
+          
+          // Show level up popup
+          const levelUpPopup: ScorePopupData = {
+            id: Date.now() + 1, // Ensure unique ID
+            x: screenX,
+            y: screenY - 50, // Show above the score popup
+            score: 0,
+            text: `Level ${updatedProgress.level}!`,
+            emoji: "🎮 ⭐",
+            type: "score"
+          };
+          
+          setScorePopups(prev => [...prev, levelUpPopup]);
+          
+          // Remove level up popup after animation
+          setTimeout(() => {
+            setScorePopups(prev => prev.filter(p => p.id !== levelUpPopup.id));
+          }, 2000);
         }
         
         setPlayerProgress(updatedProgress);
-        
         return newScore;
       });
 
@@ -563,14 +598,14 @@ const HexPuzzleMode: React.FC<HexPuzzleModeProps> = ({ imageSrc, onComplete, onE
           lastPlayed: new Date().toISOString()
         });
 
-        // Trigger completion
+        // Update puzzle completion to include bonus XP
         setScore(prevScore => {
           const updatedScore = prevScore + SCORING.gridClear;
           
-          // Add completion bonus to player progress
+          // Add completion XP bonus
           const updatedProgress = {
             ...playerProgress,
-            experience: playerProgress.experience + Math.floor(updatedScore / 50)
+            experience: playerProgress.experience + XP_REWARDS.puzzleCompletion
           };
           
           // Check for level up
@@ -581,7 +616,6 @@ const HexPuzzleMode: React.FC<HexPuzzleModeProps> = ({ imageSrc, onComplete, onE
           }
           
           setPlayerProgress(updatedProgress);
-          
           return updatedScore;
         });
         
@@ -605,7 +639,28 @@ const HexPuzzleMode: React.FC<HexPuzzleModeProps> = ({ imageSrc, onComplete, onE
         requestAnimationFrame(animate);
       }
     } else {
-      // For incorrect placement, return tile to options list
+      // Get random wrong placement message
+      const message = WRONG_PLACEMENT_MESSAGES[Math.floor(Math.random() * WRONG_PLACEMENT_MESSAGES.length)];
+
+      // Add wrong placement popup
+      const popup: ScorePopupData = {
+        id: Date.now(),
+        x: screenX,
+        y: screenY,
+        score: 0,
+        text: message.text,
+        emoji: message.emojis,
+        type: "wrong"
+      };
+
+      setScorePopups(prev => [...prev, popup]);
+
+      // Remove popup after animation
+      setTimeout(() => {
+        setScorePopups(prev => prev.filter(p => p.id !== popup.id));
+      }, 2000);
+
+      // Return tile to options list
       setVisibleTileOptions(prev => {
         const newVisible = [...prev];
         // Remove from current position

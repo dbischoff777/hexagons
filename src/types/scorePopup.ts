@@ -1,12 +1,12 @@
-export type PopupType = 'score' | 'combo' | 'quick' | 'clear';
+export type PopupType = 'score' | 'combo' | 'quick' | 'clear' | 'wrong';
 
 export interface ScorePopupData {
-  score: number;
+  id: number;
   x: number;
   y: number;
-  id: number;
-  emoji: string;
+  score: number;
   text: string;
+  emoji: string;
   type: PopupType;
 }
 

@@ -92,6 +92,21 @@
   animation: slideIn 2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
+.score-popup[data-type='wrong'] .popup-text,
+.score-popup[data-type='wrong'] .popup-score {
+  color: #FF3366;
+  text-shadow: 0 0 15px #FF3366;
+}
+
+.score-popup[data-type='wrong'] .emoji {
+  color: #FF3366;
+  filter: drop-shadow(0 0 15px #FF3366) drop-shadow(0 0 25px #FF3366) brightness(1.4);
+}
+
+.score-popup[data-type='wrong'] {
+  animation: shakePopup 0.5s cubic-bezier(0.36, 0, 0.66, -0.56) forwards;
+}
+
 @keyframes slideIn {
   0% {
     opacity: 0;
@@ -145,4 +160,10 @@
     transform: translateY(0);
     filter: brightness(1.2);
   }
+}
+
+@keyframes shakePopup {
+  0%, 100% { transform: translate(-50%, -50%) rotate(0deg); }
+  25% { transform: translate(-50%, -50%) rotate(-5deg); }
+  75% { transform: translate(-50%, -50%) rotate(5deg); }
 } 
