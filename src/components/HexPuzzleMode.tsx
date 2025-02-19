@@ -7,6 +7,8 @@ import SpringModal from './SpringModal';
 import LevelProgress from './LevelProgress';
 import { PlayerProgress } from '../types/progression';
 import { getPlayerProgress } from '../utils/progressionUtils';
+import Particles from './Particles';
+import PreventContextMenu from './PreventContextMenu';
 
 interface HexPuzzleModeProps {
   imageSrc: string;
@@ -30,6 +32,8 @@ const HexPuzzleMode: React.FC<HexPuzzleModeProps> = ({ imageSrc, onComplete, onE
   const [showCompletionModal, setShowCompletionModal] = useState(false);
   const [playerProgress, setPlayerProgress] = useState<PlayerProgress>(() => getPlayerProgress());
   const [score, setScore] = useState(0);
+  const [particleIntensity, setParticleIntensity] = useState(0.5);
+  const [particleColor, setParticleColor] = useState('#00FF9F');
 
   const tileSize = 40; // Same as main game
   const canvasWidth = 800; // Smaller initial size
@@ -131,7 +135,7 @@ const HexPuzzleMode: React.FC<HexPuzzleModeProps> = ({ imageSrc, onComplete, onE
     if (!ctx) return;
 
     // Clear and set background
-    ctx.fillStyle = '#1a1a2e';
+    ctx.fillStyle = 'transparent';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     const centerX = canvas.width / 2;
@@ -568,143 +572,154 @@ const HexPuzzleMode: React.FC<HexPuzzleModeProps> = ({ imageSrc, onComplete, onE
   };
 
   return (
-    <div className="hex-puzzle-mode">
-      <LevelProgress progress={playerProgress} />
-      <div className="score" data-label="Score">
-        <div className="score-value">{score}</div>
-      </div>
-      <div className="hex-puzzle-board-container">
-        <div className="hex-puzzle-game-board">
-          <div className="hex-puzzle-canvas-wrapper">
-            <canvas
-              ref={backgroundCanvasRef}
-              width={canvasWidth}
-              height={canvasHeight}
-            />
-            <canvas
-              ref={gameCanvasRef}
-              width={canvasWidth}
-              height={canvasHeight}
-              onClick={handleCanvasClick}
-              onMouseMove={(e) => {
-                const canvas = gameCanvasRef.current;
-                if (!canvas) return;
-                const rect = canvas.getBoundingClientRect();
-                
-                // Get the actual displayed dimensions
-                const displayWidth = rect.width;
-                const displayHeight = rect.height;
-                
-                // Convert screen coordinates to canvas space
-                const scaleX = canvas.width / displayWidth;
-                const scaleY = canvas.height / displayHeight;
-                
-                // Get mouse position in canvas coordinates
-                const mouseX = (e.clientX - rect.left) * scaleX;
-                const mouseY = (e.clientY - rect.top) * scaleY;
+    <PreventContextMenu>
+      <div className="hex-puzzle-mode">
+        <div className="particles-container">
+          <Particles 
+            intensity={particleIntensity}
+            color={particleColor}
+            width={window.innerWidth}
+            height={window.innerHeight}
+          />
+        </div>
 
-                // Adjust for the canvas scale transformation
-                const adjustedX = mouseX;
-                const adjustedY = mouseY;
-                
-                setCursorPosition({
-                  x: adjustedX,
-                  y: adjustedY
-                });
-              }}
-              onMouseLeave={() => setCursorPosition(null)}
-            />
+        <LevelProgress progress={playerProgress} />
+        <div className="score" data-label="Score">
+          <div className="score-value">{score}</div>
+        </div>
+        <div className="hex-puzzle-board-container">
+          <div className="hex-puzzle-game-board">
+            <div className="hex-puzzle-canvas-wrapper">
+              <canvas
+                ref={backgroundCanvasRef}
+                width={canvasWidth}
+                height={canvasHeight}
+              />
+              <canvas
+                ref={gameCanvasRef}
+                width={canvasWidth}
+                height={canvasHeight}
+                onClick={handleCanvasClick}
+                onMouseMove={(e) => {
+                  const canvas = gameCanvasRef.current;
+                  if (!canvas) return;
+                  const rect = canvas.getBoundingClientRect();
+                  
+                  // Get the actual displayed dimensions
+                  const displayWidth = rect.width;
+                  const displayHeight = rect.height;
+                  
+                  // Convert screen coordinates to canvas space
+                  const scaleX = canvas.width / displayWidth;
+                  const scaleY = canvas.height / displayHeight;
+                  
+                  // Get mouse position in canvas coordinates
+                  const mouseX = (e.clientX - rect.left) * scaleX;
+                  const mouseY = (e.clientY - rect.top) * scaleY;
+
+                  // Adjust for the canvas scale transformation
+                  const adjustedX = mouseX;
+                  const adjustedY = mouseY;
+                  
+                  setCursorPosition({
+                    x: adjustedX,
+                    y: adjustedY
+                  });
+                }}
+                onMouseLeave={() => setCursorPosition(null)}
+              />
+            </div>
           </div>
         </div>
-      </div>
 
-      {!isPuzzleStarted ? (
-        <button 
-          className="hex-puzzle-start-button"
-          onClick={() => {
-            setPieces(prevPieces => 
-              prevPieces.map((piece, index) => ({
-                ...piece,
-                currentPosition: { 
-                  q: -10,
-                  r: index
-                },
-                isSolved: false
-              }))
-            );
-            setIsPuzzleStarted(true);
-          }}
-        >
-          Start Puzzle
-        </button>
-      ) : (
-        <div className="hex-puzzle-next-tiles-container">
-          <div className="hex-puzzle-next-tiles">
-            {visibleTileOptions.map((tile, index) => (
-              <div 
-                key={tile.id}
-                className={`hex-puzzle-next-tile ${selectedTileIndex === index ? 'selected' : ''}`}
-                onClick={() => setSelectedTileIndex(selectedTileIndex === index ? null : index)}
-              >
-                <canvas
-                  width={100}
-                  height={100}
-                  ref={el => {
-                    if (el) {
-                      const ctx = el.getContext('2d');
-                      if (ctx) {
-                        ctx.clearRect(0, 0, 100, 100);
-                        drawNextTileOption(ctx, tile, selectedTileIndex === index);
+        {!isPuzzleStarted ? (
+          <button 
+            className="hex-puzzle-start-button"
+            onClick={() => {
+              setPieces(prevPieces => 
+                prevPieces.map((piece, index) => ({
+                  ...piece,
+                  currentPosition: { 
+                    q: -10,
+                    r: index
+                  },
+                  isSolved: false
+                }))
+              );
+              setIsPuzzleStarted(true);
+            }}
+          >
+            Start Puzzle
+          </button>
+        ) : (
+          <div className="hex-puzzle-next-tiles-container">
+            <div className="hex-puzzle-next-tiles">
+              {visibleTileOptions.map((tile, index) => (
+                <div 
+                  key={tile.id}
+                  className={`hex-puzzle-next-tile ${selectedTileIndex === index ? 'selected' : ''}`}
+                  onClick={() => setSelectedTileIndex(selectedTileIndex === index ? null : index)}
+                >
+                  <canvas
+                    width={100}
+                    height={100}
+                    ref={el => {
+                      if (el) {
+                        const ctx = el.getContext('2d');
+                        if (ctx) {
+                          ctx.clearRect(0, 0, 100, 100);
+                          drawNextTileOption(ctx, tile, selectedTileIndex === index);
+                        }
                       }
-                    }
-                  }}
-                />
-              </div>
-            ))}
+                    }}
+                  />
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
-      <button className="hex-puzzle-exit-button" onClick={() => setShowExitModal(true)}>
-        Exit Puzzle
-      </button>
-
-      {/* Modals */}
-      <SpringModal
-        isOpen={showExitModal}
-        onClose={() => setShowExitModal(false)}
-        title="Exit Puzzle"
-        message="Are you sure you want to exit? Your progress will be lost."
-        variant="danger"
-      >
-        <button className="modal-button cancel" onClick={() => setShowExitModal(false)}>
-          Stay
+        <button className="hex-puzzle-exit-button" onClick={() => setShowExitModal(true)}>
+          Exit Puzzle
         </button>
-        <button className="modal-button confirm" onClick={onExit}>
-          Exit
-        </button>
-      </SpringModal>
 
-      <SpringModal
-        isOpen={showCompletionModal}
-        onClose={() => {
-          setShowCompletionModal(false);
-          onComplete();
-        }}
-        title="Puzzle Completed!"
-        message="Congratulations! You've completed the puzzle!"
-      >
-        <button 
-          className="modal-button confirm"
-          onClick={() => {
+        {/* Modals */}
+        <SpringModal
+          isOpen={showExitModal}
+          onClose={() => setShowExitModal(false)}
+          title="Exit Puzzle"
+          message="Are you sure you want to exit? Your progress will be lost."
+          variant="danger"
+        >
+          <button className="modal-button cancel" onClick={() => setShowExitModal(false)}>
+            Stay
+          </button>
+          <button className="modal-button confirm" onClick={onExit}>
+            Exit
+          </button>
+        </SpringModal>
+
+        <SpringModal
+          isOpen={showCompletionModal}
+          onClose={() => {
             setShowCompletionModal(false);
             onComplete();
           }}
+          title="Puzzle Completed!"
+          message="Congratulations! You've completed the puzzle!"
         >
-          Continue
-        </button>
-      </SpringModal>
-    </div>
+          <button 
+            className="modal-button confirm"
+            onClick={() => {
+              setShowCompletionModal(false);
+              onComplete();
+            }}
+          >
+            Continue
+          </button>
+        </SpringModal>
+      </div>
+    </PreventContextMenu>
   );
 };
 

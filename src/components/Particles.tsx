@@ -27,7 +27,7 @@ const Particles: React.FC<ParticlesProps> = ({
     const ctx = canvas.getContext('2d')
     if (!ctx) return
 
-    // Set fixed canvas size based on props
+    // Set canvas size
     canvas.width = width
     canvas.height = height
 
@@ -203,20 +203,25 @@ const Particles: React.FC<ParticlesProps> = ({
       }
 
       draw(ctx: CanvasRenderingContext2D) {
-        ctx.beginPath()
+        ctx.beginPath();
         
-        const minRadius = 0.4
+        const minRadius = 0.4;
         const gradient = ctx.createRadialGradient(
           this.x, this.y, minRadius,
           this.x, this.y, Math.max(this.size, minRadius)
-        )
+        );
         
-        gradient.addColorStop(0, `${this.color}${Math.floor(this.opacity * 255).toString(16).padStart(2, '0')}`)
-        gradient.addColorStop(1, `${this.color}00`)
+        // Convert hex to rgba
+        const r = parseInt(color.slice(1, 3), 16);
+        const g = parseInt(color.slice(3, 5), 16);
+        const b = parseInt(color.slice(5, 7), 16);
         
-        ctx.fillStyle = gradient
-        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2)
-        ctx.fill()
+        gradient.addColorStop(0, `rgba(${r}, ${g}, ${b}, ${this.opacity})`);
+        gradient.addColorStop(1, `rgba(${r}, ${g}, ${b}, 0)`);
+        
+        ctx.fillStyle = gradient;
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+        ctx.fill();
       }
     }
 
