@@ -225,7 +225,7 @@ const HexPuzzleMode: React.FC<HexPuzzleModeProps> = ({ imageSrc, onComplete, onE
     ctx.restore();
   }, [image, pieces, isPuzzleStarted]);
 
-  // Update the game animation to only draw dynamic content
+  // Update the game animation to only draw when needed
   useEffect(() => {
     const canvas = gameCanvasRef.current;
     if (!canvas || !image) return;
@@ -233,7 +233,8 @@ const HexPuzzleMode: React.FC<HexPuzzleModeProps> = ({ imageSrc, onComplete, onE
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    const animate = () => {
+    // Draw once immediately
+    const drawGame = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
       const centerX = canvas.width / 2;
@@ -296,12 +297,28 @@ const HexPuzzleMode: React.FC<HexPuzzleModeProps> = ({ imageSrc, onComplete, onE
       }
 
       ctx.restore();
-      requestAnimationFrame(animate);
     };
 
-    const animationId = requestAnimationFrame(animate);
-    return () => cancelAnimationFrame(animationId);
-  }, [pieces, selectedTileIndex, cursorPosition, isPuzzleStarted, isCompleted]);
+    // Draw immediately
+    drawGame();
+
+    // Only set up animation frame for completion effect
+    let animationId: number | null = null;
+    if (isCompleted) {
+      const animate = () => {
+        drawGame();
+        animationId = requestAnimationFrame(animate);
+      };
+      animationId = requestAnimationFrame(animate);
+    }
+
+    // Cleanup
+    return () => {
+      if (animationId !== null) {
+        cancelAnimationFrame(animationId);
+      }
+    };
+  }, [pieces, selectedTileIndex, cursorPosition, isPuzzleStarted, isCompleted, image]);
 
   // Add helper to find grid position
   const findGridPosition = (x: number, y: number) => {

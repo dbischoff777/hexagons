@@ -91,8 +91,7 @@
 
 .hex-puzzle-next-tiles-container {
   position: absolute;
-  width: clamp(80px, 12vw, 100px);
-  min-height: min(200px, 50vh);
+  width: clamp(80px, 12vw, 120px);
   right: max(20px, 3vw);
   top: 50%;
   transform: translateY(-50%);
@@ -101,7 +100,6 @@
   gap: clamp(8px, 1.2vh, 15px);
   align-items: center;
   pointer-events: all;
-  max-width: 15%;
   z-index: 10;
   background: rgba(26, 26, 46, 0.95);
   padding: clamp(10px, 2vh, 20px);
@@ -111,6 +109,13 @@
     0 4px 20px rgba(0, 255, 159, 0.2),
     0 0 30px rgba(0, 0, 0, 0.3);
   backdrop-filter: blur(10px);
+  --scale: min(
+    1,
+    min(
+      calc((100vw - 40px) / 1200),
+      calc((100vh - 40px) / 800)
+    )
+  );
 }
 
 .hex-puzzle-next-tiles {
@@ -277,8 +282,16 @@
   }
 
   .hex-puzzle-next-tiles-container {
+    --scale: min(
+      1,
+      min(
+        calc((100vw - 20px) / 1200),
+        calc((100vh - 100px) / 800)
+      )
+    );
     right: 10px;
     padding: 10px;
+    gap: 8px;
   }
 
   .hex-puzzle-next-tile {
@@ -294,6 +307,16 @@
       1,
       min(
         calc((100vw - 10px) / 800),
+        calc((100vh - 80px) / 800)
+      )
+    );
+  }
+
+  .hex-puzzle-next-tiles-container {
+    --scale: min(
+      1,
+      min(
+        calc((100vw - 10px) / 1200),
         calc((100vh - 80px) / 800)
       )
     );
