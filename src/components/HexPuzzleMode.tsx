@@ -124,6 +124,10 @@ const HexPuzzleMode: React.FC<HexPuzzleModeProps> = ({ imageSrc, onComplete, onE
     return totalPixels > 0 && (whitePixels / totalPixels) <= threshold;
   };
 
+  // Add state for tracking significant pieces
+  const [totalSignificantPieces, setTotalSignificantPieces] = useState(0);
+  const [placedSignificantPieces, setPlacedSignificantPieces] = useState(0);
+
   // Load image and initialize puzzle
   useEffect(() => {
     const loadImage = async () => {
@@ -134,18 +138,12 @@ const HexPuzzleMode: React.FC<HexPuzzleModeProps> = ({ imageSrc, onComplete, onE
         img.onload = () => {
           setImage(img);
           
-          // Create temporary canvas for analysis
-          const tempCanvas = document.createElement('canvas');
-          const tempCtx = tempCanvas.getContext('2d');
-          if (!tempCtx) return;
-          
           // Create puzzle pieces
           const puzzlePieces = createHexPuzzle(img, tileSize);
           
-          // Filter out pieces without significant content
-          const significantPieces = puzzlePieces.filter(piece => 
-            hasSignificantContent(piece, img)
-          );
+          // Separate empty and non-empty pieces
+          const emptyPieces = puzzlePieces.filter(piece => !hasSignificantContent(piece, img));
+          const significantPieces = puzzlePieces.filter(piece => hasSignificantContent(piece, img));
           
           // Initialize all tile options with shuffled significant pieces
           const shuffledPieces = [...significantPieces].sort(() => Math.random() - 0.5);
@@ -154,12 +152,22 @@ const HexPuzzleMode: React.FC<HexPuzzleModeProps> = ({ imageSrc, onComplete, onE
           // Set first 3 pieces as visible options
           setVisibleTileOptions(shuffledPieces.slice(0, 3));
           
-          // Initialize pieces in their correct positions for preview
-          setPieces(significantPieces.map(piece => ({
-            ...piece,
-            currentPosition: piece.correctPosition,
-            isSolved: false
-          })));
+          // Initialize pieces - empty pieces are placed but not marked as solved
+          setPieces([
+            ...emptyPieces.map(piece => ({
+              ...piece,
+              currentPosition: piece.correctPosition,
+              isSolved: false
+            })),
+            ...significantPieces.map(piece => ({
+              ...piece,
+              currentPosition: piece.correctPosition,
+              isSolved: false
+            }))
+          ]);
+
+          // Store the count of significant pieces for completion check
+          setTotalSignificantPieces(significantPieces.length);
         };
 
         const svgBlob = new Blob([tiledSvg], { type: 'image/svg+xml' });
@@ -230,6 +238,11 @@ const HexPuzzleMode: React.FC<HexPuzzleModeProps> = ({ imageSrc, onComplete, onE
     validPositions.forEach(([q, r]) => {
       const { x, y } = hexToPixel(q, r, centerX, centerY, tileSize);
       
+      // Find the piece at this position
+      const piece = pieces.find(p => 
+        p.correctPosition.q === q && p.correctPosition.r === r
+      );
+      
       // Draw hex cell background and grid
       ctx.beginPath();
       for (let i = 0; i < 6; i++) {
@@ -241,7 +254,7 @@ const HexPuzzleMode: React.FC<HexPuzzleModeProps> = ({ imageSrc, onComplete, onE
       }
       ctx.closePath();
 
-      // Fill with game-style gradient
+      // Regular background for all tiles
       const gradient = ctx.createRadialGradient(
         x, y, 0,
         x, y, tileSize
@@ -251,31 +264,25 @@ const HexPuzzleMode: React.FC<HexPuzzleModeProps> = ({ imageSrc, onComplete, onE
       ctx.fillStyle = gradient;
       ctx.fill();
 
-      // Add inner glow
+      // Regular glow for all tiles
       ctx.strokeStyle = hexGlowColor;
       ctx.lineWidth = 2;
       ctx.stroke();
 
-      // Draw hex border with game style
+      // Draw hex border
       ctx.strokeStyle = hexBorderColor;
       ctx.lineWidth = 1;
       ctx.stroke();
 
-      // Draw the base image with better visibility
-      const correctPiece = pieces.find(p => 
-        p.correctPosition.q === q && p.correctPosition.r === r
-      );
-      if (correctPiece) {
-        if (isPuzzleStarted) {
-          // Increase opacity for better visibility during puzzle
+      // Draw the base image
+      if (piece) {
+        if (isPuzzleStarted && !piece.isSolved) {
           ctx.globalAlpha = 0.4;
-          // Add subtle glow to make image more visible
-          ctx.shadowColor = 'rgba(0, 255, 159, 0.2)';
-          ctx.shadowBlur = 10;
+        } else {
+          ctx.globalAlpha = 1.0;
         }
-        drawHexImageTile(ctx, image, correctPiece, x, y, tileSize);
+        drawHexImageTile(ctx, image, piece, x, y, tileSize);
         ctx.globalAlpha = 1.0;
-        ctx.shadowBlur = 0;
       }
     });
 
@@ -401,7 +408,7 @@ const HexPuzzleMode: React.FC<HexPuzzleModeProps> = ({ imageSrc, onComplete, onE
     return closestPos;
   };
 
-  // Update placeTileOnGrid to handle scoring
+  // Update placeTileOnGrid to track significant piece placement
   const placeTileOnGrid = (tileIndex: number, position: { q: number, r: number } | null) => {
     if (!position) return;
 
@@ -413,6 +420,9 @@ const HexPuzzleMode: React.FC<HexPuzzleModeProps> = ({ imageSrc, onComplete, onE
       position.r === selectedTile.correctPosition.r;
 
     if (isCorrectPlacement) {
+      // Update placed pieces count
+      setPlacedSignificantPieces(prev => prev + 1);
+
       // Update pieces state with correct placement
       setPieces(prevPieces => {
         const newPieces = [...prevPieces];
@@ -463,6 +473,51 @@ const HexPuzzleMode: React.FC<HexPuzzleModeProps> = ({ imageSrc, onComplete, onE
         }
         return newVisible;
       });
+
+      // Check if all significant pieces have been placed correctly
+      if (placedSignificantPieces + 1 === totalSignificantPieces) {
+        // Trigger completion
+        setScore(prevScore => {
+          const finalScore = prevScore + SCORING.gridClear;
+          
+          // Add completion bonus to player progress
+          const updatedProgress = {
+            ...playerProgress,
+            experience: playerProgress.experience + Math.floor(finalScore / 50)
+          };
+          
+          // Check for level up
+          if (updatedProgress.experience >= playerProgress.experienceToNext) {
+            updatedProgress.level += 1;
+            updatedProgress.experience -= playerProgress.experienceToNext;
+            updatedProgress.experienceToNext = Math.floor(playerProgress.experienceToNext * 1.5);
+          }
+          
+          setPlayerProgress(updatedProgress);
+          
+          return finalScore;
+        });
+        
+        setIsCompleted(true);
+        setCompletionEffect(1);
+        setShowCompletionModal(true);
+        
+        // Start completion animation
+        const startTime = Date.now();
+        const duration = 2000;
+        
+        const animate = () => {
+          const elapsed = Date.now() - startTime;
+          const progress = Math.min(elapsed / duration, 1);
+          setCompletionEffect(progress);
+          
+          if (progress < 1) {
+            requestAnimationFrame(animate);
+          }
+        };
+        
+        requestAnimationFrame(animate);
+      }
     } else {
       // For incorrect placement, return tile to options list
       setVisibleTileOptions(prev => {
@@ -474,55 +529,6 @@ const HexPuzzleMode: React.FC<HexPuzzleModeProps> = ({ imageSrc, onComplete, onE
         newVisible.splice(insertIndex, 0, selectedTile);
         return newVisible;
       });
-    }
-
-    // Check if grid is complete
-    const isGridComplete = pieces.every(piece => 
-      piece.currentPosition.q === piece.correctPosition.q &&
-      piece.currentPosition.r === piece.correctPosition.r
-    );
-
-    if (isGridComplete) {
-      setScore(prevScore => {
-        const finalScore = prevScore + SCORING.gridClear;
-        
-        // Add completion bonus to player progress
-        const updatedProgress = {
-          ...playerProgress,
-          experience: playerProgress.experience + Math.floor(finalScore / 50)
-        };
-        
-        // Check for level up
-        if (updatedProgress.experience >= playerProgress.experienceToNext) {
-          updatedProgress.level += 1;
-          updatedProgress.experience -= playerProgress.experienceToNext;
-          updatedProgress.experienceToNext = Math.floor(playerProgress.experienceToNext * 1.5);
-        }
-        
-        setPlayerProgress(updatedProgress);
-        
-        return finalScore;
-      });
-      
-      setIsCompleted(true);
-      setCompletionEffect(1);
-      setShowCompletionModal(true);
-      
-      // Start completion animation
-      const startTime = Date.now();
-      const duration = 2000;
-      
-      const animate = () => {
-        const elapsed = Date.now() - startTime;
-        const progress = Math.min(elapsed / duration, 1);
-        setCompletionEffect(progress);
-        
-        if (progress < 1) {
-          requestAnimationFrame(animate);
-        }
-      };
-      
-      requestAnimationFrame(animate);
     }
   };
 
@@ -619,7 +625,7 @@ const HexPuzzleMode: React.FC<HexPuzzleModeProps> = ({ imageSrc, onComplete, onE
 
     ctx.save();
 
-    // Add glow effect for correctly placed pieces
+    // Add glow effect for correctly placed pieces and solved pieces (including empty tiles)
     const isCorrectlyPlaced = 
       piece.currentPosition.q === piece.correctPosition.q && 
       piece.currentPosition.r === piece.correctPosition.r;
@@ -627,7 +633,8 @@ const HexPuzzleMode: React.FC<HexPuzzleModeProps> = ({ imageSrc, onComplete, onE
     // Update colors for selected pieces and effects
     const primaryColor = isColorBlind ? colors[2] : theme.colors.primary;
     
-    if (isCorrectlyPlaced) {
+    // Highlight both correctly placed and solved pieces (empty tiles are marked as solved)
+    if (isCorrectlyPlaced || piece.isSolved) {
       // Add stronger matched tile effects
       ctx.shadowColor = primaryColor;
       ctx.shadowBlur = 20;
@@ -651,7 +658,7 @@ const HexPuzzleMode: React.FC<HexPuzzleModeProps> = ({ imageSrc, onComplete, onE
       ctx.lineWidth = 3;
       ctx.stroke();
     } else {
-      ctx.globalAlpha = 0.8; // Make unmatched pieces slightly transparent
+      ctx.globalAlpha = 0.8;
     }
 
     drawHexImageTile(ctx, image!, piece, x, y, tileSize);
