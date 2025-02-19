@@ -15,6 +15,8 @@ const HexagonGrid: React.FC<HexagonGridProps> = ({
   hover = true
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null)
+  const colsRef = useRef(0)
+  const rowsRef = useRef(0)
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -23,15 +25,19 @@ const HexagonGrid: React.FC<HexagonGridProps> = ({
     const ctx = canvas.getContext('2d')
     if (!ctx) return
 
-    // Set canvas size to window size
+    const hexWidth = size * 2
+    const hexHeight = Math.sqrt(3) * size
+
     const updateSize = () => {
       canvas.width = window.innerWidth
       canvas.height = window.innerHeight
+      colsRef.current = Math.ceil(canvas.width / (hexWidth + gap)) + 1
+      rowsRef.current = Math.ceil(canvas.height / (hexHeight + gap)) + 1
     }
+    
     updateSize()
     window.addEventListener('resize', updateSize)
 
-    // Calculate hexagon points
     const getHexPoints = (x: number, y: number, size: number) => {
       const points = []
       for (let i = 0; i < 6; i++) {
@@ -44,7 +50,6 @@ const HexagonGrid: React.FC<HexagonGridProps> = ({
       return points
     }
 
-    // Draw hexagon
     const drawHexagon = (x: number, y: number, size: number, opacity: number) => {
       const points = getHexPoints(x, y, size)
       ctx.beginPath()
@@ -57,18 +62,10 @@ const HexagonGrid: React.FC<HexagonGridProps> = ({
       ctx.stroke()
     }
 
-    // Calculate grid dimensions
-    const hexWidth = size * 2
-    const hexHeight = Math.sqrt(3) * size
-    const cols = Math.ceil(canvas.width / (hexWidth + gap)) + 1
-    const rows = Math.ceil(canvas.height / (hexHeight + gap)) + 1
-
-    // Animation variables
     let mouseX = 0
     let mouseY = 0
     let frame = 0
 
-    // Handle mouse movement
     const handleMouseMove = (e: MouseEvent) => {
       const rect = canvas.getBoundingClientRect()
       mouseX = (e.clientX - rect.left) * (canvas.width / rect.width)
@@ -78,25 +75,21 @@ const HexagonGrid: React.FC<HexagonGridProps> = ({
       canvas.addEventListener('mousemove', handleMouseMove)
     }
 
-    // Animation loop
     const animate = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height)
       frame++
 
-      for (let row = 0; row < rows; row++) {
-        for (let col = 0; col < cols; col++) {
+      for (let row = 0; row < rowsRef.current; row++) {
+        for (let col = 0; col < colsRef.current; col++) {
           const x = col * (hexWidth + gap) + (row % 2) * (hexWidth / 2)
           const y = row * (hexHeight + gap)
 
-          // Calculate distance from mouse
           const dx = x - mouseX
           const dy = y - mouseY
           const distance = Math.sqrt(dx * dx + dy * dy)
           
-          // Calculate base opacity with wave effect
           let opacity = 0.1 + Math.sin(frame * 0.02 + (x + y) * 0.01) * 0.05
 
-          // Add hover effect
           if (hover && distance < 200) {
             opacity += (1 - distance / 200) * 0.3
           }
