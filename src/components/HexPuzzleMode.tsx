@@ -353,21 +353,21 @@ const HexPuzzleMode: React.FC<HexPuzzleModeProps> = ({ imageSrc, onComplete, onE
       position.q === selectedTile.correctPosition.q && 
       position.r === selectedTile.correctPosition.r;
 
-    // Update pieces state
-    setPieces(prevPieces => {
-      const newPieces = [...prevPieces];
-      const pieceIndex = newPieces.findIndex(p => p.id === selectedTile.id);
-      if (pieceIndex !== -1) {
-        newPieces[pieceIndex] = {
-          ...selectedTile,
-          currentPosition: position
-        };
-      }
-      return newPieces;
-    });
-
-    // Handle scoring
     if (isCorrectPlacement) {
+      // Update pieces state with correct placement
+      setPieces(prevPieces => {
+        const newPieces = [...prevPieces];
+        const pieceIndex = newPieces.findIndex(p => p.id === selectedTile.id);
+        if (pieceIndex !== -1) {
+          newPieces[pieceIndex] = {
+            ...selectedTile,
+            currentPosition: position
+          };
+        }
+        return newPieces;
+      });
+
+      // Handle scoring for correct placement
       setScore(prevScore => {
         const newScore = prevScore + SCORING.correctPlacement;
         
@@ -387,6 +387,33 @@ const HexPuzzleMode: React.FC<HexPuzzleModeProps> = ({ imageSrc, onComplete, onE
         setPlayerProgress(updatedProgress);
         
         return newScore;
+      });
+
+      // Remove the correctly placed tile from options
+      setAllTileOptions(prev => prev.filter(t => t.id !== selectedTile.id));
+      setVisibleTileOptions(prev => {
+        const newVisible = prev.filter(t => t.id !== selectedTile.id);
+        // Add next tile if available
+        if (allTileOptions.length > prev.length) {
+          const nextTile = allTileOptions.find(t => 
+            !prev.some(p => p.id === t.id) && t.id !== selectedTile.id
+          );
+          if (nextTile) {
+            newVisible.push(nextTile);
+          }
+        }
+        return newVisible;
+      });
+    } else {
+      // For incorrect placement, return tile to options list
+      setVisibleTileOptions(prev => {
+        const newVisible = [...prev];
+        // Remove from current position
+        newVisible.splice(tileIndex, 1);
+        // Add back to a random position in visible tiles
+        const insertIndex = Math.floor(Math.random() * (newVisible.length + 1));
+        newVisible.splice(insertIndex, 0, selectedTile);
+        return newVisible;
       });
     }
 
@@ -438,28 +465,6 @@ const HexPuzzleMode: React.FC<HexPuzzleModeProps> = ({ imageSrc, onComplete, onE
       
       requestAnimationFrame(animate);
     }
-
-    // Update visible tiles
-    setAllTileOptions((prev: HexPuzzlePiece[]) => {
-      const newOptions = prev.filter((t: HexPuzzlePiece) => t.id !== selectedTile.id);
-      return newOptions;
-    });
-
-    // Update visible options
-    setVisibleTileOptions((prev: HexPuzzlePiece[]) => {
-      const newVisible = [...prev];
-      newVisible.splice(tileIndex, 1);
-      // Add next tile from remaining options if available
-      if (allTileOptions.length > prev.length) {
-        const nextTile = allTileOptions.find((t: HexPuzzlePiece) => 
-          !prev.some((p: HexPuzzlePiece) => p.id === t.id) && t.id !== selectedTile.id
-        );
-        if (nextTile) {
-          newVisible.push(nextTile);
-        }
-      }
-      return newVisible;
-    });
   };
 
   // Draw next tile options
@@ -565,7 +570,7 @@ const HexPuzzleMode: React.FC<HexPuzzleModeProps> = ({ imageSrc, onComplete, onE
     
     if (isCorrectlyPlaced) {
       // Add stronger matched tile effects
-      ctx.shadowColor = `rgba(${primaryColor}, 0.6)`;
+      ctx.shadowColor = primaryColor;
       ctx.shadowBlur = 20;
       
       // Add stronger radial glow
@@ -583,7 +588,7 @@ const HexPuzzleMode: React.FC<HexPuzzleModeProps> = ({ imageSrc, onComplete, onE
       ctx.filter = 'brightness(1.3)';
       
       // Add second glow layer
-      ctx.strokeStyle = `rgba(${primaryColor}, 0.4)`;
+      ctx.strokeStyle = 'rgba(0, 255, 159, 0.4)';
       ctx.lineWidth = 3;
       ctx.stroke();
     } else {
@@ -608,6 +613,14 @@ const HexPuzzleMode: React.FC<HexPuzzleModeProps> = ({ imageSrc, onComplete, onE
 
   return (
     <PreventContextMenu>
+      <div className="particles-container">
+        <Particles 
+          intensity={particleIntensity}
+          color={particleColor}
+          width={window.innerWidth}
+          height={window.innerHeight}
+        />
+      </div>
       <div 
         className="hex-puzzle-mode"
         style={{
@@ -616,15 +629,6 @@ const HexPuzzleMode: React.FC<HexPuzzleModeProps> = ({ imageSrc, onComplete, onE
           '--background-dark': `${theme.colors.background}99`,
         } as React.CSSProperties}
       >
-        <div className="particles-container">
-          <Particles 
-            intensity={particleIntensity}
-            color={particleColor}
-            width={window.innerWidth}
-            height={window.innerHeight}
-          />
-        </div>
-
         <LevelProgress progress={playerProgress} />
         <div className="score" data-label="Score">
           <div className="score-value">{score}</div>
