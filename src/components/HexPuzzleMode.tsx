@@ -517,12 +517,6 @@ const HexPuzzleMode: React.FC<HexPuzzleModeProps> = ({ imageSrc, onComplete, onE
       ctx.fillStyle = gradient;
       ctx.fill();
 
-      // Add pulsing animation
-      const pulseScale = 1 + Math.sin(Date.now() * 0.004) * 0.05;
-      ctx.translate(x, y);
-      ctx.scale(pulseScale, pulseScale);
-      ctx.translate(-x, -y);
-
       // Increase brightness
       ctx.filter = 'brightness(1.3)';
       
@@ -539,64 +533,50 @@ const HexPuzzleMode: React.FC<HexPuzzleModeProps> = ({ imageSrc, onComplete, onE
   };
 
   return (
-    <div className="hex-puzzle-container">
-      <div className="hex-puzzle-canvas-wrapper">
-        <canvas
-          ref={backgroundCanvasRef}
-          width={canvasWidth}
-          height={canvasHeight}
-          style={{ 
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            width: '100%',
-            height: '100%'
-          }}
-        />
-        <canvas
-          ref={gameCanvasRef}
-          width={canvasWidth}
-          height={canvasHeight}
-          style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            width: '100%',
-            height: '100%'
-          }}
-          onClick={handleCanvasClick}
-          onMouseMove={(e) => {
-            const canvas = gameCanvasRef.current;
-            if (!canvas) return;
-            const rect = canvas.getBoundingClientRect();
-            
-            // Get the actual displayed dimensions
-            const displayWidth = rect.width;
-            const displayHeight = rect.height;
-            
-            // Convert screen coordinates to canvas space
-            const scaleX = canvas.width / displayWidth;
-            const scaleY = canvas.height / displayHeight;
-            
-            // Get mouse position in canvas coordinates
-            const mouseX = (e.clientX - rect.left) * scaleX;
-            const mouseY = (e.clientY - rect.top) * scaleY;
+    <div className="hex-puzzle-mode">
+      <div className="hex-puzzle-board-container">
+        <div className="hex-puzzle-game-board">
+          <div className="hex-puzzle-canvas-wrapper">
+            <canvas
+              ref={backgroundCanvasRef}
+              width={canvasWidth}
+              height={canvasHeight}
+            />
+            <canvas
+              ref={gameCanvasRef}
+              width={canvasWidth}
+              height={canvasHeight}
+              onClick={handleCanvasClick}
+              onMouseMove={(e) => {
+                const canvas = gameCanvasRef.current;
+                if (!canvas) return;
+                const rect = canvas.getBoundingClientRect();
+                
+                // Get the actual displayed dimensions
+                const displayWidth = rect.width;
+                const displayHeight = rect.height;
+                
+                // Convert screen coordinates to canvas space
+                const scaleX = canvas.width / displayWidth;
+                const scaleY = canvas.height / displayHeight;
+                
+                // Get mouse position in canvas coordinates
+                const mouseX = (e.clientX - rect.left) * scaleX;
+                const mouseY = (e.clientY - rect.top) * scaleY;
 
-            // Get the center point
-            const centerX = canvas.width / 2;
-            const centerY = canvas.height / 2;
-
-            // Adjust for the canvas scale transformation
-            const adjustedX = (mouseX - centerX) / 0.8 + centerX;
-            const adjustedY = (mouseY - centerY) / 0.8 + centerY;
-            
-            setCursorPosition({
-              x: adjustedX,
-              y: adjustedY
-            });
-          }}
-          onMouseLeave={() => setCursorPosition(null)}
-        />
+                // Adjust for the canvas scale transformation
+                const adjustedX = mouseX;
+                const adjustedY = mouseY;
+                
+                setCursorPosition({
+                  x: adjustedX,
+                  y: adjustedY
+                });
+              }}
+              onMouseLeave={() => setCursorPosition(null)}
+            />
+          </div>
+        </div>
       </div>
 
       {!isPuzzleStarted ? (
