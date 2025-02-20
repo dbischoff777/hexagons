@@ -298,7 +298,6 @@ input[type="range"]::-webkit-slider-thumb {
 .level-progress {
   margin-top: clamp(15px, 2.5vh, 20px);
   padding-top: clamp(12px, 2vh, 15px);
-  border-top: 1px solid rgba(0, 255, 159, 0.2);
   display: flex;
   justify-content: center;
   align-items: center;

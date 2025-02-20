@@ -437,7 +437,7 @@
   }
 
   .hex-puzzle-mode .score {
-    top: 45px;
+    top: 80px; /* Position below level progress */
   }
 }
 
@@ -477,7 +477,7 @@
 .hex-puzzle-mode .score {
   position: fixed;
   left: 2vw;
-  top: 4.5rem; /* Adjusted to be closer to level progress */
+  top: calc(4.5rem + 60px); /* Positioned below level progress */
   transform: none;
   min-width: min(280px, 25vw);
   padding: min(12px, 1.5vh) min(20px, 2vw);
@@ -558,7 +558,7 @@
   }
 
   .hex-puzzle-mode .score {
-    top: 70px;
+    top: calc(70px + 10px); /* Level progress height + gap */
   }
 }
 
@@ -569,6 +569,10 @@
     --ui-scale: 0.85;
     width: min(240px, calc(50vw - 15px));
   }
+
+  .hex-puzzle-mode .score {
+    top: calc(65px + 8px); /* Slightly reduced spacing for smaller screens */
+  }
 }
 
 /* Portrait orientation adjustments */
@@ -578,6 +582,14 @@
     width: min(200px, calc(50vw - 10px));
     padding: 8px 12px;
     --ui-scale: 0.8;
+  }
+
+  .hex-puzzle-mode .level-progress {
+    top: 5px;
+  }
+
+  .hex-puzzle-mode .score {
+    top: calc(80px + 8px); /* Adjusted for portrait mode */
   }
 }
 
