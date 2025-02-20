@@ -65,6 +65,7 @@ import { drawHexagonWithColoredEdges } from '../utils/hexagonRenderer'
 import { formatScore } from '../utils/formatNumbers';
 import SpringModal from './SpringModal'
 import { handleKeyboardPlacement, loadKeyBindings } from '../utils/keyBindingsUtils'
+import CustomCursor from './CustomCursor';
 
 // Replace the DEBUG object at the top
 const DEBUG = {
@@ -2567,22 +2568,23 @@ const Game: React.FC<GameProps> = ({
   };
 
   return (
-    <div
-      className="game-container"
-      style={{
-        background: backgroundGlow,
-        transition: 'background 1s ease-in-out'
-      }}
-      onContextMenu={handleContextMenu}  // Add this line
+    <div 
+      className={`game ${tutorial ? 'tutorial-mode' : ''}`}
+      ref={wrapperRef}
+      onContextMenu={handleContextMenu}
     >
+      <CustomCursor 
+        color={theme.colors.primary}
+        hide={selectedTileIndex !== null || Boolean(showLevelComplete)}
+      />
       <div className="game-header">
         <LevelProgress progress={playerProgress} />
       </div>
       <Particles 
         intensity={particleIntensity} 
         color={particleColor}
-        width={1000}   // Match your game board size
-        height={800}  // Match your game board size
+        width={1000}
+        height={800}
       />
       {tutorialState.active ? (
         <div className="tutorial-buttons">

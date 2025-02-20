@@ -5,7 +5,7 @@ import { loadGameState, clearSavedGame } from '../utils/gameStateUtils'
 import StatisticsPage from './StatisticsPage'
 import AchievementsView from './AchievementsView'
 import UnlockablesMenu from './UnlockablesMenu'
-import { setTheme, getPlayerProgress, setCompanion } from '../utils/progressionUtils'
+import { setTheme, setCompanion, getPlayerProgress, getTheme } from '../utils/progressionUtils'
 import LevelRoadmap from './LevelRoadmap'
 import soundManager from '../utils/soundManager'
 import FrenchBulldog from './FrenchBulldog'
@@ -17,6 +17,9 @@ import styles from '../styles/bubbleText.module.css'
 import HexagonGrid from './HexagonGrid'
 import SpringModal from './SpringModal'
 import { FaPuzzlePiece } from 'react-icons/fa'
+import CustomCursor from './CustomCursor'
+import { useAccessibility } from '../contexts/AccessibilityContext'
+import { DEFAULT_SCHEME } from '../utils/colorSchemes'
 
 interface StartPageProps {
   onStartGame: (
@@ -121,7 +124,11 @@ const StartPage: React.FC<StartPageProps> = ({
   const [showUnlockables, setShowUnlockables] = useState(false)
   const [showLevelRoadmap, setShowLevelRoadmap] = useState(false)
   const [showCustomize, setShowCustomize] = useState(false)
+  const { settings } = useAccessibility()
+  const isColorBlind = settings.isColorBlind
   const playerProgress = getPlayerProgress()
+  const theme = getTheme(playerProgress.selectedTheme || 'default')
+  const colors = isColorBlind ? DEFAULT_SCHEME.colors : theme.colors
   const [puppyPhrase, setPuppyPhrase] = useState(() => 
     PUPPY_PHRASES[Math.floor(Math.random() * PUPPY_PHRASES.length)]
   )
@@ -237,6 +244,10 @@ const StartPage: React.FC<StartPageProps> = ({
 
   return (
     <div className="start-page">
+      <CustomCursor 
+        color={isColorBlind ? colors.toString() : theme.colors.primary}
+        hide={false}
+      />
       <HexagonGrid 
         color="#00FF9F"
         size={30}
