@@ -233,9 +233,6 @@ const HexPuzzleMode: React.FC<HexPuzzleModeProps> = ({ onComplete, onExit }) => 
   const [currentPuzzle, setCurrentPuzzle] = useState<PuzzleImage | null>(null);
   const [selectedPuzzle, setSelectedPuzzle] = useState<PuzzleImage | null>(null);
 
-  // Add dragging state
-  const [isDragging, setIsDragging] = useState(false);
-
   // Add cursor position state for custom cursor
   const [cursorPos, setCursorPos] = useState({ x: 0, y: 0 });
 
@@ -1154,7 +1151,6 @@ const HexPuzzleMode: React.FC<HexPuzzleModeProps> = ({ onComplete, onExit }) => 
                   }}
                   onMouseLeave={() => {
                     setCursorPosition(null);
-                    setIsDragging(false);
                     setCursorPos({ x: 0, y: 0 });
                   }}
                 >
