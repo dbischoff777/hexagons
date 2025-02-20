@@ -656,9 +656,10 @@ const HexPuzzleMode: React.FC<HexPuzzleModeProps> = ({ onComplete, onExit }) => 
           updatedProgress.experience -= playerProgress.experienceToNext;
           updatedProgress.experienceToNext = Math.floor(playerProgress.experienceToNext * 1.5);
           
-          // Show level up popup
+          // Show level up popup with unique ID and timing
+          const levelUpPopupId = Date.now() + 1; // Ensure unique ID
           const levelUpPopup: ScorePopupData = {
-            id: Date.now() + 1, // Ensure unique ID
+            id: levelUpPopupId,
             x: screenX,
             y: screenY - 50, // Show above the score popup
             score: 0,
@@ -671,7 +672,7 @@ const HexPuzzleMode: React.FC<HexPuzzleModeProps> = ({ onComplete, onExit }) => 
           
           // Remove level up popup after animation
           setTimeout(() => {
-            setScorePopups(prev => prev.filter(p => p.id !== levelUpPopup.id));
+            setScorePopups(prev => prev.filter(p => p.id !== levelUpPopupId));
           }, 2000);
         }
         
