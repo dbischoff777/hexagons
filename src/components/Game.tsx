@@ -305,7 +305,7 @@ const Game: React.FC<GameProps> = ({
   const theme = getTheme(playerProgress.selectedTheme || 'default')
   const [showLevelRoadmap, setShowLevelRoadmap] = useState(false)
   const [newBadges, setNewBadges] = useState<Badge[]>([])
-  const [particleIntensity, setParticleIntensity] = useState(0.3)
+  const [particleIntensity, setParticleIntensity] = useState(0.5)
   const [particleColor, setParticleColor] = useState(theme.colors.primary)
   const [backgroundGlow, setBackgroundGlow] = useState('');
   const [animatingTiles, setAnimatingTiles] = useState<{ q: number, r: number, type: 'place' | 'match' | 'hint' }[]>([]);
@@ -2577,15 +2577,17 @@ const Game: React.FC<GameProps> = ({
         color={theme.colors.primary}
         hide={selectedTileIndex !== null || Boolean(showLevelComplete)}
       />
+      <div className="particles-container">
+        <Particles 
+          intensity={particleIntensity}
+          color={particleColor}
+          width={window.innerWidth}
+          height={window.innerHeight}
+        />
+      </div>
       <div className="game-header">
         <LevelProgress progress={playerProgress} />
       </div>
-      <Particles 
-        intensity={particleIntensity} 
-        color={particleColor}
-        width={1000}
-        height={800}
-      />
       {tutorialState.active ? (
         <div className="tutorial-buttons">
           <button 

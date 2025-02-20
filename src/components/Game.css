@@ -1,3 +1,25 @@
+.particles-container {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  height: 100dvh;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+  background: var(--background-gradient, linear-gradient(180deg, 
+    rgba(13, 13, 26, 0.95) 0%,
+    rgba(13, 13, 26, 0.98) 100%
+  ));
+}
+
+.particles-container canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
 @keyframes rotateGrid {
   0% {
     transform: rotate(0deg);
@@ -78,6 +100,11 @@
   background: radial-gradient(circle, rgba(0, 255, 159, 0.1) 0%, transparent 70%);
   pointer-events: none;
   animation: ambientGlow 8s ease-in-out infinite;
+}
+
+/* Remove ::after since we're using Particles component */
+.game-container::after {
+  display: none;
 }
 
 @keyframes ambientGlow {
