@@ -577,17 +577,11 @@
 
 .puzzle-selector {
   position: relative;
-  width: min(90vw, 1200px);
-  max-height: 90vh;
+  width: min(95vw, 1200px);
+  max-height: min(90vh, 100dvh - 40px);
   margin: 0 auto;
-  padding: clamp(20px, 4vh, 30px);
-  background: rgba(26, 26, 46, 0.95);
-  border: 2px solid var(--hex-color);
-  border-radius: clamp(10px, 2vw, 15px);
+  padding: clamp(15px, 3vh, 30px);
   overflow-y: auto;
-  box-shadow: 
-    0 0 20px rgba(var(--hex-color), 0.1),
-    0 0 40px rgba(0, 0, 0, 0.3);
 }
 
 .puzzle-selector-title {
@@ -688,7 +682,7 @@
 
 .puzzle-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(280px, calc(100vw - 40px)), 1fr));
   gap: clamp(10px, 2vw, 20px);
   width: 100%;
   padding: 0.5rem;
@@ -707,8 +701,6 @@
   aspect-ratio: 3/4;
   display: flex;
   flex-direction: column;
-  text-align: left;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 .puzzle-card:hover,
@@ -813,13 +805,15 @@
 @media (max-width: 480px) {
   .puzzle-selector {
     width: 100vw;
-    height: 100vh;
-    max-height: none;
+    height: 100dvh;
+    padding: 15px;
     border-radius: 0;
   }
   
   .puzzle-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(auto-fit, minmax(min(160px, calc(100vw - 30px)), 1fr));
+    gap: 10px;
+    padding: 0.25rem;
   }
   
   .puzzle-filters {
@@ -827,9 +821,55 @@
   }
 
   .difficulty-filter {
-    padding: 0.4rem 1rem;
-    min-width: 80px;
+    padding: 0.4rem 0.8rem;
     font-size: 0.8rem;
+    min-width: 70px;
+  }
+
+  .puzzle-info h3 {
+    font-size: 1rem;
+  }
+
+  .difficulty {
+    font-size: 0.75rem;
+    padding: 0.2rem 0.5rem;
+  }
+
+  .ring-selector {
+    padding: 1rem;
+    margin: 1rem auto;
+  }
+
+  .ring-controls button {
+    width: 40px;
+    height: 40px;
+    font-size: 1.2rem;
+  }
+}
+
+/* Add specific adjustments for narrow screens */
+@media (max-width: 412px) {
+  .puzzle-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .puzzle-card {
+    aspect-ratio: 2/3;
+  }
+
+  .puzzle-info {
+    padding: 0.5rem;
+  }
+
+  .puzzle-info h3 {
+    font-size: 0.9rem;
+    margin-bottom: 0.25rem;
+  }
+
+  .puzzle-selector-title {
+    font-size: 1.25rem;
+    margin-bottom: 1rem;
   }
 }
 

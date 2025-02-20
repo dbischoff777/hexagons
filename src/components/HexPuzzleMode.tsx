@@ -891,7 +891,7 @@ const HexPuzzleMode: React.FC<HexPuzzleModeProps> = ({ onComplete, onExit }) => 
     const [normalizedUrls, setNormalizedUrls] = useState<Record<string, string>>({});
     const [filter, setFilter] = useState<PuzzleFilter>({ difficulty: 'all' });
     const [currentPage, setCurrentPage] = useState(1);
-    const itemsPerPage = 6; // Adjust based on screen size
+    const itemsPerPage = 8; // Changed from 6 to 8 to show more puzzles per page
 
     // Create normalized URLs for all puzzle images
     useEffect(() => {
