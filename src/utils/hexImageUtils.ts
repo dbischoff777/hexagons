@@ -64,12 +64,8 @@ export const createHexPuzzle = (
     // Draw original image for analysis
     analysisCtx.drawImage(image, x, y, scaledWidth, scaledHeight);
     
-    // Draw darkened image for display
-    displayCtx.filter = 'brightness(0.4) contrast(0.4)';
-    displayCtx.globalAlpha = 0.85;
+    // Draw original image for display without darkening
     displayCtx.drawImage(image, x, y, scaledWidth, scaledHeight);
-    displayCtx.filter = 'none';
-    displayCtx.globalAlpha = 1;
     
     // Create scaled images
     const displayImage = new Image();

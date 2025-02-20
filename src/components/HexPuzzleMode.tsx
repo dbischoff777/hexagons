@@ -18,8 +18,11 @@ import { ScorePopupData } from '../types/scorePopup';
 import frenchie from '../assets/images/frenchie.svg';
 import frenchie2 from '../assets/images/frenchie2.svg';
 import unicorn from '../assets/images/unicorn.jpg';
+import unicornColor from '../assets/images/unicornColor.jpg';
 import spaceman from '../assets/images/spaceman.svg';
+import spacemanColor from '../assets/images/spacemanColor.jpg';
 import spacegirl from '../assets/images/spacegirl.svg';
+import shroomColor from '../assets/images/shroomColor.jpg';
 
 // Define an interface for puzzle images
 interface PuzzleImage {
@@ -57,15 +60,33 @@ const PUZZLE_IMAGES: PuzzleImage[] = [
     type: 'jpg'
   },
   {
+    id: 'unicornColor',
+    src: unicornColor,
+    name: 'Unicorn Color',
+    difficulty: 'hard',
+  },
+  {
     id: 'spaceman',
     src: spaceman,
     name: 'Spaceman',
+    difficulty: 'hard',
+  },  
+  {
+    id: 'spacemanColor',
+    src: spacemanColor,
+    name: 'Spaceman Color',
     difficulty: 'hard',
   },
   {
     id: 'spacegirl',
     src: spacegirl,
     name: 'Spacegirl',
+    difficulty: 'hard',
+  },    
+  {
+    id: 'shroomColor',
+    src: shroomColor,
+    name: 'Shroom Color',
     difficulty: 'hard',
   },
 ];
