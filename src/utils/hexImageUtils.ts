@@ -16,115 +16,133 @@ type HexPosition = [number, number];
 const validPositions: HexPosition[] = [
   // Center
   [0, 0],
-  // First ring
+  // First ring (6)
   [1, 0], [0, 1], [-1, 1], [-1, 0], [0, -1], [1, -1],
-  // Second ring
+  // Second ring (12)
   [2, 0], [1, 1], [0, 2], [-1, 2], [-2, 2], [-2, 1],
   [-2, 0], [-1, -1], [0, -2], [1, -2], [2, -2], [2, -1],
-  // Third ring
+  // Third ring (18)
   [3, 0], [2, 1], [1, 2], [0, 3], [-1, 3], [-2, 3],
   [-3, 3], [-3, 2], [-3, 1], [-3, 0], [-2, -1], [-1, -2],
   [0, -3], [1, -3], [2, -3], [3, -3], [3, -2], [3, -1],
-  // Fourth ring (complete)
+  // Fourth ring (24)
   [4, 0], [3, 1], [2, 2], [1, 3], [0, 4], [-1, 4],
   [-2, 4], [-3, 4], [-4, 4], [-4, 3], [-4, 2], [-4, 1],
   [-4, 0], [-3, -1], [-2, -2], [-1, -3], [0, -4], [1, -4],
-  [2, -4], [3, -4], [4, -4], [4, -3], [4, -2], [4, -1]
+  [2, -4], [3, -4], [4, -4], [4, -3], [4, -2], [4, -1],
+  // Fifth ring (30)
+  [5, 0], [4, 1], [3, 2], [2, 3], [1, 4], [0, 5], [-1, 5],
+  [-2, 5], [-3, 5], [-4, 5], [-5, 5], [-5, 4], [-5, 3],
+  [-5, 2], [-5, 1], [-5, 0], [-4, -1], [-3, -2], [-2, -3],
+  [-1, -4], [0, -5], [1, -5], [2, -5], [3, -5], [4, -5],
+  [5, -5], [5, -4], [5, -3], [5, -2], [5, -1]
 ];
 
-export const createHexPuzzle = (
+interface ScalingOptions {
+  targetWidth?: number;
+  targetHeight?: number;
+  maintainAspectRatio?: boolean;
+}
+
+export const createHexPuzzle = async (
   image: HTMLImageElement,
-  hexSize: number
-): Promise<{ pieces: HexPuzzlePiece[], scaledImage: HTMLImageElement }> => {
-  return new Promise((resolve) => {
-    // Create two temporary canvases - one for display, one for analysis
-    const displayCanvas = document.createElement('canvas');
-    const analysisCanvas = document.createElement('canvas');
-    const gridDiameter = 9;
-    const gridWidth = gridDiameter * hexSize * 1.5;
-    const gridHeight = gridDiameter * hexSize * Math.sqrt(3);
-    
-    displayCanvas.width = gridWidth;
-    displayCanvas.height = gridHeight;
-    analysisCanvas.width = gridWidth;
-    analysisCanvas.height = gridHeight;
-    
-    const displayCtx = displayCanvas.getContext('2d')!;
-    const analysisCtx = analysisCanvas.getContext('2d')!;
-    
-    // Calculate scale and position
-    const scaleWidth = gridWidth / image.width;
-    const scaleHeight = gridHeight / image.height;
-    const scale = Math.max(scaleWidth, scaleHeight);
-    const scaledWidth = image.width * scale;
-    const scaledHeight = image.height * scale;
-    const x = (gridWidth - scaledWidth) / 2;
-    const y = (gridHeight - scaledHeight) / 2;
-    
-    // Draw original image for analysis
-    analysisCtx.drawImage(image, x, y, scaledWidth, scaledHeight);
-    
-    // Draw original image for display without darkening
-    displayCtx.drawImage(image, x, y, scaledWidth, scaledHeight);
-    
-    // Create scaled images
-    const displayImage = new Image();
-    const analysisImage = new Image();
-    
-    let imagesLoaded = 0;
-    const onImageLoad = () => {
-      imagesLoaded++;
-      if (imagesLoaded === 2) {
-        const allPieces: HexPuzzlePiece[] = [];
-        const centerX = gridWidth / 2;
-        const centerY = gridHeight / 2;
-        
-        // Create pieces using both images
-        validPositions.forEach(([q, r]: HexPosition, index: number) => {
-          const pixelX = centerX + hexSize * (3/2 * q);
-          const pixelY = centerY + hexSize * (Math.sqrt(3) * (r + q/2));
-          
-          const piece: HexPuzzlePiece = {
-            id: index,
-            correctPosition: { q, r },
-            currentPosition: { q: -10, r: -10 },
-            sourceX: pixelX - hexSize,
-            sourceY: pixelY - hexSize,
-            width: hexSize * 2,
-            height: hexSize * 2,
-            isSolved: false
-          };
+  tileSize: number,
+  scalingOptions?: ScalingOptions
+): Promise<{ pieces: HexPuzzlePiece[]; scaledImage: HTMLImageElement }> => {
+  // Create a temporary canvas for scaling
+  const tempCanvas = document.createElement('canvas');
+  const tempCtx = tempCanvas.getContext('2d');
+  if (!tempCtx) throw new Error('Could not get canvas context');
 
-          // Check content using the analysis image
-          const hasContent = hasSignificantContent(piece, analysisImage);
-          
-          console.debug(`Processing piece ${index}:`, {
-            position: `q:${q}, r:${r}`,
-            hasContent,
-            willBeSolved: !hasContent
-          });
+  // Calculate dimensions
+  let scaledWidth: number;
+  let scaledHeight: number;
 
-          if (!hasContent) {
-            piece.isSolved = true;
-            piece.currentPosition = piece.correctPosition;
-          }
-          
-          allPieces.push(piece);
-        });
-
-        resolve({ 
-          pieces: allPieces,
-          scaledImage: displayImage // Use the darkened image for display
-        });
+  if (scalingOptions) {
+    if (scalingOptions.maintainAspectRatio !== false) {
+      // Maintain aspect ratio while fitting within target dimensions
+      const aspectRatio = image.width / image.height;
+      if (scalingOptions.targetWidth && scalingOptions.targetHeight) {
+        if (aspectRatio > scalingOptions.targetWidth / scalingOptions.targetHeight) {
+          scaledWidth = scalingOptions.targetWidth;
+          scaledHeight = scaledWidth / aspectRatio;
+        } else {
+          scaledHeight = scalingOptions.targetHeight;
+          scaledWidth = scaledHeight * aspectRatio;
+        }
+      } else if (scalingOptions.targetWidth) {
+        scaledWidth = scalingOptions.targetWidth;
+        scaledHeight = scaledWidth / aspectRatio;
+      } else if (scalingOptions.targetHeight) {
+        scaledHeight = scalingOptions.targetHeight;
+        scaledWidth = scaledHeight * aspectRatio;
+      } else {
+        scaledWidth = image.width;
+        scaledHeight = image.height;
       }
-    };
-    
-    displayImage.onload = onImageLoad;
-    analysisImage.onload = onImageLoad;
-    
-    displayImage.src = displayCanvas.toDataURL();
-    analysisImage.src = analysisCanvas.toDataURL();
+    } else {
+      // Force exact dimensions
+      scaledWidth = scalingOptions.targetWidth || image.width;
+      scaledHeight = scalingOptions.targetHeight || image.height;
+    }
+  } else {
+    // Default scaling if no options provided
+    scaledWidth = image.width;
+    scaledHeight = image.height;
+  }
+
+  // Set canvas dimensions and draw scaled image
+  tempCanvas.width = scaledWidth;
+  tempCanvas.height = scaledHeight;
+  tempCtx.drawImage(image, 0, 0, scaledWidth, scaledHeight);
+
+  // Create scaled image
+  const scaledImage = new Image();
+  scaledImage.src = tempCanvas.toDataURL();
+
+  // Wait for scaled image to load
+  await new Promise((resolve) => {
+    scaledImage.onload = resolve;
   });
+
+  // Create puzzle pieces using the scaled image
+  const allPieces: HexPuzzlePiece[] = [];
+  const centerX = scaledWidth / 2;
+  const centerY = scaledHeight / 2;
+  
+  validPositions.forEach(([q, r]: HexPosition, index: number) => {
+    const pixelX = centerX + tileSize * (3/2 * q);
+    const pixelY = centerY + tileSize * (Math.sqrt(3) * (r + q/2));
+    
+    const piece: HexPuzzlePiece = {
+      id: index,
+      correctPosition: { q, r },
+      currentPosition: { q: -10, r: -10 },
+      sourceX: pixelX - tileSize,
+      sourceY: pixelY - tileSize,
+      width: tileSize * 2,
+      height: tileSize * 2,
+      isSolved: false
+    };
+
+    // Check content using the scaled image
+    const hasContent = hasSignificantContent(piece, scaledImage);
+    
+    console.debug(`Processing piece ${index}:`, {
+      position: `q:${q}, r:${r}`,
+      hasContent,
+      willBeSolved: !hasContent
+    });
+
+    if (!hasContent) {
+      piece.isSolved = true;
+      piece.currentPosition = piece.correctPosition;
+    }
+    
+    allPieces.push(piece);
+  });
+
+  return { pieces: allPieces, scaledImage };
 };
 
 export const drawHexImageTile = (

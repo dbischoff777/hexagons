@@ -339,28 +339,34 @@ const HexPuzzleMode: React.FC<HexPuzzleModeProps> = ({ onComplete, onExit }) => 
   const particleColor = isColorBlind ? colors[2] : theme.colors.primary;
 
   // Update the tile size and canvas dimensions
-  const tileSize = 35; // Optimal hex size for 440x485 image
-  const canvasWidth = 1000; // Increased to accommodate the larger grid
-  const canvasHeight = 1000; // Keep square for better centering
-
-  // Update valid positions to match the axial coordinate system
+  const tileSize = 35; // Keep the tile size constant
+  const canvasWidth = 1000;
+  const canvasHeight = 1000;
+  
+  // Update valid positions to include all fifth ring positions
   const validPositions: [number, number][] = [
     // Center
     [0, 0],
-    // First ring
+    // First ring (6)
     [1, 0], [0, 1], [-1, 1], [-1, 0], [0, -1], [1, -1],
-    // Second ring
+    // Second ring (12)
     [2, 0], [1, 1], [0, 2], [-1, 2], [-2, 2], [-2, 1],
     [-2, 0], [-1, -1], [0, -2], [1, -2], [2, -2], [2, -1],
-    // Third ring
+    // Third ring (18)
     [3, 0], [2, 1], [1, 2], [0, 3], [-1, 3], [-2, 3],
     [-3, 3], [-3, 2], [-3, 1], [-3, 0], [-2, -1], [-1, -2],
     [0, -3], [1, -3], [2, -3], [3, -3], [3, -2], [3, -1],
-    // Fourth ring (complete)
+    // Fourth ring (24)
     [4, 0], [3, 1], [2, 2], [1, 3], [0, 4], [-1, 4],
     [-2, 4], [-3, 4], [-4, 4], [-4, 3], [-4, 2], [-4, 1],
     [-4, 0], [-3, -1], [-2, -2], [-1, -3], [0, -4], [1, -4],
-    [2, -4], [3, -4], [4, -4], [4, -3], [4, -2], [4, -1]
+    [2, -4], [3, -4], [4, -4], [4, -3], [4, -2], [4, -1],
+    // Fifth ring (30)
+    [5, 0], [4, 1], [3, 2], [2, 3], [1, 4], [0, 5], [-1, 5],
+    [-2, 5], [-3, 5], [-4, 5], [-5, 5], [-5, 4], [-5, 3],
+    [-5, 2], [-5, 1], [-5, 0], [-4, -1], [-3, -2], [-2, -3],
+    [-1, -4], [0, -5], [1, -5], [2, -5], [3, -5], [4, -5],
+    [5, -5], [5, -4], [5, -3], [5, -2], [5, -1],
   ];
 
   // Add scoring constants
@@ -432,7 +438,9 @@ const HexPuzzleMode: React.FC<HexPuzzleModeProps> = ({ onComplete, onExit }) => 
       try {
         let imageUrl;
         if (currentPuzzle.type === 'svg') {
-          const tiledSvg = await loadAndTileSvg(currentPuzzle.src, tileSize, 3);
+          const gridRadius = 5;
+          // Reduced scaling since we have proper grid coverage
+          const tiledSvg = await loadAndTileSvg(currentPuzzle.src, tileSize, gridRadius);
           const svgBlob = new Blob([tiledSvg], { type: 'image/svg+xml' });
           imageUrl = URL.createObjectURL(svgBlob);
         } else {
@@ -442,8 +450,20 @@ const HexPuzzleMode: React.FC<HexPuzzleModeProps> = ({ onComplete, onExit }) => 
         const img = new Image();
         img.onload = async () => {
           try {
-            // Create puzzle pieces and get scaled image
-            const { pieces: puzzlePieces, scaledImage } = await createHexPuzzle(img, tileSize);
+            const gridRadius = 5;
+            // Reduced scaling to match the proper grid size
+            const gridPixelWidth = tileSize * Math.sqrt(3) * (gridRadius * 2);
+            
+            const { pieces: puzzlePieces, scaledImage } = await createHexPuzzle(
+              img,
+              tileSize,
+              {
+                targetWidth: gridPixelWidth,
+                targetHeight: gridPixelWidth,
+                maintainAspectRatio: false
+              }
+            );
+
             setImage(scaledImage);
             
             // Clear any existing pieces and options

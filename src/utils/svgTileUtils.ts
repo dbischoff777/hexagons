@@ -110,33 +110,57 @@ export const generateGameGridTiles = (
 ): HexTileData[] => {
   const tiles: HexTileData[] = [];
   
-  // Calculate dimensions for 440x485 target
-  const targetWidth = 440;
-  const targetHeight = 485;
+  // Calculate dimensions to fit all rings
+  const horizontalSpacing = hexSize * Math.sqrt(3);
+  const verticalSpacing = hexSize * 1.5;
   
-  // Calculate center offset based on target dimensions
-  const centerX = targetWidth / 2;
-  const centerY = targetHeight / 2;
+  // Calculate required dimensions based on grid radius
+  const width = horizontalSpacing * (gridRadius * 2 + 1);
+  const height = verticalSpacing * (gridRadius * 2 + 1);
   
-  // Generate tiles in a hexagonal pattern
-  for (let q = -gridRadius; q <= gridRadius; q++) {
-    const r1 = Math.max(-gridRadius, -q - gridRadius);
-    const r2 = Math.min(gridRadius, -q + gridRadius);
+  // Calculate center offset
+  const centerX = width / 2;
+  const centerY = height / 2;
+
+  // Use the same valid positions array as HexPuzzleMode
+  const validPositions = [
+    // Center
+    [0, 0],
+    // First ring (6)
+    [1, 0], [0, 1], [-1, 1], [-1, 0], [0, -1], [1, -1],
+    // Second ring (12)
+    [2, 0], [1, 1], [0, 2], [-1, 2], [-2, 2], [-2, 1],
+    [-2, 0], [-1, -1], [0, -2], [1, -2], [2, -2], [2, -1],
+    // Third ring (18)
+    [3, 0], [2, 1], [1, 2], [0, 3], [-1, 3], [-2, 3],
+    [-3, 3], [-3, 2], [-3, 1], [-3, 0], [-2, -1], [-1, -2],
+    [0, -3], [1, -3], [2, -3], [3, -3], [3, -2], [3, -1],
+    // Fourth ring (24)
+    [4, 0], [3, 1], [2, 2], [1, 3], [0, 4], [-1, 4],
+    [-2, 4], [-3, 4], [-4, 4], [-4, 3], [-4, 2], [-4, 1],
+    [-4, 0], [-3, -1], [-2, -2], [-1, -3], [0, -4], [1, -4],
+    [2, -4], [3, -4], [4, -4], [4, -3], [4, -2], [4, -1],
+    // Fifth ring (30)
+    [5, 0], [4, 1], [3, 2], [2, 3], [1, 4], [0, 5], [-1, 5],
+    [-2, 5], [-3, 5], [-4, 5], [-5, 5], [-5, 4], [-5, 3],
+    [-5, 2], [-5, 1], [-5, 0], [-4, -1], [-3, -2], [-2, -3],
+    [-1, -4], [0, -5], [1, -5], [2, -5], [3, -5], [4, -5],
+    [5, -5], [5, -4], [5, -3], [5, -2], [5, -1]
+  ];
+
+  // Generate tiles using valid positions
+  validPositions.forEach(([q, r]) => {
+    const x = centerX + hexSize * (3/2 * q);
+    const y = centerY + hexSize * (Math.sqrt(3) * (r + q/2));
     
-    for (let r = r1; r <= r2; r++) {
-      // Update position calculation to match our target dimensions
-      const x = centerX + hexSize * (Math.sqrt(3) * q + Math.sqrt(3)/2 * r);
-      const y = centerY + hexSize * (3./2 * r);
-      
-      tiles.push({
-        clipPath: createHexagonClipPath(x, y, hexSize - padding),
-        x: x - hexSize,
-        y: y - hexSize,
-        width: hexSize * 2,
-        height: hexSize * 2
-      });
-    }
-  }
+    tiles.push({
+      clipPath: createHexagonClipPath(x, y, hexSize - padding),
+      x: x - hexSize,
+      y: y - hexSize,
+      width: hexSize * 2,
+      height: hexSize * 2
+    });
+  });
   
   return tiles;
 };
