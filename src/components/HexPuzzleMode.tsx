@@ -15,8 +15,8 @@ import { getTheme } from '../utils/progressionUtils';
 import { updateStatistics } from '../utils/gameStateUtils';
 import ScorePopup from './ScorePopup';
 import { ScorePopupData } from '../types/scorePopup';
-import frenchie from '../assets/images/frenchie.svg';
-import frenchie2 from '../assets/images/frenchie2.svg';
+import cuteFrenchie from '../assets/images/cuteFrenchie.jpg';
+import cutePuppy from '../assets/images/cutePuppy.jpg';
 import unicorn from '../assets/images/unicorn.jpg';
 import unicornColor from '../assets/images/unicornColor.jpg';
 import spaceman from '../assets/images/spaceman.svg';
@@ -37,20 +37,20 @@ interface PuzzleImage {
 // Create an array of available puzzle images
 const PUZZLE_IMAGES: PuzzleImage[] = [
   {
-    id: 'frenchie1',
-    src: frenchie,
-    name: 'French Bulldog',
+    id: 'cuteFrenchie',
+    src: cuteFrenchie,
+    name: 'Cute Frenchie',
     difficulty: 'easy',
     description: 'A cute French Bulldog portrait',
-    type: 'svg'
+    type: 'jpg'
   },
   {
-    id: 'frenchie2',
-    src: frenchie2,
-    name: 'French Bulldog 2',
+    id: 'cutePuppy',
+    src: cutePuppy,
+    name: 'Cute Puppy',
     difficulty: 'medium',
-    description: 'Another adorable Frenchie',
-    type: 'svg'
+    description: 'A cute puppy portrait',
+    type: 'jpg'
   },
   {
     id: 'unicorn',
