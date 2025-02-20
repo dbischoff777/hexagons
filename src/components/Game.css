@@ -971,67 +971,24 @@
   }
 }
 
-/* Update level progress styling to match HexPuzzleMode */
+/* Level progress positioning */
 .level-progress {
   position: fixed;
   top: 0.625rem;
   left: 2vw;
   z-index: 100;
   min-width: min(280px, 25vw);
-  background: var(--background-dark);
-  backdrop-filter: blur(10px);
-  border: 2px solid rgba(var(--hex-color), 0.2);
-  box-shadow: 
-    0 4px 20px rgba(var(--hex-color), 0.1),
-    0 0 30px rgba(0, 0, 0, 0.2);
+  height: 60px; /* Set fixed height */
+  padding: min(12px, 1.5vh) min(20px, 2vw);
   transform-origin: left top;
   transform: scale(var(--ui-scale, 1));
 }
 
-/* Mobile adjustments */
-@media (max-width: 768px) {
-  .score,
-  .level-progress {
-    left: 10px;
-    transform: scale(var(--ui-scale, 0.9));
-    width: min(280px, calc(50vw - 20px));
-    min-width: auto;
-  }
-
-  .level-progress {
-    top: 5px;
-  }
-
-  .score {
-    top: 70px;
-  }
-}
-
-/* Smaller device optimizations */
-@media (max-width: 480px) {
-  .score,
-  .level-progress {
-    --ui-scale: 0.85;
-    width: min(240px, calc(50vw - 15px));
-  }
-}
-
-/* Portrait orientation adjustments */
-@media (max-width: 768px) and (orientation: portrait) {
-  .score,
-  .level-progress {
-    width: min(200px, calc(50vw - 10px));
-    padding: 8px 12px;
-    --ui-scale: 0.8;
-  }
-}
-
-/* Update score positioning and styling to match HexPuzzleMode exactly */
+/* Score positioning - calculate position based on level progress height */
 .score {
   position: fixed;
   left: 2vw;
-  top: 4.5rem;
-  transform: none;
+  top: calc(0.625rem + 60px + 0.5rem); /* level progress top + height + gap */
   min-width: min(280px, 25vw);
   padding: min(12px, 1.5vh) min(20px, 2vw);
   border-radius: min(12px, 1.5vh);
@@ -1050,6 +1007,44 @@
   z-index: 100;
   transform-origin: left top;
   transform: scale(var(--ui-scale, 1));
+}
+
+/* Mobile adjustments */
+@media (max-width: 768px) {
+  .level-progress {
+    top: 5px;
+    height: 54px;
+    transform: scale(0.9);
+  }
+
+  .score {
+    top: calc(5px + 54px + 8px); /* level progress top + height + gap */
+    transform: scale(0.9);
+  }
+}
+
+/* Smaller device optimizations */
+@media (max-width: 480px) {
+  .level-progress {
+    transform: scale(0.85);
+  }
+
+  .score {
+    top: calc(5px + 54px + 8px); /* Keep same spacing */
+    transform: scale(0.85);
+  }
+}
+
+/* Portrait orientation adjustments */
+@media (max-width: 768px) and (orientation: portrait) {
+  .level-progress {
+    transform: scale(0.8);
+  }
+
+  .score {
+    top: calc(5px + 54px + 8px); /* Keep same spacing */
+    transform: scale(0.8);
+  }
 }
 
 .score::before {
@@ -1077,61 +1072,6 @@
   box-shadow: 
     0 6px 25px rgba(var(--hex-color), 0.15),
     0 0 35px rgba(0, 0, 0, 0.25);
-}
-
-/* Update level progress positioning and styling to match HexPuzzleMode exactly */
-.level-progress {
-  position: fixed;
-  top: 0.625rem;
-  left: 2vw;
-  z-index: 100;
-  min-width: min(280px, 25vw);
-  background: var(--background-dark);
-  backdrop-filter: blur(10px);
-  border: 2px solid rgba(var(--hex-color), 0.2);
-  box-shadow: 
-    0 4px 20px rgba(var(--hex-color), 0.1),
-    0 0 30px rgba(0, 0, 0, 0.2);
-  transform-origin: left top;
-  transform: scale(var(--ui-scale, 1));
-}
-
-/* Mobile adjustments */
-@media (max-width: 768px) {
-  .score,
-  .level-progress {
-    left: 10px;
-    transform: scale(var(--ui-scale, 0.9));
-    width: min(280px, calc(50vw - 20px));
-    min-width: auto;
-  }
-
-  .level-progress {
-    top: 5px;
-  }
-
-  .score {
-    top: 70px;
-  }
-}
-
-/* Smaller device optimizations */
-@media (max-width: 480px) {
-  .score,
-  .level-progress {
-    --ui-scale: 0.85;
-    width: min(240px, calc(50vw - 15px));
-  }
-}
-
-/* Portrait orientation adjustments */
-@media (max-width: 768px) and (orientation: portrait) {
-  .score,
-  .level-progress {
-    width: min(200px, calc(50vw - 10px));
-    padding: 8px 12px;
-    --ui-scale: 0.8;
-  }
 }
 
 /* Next tiles container - default positioning (right side) */
