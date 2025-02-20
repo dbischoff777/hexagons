@@ -277,18 +277,7 @@ const HexPuzzleMode: React.FC<HexPuzzleModeProps> = ({ onComplete, onExit }) => 
             // Get only the unsolved (significant) pieces for tile options
             const significantPieces = puzzlePieces.filter(piece => {
               const isSignificant = !piece.isSolved;
-              console.debug(`Filtering piece ${piece.id}:`, {
-                position: `q:${piece.correctPosition.q}, r:${piece.correctPosition.r}`,
-                isSolved: piece.isSolved,
-                isSignificant
-              });
               return isSignificant;
-            });
-            
-            console.debug('Filtered pieces:', {
-              total: puzzlePieces.length,
-              significant: significantPieces.length,
-              solved: puzzlePieces.filter(p => p.isSolved).length
             });
             
             // Initialize tile options with ONLY significant pieces

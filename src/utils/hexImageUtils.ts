@@ -108,12 +108,6 @@ export const createHexPuzzle = async (
     // Check content using the scaled image
     const hasContent = hasSignificantContent(piece, scaledImage);
     
-    console.debug(`Processing piece ${index}:`, {
-      position: `q:${q}, r:${r}`,
-      hasContent,
-      willBeSolved: !hasContent
-    });
-
     if (!hasContent) {
       piece.isSolved = true;
       piece.currentPosition = piece.correctPosition;
@@ -228,17 +222,6 @@ export const hasSignificantContent = (
   const contentRatio = totalPixels > 0 ? significantPixels / totalPixels : 0;
   const threshold = isSvg ? 0.01 : 0.05; // Different thresholds for SVG and JPG
   const hasContent = contentRatio > threshold;
-
-  // Debug logging
-  console.debug(`Piece ${piece.id} analysis:`, {
-    position: `q:${piece.correctPosition.q}, r:${piece.correctPosition.r}`,
-    isSvg,
-    totalPixels,
-    significantPixels,
-    contentRatio,
-    threshold,
-    hasContent
-  });
 
   return hasContent;
 }; 
