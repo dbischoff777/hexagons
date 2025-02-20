@@ -9,8 +9,11 @@ interface CustomCursorProps {
 const CustomCursor: React.FC<CustomCursorProps> = ({ color = '#00FF9F', hide = false }) => {
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [isTouching, setIsTouching] = useState(false);
+  const [isTouch, setIsTouch] = useState(false);
 
   useEffect(() => {
+    setIsTouch('ontouchstart' in window);
+
     const updatePosition = (e: MouseEvent | Touch) => {
       setPosition({ x: e.clientX, y: e.clientY });
     };
@@ -18,6 +21,13 @@ const CustomCursor: React.FC<CustomCursorProps> = ({ color = '#00FF9F', hide = f
     const handleMouseMove = (e: MouseEvent) => {
       updatePosition(e);
       setIsTouching(false);
+    };
+
+    const handleTouchStart = (e: TouchEvent) => {
+      if (e.touches[0]) {
+        updatePosition(e.touches[0]);
+        setIsTouching(true);
+      }
     };
 
     const handleTouchMove = (e: TouchEvent) => {
@@ -32,20 +42,28 @@ const CustomCursor: React.FC<CustomCursorProps> = ({ color = '#00FF9F', hide = f
       setIsTouching(false);
     };
 
-    window.addEventListener('mousemove', handleMouseMove);
+    if (!isTouch) {
+      window.addEventListener('mousemove', handleMouseMove);
+    }
+    window.addEventListener('touchstart', handleTouchStart);
     window.addEventListener('touchmove', handleTouchMove, { passive: false });
     window.addEventListener('touchend', handleTouchEnd);
 
     return () => {
-      window.removeEventListener('mousemove', handleMouseMove);
+      if (!isTouch) {
+        window.removeEventListener('mousemove', handleMouseMove);
+      }
+      window.removeEventListener('touchstart', handleTouchStart);
       window.removeEventListener('touchmove', handleTouchMove);
       window.removeEventListener('touchend', handleTouchEnd);
     };
-  }, []);
+  }, [isTouch]);
+
+  const shouldHide = hide || (isTouch && !isTouching);
 
   return (
     <div 
-      className={`custom-cursor ${hide ? 'hidden' : ''} ${isTouching ? 'touching' : ''}`}
+      className={`custom-cursor ${shouldHide ? 'hidden' : ''} ${isTouching ? 'touching' : ''}`}
       style={{
         '--cursor-x': `${position.x}px`,
         '--cursor-y': `${position.y}px`,
