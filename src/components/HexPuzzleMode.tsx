@@ -24,6 +24,7 @@ import spacemanColor from '../assets/images/spacemanColor.jpg';
 import spacegirl from '../assets/images/spacegirl.svg';
 import shroomColor from '../assets/images/shroomColor.jpg';
 import { generateValidPositions } from '../utils/svgTileUtils';
+import CustomCursor from './CustomCursor';
 
 // Define an interface for puzzle images
 interface PuzzleImage {
@@ -231,6 +232,12 @@ const HexPuzzleMode: React.FC<HexPuzzleModeProps> = ({ onComplete, onExit }) => 
   // Add state to track current puzzle
   const [currentPuzzle, setCurrentPuzzle] = useState<PuzzleImage | null>(null);
   const [selectedPuzzle, setSelectedPuzzle] = useState<PuzzleImage | null>(null);
+
+  // Add dragging state
+  const [isDragging, setIsDragging] = useState(false);
+
+  // Add cursor position state for custom cursor
+  const [cursorPos, setCursorPos] = useState({ x: 0, y: 0 });
 
   // Load image and initialize puzzle
   useEffect(() => {
@@ -520,7 +527,7 @@ const HexPuzzleMode: React.FC<HexPuzzleModeProps> = ({ onComplete, onExit }) => 
     ctx.restore();
   }, [image, pieces, isPuzzleStarted, tileSize, canvasWidth, canvasHeight]);
 
-  // Game canvas - draw only active/selected pieces
+  // Update the game canvas effect where we draw the cursor preview
   useEffect(() => {
     const canvas = gameCanvasRef.current;
     if (!canvas || !image) return;
@@ -538,7 +545,9 @@ const HexPuzzleMode: React.FC<HexPuzzleModeProps> = ({ onComplete, onExit }) => 
         ctx.save();
         
         ctx.globalAlpha = 0.8;
-        ctx.shadowColor = 'rgba(0, 255, 159, 0.6)';
+        // Use theme color for cursor glow
+        const cursorColor = isColorBlind ? colors[2] : theme.colors.primary;
+        ctx.shadowColor = `${cursorColor}99`; // Add some transparency
         ctx.shadowBlur = 25;
         
         // Draw at cursor position
@@ -551,8 +560,8 @@ const HexPuzzleMode: React.FC<HexPuzzleModeProps> = ({ onComplete, onExit }) => 
           tileSize
         );
 
-        // Add hex outline
-        ctx.strokeStyle = 'rgba(0, 255, 159, 0.8)';
+        // Add hex outline with theme color
+        ctx.strokeStyle = cursorColor;
         ctx.lineWidth = 2;
         ctx.beginPath();
         for (let i = 0; i < 6; i++) {
@@ -570,7 +579,7 @@ const HexPuzzleMode: React.FC<HexPuzzleModeProps> = ({ onComplete, onExit }) => 
     }
 
     ctx.restore();
-  }, [image, selectedTileIndex, cursorPosition, visibleTileOptions]);
+  }, [image, selectedTileIndex, cursorPosition, visibleTileOptions, isColorBlind, colors, theme.colors.primary]);
 
   // Update placeTileOnGrid to track significant piece placement
   const placeTileOnGrid = (tileIndex: number, position: { q: number, r: number } | null) => {
@@ -1055,8 +1064,21 @@ const HexPuzzleMode: React.FC<HexPuzzleModeProps> = ({ onComplete, onExit }) => 
     );
   };
 
+  // Update the wrapper style based on cursorPos
+  useEffect(() => {
+    const wrapper = gameCanvasRef.current?.parentElement;
+    if (wrapper && cursorPos) {
+      wrapper.style.setProperty('--cursor-x', `${cursorPos.x}px`);
+      wrapper.style.setProperty('--cursor-y', `${cursorPos.y}px`);
+    }
+  }, [cursorPos]);
+
   return (
     <PreventContextMenu>
+      <CustomCursor 
+        color={isColorBlind ? colors[2] : theme.colors.primary}
+        hide={selectedTileIndex !== null}
+      />
       <div className="particles-container">
         <Particles 
           intensity={particleIntensity}
@@ -1092,7 +1114,50 @@ const HexPuzzleMode: React.FC<HexPuzzleModeProps> = ({ onComplete, onExit }) => 
             </div>
             <div className="hex-puzzle-board-container">
               <div className="hex-puzzle-game-board">
-                <div className="hex-puzzle-canvas-wrapper">
+                <div 
+                  className={`hex-puzzle-canvas-wrapper ${selectedTileIndex !== null ? 'dragging' : ''}`}
+                  onMouseMove={(e) => {
+                    const canvas = gameCanvasRef.current;
+                    if (!canvas) return;
+                    const rect = canvas.getBoundingClientRect();
+                    
+                    // Get the actual displayed dimensions
+                    const displayWidth = rect.width;
+                    const displayHeight = rect.height;
+                    
+                    // Convert screen coordinates to canvas space
+                    const scaleX = canvas.width / displayWidth;
+                    const scaleY = canvas.height / displayHeight;
+                    
+                    // Get mouse position in canvas coordinates
+                    const mouseX = (e.clientX - rect.left) * scaleX;
+                    const mouseY = (e.clientY - rect.top) * scaleY;
+
+                    // Update canvas cursor position
+                    setCursorPosition({
+                      x: mouseX,
+                      y: mouseY
+                    });
+
+                    // Update custom cursor position
+                    setCursorPos({
+                      x: e.clientX,
+                      y: e.clientY
+                    });
+
+                    // Update cursor style position
+                    const wrapper = canvas.parentElement;
+                    if (wrapper) {
+                      wrapper.style.setProperty('--cursor-x', `${e.clientX}px`);
+                      wrapper.style.setProperty('--cursor-y', `${e.clientY}px`);
+                    }
+                  }}
+                  onMouseLeave={() => {
+                    setCursorPosition(null);
+                    setIsDragging(false);
+                    setCursorPos({ x: 0, y: 0 });
+                  }}
+                >
                   <canvas
                     ref={backgroundCanvasRef}
                     width={canvasWidth}
@@ -1103,33 +1168,6 @@ const HexPuzzleMode: React.FC<HexPuzzleModeProps> = ({ onComplete, onExit }) => 
                     width={canvasWidth}
                     height={canvasHeight}
                     onClick={handleCanvasClick}
-                    onMouseMove={(e) => {
-                      const canvas = gameCanvasRef.current;
-                      if (!canvas) return;
-                      const rect = canvas.getBoundingClientRect();
-                      
-                      // Get the actual displayed dimensions
-                      const displayWidth = rect.width;
-                      const displayHeight = rect.height;
-                      
-                      // Convert screen coordinates to canvas space
-                      const scaleX = canvas.width / displayWidth;
-                      const scaleY = canvas.height / displayHeight;
-                      
-                      // Get mouse position in canvas coordinates
-                      const mouseX = (e.clientX - rect.left) * scaleX;
-                      const mouseY = (e.clientY - rect.top) * scaleY;
-
-                      // Adjust for the canvas scale transformation
-                      const adjustedX = mouseX;
-                      const adjustedY = mouseY;
-                      
-                      setCursorPosition({
-                        x: adjustedX,
-                        y: adjustedY
-                      });
-                    }}
-                    onMouseLeave={() => setCursorPosition(null)}
                   />
                 </div>
               </div>
