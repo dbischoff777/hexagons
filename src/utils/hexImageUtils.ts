@@ -1,3 +1,5 @@
+import { generateValidPositions } from "./svgTileUtils";
+
 export interface HexPuzzlePiece {
   id: number;
   currentPosition: { q: number; r: number };
@@ -47,7 +49,8 @@ interface ScalingOptions {
 export const createHexPuzzle = async (
   image: HTMLImageElement,
   tileSize: number,
-  scalingOptions?: ScalingOptions
+  scalingOptions?: ScalingOptions,
+  validPositions?: [number, number][]
 ): Promise<{ pieces: HexPuzzlePiece[]; scaledImage: HTMLImageElement }> => {
   // Create a temporary canvas for scaling
   const tempCanvas = document.createElement('canvas');
@@ -110,7 +113,10 @@ export const createHexPuzzle = async (
   const centerX = scaledWidth / 2;
   const centerY = scaledHeight / 2;
   
-  validPositions.forEach(([q, r]: HexPosition, index: number) => {
+  // Use passed validPositions or generate default
+  const positions = validPositions || generateValidPositions(5);
+  
+  positions.forEach(([q, r]: HexPosition, index: number) => {
     const pixelX = centerX + tileSize * (3/2 * q);
     const pixelY = centerY + tileSize * (Math.sqrt(3) * (r + q/2));
     

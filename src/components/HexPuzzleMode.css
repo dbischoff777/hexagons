@@ -871,4 +871,83 @@
 .pagination-controls button:focus-visible {
   outline: 3px solid var(--hex-color);
   outline-offset: 2px;
+}
+
+/* Update ring selector styles */
+.ring-selector {
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 12px;
+  border: 2px solid rgba(var(--hex-color), 0.2);
+  padding: 1.5rem;
+  margin: 2rem auto;
+  width: 100%;
+  max-width: 400px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  box-shadow: 
+    0 0 20px rgba(var(--hex-color), 0.1),
+    0 0 40px rgba(0, 0, 0, 0.3);
+}
+
+.ring-selector label {
+  color: var(--hex-color);
+  font-size: 1.1rem;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  text-shadow: 0 0 10px rgba(var(--hex-color), 0.3);
+}
+
+.ring-controls {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  padding: 0.5rem;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+  border: 1px solid rgba(var(--hex-color), 0.1);
+}
+
+.ring-controls button {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 2px solid rgba(var(--hex-color), 0.3);
+  background: rgba(0, 0, 0, 0.3);
+  color: var(--hex-color);
+  font-weight: bold;
+  font-size: 1.5rem;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.ring-controls button:not(:disabled):hover {
+  background: rgba(var(--hex-color), 0.1);
+  transform: scale(1.1);
+  box-shadow: 0 0 15px rgba(var(--hex-color), 0.2);
+}
+
+.ring-controls button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.ring-controls span {
+  color: #fff;
+  font-size: 1.2rem;
+  min-width: 120px;
+  text-align: center;
+  text-shadow: 0 0 10px rgba(var(--hex-color), 0.3);
+}
+
+/* Add info text */
+.ring-selector .info-text {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.9rem;
+  text-align: center;
+  margin-top: 0.5rem;
 } 

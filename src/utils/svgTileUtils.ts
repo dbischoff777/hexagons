@@ -103,6 +103,43 @@ export const createTiledSvg = (
   return new XMLSerializer().serializeToString(newSvg);
 };
 
+export const generateValidPositions = (rings: number): [number, number][] => {
+  const positions: [number, number][] = [
+    // Center
+    [0, 0]
+  ];
+
+  // Generate positions for each ring
+  for (let ring = 1; ring <= rings; ring++) {
+    // Top right to top left
+    for (let i = 0; i < ring; i++) {
+      positions.push([ring - i, i]);
+    }
+    // Top left to middle left
+    for (let i = 0; i < ring; i++) {
+      positions.push([-i, ring]);
+    }
+    // Middle left to bottom left
+    for (let i = 0; i < ring; i++) {
+      positions.push([-ring, ring - i]);
+    }
+    // Bottom left to bottom right
+    for (let i = 0; i < ring; i++) {
+      positions.push([-(ring - i), -i]);
+    }
+    // Bottom right to middle right
+    for (let i = 0; i < ring; i++) {
+      positions.push([i, -ring]);
+    }
+    // Middle right to top right
+    for (let i = 0; i < ring; i++) {
+      positions.push([ring, -(ring - i)]);
+    }
+  }
+
+  return positions;
+};
+
 export const generateGameGridTiles = (
   gridRadius: number,
   hexSize: number,
@@ -122,31 +159,8 @@ export const generateGameGridTiles = (
   const centerX = width / 2;
   const centerY = height / 2;
 
-  // Use the same valid positions array as HexPuzzleMode
-  const validPositions = [
-    // Center
-    [0, 0],
-    // First ring (6)
-    [1, 0], [0, 1], [-1, 1], [-1, 0], [0, -1], [1, -1],
-    // Second ring (12)
-    [2, 0], [1, 1], [0, 2], [-1, 2], [-2, 2], [-2, 1],
-    [-2, 0], [-1, -1], [0, -2], [1, -2], [2, -2], [2, -1],
-    // Third ring (18)
-    [3, 0], [2, 1], [1, 2], [0, 3], [-1, 3], [-2, 3],
-    [-3, 3], [-3, 2], [-3, 1], [-3, 0], [-2, -1], [-1, -2],
-    [0, -3], [1, -3], [2, -3], [3, -3], [3, -2], [3, -1],
-    // Fourth ring (24)
-    [4, 0], [3, 1], [2, 2], [1, 3], [0, 4], [-1, 4],
-    [-2, 4], [-3, 4], [-4, 4], [-4, 3], [-4, 2], [-4, 1],
-    [-4, 0], [-3, -1], [-2, -2], [-1, -3], [0, -4], [1, -4],
-    [2, -4], [3, -4], [4, -4], [4, -3], [4, -2], [4, -1],
-    // Fifth ring (30)
-    [5, 0], [4, 1], [3, 2], [2, 3], [1, 4], [0, 5], [-1, 5],
-    [-2, 5], [-3, 5], [-4, 5], [-5, 5], [-5, 4], [-5, 3],
-    [-5, 2], [-5, 1], [-5, 0], [-4, -1], [-3, -2], [-2, -3],
-    [-1, -4], [0, -5], [1, -5], [2, -5], [3, -5], [4, -5],
-    [5, -5], [5, -4], [5, -3], [5, -2], [5, -1]
-  ];
+  // Use the shared generateValidPositions function
+  const validPositions = generateValidPositions(gridRadius);
 
   // Generate tiles using valid positions
   validPositions.forEach(([q, r]) => {

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { HexPuzzlePiece, drawHexImageTile, createHexPuzzle } from '../utils/hexImageUtils';
 import { hexToPixel } from '../utils/hexUtils';
 import { loadAndTileSvg } from '../utils/svgTileUtils';
@@ -23,6 +23,7 @@ import spaceman from '../assets/images/spaceman.svg';
 import spacemanColor from '../assets/images/spacemanColor.jpg';
 import spacegirl from '../assets/images/spacegirl.svg';
 import shroomColor from '../assets/images/shroomColor.jpg';
+import { generateValidPositions } from '../utils/svgTileUtils';
 
 // Define an interface for puzzle images
 interface PuzzleImage {
@@ -132,184 +133,8 @@ interface PuzzleFilter {
   difficulty: 'all' | 'easy' | 'medium' | 'hard';
 }
 
-// Update the PuzzleSelector component
-const PuzzleSelector: React.FC<{
-  onSelect: (puzzle: PuzzleImage) => void;
-  theme: any;
-  isColorBlind: boolean;
-  colors: string[];
-}> = ({ onSelect, theme, isColorBlind, colors }) => {
-  const [normalizedUrls, setNormalizedUrls] = useState<Record<string, string>>({});
-  const [filter, setFilter] = useState<PuzzleFilter>({ difficulty: 'all' });
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 6; // Adjust based on screen size
-
-  // Create normalized URLs for all puzzle images
-  useEffect(() => {
-    const loadNormalizedUrls = async () => {
-      const urls: Record<string, string> = {};
-      for (const puzzle of PUZZLE_IMAGES) {
-        if (puzzle.type === 'svg') {
-          urls[puzzle.id] = await createNormalizedSvgUrl(puzzle.src);
-        } else {
-          urls[puzzle.id] = puzzle.src; // Use JPG directly
-        }
-      }
-      setNormalizedUrls(urls);
-    };
-
-    loadNormalizedUrls();
-    return () => {
-      Object.values(normalizedUrls).forEach(url => {
-        if (url.startsWith('blob:')) {
-          URL.revokeObjectURL(url);
-        }
-      });
-    };
-  }, []);
-
-  // Filter and paginate puzzles
-  const filteredPuzzles = PUZZLE_IMAGES.filter(puzzle => {
-    return filter.difficulty === 'all' || puzzle.difficulty === filter.difficulty;
-  });
-
-  const totalPages = Math.ceil(filteredPuzzles.length / itemsPerPage);
-  const paginatedPuzzles = filteredPuzzles.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
-
-  // Handle keyboard navigation
-  const handleKeyNavigation = (e: React.KeyboardEvent) => {
-    switch (e.key) {
-      case 'ArrowLeft':
-        setCurrentPage(prev => Math.max(1, prev - 1));
-        break;
-      case 'ArrowRight':
-        setCurrentPage(prev => Math.min(totalPages, prev + 1));
-        break;
-      case 'Home':
-        setCurrentPage(1);
-        break;
-      case 'End':
-        setCurrentPage(totalPages);
-        break;
-    }
-  };
-
-  return (
-    <div 
-      className="puzzle-selector"
-      role="region" 
-      aria-label="Puzzle Selection Menu"
-      onKeyDown={handleKeyNavigation}
-    >
-      <h2 className="puzzle-selector-title">Select a Puzzle</h2>
-      
-      <div className="puzzle-filters">
-        <div className="difficulty-filters" role="radiogroup" aria-label="Filter by difficulty">
-          {['all', 'easy', 'medium', 'hard'].map((difficulty) => (
-            <button
-              key={difficulty}
-              className={`difficulty-filter ${filter.difficulty === difficulty ? 'active' : ''}`}
-              onClick={() => {
-                setFilter({ difficulty: difficulty as PuzzleFilter['difficulty'] });
-                setCurrentPage(1);
-              }}
-              aria-pressed={filter.difficulty === difficulty}
-            >
-              {difficulty.charAt(0).toUpperCase() + difficulty.slice(1)}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Show results summary */}
-      <div className="results-summary" aria-live="polite">
-        {filteredPuzzles.length === 0 ? (
-          <p>No puzzles found matching your criteria</p>
-        ) : (
-          <p>Showing {paginatedPuzzles.length} of {filteredPuzzles.length} puzzles</p>
-        )}
-      </div>
-
-      <div 
-        className="puzzle-grid"
-        role="list"
-        aria-label="Available Puzzles"
-      >
-        {paginatedPuzzles.map((puzzle) => (
-          <button 
-            key={puzzle.id}
-            className="puzzle-card"
-            onClick={() => onSelect(puzzle)}
-            onKeyPress={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                onSelect(puzzle);
-              }
-            }}
-            style={{
-              '--card-glow': isColorBlind ? colors[2] : theme.colors.primary
-            } as React.CSSProperties}
-            role="listitem"
-            aria-label={`${puzzle.name} - ${puzzle.difficulty} difficulty${puzzle.description ? ` - ${puzzle.description}` : ''}`}
-          >
-            <div className="puzzle-preview" aria-hidden="true">
-              {normalizedUrls[puzzle.id] ? (
-                <img 
-                  src={normalizedUrls[puzzle.id]} 
-                  alt=""
-                  loading="lazy"
-                />
-              ) : (
-                <div className="loading-placeholder" />
-              )}
-            </div>
-            <div className="puzzle-info">
-              <h3>{puzzle.name}</h3>
-              <span 
-                className={`difficulty ${puzzle.difficulty}`}
-                aria-label={`Difficulty: ${puzzle.difficulty}`}
-              >
-                {puzzle.difficulty.charAt(0).toUpperCase() + puzzle.difficulty.slice(1)}
-              </span>
-              {puzzle.description && (
-                <p>{puzzle.description}</p>
-              )}
-            </div>
-          </button>
-        ))}
-      </div>
-
-      {/* Add pagination controls */}
-      {totalPages > 1 && (
-        <div className="pagination-controls" role="navigation" aria-label="Puzzle pages">
-          <button
-            onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-            disabled={currentPage === 1}
-            aria-label="Previous page"
-          >
-            ←
-          </button>
-          
-          <span aria-label={`Page ${currentPage} of ${totalPages}`}>
-            {currentPage} / {totalPages}
-          </span>
-          
-          <button
-            onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-            disabled={currentPage === totalPages}
-            aria-label="Next page"
-          >
-            →
-          </button>
-        </div>
-      )}
-    </div>
-  );
-};
-
 const HexPuzzleMode: React.FC<HexPuzzleModeProps> = ({ onComplete, onExit }) => {
+  const [gridRadius, setGridRadius] = useState(5); // Default to 5 rings
   const backgroundCanvasRef = useRef<HTMLCanvasElement>(null);
   const gameCanvasRef = useRef<HTMLCanvasElement>(null);
   const [pieces, setPieces] = useState<HexPuzzlePiece[]>([]);
@@ -344,30 +169,7 @@ const HexPuzzleMode: React.FC<HexPuzzleModeProps> = ({ onComplete, onExit }) => 
   const canvasHeight = 1000;
   
   // Update valid positions to include all fifth ring positions
-  const validPositions: [number, number][] = [
-    // Center
-    [0, 0],
-    // First ring (6)
-    [1, 0], [0, 1], [-1, 1], [-1, 0], [0, -1], [1, -1],
-    // Second ring (12)
-    [2, 0], [1, 1], [0, 2], [-1, 2], [-2, 2], [-2, 1],
-    [-2, 0], [-1, -1], [0, -2], [1, -2], [2, -2], [2, -1],
-    // Third ring (18)
-    [3, 0], [2, 1], [1, 2], [0, 3], [-1, 3], [-2, 3],
-    [-3, 3], [-3, 2], [-3, 1], [-3, 0], [-2, -1], [-1, -2],
-    [0, -3], [1, -3], [2, -3], [3, -3], [3, -2], [3, -1],
-    // Fourth ring (24)
-    [4, 0], [3, 1], [2, 2], [1, 3], [0, 4], [-1, 4],
-    [-2, 4], [-3, 4], [-4, 4], [-4, 3], [-4, 2], [-4, 1],
-    [-4, 0], [-3, -1], [-2, -2], [-1, -3], [0, -4], [1, -4],
-    [2, -4], [3, -4], [4, -4], [4, -3], [4, -2], [4, -1],
-    // Fifth ring (30)
-    [5, 0], [4, 1], [3, 2], [2, 3], [1, 4], [0, 5], [-1, 5],
-    [-2, 5], [-3, 5], [-4, 5], [-5, 5], [-5, 4], [-5, 3],
-    [-5, 2], [-5, 1], [-5, 0], [-4, -1], [-3, -2], [-2, -3],
-    [-1, -4], [0, -5], [1, -5], [2, -5], [3, -5], [4, -5],
-    [5, -5], [5, -4], [5, -3], [5, -2], [5, -1],
-  ];
+  const validPositions = useMemo(() => generateValidPositions(gridRadius), [gridRadius]);
 
   // Add scoring constants
   const SCORING = {
@@ -438,8 +240,6 @@ const HexPuzzleMode: React.FC<HexPuzzleModeProps> = ({ onComplete, onExit }) => 
       try {
         let imageUrl;
         if (currentPuzzle.type === 'svg') {
-          const gridRadius = 5;
-          // Reduced scaling since we have proper grid coverage
           const tiledSvg = await loadAndTileSvg(currentPuzzle.src, tileSize, gridRadius);
           const svgBlob = new Blob([tiledSvg], { type: 'image/svg+xml' });
           imageUrl = URL.createObjectURL(svgBlob);
@@ -450,8 +250,6 @@ const HexPuzzleMode: React.FC<HexPuzzleModeProps> = ({ onComplete, onExit }) => 
         const img = new Image();
         img.onload = async () => {
           try {
-            const gridRadius = 5;
-            // Reduced scaling to match the proper grid size
             const gridPixelWidth = tileSize * Math.sqrt(3) * (gridRadius * 2);
             
             const { pieces: puzzlePieces, scaledImage } = await createHexPuzzle(
@@ -461,7 +259,8 @@ const HexPuzzleMode: React.FC<HexPuzzleModeProps> = ({ onComplete, onExit }) => 
                 targetWidth: gridPixelWidth,
                 targetHeight: gridPixelWidth,
                 maintainAspectRatio: false
-              }
+              },
+              validPositions
             );
 
             setImage(scaledImage);
@@ -514,7 +313,7 @@ const HexPuzzleMode: React.FC<HexPuzzleModeProps> = ({ onComplete, onExit }) => 
     };
 
     loadImage();
-  }, [currentPuzzle, isPuzzleStarted, tileSize]);
+  }, [currentPuzzle, isPuzzleStarted, tileSize, gridRadius, validPositions]);
 
   // Update the pixelToHex function
   const pixelToHex = (x: number, y: number, centerX: number, centerY: number, size: number) => {
@@ -1040,6 +839,221 @@ const HexPuzzleMode: React.FC<HexPuzzleModeProps> = ({ onComplete, onExit }) => 
     setCurrentPuzzle(puzzle);
   };
 
+  // Define RingSelector component inside main component
+  const RingSelector: React.FC<{
+    value: number;
+    onChange: (rings: number) => void;
+  }> = ({ value, onChange }) => {
+    return (
+      <div className="ring-selector">
+        <label>Grid Size</label>
+        <div className="ring-controls">
+          <button 
+            onClick={() => onChange(Math.max(2, value - 1))}
+            disabled={value <= 2}
+            aria-label="Decrease grid size"
+          >
+            −
+          </button>
+          <span>{value} Rings</span>
+          <button 
+            onClick={() => onChange(Math.min(7, value + 1))}
+            disabled={value >= 7}
+            aria-label="Increase grid size"
+          >
+            +
+          </button>
+        </div>
+        <div className="info-text">
+          {value === 2 ? "Easiest" : value === 7 ? "Hardest" : ""}
+          {value > 2 && value < 7 && `${value * value * 3} pieces`}
+        </div>
+      </div>
+    );
+  };
+
+  // Define PuzzleSelector component inside main component
+  const PuzzleSelector: React.FC<{
+    onSelect: (puzzle: PuzzleImage) => void;
+    theme: any;
+    isColorBlind: boolean;
+    colors: string[];
+    ringCount: number;
+    onRingChange: (rings: number) => void;
+  }> = ({ onSelect, theme, isColorBlind, colors, ringCount, onRingChange }) => {
+    const [normalizedUrls, setNormalizedUrls] = useState<Record<string, string>>({});
+    const [filter, setFilter] = useState<PuzzleFilter>({ difficulty: 'all' });
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 6; // Adjust based on screen size
+
+    // Create normalized URLs for all puzzle images
+    useEffect(() => {
+      const loadNormalizedUrls = async () => {
+        const urls: Record<string, string> = {};
+        for (const puzzle of PUZZLE_IMAGES) {
+          if (puzzle.type === 'svg') {
+            urls[puzzle.id] = await createNormalizedSvgUrl(puzzle.src);
+          } else {
+            urls[puzzle.id] = puzzle.src; // Use JPG directly
+          }
+        }
+        setNormalizedUrls(urls);
+      };
+
+      loadNormalizedUrls();
+      return () => {
+        Object.values(normalizedUrls).forEach(url => {
+          if (url.startsWith('blob:')) {
+            URL.revokeObjectURL(url);
+          }
+        });
+      };
+    }, []);
+
+    // Filter and paginate puzzles
+    const filteredPuzzles = PUZZLE_IMAGES.filter(puzzle => {
+      return filter.difficulty === 'all' || puzzle.difficulty === filter.difficulty;
+    });
+
+    const totalPages = Math.ceil(filteredPuzzles.length / itemsPerPage);
+    const paginatedPuzzles = filteredPuzzles.slice(
+      (currentPage - 1) * itemsPerPage,
+      currentPage * itemsPerPage
+    );
+
+    // Handle keyboard navigation
+    const handleKeyNavigation = (e: React.KeyboardEvent) => {
+      switch (e.key) {
+        case 'ArrowLeft':
+          setCurrentPage(prev => Math.max(1, prev - 1));
+          break;
+        case 'ArrowRight':
+          setCurrentPage(prev => Math.min(totalPages, prev + 1));
+          break;
+        case 'Home':
+          setCurrentPage(1);
+          break;
+        case 'End':
+          setCurrentPage(totalPages);
+          break;
+      }
+    };
+
+    return (
+      <div 
+        className="puzzle-selector"
+        role="region" 
+        aria-label="Puzzle Selection Menu"
+        onKeyDown={handleKeyNavigation}
+      >
+        <h2 className="puzzle-selector-title">Select a Puzzle</h2>
+        
+        {/* Add ring selector before filters */}
+        <RingSelector value={ringCount} onChange={onRingChange} />
+        
+        <div className="puzzle-filters">
+          <div className="difficulty-filters" role="radiogroup" aria-label="Filter by difficulty">
+            {['all', 'easy', 'medium', 'hard'].map((difficulty) => (
+              <button
+                key={difficulty}
+                className={`difficulty-filter ${filter.difficulty === difficulty ? 'active' : ''}`}
+                onClick={() => {
+                  setFilter({ difficulty: difficulty as PuzzleFilter['difficulty'] });
+                  setCurrentPage(1);
+                }}
+                aria-pressed={filter.difficulty === difficulty}
+              >
+                {difficulty.charAt(0).toUpperCase() + difficulty.slice(1)}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Show results summary */}
+        <div className="results-summary" aria-live="polite">
+          {filteredPuzzles.length === 0 ? (
+            <p>No puzzles found matching your criteria</p>
+          ) : (
+            <p>Showing {paginatedPuzzles.length} of {filteredPuzzles.length} puzzles</p>
+          )}
+        </div>
+
+        <div 
+          className="puzzle-grid"
+          role="list"
+          aria-label="Available Puzzles"
+        >
+          {paginatedPuzzles.map((puzzle) => (
+            <button 
+              key={puzzle.id}
+              className="puzzle-card"
+              onClick={() => onSelect(puzzle)}
+              onKeyPress={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  onSelect(puzzle);
+                }
+              }}
+              style={{
+                '--card-glow': isColorBlind ? colors[2] : theme.colors.primary
+              } as React.CSSProperties}
+              role="listitem"
+              aria-label={`${puzzle.name} - ${puzzle.difficulty} difficulty${puzzle.description ? ` - ${puzzle.description}` : ''}`}
+            >
+              <div className="puzzle-preview" aria-hidden="true">
+                {normalizedUrls[puzzle.id] ? (
+                  <img 
+                    src={normalizedUrls[puzzle.id]} 
+                    alt=""
+                    loading="lazy"
+                  />
+                ) : (
+                  <div className="loading-placeholder" />
+                )}
+              </div>
+              <div className="puzzle-info">
+                <h3>{puzzle.name}</h3>
+                <span 
+                  className={`difficulty ${puzzle.difficulty}`}
+                  aria-label={`Difficulty: ${puzzle.difficulty}`}
+                >
+                  {puzzle.difficulty.charAt(0).toUpperCase() + puzzle.difficulty.slice(1)}
+                </span>
+                {puzzle.description && (
+                  <p>{puzzle.description}</p>
+                )}
+              </div>
+            </button>
+          ))}
+        </div>
+
+        {/* Add pagination controls */}
+        {totalPages > 1 && (
+          <div className="pagination-controls" role="navigation" aria-label="Puzzle pages">
+            <button
+              onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+              disabled={currentPage === 1}
+              aria-label="Previous page"
+            >
+              ←
+            </button>
+            
+            <span aria-label={`Page ${currentPage} of ${totalPages}`}>
+              {currentPage} / {totalPages}
+            </span>
+            
+            <button
+              onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+              disabled={currentPage === totalPages}
+              aria-label="Next page"
+            >
+              →
+            </button>
+          </div>
+        )}
+      </div>
+    );
+  };
+
   return (
     <PreventContextMenu>
       <div className="particles-container">
@@ -1065,6 +1079,8 @@ const HexPuzzleMode: React.FC<HexPuzzleModeProps> = ({ onComplete, onExit }) => 
             theme={theme}
             isColorBlind={isColorBlind}
             colors={colors}
+            ringCount={gridRadius}
+            onRingChange={setGridRadius}
           />
         ) : (
           // Show puzzle game once puzzle is selected
