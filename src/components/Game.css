@@ -137,58 +137,6 @@
   letter-spacing: 2px;
 }
 
-.score {
-  position: fixed;
-  left: 2vw;
-  top: 7.3rem;
-  transform: none;
-  min-width: min(280px, 25vw);
-  padding: min(12px, 1.5vh) min(20px, 2vw);
-  border-radius: min(12px, 1.5vh);
-  background: rgba(26, 26, 46, 0.95);
-  backdrop-filter: blur(10px);
-  border: 2px solid rgba(0, 255, 159, 0.3);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: min(6px, 0.8vh);
-  overflow: visible;
-  box-shadow: 
-    0 4px 20px rgba(0, 255, 159, 0.2),
-    0 0 30px rgba(0, 0, 0, 0.3);
-  transition: all 0.3s ease;
-  z-index: 1;
-}
-
-/* Add labels above score and timer */
-.score::before,
-.timer::before {
-  content: attr(data-label);
-  font-size: 0.7em;
-  text-transform: uppercase;
-  letter-spacing: 2px;
-  color: rgba(255, 255, 255, 0.7);
-  margin-bottom: 2px;
-}
-
-.score-value {
-  font-size: min(1.4em, 4vw);
-  font-weight: bold;
-  color: #00FF9F;
-  text-shadow: 
-    0 0 10px rgba(0, 255, 159, 0.5),
-    0 0 20px rgba(0, 255, 159, 0.3);
-  letter-spacing: 0.5px;
-}
-
-.score:hover {
-  transform: translateY(2px);
-  border-color: rgba(0, 255, 159, 0.4);
-  box-shadow: 
-    0 6px 25px rgba(0, 255, 159, 0.25),
-    0 0 35px rgba(0, 0, 0, 0.3);
-}
-
 .timer.safe {
   color: #00FF9F;
 }
@@ -202,19 +150,19 @@
 }
 
 .board-container {
-  position: relative;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
   width: 100%;
-  height: 100vh;
-  height: 100dvh;
+  height: auto;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
   margin: 0;
-  padding-top: 60px;
-  padding-bottom: 60px;
-  max-height: 100vh;
-  overflow: hidden;
+  padding: 0;
+  overflow: visible;
 }
 
 .game-board {
@@ -228,11 +176,11 @@
   position: relative;
   width: min(90vw, calc(100vh - 160px));
   height: min(90vw, calc(100vh - 160px));
-  margin: auto;
+  margin: 0;
   transform-style: preserve-3d;
   will-change: transform;
   display: flex;
-  justify-content: center;
+  justify-content: center;  
   align-items: center;
   max-width: calc(100vh - 160px);
   max-height: calc(100vh - 160px);
@@ -675,18 +623,6 @@
   gap: 10px;
 }
 
-/* Score text styling */
-.score {
-  color: #00FF9F;
-  font-size: 32px;
-  font-weight: bold;
-  text-shadow: 
-    0 0 10px rgba(0, 255, 159, 0.5),
-    0 0 20px rgba(0, 255, 159, 0.3);
-  letter-spacing: 2px;
-  z-index: 990;
-}
-
 :root {
   --theme-accent: #00FF9F;
   --theme-secondary: #00FFFF;
@@ -1032,5 +968,279 @@
   .next-tile {
     width: clamp(40px, 12vw, 60px);
     height: clamp(40px, 12vw, 60px);
+  }
+}
+
+/* Update level progress styling to match HexPuzzleMode */
+.level-progress {
+  position: fixed;
+  top: 0.625rem;
+  left: 2vw;
+  z-index: 100;
+  min-width: min(280px, 25vw);
+  background: var(--background-dark);
+  backdrop-filter: blur(10px);
+  border: 2px solid rgba(var(--hex-color), 0.2);
+  box-shadow: 
+    0 4px 20px rgba(var(--hex-color), 0.1),
+    0 0 30px rgba(0, 0, 0, 0.2);
+  transform-origin: left top;
+  transform: scale(var(--ui-scale, 1));
+}
+
+/* Mobile adjustments */
+@media (max-width: 768px) {
+  .score,
+  .level-progress {
+    left: 10px;
+    transform: scale(var(--ui-scale, 0.9));
+    width: min(280px, calc(50vw - 20px));
+    min-width: auto;
+  }
+
+  .level-progress {
+    top: 5px;
+  }
+
+  .score {
+    top: 70px;
+  }
+}
+
+/* Smaller device optimizations */
+@media (max-width: 480px) {
+  .score,
+  .level-progress {
+    --ui-scale: 0.85;
+    width: min(240px, calc(50vw - 15px));
+  }
+}
+
+/* Portrait orientation adjustments */
+@media (max-width: 768px) and (orientation: portrait) {
+  .score,
+  .level-progress {
+    width: min(200px, calc(50vw - 10px));
+    padding: 8px 12px;
+    --ui-scale: 0.8;
+  }
+}
+
+/* Update score positioning and styling to match HexPuzzleMode exactly */
+.score {
+  position: fixed;
+  left: 2vw;
+  top: 4.5rem;
+  transform: none;
+  min-width: min(280px, 25vw);
+  padding: min(12px, 1.5vh) min(20px, 2vw);
+  border-radius: min(12px, 1.5vh);
+  background: var(--background-dark);
+  backdrop-filter: blur(10px);
+  border: 2px solid rgba(var(--hex-color), 0.2);
+  box-shadow: 
+    0 4px 20px rgba(var(--hex-color), 0.1),
+    0 0 30px rgba(0, 0, 0, 0.2);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: min(6px, 0.8vh);
+  overflow: visible;
+  transition: all 0.3s ease;
+  z-index: 100;
+  transform-origin: left top;
+  transform: scale(var(--ui-scale, 1));
+}
+
+.score::before {
+  content: attr(data-label);
+  font-size: 0.7em;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: rgba(255, 255, 255, 0.7);
+  margin-bottom: 2px;
+}
+
+.score-value {
+  font-size: min(1.4em, 4vw);
+  font-weight: bold;
+  color: var(--hex-color);
+  text-shadow: 
+    0 0 10px rgba(var(--hex-color), 0.5),
+    0 0 20px rgba(var(--hex-color), 0.3);
+  letter-spacing: 0.5px;
+}
+
+.score:hover {
+  background: rgba(13, 13, 26, 0.7);
+  border-color: rgba(var(--hex-color), 0.3);
+  box-shadow: 
+    0 6px 25px rgba(var(--hex-color), 0.15),
+    0 0 35px rgba(0, 0, 0, 0.25);
+}
+
+/* Update level progress positioning and styling to match HexPuzzleMode exactly */
+.level-progress {
+  position: fixed;
+  top: 0.625rem;
+  left: 2vw;
+  z-index: 100;
+  min-width: min(280px, 25vw);
+  background: var(--background-dark);
+  backdrop-filter: blur(10px);
+  border: 2px solid rgba(var(--hex-color), 0.2);
+  box-shadow: 
+    0 4px 20px rgba(var(--hex-color), 0.1),
+    0 0 30px rgba(0, 0, 0, 0.2);
+  transform-origin: left top;
+  transform: scale(var(--ui-scale, 1));
+}
+
+/* Mobile adjustments */
+@media (max-width: 768px) {
+  .score,
+  .level-progress {
+    left: 10px;
+    transform: scale(var(--ui-scale, 0.9));
+    width: min(280px, calc(50vw - 20px));
+    min-width: auto;
+  }
+
+  .level-progress {
+    top: 5px;
+  }
+
+  .score {
+    top: 70px;
+  }
+}
+
+/* Smaller device optimizations */
+@media (max-width: 480px) {
+  .score,
+  .level-progress {
+    --ui-scale: 0.85;
+    width: min(240px, calc(50vw - 15px));
+  }
+}
+
+/* Portrait orientation adjustments */
+@media (max-width: 768px) and (orientation: portrait) {
+  .score,
+  .level-progress {
+    width: min(200px, calc(50vw - 10px));
+    padding: 8px 12px;
+    --ui-scale: 0.8;
+  }
+}
+
+/* Next tiles container - default positioning (right side) */
+.next-tiles-container {
+  position: absolute;
+  width: clamp(80px, 12vw, 120px);
+  right: max(20px, 3vw);
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: clamp(8px, 1.2vh, 15px);
+  align-items: center;
+  pointer-events: all;
+  z-index: 100;
+  padding: clamp(10px, 2vh, 20px);
+  border-radius: clamp(10px, 2vw, 20px);
+  border: 2px solid rgba(var(--hex-color), 0.2);
+  transition: all 0.3s ease;
+}
+
+.next-tiles {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(5px, 2.5vh, 10px);
+  align-items: center;
+}
+
+.next-tile {
+  position: relative;
+  width: clamp(60px, 10vw, 100px);
+  height: clamp(60px, 10vw, 100px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  cursor: pointer;
+  border-radius: 50%;
+  background: var(--background-dark);
+  border: 2px solid rgba(var(--hex-color), 0.2);
+  box-shadow: 
+    0 0 10px rgba(var(--hex-color), 0.1),
+    0 0 20px rgba(0, 0, 0, 0.2);
+  transform: scale(var(--scale, 1));
+  --scale: 1;
+}
+
+.next-tile:hover {
+  --scale: 1.05;
+  background: rgba(13, 13, 26, 0.7);
+  border-color: rgba(var(--hex-color), 0.4);
+  box-shadow: 
+    0 0 15px rgba(var(--hex-color), 0.15),
+    0 0 25px rgba(0, 0, 0, 0.25);
+}
+
+.next-tile.selected {
+  --scale: 1.1;
+  background: rgba(13, 13, 26, 0.8);
+  border-color: rgba(var(--hex-color), 0.5);
+  box-shadow: 
+    0 0 20px rgba(var(--hex-color), 0.2),
+    0 0 30px rgba(0, 0, 0, 0.3);
+}
+
+.next-tile canvas {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  pointer-events: none;
+  transform: scale(var(--scale));
+  box-shadow: 0 0 clamp(8px, 1.5vw, 15px) rgba(0, 255, 159, 0.2);
+  pointer-events: none;
+  transition: transform 0.2s ease;
+}
+
+/* Mobile layout */
+@media (max-width: 768px) {
+  .next-tiles-container {
+    position: fixed;
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: min(90vw, 400px);
+    flex-direction: row;
+    justify-content: center;
+    padding: 8px;
+    gap: 10px;
+  }
+
+  .next-tiles {
+    flex-direction: row;
+    gap: 10px;
+    margin: 0;
+  }
+
+  .next-tile {
+    transform: rotate(90deg);
+  }
+}
+
+/* Smaller device optimizations */
+@media (max-width: 480px) {
+  .next-tiles-container {
+    padding: 5px;
+  }
+
+  .next-tile {
+    width: clamp(35px, 11vw, 50px);
+    height: clamp(35px, 11vw, 50px);
   }
 }
