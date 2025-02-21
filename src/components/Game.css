@@ -234,9 +234,9 @@
   opacity: 0;
   z-index: 2;
   box-shadow: 
-    0 0 20px rgba(0, 255, 159, 0.4),
-    0 0 40px rgba(0, 255, 159, 0.2),
-    inset 0 0 15px rgba(255, 255, 255, 0.6);
+    0 0 30px rgba(0, 255, 159, 0.4),
+    0 0 60px rgba(0, 255, 159, 0.2),
+    inset 0 0 20px rgba(255, 255, 255, 0.6);
   border: 2px solid rgba(255, 255, 255, 0.8);
   backdrop-filter: blur(4px);
 }
@@ -250,27 +250,27 @@
 @keyframes flashTile {
   0% {
     opacity: 0;
-    transform: translate(-50%, -50%) scale(0.8);
+    transform: translate(-50%, -50%) scale(0.6);
     filter: brightness(0.5) blur(4px);
   }
-  20% { 
+  20% {
     opacity: 1;
-    transform: translate(-50%, -50%) scale(1.2);
+    transform: translate(-50%, -50%) scale(1.6);
     filter: brightness(1.2) blur(0px);
   }
   40% {
     opacity: 1;
-    transform: translate(-50%, -50%) scale(1.4);
+    transform: translate(-50%, -50%) scale(2.0);
     filter: brightness(1.5) blur(0px);
   }
   60% {
     opacity: 0.8;
-    transform: translate(-50%, -50%) scale(1.3);
+    transform: translate(-50%, -50%) scale(1.8);
     filter: brightness(1.2) blur(2px);
   }
   100% {
     opacity: 0;
-    transform: translate(-50%, -50%) scale(1);
+    transform: translate(-50%, -50%) scale(1.2);
     filter: brightness(1) blur(4px);
   }
 }
