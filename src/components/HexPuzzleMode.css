@@ -127,14 +127,10 @@
   top: 20px;
   right: 20px;
   padding: 10px 20px;
-  background: rgba(var(--accent-color), 0.1);
-  backdrop-filter: blur(10px);
-  border: 2px solid rgba(var(--accent-color), 0.3);
-  box-shadow: 
-    0 0 15px rgba(var(--accent-color), 0.1),
-    0 0 20px rgba(0, 0, 0, 0.2);
-  color: var(--accent-color);
-  border-radius: 4px;
+  background: color-mix(in srgb, var(--theme-accent) 10%, transparent);
+  border: 2px solid var(--theme-accent);
+  color: var(--theme-accent);
+  border-radius: 8px;
   cursor: pointer;
   font-size: 16px;
   transition: all 0.3s ease;
@@ -142,11 +138,9 @@
 }
 
 .hex-puzzle-exit-button:hover {
-  background: rgba(var(--accent-color), 0.2);
-  border-color: rgba(var(--accent-color), 0.4);
-  box-shadow: 
-    0 0 20px rgba(var(--accent-color), 0.2),
-    0 0 25px rgba(0, 0, 0, 0.3);
+  background: color-mix(in srgb, var(--theme-accent) 20%, transparent);
+  transform: scale(1.05);
+  box-shadow: 0 0 15px color-mix(in srgb, var(--theme-accent) 30%, transparent);
 }
 
 .puzzle-container {
@@ -288,20 +282,25 @@
 }
 
 .modal-button.cancel {
-  background: rgba(var(--hex-color), 0.1);
+  background: color-mix(in srgb, var(--hex-color) 10%, transparent);
   border: 2px solid var(--hex-color);
   color: var(--hex-color);
 }
 
 .modal-button.cancel:hover {
-  background: rgba(var(--hex-color), 0.2);
-  box-shadow: 0 0 15px rgba(var(--hex-color), 0.3);
+  background: color-mix(in srgb, var(--hex-color) 20%, transparent);
+  box-shadow: 0 0 15px color-mix(in srgb, var(--hex-color) 30%, transparent);
 }
 
 .modal-button.confirm {
-  background: rgba(var(--accent-color), 0.1);
+  background: color-mix(in srgb, var(--accent-color) 10%, transparent);
   border: 2px solid var(--accent-color);
   color: var(--accent-color);
+}
+
+.modal-button.confirm:hover {
+  background: color-mix(in srgb, var(--accent-color) 20%, transparent);
+  box-shadow: 0 0 15px color-mix(in srgb, var(--accent-color) 30%, transparent);
 }
 
 .hex-puzzle-container {

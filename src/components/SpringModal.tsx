@@ -1,4 +1,7 @@
 import React, { useEffect, useState } from 'react'
+import { useAccessibility } from '../contexts/AccessibilityContext'
+import { getPlayerProgress, getTheme } from '../utils/progressionUtils'
+import { DEFAULT_SCHEME } from '../utils/colorSchemes'
 import './SpringModal.css'
 
 interface SpringModalProps {
@@ -21,6 +24,11 @@ const SpringModal: React.FC<SpringModalProps> = ({
   const [isAnimating, setIsAnimating] = useState(false)
   const [isVisible, setIsVisible] = useState(false)
 
+  const { settings } = useAccessibility()
+  const isColorBlind = settings.isColorBlind
+  const playerProgress = getPlayerProgress()
+  const theme = getTheme(playerProgress.selectedTheme || 'default')
+
   useEffect(() => {
     if (isOpen) {
       setIsVisible(true)
@@ -38,6 +46,13 @@ const SpringModal: React.FC<SpringModalProps> = ({
     <div 
       className={`spring-modal__overlay ${isAnimating ? 'active' : 'exit'}`}
       onClick={(e) => e.target === e.currentTarget && onClose()}
+      style={{
+        '--theme-primary': isColorBlind ? DEFAULT_SCHEME.colors.primary : theme.colors.primary,
+        '--theme-secondary': isColorBlind ? DEFAULT_SCHEME.colors.secondary : theme.colors.secondary,
+        '--theme-accent': isColorBlind ? DEFAULT_SCHEME.colors.accent : theme.colors.accent,
+        '--theme-background': isColorBlind ? DEFAULT_SCHEME.colors.background : theme.colors.background,
+        '--theme-text': isColorBlind ? DEFAULT_SCHEME.colors.text : theme.colors.text,
+      } as React.CSSProperties}
     >
       <div className={`spring-modal__content ${isAnimating ? 'active' : 'exit'} ${variant}`}>
         <div className="spring-modal__header">

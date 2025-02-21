@@ -162,7 +162,7 @@ const HexPuzzleMode: React.FC<HexPuzzleModeProps> = ({ onComplete, onExit }) => 
   const colors = isColorBlind ? currentScheme.colors : DEFAULT_SCHEME.colors;
   // Update particle color to use theme or colorblind colors
   const [particleIntensity] = useState(0.5);
-  const particleColor = isColorBlind ? colors[2] : theme.colors.primary;
+  const particleColor = isColorBlind ? currentScheme.colors.primary : theme.colors.primary;
 
   // Update the tile size and canvas dimensions
   const tileSize = 35; // Keep the tile size constant
@@ -466,7 +466,7 @@ const HexPuzzleMode: React.FC<HexPuzzleModeProps> = ({ onComplete, onExit }) => 
 
         if (isCorrectlyPlaced) {
           // Use theme color for the glow
-          const glowColor = isColorBlind ? colors[2] : theme.colors.primary;
+          const glowColor = isColorBlind ? currentScheme.colors.primary : theme.colors.primary;
           
           // Add outer glow with increased intensity
           ctx.shadowColor = glowColor;
@@ -532,7 +532,7 @@ const HexPuzzleMode: React.FC<HexPuzzleModeProps> = ({ onComplete, onExit }) => 
         
         ctx.globalAlpha = 0.8;
         // Use theme color for cursor glow
-        const cursorColor = isColorBlind ? colors[2] : theme.colors.primary;
+        const cursorColor = isColorBlind ? currentScheme.colors.primary : theme.colors.primary;
         ctx.shadowColor = `${cursorColor}99`; // Add some transparency
         ctx.shadowBlur = 25;
         
@@ -1062,8 +1062,8 @@ const HexPuzzleMode: React.FC<HexPuzzleModeProps> = ({ onComplete, onExit }) => 
   return (
     <PreventContextMenu>
       <CustomCursor 
-        color={isColorBlind ? colors[2] : theme.colors.primary}
-        hide={selectedTileIndex !== null && !showCompletionModal && !showExitModal}
+        color={isColorBlind ? currentScheme.colors.primary : theme.colors.primary}
+        hide={selectedTileIndex !== null}
       />
       <div className="particles-container">
         <Particles 
@@ -1076,8 +1076,8 @@ const HexPuzzleMode: React.FC<HexPuzzleModeProps> = ({ onComplete, onExit }) => 
       <div 
         className="hex-puzzle-mode"
         style={{
-          '--hex-color': isColorBlind ? colors[2] : theme.colors.primary,
-          '--accent-color': isColorBlind ? colors[0] : theme.colors.accent,
+          '--hex-color': isColorBlind ? currentScheme.colors.primary : theme.colors.primary,
+          '--theme-accent': isColorBlind ? currentScheme.colors.accent : theme.colors.accent,
           '--background-dark': `${theme.colors.background}99`,
         } as React.CSSProperties}
       >
@@ -1087,7 +1087,7 @@ const HexPuzzleMode: React.FC<HexPuzzleModeProps> = ({ onComplete, onExit }) => 
             onSelect={handlePuzzleSelect}
             theme={theme}
             isColorBlind={isColorBlind}
-            colors={colors}
+            colors={Object.values(colors)} // Convert colors object to array properly
             ringCount={gridRadius}
             onRingChange={setGridRadius}
           />
@@ -1233,7 +1233,7 @@ const HexPuzzleMode: React.FC<HexPuzzleModeProps> = ({ onComplete, onExit }) => 
           <button className="modal-button cancel" onClick={() => setShowExitModal(false)}>
             Stay
           </button>
-          <button className="modal-button confirm" onClick={onExit}>
+          <button className="modal-button confirm danger" onClick={onExit}>
             Exit
           </button>
         </SpringModal>
