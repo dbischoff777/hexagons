@@ -24,9 +24,9 @@
   
   /* Update existing properties */
   position: absolute;
-  left: clamp(15px, 2.5vw, 20px);
-  top: clamp(80px, 12vh, 100px);
-  transform: none;  /* Remove transform since we're using fixed positioning */
+  left: 2vw;
+  top: calc(4.5rem + 60px + 80px); /* level progress + gap + score height */
+  transform: none;
   width: clamp(140px, 20vw, 160px);
   height: clamp(140px, 20vw, 160px);
   cursor: pointer;

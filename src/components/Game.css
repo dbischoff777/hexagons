@@ -920,19 +920,6 @@
     padding-bottom: 100px; /* Make room for next tiles */
   }
 
-  .next-tiles-container {
-    position: absolute; /* Change to absolute */
-    bottom: 20px; /* Position at bottom */
-    left: 50%;
-    transform: translateX(-50%);
-    top: auto;
-    right: auto;
-    width: min(95vw, 95vh);
-    margin: 0;
-    padding: 10px;
-    background: transparent;
-    border: none;
-  }
 
   .next-tiles {
     flex-direction: row;
@@ -941,17 +928,16 @@
   }
 
   .next-tile {
-    transform: rotate(90deg);
     width: clamp(45px, 15vw, 70px); /* Adjust size */
     height: clamp(45px, 15vw, 70px);
   }
 
   .next-tile.selected {
-    transform: rotate(90deg) scale(1.1);
+    transform: scale(1.1);
   }
 
   .next-tile:hover {
-    transform: rotate(90deg) scale(1.05);
+    transform: scale(1.05);
   }
 }
 
@@ -1100,10 +1086,6 @@
     flex-direction: row;
     gap: 10px;
     margin: 0;
-  }
-
-  .next-tile {
-    transform: rotate(90deg);
   }
 }
 
