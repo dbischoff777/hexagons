@@ -2027,10 +2027,43 @@ const Game: React.FC<GameProps> = ({
         wrapper.appendChild(flash);
       });
 
+      // Calculate grid clear points with combo multiplier
+      const gridClearPoints = GRID_CLEAR_POINTS * (combo.count > 0 ? combo.multiplier : 1);
+      
+      // Store current score before update
+      const previousScore = score;
+      
+      // Update score including any previous points
+      const newScore = previousScore + gridClearPoints;
+      setScore(newScore);
+      
+      // Update objectives if in daily challenge
+      if (isDailyChallenge) {
+        updateObjectives(0, combo.count, newScore);
+      }
+      
+      // Add score popup
+      addScorePopup({
+        score: gridClearPoints,
+        x: centerX,
+        y: centerY,
+        type: 'clear',
+        emoji: '✨',
+        text: 'Grid Clear!'
+      });
+
+      // Play sound effect
+      soundManager.playSound('gridClear');
+
       // Clean up effects after animation
-      setTimeout(() => {
+      const cleanupTimeout = setTimeout(() => {
         cleanupGridAnimations(wrapper);
+        
+        // Reset the grid after cleanup
+        setPlacedTiles([createInitialTile()]);
       }, 1200);
+
+      return () => clearTimeout(cleanupTimeout);
     }
   };
 

@@ -253,7 +253,7 @@
     transform: translate(-50%, -50%) scale(0.8);
     filter: brightness(0.5) blur(4px);
   }
-  20% {
+  20% { 
     opacity: 1;
     transform: translate(-50%, -50%) scale(1.2);
     filter: brightness(1.2) blur(0px);
@@ -1111,17 +1111,4 @@
     width: clamp(35px, 11vw, 50px);
     height: clamp(35px, 11vw, 50px);
   }
-}
-
-/* Debug coordinate system */
-.canvas-wrapper::after {
-  content: '';
-  position: absolute;
-  left: calc(500px * var(--scale));  /* Exact centerX with scale */
-  top: calc(400px * var(--scale));   /* Exact centerY with scale */
-  width: 10px;
-  height: 10px;
-  background: red;
-  border-radius: 50%;
-  z-index: 1000;
 }
