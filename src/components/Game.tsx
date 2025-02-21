@@ -2724,21 +2724,111 @@ const Game: React.FC<GameProps> = ({
                           ctx.setLineDash([]);
                         }
 
-                        // Keep all the existing special tile drawing code
+                        // Draw tile value if it exists (for normal tiles only)
                         if (tile.value > 0 && !tile.isJoker && tile.type !== 'mirror' && !tile.powerUp) {
-                          // ... existing normal tile value drawing code
+                          ctx.strokeStyle = '#000000';
+                          ctx.lineWidth = 3;
+                          ctx.shadowColor = '#000000';
+                          ctx.shadowBlur = 4;
+                          ctx.font = 'bold 24px Arial';
+                          ctx.textAlign = 'center';
+                          ctx.textBaseline = 'middle';
+                          
+                          // Draw text stroke first (outline)
+                          ctx.strokeText(tile.value.toString(), 50, 50);
+                          
+                          // Then draw the bright text
+                          ctx.fillStyle = '#FFFFFF';
+                          ctx.shadowColor = '#00FFFF';
+                          ctx.shadowBlur = 8;
+                          ctx.fillText(tile.value.toString(), 50, 50);
+                          
+                          // Reset shadow
+                          ctx.shadowBlur = 0;
                         }
 
+                        // Handle joker tiles
                         if (tile.isJoker) {
-                          // ... existing joker tile drawing code
+                          // Draw star symbol above the number
+                          ctx.fillStyle = '#FFFFFF';
+                          ctx.shadowColor = '#FFFFFF';
+                          ctx.shadowBlur = 15;
+                          ctx.font = 'bold 20px Arial';
+                          ctx.textAlign = 'center';
+                          ctx.textBaseline = 'middle';
+                          ctx.fillText('★', 50, 38);
+
+                          // Draw number below the star
+                          ctx.shadowColor = 'rgba(0, 0, 0, 0.2)';
+                          ctx.shadowBlur = 2;
+                          ctx.fillStyle = selectedTileIndex === index ? '#1a1a1a' : '#2d2d2d';
+                          ctx.font = `bold ${selectedTileIndex === index ? 24 : 22}px Arial`;
+                          ctx.textAlign = 'center';
+                          ctx.textBaseline = 'middle';
+                          ctx.fillText(tile.value.toString(), 50, 62);
+
+                          // Add rainbow border effect for joker tiles
+                          const gradient = ctx.createLinearGradient(10, 10, 90, 90);
+                          gradient.addColorStop(0, '#ff0000');
+                          gradient.addColorStop(0.2, '#ffff00');
+                          gradient.addColorStop(0.4, '#00ff00');
+                          gradient.addColorStop(0.6, '#00ffff');
+                          gradient.addColorStop(0.8, '#0000ff');
+                          gradient.addColorStop(1, '#ff00ff');
+                          
+                          ctx.strokeStyle = gradient;
+                          ctx.lineWidth = 4;
+                          ctx.beginPath();
+                          ctx.arc(50, 50, 42, 0, Math.PI * 2);
+                          ctx.stroke();
                         }
 
-                        if (tile.type === 'mirror') {
-                          // ... existing mirror tile drawing code
+                        // Handle mirror tiles
+                        else if (tile.type === 'mirror') {
+                          // Draw mirror symbol above the number
+                          ctx.fillStyle = '#FFFFFF';
+                          ctx.shadowColor = '#FFFFFF';
+                          ctx.shadowBlur = 15;
+                          ctx.font = 'bold 20px Arial';
+                          ctx.textAlign = 'center';
+                          ctx.textBaseline = 'middle';
+                          ctx.fillText('⇄', 50, 38);
+
+                          // Draw number below the symbol
+                          ctx.shadowColor = 'rgba(0, 0, 0, 0.2)';
+                          ctx.shadowBlur = 2;
+                          ctx.fillStyle = selectedTileIndex === index ? '#1a1a1a' : '#2d2d2d';
+                          ctx.font = `bold ${selectedTileIndex === index ? 24 : 22}px Arial`;
+                          ctx.textAlign = 'center';
+                          ctx.textBaseline = 'middle';
+                          ctx.fillText(tile.value.toString(), 50, 62);
                         }
 
-                        if (tile.powerUp) {
-                          // ... existing power-up tile drawing code
+                        // Handle power-up tiles
+                        else if (tile.powerUp) {
+                          const powerUpIcons = {
+                            freeze: '❄️',
+                            colorShift: '🎨',
+                            multiplier: '✨'
+                          };
+
+                          // Draw power-up icon above the number
+                          ctx.fillStyle = '#FFFFFF';
+                          ctx.shadowColor = '#FFFFFF';
+                          ctx.shadowBlur = 15;
+                          ctx.font = 'bold 20px Arial';
+                          ctx.textAlign = 'center';
+                          ctx.textBaseline = 'middle';
+                          ctx.fillText(powerUpIcons[tile.powerUp.type], 50, 38);
+
+                          // Draw number below the icon
+                          ctx.shadowColor = 'rgba(0, 0, 0, 0.2)';
+                          ctx.shadowBlur = 2;
+                          ctx.fillStyle = selectedTileIndex === index ? '#1a1a1a' : '#2d2d2d';
+                          ctx.font = `bold ${selectedTileIndex === index ? 24 : 22}px Arial`;
+                          ctx.textAlign = 'center';
+                          ctx.textBaseline = 'middle';
+                          ctx.fillText(tile.value.toString(), 50, 62);
                         }
                       }
                     }
