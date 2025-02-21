@@ -1967,7 +1967,7 @@ const Game: React.FC<GameProps> = ({
         
         // Get canvas position relative to center
         const { x: canvasX, y: canvasY } = hexToPixel(q, r, centerX, centerY, tileSize);
-        
+          
         // Calculate position relative to wrapper center
         const wrapperCenterX = wrapper.offsetWidth / 2;
         const wrapperCenterY = wrapper.offsetHeight / 2;
@@ -2530,7 +2530,7 @@ const Game: React.FC<GameProps> = ({
     >
       <CustomCursor 
         color={theme.colors.primary}
-        hide={selectedTileIndex !== null || Boolean(showLevelComplete)}
+        hide={selectedTileIndex !== null} // Only hide when a tile is selected
       />
       <div className="particles-container">
         <Particles 

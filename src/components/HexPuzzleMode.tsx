@@ -1063,7 +1063,7 @@ const HexPuzzleMode: React.FC<HexPuzzleModeProps> = ({ onComplete, onExit }) => 
     <PreventContextMenu>
       <CustomCursor 
         color={isColorBlind ? colors[2] : theme.colors.primary}
-        hide={selectedTileIndex !== null}
+        hide={selectedTileIndex !== null && !showCompletionModal && !showExitModal}
       />
       <div className="particles-container">
         <Particles 
