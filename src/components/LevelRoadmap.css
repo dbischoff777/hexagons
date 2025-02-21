@@ -42,7 +42,7 @@
 
 .level-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(150px, calc((100% - 60px) / 5)), 1fr));
+  grid-template-columns: repeat(5, minmax(min(150px, calc((100% - 60px) / 5)), 1fr));
   gap: clamp(10px, min(2vw, 3vh), 15px);
   position: relative;
 }
@@ -415,4 +415,17 @@
   letter-spacing: 2px;
   text-shadow: 0 0 15px var(--cell-border-glow);
   font-weight: bold;
+}
+
+/* Add responsive behavior for smaller screens */
+@media (max-width: 768px) {
+  .level-grid {
+    grid-template-columns: repeat(auto-fit, minmax(min(120px, calc((100% - 30px) / 3)), 1fr));
+  }
+}
+
+@media (max-width: 480px) {
+  .level-grid {
+    grid-template-columns: repeat(auto-fit, minmax(min(100px, calc((100% - 20px) / 4)), 1fr));
+  }
 }
