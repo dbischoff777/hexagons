@@ -75,6 +75,7 @@
   }
 }
 
+/* Game container - base layout */
 .game-container {
   position: fixed;
   inset: 0;
@@ -149,13 +150,14 @@
   color: #FF1177;
 }
 
+/* Single board container definition */
 .board-container {
-  position: absolute;
+  position: fixed; /* Change to fixed */
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 100%;
-  height: auto;
+  width: min(90vw, calc(100vh - 160px)); /* Match game board width */
+  height: min(90vw, calc(100vh - 160px)); /* Match game board height */
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -166,14 +168,9 @@
   overflow: visible;
 }
 
+/* Game board - maintain fixed dimensions */
 .game-board {
-  --scale: min(
-    1,
-    min(
-      calc((100vw - 10px) / 400),
-      calc((100vh - 140px) / 400)
-    )
-  );
+  --scale: min(1, min(calc((100vw - 10px) / 400), calc((100vh - 140px) / 400)));
   position: relative;
   width: min(90vw, calc(100vh - 160px));
   height: min(90vw, calc(100vh - 160px));
@@ -185,22 +182,37 @@
   align-items: center;
   max-width: calc(100vh - 160px);
   max-height: calc(100vh - 160px);
+  border: 2px solid blue;  /* Debug border */
 }
 
-/* Update canvas to match hex puzzle's canvas */
+/* Canvas wrapper - container for canvas and animations */
+.canvas-wrapper {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transform-origin: center;
+}
+
 .game-board canvas {
   position: absolute;
   width: 100% !important;
   height: 100% !important;
   object-fit: contain;
   transform-origin: center;
-  transform: scale(var(--scale));
+  transform: scale(var(--scale));  /* Keep scale only on canvas */
 }
 
-
+/* Grid clear animation positioning */
 .grid-full {
   animation: gridClear 1.2s cubic-bezier(0.4, 0, 0.2, 1);
-  position: relative;
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
   z-index: 1;
 }
 
@@ -217,6 +229,85 @@
   pointer-events: none;
   z-index: 0;
   animation: gridClearOverlay 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Tile flash animation */
+.tile-flash {
+  position: absolute;
+  left: 50%;  /* Center in canvas-wrapper */
+  top: 50%;   /* Center in canvas-wrapper */
+  width: calc(var(--tile-size, 60px) * 0.866);
+  height: var(--tile-size, 60px);
+  clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+  background: rgba(0, 255, 159, 0.4);
+  pointer-events: none;
+  opacity: 0;
+  transform-origin: center;
+  transform: translate(-50%, -50%) scale(var(--scale));  /* Center and scale */
+}
+
+/* Ring-based animations */
+.ring-0 { animation: flashTile 0.4s ease-out 0s; }     /* Center */
+.ring-1 { animation: flashTile 0.4s ease-out 0.1s; }   /* First ring */
+.ring-2 { animation: flashTile 0.4s ease-out 0.2s; }   /* Second ring */
+.ring-3 { animation: flashTile 0.4s ease-out 0.3s; }   /* Outer ring */
+
+/* Hexagonal ripple effect */
+.hex-ripple {
+  position: absolute;
+  left: 50%;  /* Center in canvas-wrapper */
+  top: 50%;   /* Center in canvas-wrapper */
+  width: calc(var(--tile-size, 60px) * 0.866);
+  height: var(--tile-size, 60px);
+  background: transparent;
+  border: 6px solid var(--theme-accent, rgba(0, 0, 0, 0));
+  clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+  opacity: 0;
+  transform-origin: center;
+  transform: translate(-50%, -50%) scale(var(--scale));  /* Center and scale */
+}
+
+.ripple-1 { animation: hexRipple 1.2s ease-out 0s; }
+.ripple-2 { animation: hexRipple 1.2s ease-out 0.2s; }
+.ripple-3 { animation: hexRipple 1.2s ease-out 0.4s; }
+
+/* Update animations to maintain centering */
+@keyframes flashTile {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(calc(0.8 * var(--game-scale)));
+  }
+  50% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(calc(1.1 * var(--game-scale)));
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(calc(1 * var(--game-scale)));
+  }
+}
+
+@keyframes hexRipple {
+  0% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(calc(1 * var(--game-scale)));
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(calc(2.5 * var(--game-scale)));
+  }
+}
+
+/* Canvas wrapper grid full state */
+.canvas-wrapper.grid-full {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1;
 }
 
 @keyframes gridClearOverlay {
@@ -811,100 +902,6 @@
   opacity: 0.2;
 }
 
-/* Base setup for grid animations */
-.canvas-wrapper {
-  position: relative;
-  width: 100%;
-  height: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-.canvas-wrapper.grid-full {
-  position: relative;
-  z-index: 1;
-}
-
-/* Tile flash animation */
-.tile-flash {
-  position: absolute;
-  width: calc(var(--tile-size, 60px) * 0.866); /* Hexagon width */
-  height: var(--tile-size, 60px);
-  clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
-  background: rgba(0, 255, 159, 0.4);
-  pointer-events: none;
-  opacity: 0;
-}
-
-/* Ring-based animations */
-.ring-0 { animation: flashTile 0.4s ease-out 0s; }     /* Center */
-.ring-1 { animation: flashTile 0.4s ease-out 0.1s; }   /* First ring */
-.ring-2 { animation: flashTile 0.4s ease-out 0.2s; }   /* Second ring */
-.ring-3 { animation: flashTile 0.4s ease-out 0.3s; }   /* Outer ring */
-
-/* Hexagonal ripple effect */
-.hex-ripple {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  width: calc(min(120px, 12vw) * 0.866);
-  height: min(120px, 12vw);
-  background: transparent;
-  border: 6px solid var(--theme-accent, rgba(0, 0, 0, 0));
-  clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
-  opacity: 0;
-}
-
-.ripple-1 { animation: hexRipple 1.2s ease-out 0s; }
-.ripple-2 { animation: hexRipple 1.2s ease-out 0.2s; }
-.ripple-3 { animation: hexRipple 1.2s ease-out 0.4s; }
-
-@keyframes flashTile {
-  0% {
-    opacity: 0;
-    transform: scale(0.8);
-  }
-  50% {
-    opacity: 1;
-    transform: scale(1.1);
-  }
-  100% {
-    opacity: 0;
-    transform: scale(1);
-  }
-}
-
-@keyframes hexRipple {
-  0% {
-    opacity: 1;
-    transform: translate(-50%, -50%) scale(1);
-  }
-  100% {
-    opacity: 0;
-    transform: translate(-50%, -50%) scale(2.5);
-  }
-}
-
-.level-complete__button--danger {
-  background: rgba(255, 17, 119, 0.1);
-  border-color: #FF1177;
-  color: #FF1177;
-  box-shadow: 
-    0 0 10px rgba(255, 17, 119, 0.2),
-    inset 0 0 15px rgba(255, 17, 119, 0.1);
-  text-shadow: 0 0 8px #FF1177;
-}
-
-.level-complete__button--danger:hover {
-  background: rgba(255, 17, 119, 0.2);
-  border-color: #FF1177;
-  box-shadow: 
-    0 0 15px rgba(255, 17, 119, 0.3),
-    inset 0 0 20px rgba(255, 17, 119, 0.2);
-}
-
 /* Media query for next tiles positioning */
 @media (max-width: 768px) {
   .board-container {
@@ -993,6 +990,7 @@
   width: clamp(80px, 12vw, 120px);
   right: max(20px, 3vw);
   top: 50%;
+  left: 100%;
   transform: translateY(-50%);
   display: flex;
   flex-direction: column;
@@ -1093,4 +1091,17 @@
     width: clamp(35px, 11vw, 50px);
     height: clamp(35px, 11vw, 50px);
   }
+}
+
+/* Debug coordinate system */
+.canvas-wrapper::after {
+  content: '';
+  position: absolute;
+  left: calc(500px * var(--scale));  /* Exact centerX with scale */
+  top: calc(400px * var(--scale));   /* Exact centerY with scale */
+  width: 10px;
+  height: 10px;
+  background: red;
+  border-radius: 50%;
+  z-index: 1000;
 }
