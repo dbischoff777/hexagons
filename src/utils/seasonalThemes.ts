@@ -11,7 +11,7 @@ export const SEASONAL_THEMES: SeasonalTheme[] = [
       background: '#2D1832',
       primary: '#FFB7E0',
       secondary: '#9C4670',
-      accent: '#FF80B0'
+      accent: '#FF80B0' 
     },
     icon: '🌸'
   },

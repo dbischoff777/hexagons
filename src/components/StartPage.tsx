@@ -128,7 +128,6 @@ const StartPage: React.FC<StartPageProps> = ({
   const isColorBlind = settings.isColorBlind
   const playerProgress = getPlayerProgress()
   const theme = getTheme(playerProgress.selectedTheme || 'default')
-  const colors = isColorBlind ? DEFAULT_SCHEME.colors : theme.colors
   const [puppyPhrase, setPuppyPhrase] = useState(() => 
     PUPPY_PHRASES[Math.floor(Math.random() * PUPPY_PHRASES.length)]
   )
@@ -243,13 +242,19 @@ const StartPage: React.FC<StartPageProps> = ({
   }
 
   return (
-    <div className="start-page">
+    <div className="start-page" style={{
+      '--theme-primary': isColorBlind ? DEFAULT_SCHEME.colors.primary : theme.colors.primary,
+      '--theme-secondary': isColorBlind ? DEFAULT_SCHEME.colors.secondary : theme.colors.secondary,
+      '--theme-accent': isColorBlind ? DEFAULT_SCHEME.colors.accent : theme.colors.accent,
+      '--theme-background': isColorBlind ? DEFAULT_SCHEME.colors.background : theme.colors.background,
+      '--theme-text': isColorBlind ? DEFAULT_SCHEME.colors.text : theme.colors.text,
+    } as React.CSSProperties}>
       <CustomCursor 
-        color={isColorBlind ? colors.toString() : theme.colors.primary}
+        color={isColorBlind ? DEFAULT_SCHEME.colors.primary : theme.colors.primary}
         hide={false}
       />
       <HexagonGrid 
-        color="#00FF9F"
+        color={isColorBlind ? DEFAULT_SCHEME.colors.primary : theme.colors.primary}
         size={30}
         gap={4}
         hover={true}
@@ -441,13 +446,9 @@ const StartPage: React.FC<StartPageProps> = ({
       )}
 
       {showAchievements && (
-        <div className="modal-overlay" onClick={(e) => {
-          if (e.target === e.currentTarget) {
-            setShowAchievements(false)
-          }
-        }}>
+        <div className="modal-overlay" onClick={() => setShowAchievements(false)}>
           <div className="modal-content achievements-modal">
-            <AchievementsView />
+            <AchievementsView onClose={() => setShowAchievements(false)} />
           </div>
         </div>
       )}

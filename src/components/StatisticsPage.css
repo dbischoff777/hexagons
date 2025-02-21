@@ -7,24 +7,24 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  background: rgba(0, 0, 0, 0.85);
+  background: color-mix(in srgb, var(--theme-background) 85%, black);
 }
 
 .stats-content {
-  background: #1a1a2e;
+  background: var(--theme-background);
   padding: clamp(1.5rem, 3vh, 3rem);
   border-radius: clamp(10px, 2vw, 20px);
-  border: 1px solid rgba(0, 255, 159, 0.3);
-  box-shadow: 0 0 30px rgba(0, 255, 159, 0.15);
+  border: 1px solid color-mix(in srgb, var(--theme-primary) 30%, transparent);
+  box-shadow: 0 0 30px color-mix(in srgb, var(--theme-primary) 15%, transparent);
   text-align: center;
   width: min(90vw, 800px);
   max-height: min(90vh, 800px);
 }
 
 .statistics-page h1 {
-  color: #00FF9F;
+  color: var(--theme-primary);
   font-size: clamp(2rem, 5vw, 4rem);
-  text-shadow: 0 0 20px rgba(0, 255, 159, 0.5);
+  text-shadow: 0 0 20px color-mix(in srgb, var(--theme-primary) 50%, transparent);
   margin-bottom: clamp(1.5rem, 3vh, 3rem);
   text-align: center;
 }
@@ -42,10 +42,10 @@
 }
 
 .stat-item {
-  background: rgba(0, 0, 0, 0.4);
+  background: color-mix(in srgb, black 40%, transparent);
   padding: clamp(1rem, 2vh, 2rem) clamp(1rem, 2vw, 1.5rem);
   border-radius: clamp(6px, 1.2vw, 12px);
-  border: 1px solid rgba(0, 255, 159, 0.2);
+  border: 1px solid color-mix(in srgb, var(--theme-primary) 20%, transparent);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -53,7 +53,7 @@
 }
 
 .stat-item label {
-  color: #00FF9F;
+  color: var(--theme-primary);
   font-size: clamp(0.9rem, 1.8vw, 1.2rem);
   text-transform: uppercase;
   letter-spacing: 2px;
@@ -61,7 +61,7 @@
 }
 
 .stat-item span {
-  color: white;
+  color: var(--theme-text);
   font-size: clamp(1.5rem, 3vw, 3rem);
   font-weight: bold;
   display: block;
@@ -70,9 +70,9 @@
 .back-button {
   padding: clamp(0.8rem, 1.5vh, 1rem) clamp(1.5rem, 3vw, 2.5rem);
   font-size: clamp(0.9rem, 1.8vw, 1.2rem);
-  background: rgba(0, 255, 159, 0.2);
-  color: #00FF9F;
-  border: 2px solid #00FF9F;
+  background: color-mix(in srgb, var(--theme-primary) 20%, transparent);
+  color: var(--theme-primary);
+  border: 2px solid var(--theme-primary);
   border-radius: clamp(4px, 0.8vw, 8px);
   cursor: pointer;
   transition: all 0.3s ease;
@@ -82,12 +82,16 @@
 }
 
 .back-button:hover {
-  background: rgba(0, 255, 159, 0.3);
+  background: color-mix(in srgb, var(--theme-primary) 30%, transparent);
   transform: scale(1.05);
-  box-shadow: 0 0 20px rgba(0, 255, 159, 0.3);
+  box-shadow: 0 0 20px color-mix(in srgb, var(--theme-primary) 30%, transparent);
 }
 
 @keyframes glow {
-  0%, 100% { text-shadow: 0 0 20px rgba(0, 255, 159, 0.5); }
-  50% { text-shadow: 0 0 40px rgba(0, 255, 159, 0.8); }
+  0%, 100% { 
+    text-shadow: 0 0 20px color-mix(in srgb, var(--theme-primary) 50%, transparent);
+  }
+  50% { 
+    text-shadow: 0 0 40px color-mix(in srgb, var(--theme-primary) 80%, transparent);
+  }
 }

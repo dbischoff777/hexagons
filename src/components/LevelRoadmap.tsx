@@ -4,9 +4,13 @@ import {
   getCurrentLevelInfo, 
   BADGES, 
   LevelBlock, 
-  getPlayerProgress 
+  getPlayerProgress,
+  getTheme 
 } from '../utils/progressionUtils';
 import { formatNumber } from '../utils/formatNumbers';
+import { useAccessibility } from '../contexts/AccessibilityContext';
+import { DEFAULT_SCHEME } from '../utils/colorSchemes';
+import CustomCursor from './CustomCursor';
 import './LevelRoadmap.css';
 
 // Add this interface for the reward type
@@ -21,6 +25,11 @@ interface LevelRoadmapProps {
 }
 
 const LevelRoadmap: React.FC<LevelRoadmapProps> = ({ currentPoints, onStartGame }) => {
+  const { settings } = useAccessibility();
+  const isColorBlind = settings.isColorBlind;
+  const playerProgress = getPlayerProgress();
+  const theme = getTheme(playerProgress.selectedTheme || 'default');
+
   const { 
     currentBlock, 
     currentLevel, 
@@ -57,11 +66,28 @@ const LevelRoadmap: React.FC<LevelRoadmapProps> = ({ currentPoints, onStartGame 
     const isNext = badge && !isEarned && progress.level >= (blockLevel - 10);
 
     return (
-      <div key={block.blockNumber} className="level-block">
+      <div 
+        key={block.blockNumber} 
+        className="level-block"
+        style={{
+          // Add hover effect with theme color
+          '--hover-glow': isColorBlind ? 
+            DEFAULT_SCHEME.colors.primary : 
+            theme.colors.primary
+        } as React.CSSProperties}
+      >
         <div className="block-header">
-          <h3>Block {block.blockNumber}</h3>
+          <h3>{`Block ${block.blockNumber}`}</h3>
           {badge && (
-            <div className={`block-badge ${isEarned ? 'earned' : isNext ? 'next' : 'locked'}`}>
+            <div 
+              className={`block-badge ${isEarned ? 'earned' : isNext ? 'next' : 'locked'}`}
+              style={{
+                // Add badge glow with theme color
+                '--badge-glow': isColorBlind ? 
+                  DEFAULT_SCHEME.colors.accent : 
+                  theme.colors.accent
+              } as React.CSSProperties}
+            >
               <div className="badge-icon">{badge.icon}</div>
               <div className="badge-tooltip">
                 <h4>{badge.name}</h4>
@@ -94,9 +120,15 @@ const LevelRoadmap: React.FC<LevelRoadmapProps> = ({ currentPoints, onStartGame 
                   block.blockNumber, 
                   levelInfo.level
                 )}
-                style={{ cursor: isCompleted || (block.blockNumber === 1 && levelInfo.level === 1) ? 'pointer' : 'default' }}
+                style={{ 
+                  cursor: isCompleted || (block.blockNumber === 1 && levelInfo.level === 1) ? 'pointer' : 'default',
+                  // Add progress bar color with theme accent
+                  '--progress-color': isColorBlind ? 
+                    DEFAULT_SCHEME.colors.accent : 
+                    theme.colors.accent
+                } as React.CSSProperties}
               >
-                <div className="level-number">{block.blockNumber}-{levelInfo.level}</div>
+                <div className="level-number">{`${block.blockNumber}-${levelInfo.level}`}</div>
                 <div className={`points-required ${window.innerWidth <= 600 ? 'shortened' : ''}`}>
                   {formatNumber(levelInfo.pointsRequired)} pts
                 </div>
@@ -131,7 +163,25 @@ const LevelRoadmap: React.FC<LevelRoadmapProps> = ({ currentPoints, onStartGame 
   };
 
   return (
-    <div className="level-roadmap">
+    <div 
+      className="level-roadmap"
+      style={{
+        '--theme-primary': isColorBlind ? DEFAULT_SCHEME.colors.primary : theme.colors.primary,
+        '--theme-secondary': isColorBlind ? DEFAULT_SCHEME.colors.secondary : theme.colors.secondary,
+        '--theme-accent': isColorBlind ? DEFAULT_SCHEME.colors.accent : theme.colors.accent,
+        '--theme-background': isColorBlind ? DEFAULT_SCHEME.colors.background : theme.colors.background,
+        '--theme-text': isColorBlind ? DEFAULT_SCHEME.colors.text : theme.colors.text,
+        '--title-color': '#00FFFF',
+        '--block-title-color': '#00FFFF',
+        '--connecting-line-color': '#FF1493',
+        '--cell-border-glow': 'rgba(0, 255, 255, 0.3)',
+      } as React.CSSProperties}
+    >
+      <CustomCursor 
+        color={isColorBlind ? DEFAULT_SCHEME.colors.primary : theme.colors.primary}
+        hide={false}
+      />
+      <h1 className="level-roadmap-title">Level Roadmap</h1>
       {LEVEL_BLOCKS.map((block) => renderBlock(block, currentPoints))}
     </div>
   );

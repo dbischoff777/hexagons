@@ -1,70 +1,99 @@
 import React from 'react';
+import { Achievement } from '../types/achievements';
 import { getAchievements, resetAchievements } from '../utils/achievementUtils';
+import { useAccessibility } from '../contexts/AccessibilityContext';
+import { getPlayerProgress, getTheme } from '../utils/progressionUtils';
+import { DEFAULT_SCHEME } from '../utils/colorSchemes';
 import './AchievementsView.css';
 
-const AchievementsView: React.FC = () => {
-  const { achievements, totalTilesPlaced } = getAchievements();
+interface AchievementsViewProps {
+  onClose: () => void;
+}
+
+const AchievementsView: React.FC<AchievementsViewProps> = ({ onClose }) => {
+  const achievementState = getAchievements();
+  const { achievements } = achievementState;
+  const { settings } = useAccessibility();
+  const isColorBlind = settings.isColorBlind;
+  const playerProgress = getPlayerProgress();
+  const theme = getTheme(playerProgress.selectedTheme || 'default');
 
   const handleReset = () => {
     if (window.confirm('Are you sure you want to reset all achievements? This cannot be undone.')) {
       resetAchievements();
-      window.location.reload(); // Refresh to show updated state
+      onClose();
     }
   };
 
-  const unlockedCount = achievements.filter(a => a.achieved).length;
-  const totalCount = achievements.length;
+  const handleOverlayClick = (e: React.MouseEvent) => {
+    if (e.target === e.currentTarget) {
+      onClose();
+    }
+  };
 
   return (
-    <div className="achievements-view">
+    <div 
+      className="achievements-view"
+      onClick={handleOverlayClick}
+      style={{
+        '--theme-primary': isColorBlind ? DEFAULT_SCHEME.colors.primary : theme.colors.primary,
+        '--theme-secondary': isColorBlind ? DEFAULT_SCHEME.colors.secondary : theme.colors.secondary,
+        '--theme-accent': isColorBlind ? DEFAULT_SCHEME.colors.accent : theme.colors.accent,
+        '--theme-background': isColorBlind ? DEFAULT_SCHEME.colors.background : theme.colors.background,
+        '--theme-text': isColorBlind ? DEFAULT_SCHEME.colors.text : theme.colors.text,
+      } as React.CSSProperties}
+    >
       <h2>Achievements</h2>
+      
       <div className="achievements-stats">
         <div className="stat">
-          <span className="stat-label">Total Tiles Placed:</span>
-          <span className="stat-value">{totalTilesPlaced}</span>
+          <span className="stat-label">Total Achievements</span>
+          <span className="stat-value">{achievements.length}</span>
         </div>
         <div className="stat">
-          <span className="stat-label">Achievements Unlocked:</span>
-          <span className="stat-value">{unlockedCount} / {totalCount}</span>
+          <span className="stat-label">Completed</span>
+          <span className="stat-value">
+            {achievements.filter((a: Achievement) => a.achieved).length}
+          </span>
         </div>
-        <button className="reset-achievements-button" onClick={handleReset}>
-          Reset Achievements
-        </button>
       </div>
+
       <div className="achievements-grid">
-        {achievements.map(achievement => (
+        {achievements.map((achievement: Achievement) => (
           <div 
             key={achievement.id} 
             className={`achievement-card ${achievement.achieved ? 'achieved' : 'locked'}`}
           >
             <div className="achievement-icon">
-              {achievement.achieved ? achievement.icon : '❓'}
+              {achievement.icon}
             </div>
             <div className="achievement-info">
-              <h3>{achievement.achieved ? achievement.name : '???'}</h3>
-              <p>{achievement.achieved ? achievement.description : 'Keep playing to unlock this achievement!'}</p>
-              {achievement.achieved && (
+              <h3>{achievement.name}</h3>
+              <p>{achievement.description}</p>
+              {achievement.currentProgress !== undefined && achievement.requirement !== undefined && (
                 <div className="achievement-progress">
                   <div 
-                    className="progress-bar"
-                    style={{ 
-                      width: `${Math.min(100, ((Math.min(achievement.currentProgress, achievement.requirement)) / achievement.requirement) * 100)}%`
-                    }}
+                    className="progress-bar" 
+                    style={{ width: `${(achievement.currentProgress / achievement.requirement) * 100}%` }}
                   />
-                  <span className="progress-text">
-                    {Math.min(achievement.currentProgress, achievement.requirement)} / {achievement.requirement}
-                  </span>
+                  <div className="progress-text">
+                    {achievement.currentProgress} / {achievement.requirement}
+                  </div>
                 </div>
               )}
-              {achievement.achieved && achievement.timestamp && (
+              {achievement.achieved && achievement.dateAwarded && (
                 <div className="achievement-date">
-                  Achieved: {new Date(achievement.timestamp).toLocaleDateString()}
+                  Achieved on {new Date(achievement.dateAwarded).toLocaleDateString()}
                 </div>
               )}
             </div>
           </div>
         ))}
       </div>
+
+      <button className="reset-achievements-button" onClick={handleReset}>
+        Reset Achievements
+      </button>
     </div>
   );
 };

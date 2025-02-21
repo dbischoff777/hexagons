@@ -1,11 +1,14 @@
 import React from 'react';
 import { getUnlockedRewards, getTheme, THEMES } from '../utils/progressionUtils';
 import { getPlayerProgress } from '../utils/progressionUtils';
+import { useAccessibility } from '../contexts/AccessibilityContext';
+import { DEFAULT_SCHEME } from '../utils/colorSchemes';
 import './UnlockablesMenu.css';
 import { SeasonalTheme, UnlockableReward } from '../types/progression';
 import { SEASONAL_THEMES, getActiveSeasonalThemes } from '../utils/seasonalThemes';
 import { CompanionId } from '../types/companion';
 import { PROGRESSION_KEY } from '../utils/progressionUtils';
+import CustomCursor from './CustomCursor';
 
 interface UnlockablesMenuProps {
   onSelectTheme: (themeId: string) => void;
@@ -33,15 +36,17 @@ const UnlockablesMenu: React.FC<UnlockablesMenuProps> = ({
   onSelectCompanion, 
   onClose
 }) => {
+  const { settings } = useAccessibility();
+  const isColorBlind = settings.isColorBlind;
   const rewards = getUnlockedRewards();
   const progress = getPlayerProgress();
-  const currentTheme = getTheme(progress.selectedTheme || 'default');
+  const theme = getTheme(progress.selectedTheme || 'default');
   const activeSeasonalThemes = getActiveSeasonalThemes();
   
   console.log('Debug theme selection:', {
     rewards,
     progress,
-    currentTheme,
+    theme,
     activeSeasonalThemes
   });
 
@@ -169,7 +174,21 @@ const UnlockablesMenu: React.FC<UnlockablesMenuProps> = ({
   };
 
   return (
-    <div className="unlockables-overlay" onClick={handleOverlayClick}>
+    <div 
+      className="unlockables-overlay" 
+      onClick={handleOverlayClick}
+      style={{
+        '--theme-primary': isColorBlind ? DEFAULT_SCHEME.colors.primary : theme.colors.primary,
+        '--theme-secondary': isColorBlind ? DEFAULT_SCHEME.colors.secondary : theme.colors.secondary,
+        '--theme-accent': isColorBlind ? DEFAULT_SCHEME.colors.accent : theme.colors.accent,
+        '--theme-background': isColorBlind ? DEFAULT_SCHEME.colors.background : theme.colors.background,
+        '--theme-text': isColorBlind ? DEFAULT_SCHEME.colors.text : theme.colors.text,
+      } as React.CSSProperties}
+    >
+      <CustomCursor 
+        color={isColorBlind ? DEFAULT_SCHEME.colors.primary : theme.colors.primary}
+        hide={false}
+      />
       <div className="unlockables-container">
         <h2>Unlockables</h2>
         
@@ -187,7 +206,7 @@ const UnlockablesMenu: React.FC<UnlockablesMenuProps> = ({
                 <div 
                   key={theme.id}
                   className={`theme-item ${isUnlocked ? 'unlocked' : 'locked'} ${
-                    currentTheme.id === theme.id ? 'selected' : ''
+                    theme.id === 'default' ? 'selected' : ''
                   } ${timeRemaining ? 'seasonal' : ''}`}
                   onClick={() => isUnlocked && onSelectTheme(theme.id)}
                 >

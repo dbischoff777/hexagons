@@ -4,7 +4,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.85);
+  background: color-mix(in srgb, var(--theme-background) 85%, black);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -12,8 +12,8 @@
 }
 
 .unlockables-container {
-  background: rgba(26, 26, 46, 0.95);
-  border: 2px solid #00FF9F;
+  background: var(--theme-background);
+  border: 2px solid var(--theme-primary);
   border-radius: clamp(10px, 2vw, 15px);
   padding: clamp(20px, 4vh, 30px);
   width: min(90vw, 800px);
@@ -22,7 +22,7 @@
 }
 
 .unlockables-container h2 {
-  color: #00FF9F;
+  color: var(--theme-primary);
   text-align: center;
   margin-bottom: 2rem;
 }
@@ -32,7 +32,7 @@
 }
 
 .unlockables-section h3 {
-  color: #fff;
+  color: var(--theme-text);
   margin-bottom: 1rem;
 }
 
@@ -48,9 +48,10 @@
   align-items: center;
   padding: 10px;
   border-radius: 12px;
-  background: rgba(0, 0, 0, 0.2);
+  background: color-mix(in srgb, black 20%, transparent);
   cursor: pointer;
   transition: all 0.2s ease;
+  border: 1px solid color-mix(in srgb, var(--theme-primary) 30%, transparent);
 }
 
 .theme-preview {
@@ -68,8 +69,8 @@
 }
 
 .theme-item.selected {
-  box-shadow: 0 0 0 2px #00ff9f;
-  background: rgba(0, 255, 159, 0.1);
+  box-shadow: 0 0 0 2px var(--theme-primary);
+  background: color-mix(in srgb, var(--theme-primary) 10%, transparent);
 }
 
 .theme-item.locked {
@@ -124,16 +125,17 @@
 
 .theme-name {
   font-weight: bold;
-  color: #00FF9F;
+  color: var(--theme-primary);
 }
 
 .theme-description {
   font-size: 0.9em;
+  color: var(--theme-text);
   opacity: 0.8;
 }
 
 .unlock-level {
-  color: #00FF9F;
+  color: var(--theme-primary);
   font-size: 0.9em;
 }
 
@@ -141,17 +143,17 @@
   display: block;
   margin: 2rem auto 0;
   padding: 1rem 2rem;
-  background: #00FF9F;
+  background: var(--theme-primary);
   border: none;
   border-radius: 8px;
-  color: #1a1a2e;
+  color: var(--theme-background);
   cursor: pointer;
   transition: all 0.3s ease;
 }
 
 .close-button:hover {
   transform: translateY(-2px);
-  box-shadow: 0 0 20px rgba(0, 255, 159, 0.4);
+  box-shadow: 0 0 20px color-mix(in srgb, var(--theme-primary) 40%, transparent);
 }
 
 .tile-description, .powerup-description {
@@ -180,7 +182,7 @@
   width: clamp(80px, 15vw, 120px);
   height: clamp(80px, 15vw, 120px);
   border-radius: 50%;
-  background: rgba(0, 255, 159, 0.1);
+  background: color-mix(in srgb, var(--theme-primary) 10%, transparent);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -190,7 +192,7 @@
 
 .companion-preview .companion-avatar {
   font-size: 48px;
-  filter: drop-shadow(0 0 10px rgba(0, 255, 159, 0.5));
+  filter: drop-shadow(0 0 10px color-mix(in srgb, var(--theme-primary) 50%, transparent));
 }
 
 .theme-item:hover .companion-preview {
@@ -211,17 +213,17 @@
 .tab {
   flex: 1;
   padding: 10px 20px;
-  background: rgba(0, 0, 0, 0.3);
+  background: color-mix(in srgb, black 30%, transparent);
   border: 2px solid transparent;
   border-radius: 8px;
-  color: white;
+  color: var(--theme-text);
   cursor: pointer;
   transition: all 0.3s ease;
 }
 
 .tab.active {
-  border-color: #00FF9F;
-  background: rgba(0, 255, 159, 0.1);
+  border-color: var(--theme-primary);
+  background: color-mix(in srgb, var(--theme-primary) 10%, transparent);
 }
 
 .customization-section {
@@ -241,6 +243,6 @@
 
 .unlock-requirement {
   font-size: 0.8em;
-  color: #00FF9F;
+  color: var(--theme-primary);
   margin-top: 4px;
 } 

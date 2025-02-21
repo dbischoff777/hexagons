@@ -1,6 +1,10 @@
 import React from 'react'
 import { getStatistics } from '../utils/gameStateUtils'
+import CustomCursor from './CustomCursor'
 import './StatisticsPage.css'
+import { useAccessibility } from '../contexts/AccessibilityContext'
+import { getPlayerProgress, getTheme } from '../utils/progressionUtils'
+import { DEFAULT_SCHEME } from '../utils/colorSchemes'
 
 interface StatisticsPageProps {
   onBack: () => void
@@ -8,6 +12,11 @@ interface StatisticsPageProps {
 
 const StatisticsPage: React.FC<StatisticsPageProps> = ({ onBack }) => {
   const stats = getStatistics()
+  const { settings } = useAccessibility()
+  const isColorBlind = settings.isColorBlind
+  const playerProgress = getPlayerProgress()
+  const theme = getTheme(playerProgress.selectedTheme || 'default')
+
   const averageScore = stats.gamesPlayed > 0 
     ? Math.round(stats.totalScore / stats.gamesPlayed) 
     : 0;
@@ -20,7 +29,21 @@ const StatisticsPage: React.FC<StatisticsPageProps> = ({ onBack }) => {
   }
 
   return (
-    <div className="statistics-page" onClick={handleBackgroundClick}>
+    <div 
+      className="statistics-page" 
+      onClick={handleBackgroundClick}
+      style={{
+        '--theme-primary': isColorBlind ? DEFAULT_SCHEME.colors.primary : theme.colors.primary,
+        '--theme-secondary': isColorBlind ? DEFAULT_SCHEME.colors.secondary : theme.colors.secondary,
+        '--theme-accent': isColorBlind ? DEFAULT_SCHEME.colors.accent : theme.colors.accent,
+        '--theme-background': isColorBlind ? DEFAULT_SCHEME.colors.background : theme.colors.background,
+        '--theme-text': isColorBlind ? DEFAULT_SCHEME.colors.text : theme.colors.text,
+      } as React.CSSProperties}
+    >
+      <CustomCursor 
+        color={isColorBlind ? DEFAULT_SCHEME.colors.primary : theme.colors.primary}
+        hide={false}
+      />
       <div className="stats-content">
         <h1>Statistics</h1>
         

@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { useAccessibility } from '../contexts/AccessibilityContext';
+import { getPlayerProgress, getTheme } from '../utils/progressionUtils';
 import './BulldogCustomizer.css';
 import bulldogConfig from '../config/bulldogConfig.json';
 import { 
@@ -9,7 +11,7 @@ import {
   getAccessoryRequiredLevel,
   LEVEL_REQUIREMENTS
 } from '../utils/customizationUtils';
-import { getPlayerProgress } from '../utils/progressionUtils';
+
 interface CustomizerProps {
   onConfigChange: (newConfig: typeof bulldogConfig) => void;
   currentConfig: typeof bulldogConfig;
@@ -23,6 +25,10 @@ const BulldogCustomizer: React.FC<CustomizerProps> = ({
   currentConfig,
   unlockedOptions = []
 }) => {
+  const { settings } = useAccessibility();
+  const isColorBlind = settings.isColorBlind;
+  const playerProgress = getPlayerProgress();
+  const theme = getTheme(playerProgress.selectedTheme || 'default');
   const [activeTab, setActiveTab] = useState('colors');
 
   // Helper function to check if an option is unlocked
@@ -169,12 +175,21 @@ const BulldogCustomizer: React.FC<CustomizerProps> = ({
     onConfigChange(newConfig);
   };
 
-  const playerLevel = getPlayerProgress().level;
+  const playerLevel = playerProgress.level;
 
   return (
     <div className="customizer-wrapper">
-      <div className="bulldog-customizer">
-        <h3>Customize Your Buddy</h3>
+      <div 
+        className="bulldog-customizer"
+        style={{
+          '--theme-primary': isColorBlind ? DEFAULT_SCHEME.colors.primary : theme.colors.primary,
+          '--theme-secondary': isColorBlind ? DEFAULT_SCHEME.colors.secondary : theme.colors.secondary,
+          '--theme-accent': isColorBlind ? DEFAULT_SCHEME.colors.accent : theme.colors.accent,
+          '--theme-background': isColorBlind ? DEFAULT_SCHEME.colors.background : theme.colors.background,
+          '--theme-text': isColorBlind ? DEFAULT_SCHEME.colors.text : theme.colors.text,
+        } as React.CSSProperties}
+      >
+        <h2>Customize Your Buddy</h2>
         
         <div className="customizer-tabs">
           <button 

@@ -4,7 +4,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.85);
+  background: color-mix(in srgb, var(--theme-background) 85%, black);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -12,8 +12,8 @@
 }
 
 .customize-container {
-  background: rgba(26, 26, 46, 0.95);
-  border: 2px solid #00FF9F;
+  background: var(--theme-background);
+  border: 2px solid var(--theme-primary);
   border-radius: clamp(12px, 2vw, 15px);
   padding: clamp(20px, 3vh, 25px);
   width: min(90vw, 500px);
@@ -22,7 +22,7 @@
 }
 
 .customize-container h2 {
-  color: #00FF9F;
+  color: var(--theme-primary);
   text-align: center;
   margin-bottom: clamp(15px, 2.5vh, 20px);
   font-size: clamp(1.3em, 2.2vw, 1.5em);
@@ -49,6 +49,18 @@
 .customize-container .preset-button {
   width: 100%;
   padding: clamp(8px, 1.5vh, 10px);
+  background: color-mix(in srgb, var(--theme-primary) 15%, transparent);
+  color: var(--theme-primary);
+  border: 2px solid var(--theme-primary);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.customize-container .preset-button:hover {
+  background: color-mix(in srgb, var(--theme-primary) 25%, transparent);
+  transform: scale(1.05);
+  box-shadow: 0 0 15px color-mix(in srgb, var(--theme-primary) 30%, transparent);
 }
 
 .customize-container section {
@@ -69,15 +81,15 @@
 }
 
 .customize-container::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.2);
+  background: color-mix(in srgb, black 20%, transparent);
   border-radius: clamp(3px, 0.5vw, 4px);
 }
 
 .customize-container::-webkit-scrollbar-thumb {
-  background: rgba(0, 255, 159, 0.3);
+  background: color-mix(in srgb, var(--theme-primary) 30%, transparent);
   border-radius: clamp(3px, 0.5vw, 4px);
 }
 
 .customize-container::-webkit-scrollbar-thumb:hover {
-  background: rgba(0, 255, 159, 0.5);
+  background: color-mix(in srgb, var(--theme-primary) 50%, transparent);
 } 

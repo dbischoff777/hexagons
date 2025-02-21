@@ -1964,10 +1964,10 @@ const Game: React.FC<GameProps> = ({
         const flash = document.createElement('div');
         const ring = getRingNumber(q, r);
         flash.className = `tile-flash ring-${ring}`;
-        
+          
         // Get canvas position relative to center
         const { x: canvasX, y: canvasY } = hexToPixel(q, r, centerX, centerY, tileSize);
-          
+
         // Calculate position relative to wrapper center
         const wrapperCenterX = wrapper.offsetWidth / 2;
         const wrapperCenterY = wrapper.offsetHeight / 2;

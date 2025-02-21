@@ -10,6 +10,9 @@ export interface Achievement {
   currentProgress: number;
   achieved: boolean;
   timestamp?: string;
+  dateAwarded?: string;
+  progress?: number;
+  target?: number;
 }
 
 export interface AchievementState {

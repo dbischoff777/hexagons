@@ -13,7 +13,7 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  background-color: #1a1a2e;
+  background-color: var(--theme-background, #1a1a2e);
   top: 0;
   left: 0;
   overflow: hidden;
@@ -35,7 +35,8 @@
   text-align: center;
   font-size: clamp(2.5rem, 8vw, 5rem);
   font-weight: 100; /* equivalent to font-thin */
-  text-shadow: 0 0 20px rgba(0, 255, 159, 0.5);
+  color: var(--theme-primary);
+  text-shadow: 0 0 20px color-mix(in srgb, var(--theme-primary) 50%, transparent);
   margin: 0 0 clamp(0.5rem, 1vh, 1rem);
   letter-spacing: clamp(0.25rem, 1vw, 0.5rem);
   animation: glow 2s ease-in-out infinite;
@@ -43,7 +44,7 @@
 
 .welcome-text {
   font-size: clamp(1rem, 2vw, 1.2rem);
-  color: #fff;
+  color: var(--theme-primary);
   opacity: 0.9;
   text-align: center;
   margin: 0 0 clamp(0.5rem, 1vh, 1rem);
@@ -63,7 +64,7 @@
   background: rgba(0, 0, 0, 0.3);
   padding: clamp(0.8rem, 1.5vw, 1.2rem);
   border-radius: clamp(0.5rem, 1vw, 1rem);
-  border: 1px solid rgba(0, 255, 159, 0.2);
+  border: 1px solid color-mix(in srgb, var(--theme-primary, #00FF9F) 20%, transparent);
 }
 
 .setting-item {
@@ -74,15 +75,15 @@
 }
 
 .setting-item label {
-  color: #fff;
+  color: var(--theme-primary);
   font-size: 0.9rem;
   opacity: 0.8;
 }
 
 .setting-button {
   background: none;
-  border: 1px solid #00FF9F;
-  color: #00FF9F;
+  border: 1px solid var(--theme-primary, #00FF9F);
+  color: var(--theme-primary, #00FF9F);
   padding: 0.5rem 1rem;
   border-radius: 0.5rem;
   cursor: pointer;
@@ -97,8 +98,8 @@
 
 .setting-button:hover,
 .setting-button.active {
-  background: rgba(0, 255, 159, 0.1);
-  box-shadow: 0 0 10px rgba(0, 255, 159, 0.3);
+  background: color-mix(in srgb, var(--theme-primary, #00FF9F) 10%, transparent);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--theme-primary, #00FF9F) 30%, transparent);
 }
 
 .game-start {
@@ -112,10 +113,10 @@
   width: 100%;
   padding: 1.5rem;
   font-size: 2rem;
-  background: #00FF9F;
+  background: var(--theme-primary, #00FF9F);
   border: none;
   border-radius: 1rem;
-  color: #1a1a2e;
+  color: var(--theme-background, #1a1a2e);
   cursor: pointer;
   transition: all 0.3s ease;
   font-weight: bold;
@@ -129,7 +130,7 @@
 
 .play-button:hover {
   transform: translateY(-2px);
-  box-shadow: 0 0 30px rgba(0, 255, 159, 0.4);
+  box-shadow: 0 0 30px color-mix(in srgb, var(--theme-primary, #00FF9F) 40%, transparent);
 }
 
 .mode-selection {
@@ -162,14 +163,14 @@
 }
 
 .mode-button.timed {
-  background: #00FF9F;
-  color: #1a1a2e;
+  background: var(--theme-primary, #00FF9F);
+  color: var(--theme-background, #1a1a2e);
 }
 
 .mode-button.zen {
   background: transparent;
-  border: 2px solid #00FF9F;
-  color: #00FF9F;
+  border: 2px solid var(--theme-primary, #00FF9F);
+  color: var(--theme-primary, #00FF9F);
 }
 
 .mode-button:hover {
@@ -194,8 +195,12 @@
 }
 
 @keyframes glow {
-  0%, 100% { text-shadow: 0 0 20px rgba(0, 255, 159, 0.5); }
-  50% { text-shadow: 0 0 40px rgba(0, 255, 159, 0.8); }
+  0%, 100% { 
+    text-shadow: 0 0 20px color-mix(in srgb, var(--theme-primary) 50%, transparent);
+  }
+  50% { 
+    text-shadow: 0 0 40px color-mix(in srgb, var(--theme-primary) 80%, transparent);
+  }
 }
 
 @keyframes fadeIn {
@@ -227,9 +232,9 @@
   margin-top: 20px;
   padding: 15px 30px;
   font-size: 1.2em;
-  background: rgba(0, 255, 159, 0.2);
-  color: #00FF9F;
-  border: 2px solid #00FF9F;
+  background: color-mix(in srgb, var(--theme-primary) 20%, transparent);
+  color: var(--theme-primary);
+  border: 2px solid var(--theme-primary);
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.3s ease;
@@ -242,44 +247,43 @@
 }
 
 .tutorial-button:hover {
-  background: rgba(0, 255, 159, 0.3);
+  background: color-mix(in srgb, var(--theme-primary) 30%, transparent);
   transform: scale(1.05);
-  box-shadow: 0 0 20px rgba(0, 255, 159, 0.3);
+  box-shadow: 0 0 20px color-mix(in srgb, var(--theme-primary) 30%, transparent);
 }
 
 .continue-button {
   width: 100%;
-  padding: 1.5rem;
-  font-size: 1.8rem;
-  background: linear-gradient(45deg, #00FF9F, #00FFFF);
-  border: none;
-  border-radius: 1rem;
-  color: #1a1a2e;
+  padding: 1rem;
+  font-size: 1.2rem;
+  background: color-mix(in srgb, var(--theme-primary) 15%, transparent);
+  color: var(--theme-primary);
+  border: 2px solid var(--theme-primary);
+  border-radius: 8px;
   cursor: pointer;
   transition: all 0.3s ease;
-  font-weight: bold;
-  letter-spacing: 0.2rem;
-  margin: 0;
-  animation: pulse 2s infinite;
+  text-transform: uppercase;
+  letter-spacing: 1px;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 0.8rem;
+  margin: 0;
 }
 
-@keyframes pulse {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.05); }
-  100% { transform: scale(1); }
+.continue-button:hover {
+  background: color-mix(in srgb, var(--theme-primary) 25%, transparent);
+  transform: scale(1.05);
+  box-shadow: 0 0 15px color-mix(in srgb, var(--theme-primary) 30%, transparent);
 }
 
 .stats-button {
   margin-top: 1rem;
-  padding: 1rem 2rem;
+  padding: 1rem;
   font-size: 1.2rem;
-  background: rgba(0, 255, 159, 0.15);
-  color: #00FF9F;
-  border: 2px solid #00FF9F;
+  background: color-mix(in srgb, var(--theme-primary) 15%, transparent);
+  color: var(--theme-primary);
+  border: 2px solid var(--theme-primary);
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.3s ease;
@@ -290,8 +294,9 @@
 }
 
 .stats-button:hover {
-  background: rgba(0, 255, 159, 0.25);
+  background: color-mix(in srgb, var(--theme-primary) 25%, transparent);
   transform: scale(1.05);
+  box-shadow: 0 0 15px color-mix(in srgb, var(--theme-primary) 30%, transparent);
 }
 
 .modal-overlay {
@@ -300,7 +305,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.85);
+  background: color-mix(in srgb, var(--theme-background) 85%, black);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -309,8 +314,8 @@
 }
 
 .modal-content {
-  background: rgba(26, 26, 46, 0.95);
-  border: 2px solid #00FF9F;
+  background: color-mix(in srgb, var(--theme-background) 95%, black);
+  border: 2px solid var(--theme-primary);
   border-radius: clamp(0.5rem, 1vw, 1rem);
   padding: clamp(1rem, 3vw, 2rem);
   width: min(95vw, 800px);
@@ -329,21 +334,25 @@
 .roadmap-modal {
   min-height: 80vh;
   padding: 0;
-  background: rgba(26, 26, 46, 0.95);
-  border: 2px solid #00FF9F;
+  background: color-mix(in srgb, var(--theme-background) 95%, transparent);
+  border: 2px solid var(--theme-primary);
 }
 
 .modal-header {
   padding: 20px;
-  border-bottom: 1px solid rgba(0, 255, 159, 0.2);
+  border-bottom: 1px solid color-mix(in srgb, var(--theme-primary) 20%, transparent);
+  background: color-mix(in srgb, black 30%, transparent);
 }
 
 .modal-header h2 {
   margin: 0;
-  color: #00FF9F;
+  color: var(--theme-primary);
   text-align: center;
-  font-size: 2rem;
-  text-shadow: 0 0 10px rgba(0, 255, 159, 0.5);
+  font-size: clamp(1.4rem, 2.5vw, 1.8rem);
+  text-shadow: 0 0 10px color-mix(in srgb, var(--theme-primary) 30%, transparent);
+  margin-bottom: clamp(15px, 2.5vh, 20px);
+  text-transform: uppercase;
+  letter-spacing: 2px;
 }
 
 .close-button {
@@ -352,7 +361,7 @@
   right: 10px;
   background: none;
   border: none;
-  color: #00FF9F;
+  color: var(--theme-primary);
   font-size: 24px;
   cursor: pointer;
   width: 40px;
@@ -365,7 +374,7 @@
 }
 
 .close-button:hover {
-  background: rgba(0, 255, 159, 0.1);
+  color: var(--theme-accent);
   transform: scale(1.1);
 }
 
@@ -392,9 +401,9 @@
   margin-top: 1rem;
   padding: 1rem 2rem;
   font-size: 1.2rem;
-  background: rgba(0, 255, 159, 0.15);
-  color: #00FF9F;
-  border: 2px solid #00FF9F;
+  background: color-mix(in srgb, var(--theme-primary) 15%, transparent);
+  color: var(--theme-primary);
+  border: 2px solid var(--theme-primary);
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.3s ease;
@@ -405,35 +414,42 @@
 }
 
 .mode-selection .back-button:hover {
-  background: rgba(0, 255, 159, 0.25);
+  background: color-mix(in srgb, var(--theme-primary) 25%, transparent);
   transform: scale(1.05);
+  box-shadow: 0 0 15px color-mix(in srgb, var(--theme-primary) 30%, transparent);
 }
 
 .mode-button.daily {
-  background: linear-gradient(45deg, #FF6B6B, #4ECDC4);
-  border: 2px solid rgba(255, 255, 255, 0.2);
+  background: linear-gradient(45deg, 
+    var(--theme-accent),
+    var(--theme-secondary)
+  );
+  border: 2px solid color-mix(in srgb, var(--theme-primary) 20%, transparent);
 }
 
 .mode-button.daily:hover {
-  background: linear-gradient(45deg, #FF8787, #6EE7E0);
-  transform: translateY(-2px);
+  background: linear-gradient(45deg,
+    color-mix(in srgb, var(--theme-accent) 120%, white),
+    color-mix(in srgb, var(--theme-secondary) 120%, white)
+  );
 }
 
 .roadmap-button {
   margin-top: 1rem;
   padding: 1rem 2rem;
   font-size: 1.2rem;
-  background: rgba(0, 255, 159, 0.15);
-  color: #00FF9F;
-  border: 2px solid #00FF9F;
+  background: color-mix(in srgb, var(--theme-primary) 15%, transparent);
+  color: var(--theme-primary);
+  border: 2px solid var(--theme-primary);
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.3s ease;
 }
 
 .roadmap-button:hover {
-  background: rgba(0, 255, 159, 0.25);
+  background: color-mix(in srgb, var(--theme-primary) 25%, transparent);
   transform: scale(1.05);
+  box-shadow: 0 0 15px color-mix(in srgb, var(--theme-primary) 30%, transparent);
 }
 
 .modal-header {
@@ -441,12 +457,12 @@
   justify-content: space-between;
   align-items: center;
   padding: 15px 20px;
-  background: rgba(0, 0, 0, 0.3);
-  border-bottom: 1px solid #00FF9F;
+  background: color-mix(in srgb, black 30%, transparent);
+  border-bottom: 1px solid var(--theme-primary);
 }
 
 .modal-header h2 {
-  color: #00FF9F;
+  color: var(--theme-primary);
   margin: 0;
   font-size: 1.5em;
 }
@@ -454,15 +470,16 @@
 .close-button {
   background: none;
   border: none;
-  color: #00FF9F;
+  color: var(--theme-primary);
   font-size: 24px;
   cursor: pointer;
   padding: 0 8px;
-  transition: color 0.3s ease;
+  transition: all 0.3s ease;
 }
 
 .close-button:hover {
-  color: #FF1177;
+  color: var(--theme-accent);
+  transform: scale(1.1);
 }
 
 /* Add scrollbar styling */
@@ -471,27 +488,31 @@
 }
 
 .roadmap-modal::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.2);
+  background: color-mix(in srgb, black 20%, transparent);
   border-radius: 4px;
 }
 
 .roadmap-modal::-webkit-scrollbar-thumb {
-  background: #00FF9F;
+  background: color-mix(in srgb, var(--theme-primary) 30%, transparent);
   border-radius: 4px;
 }
 
 .roadmap-modal::-webkit-scrollbar-thumb:hover {
-  background: #00CC7F;
+  background: color-mix(in srgb, var(--theme-primary) 50%, transparent);
 }
 
 .mode-button.roadmap {
-  background: linear-gradient(45deg, #00FF9F, #00FFFF);
-  border: 2px solid rgba(255, 255, 255, 0.2);
+  background: linear-gradient(45deg,
+    var(--theme-primary),
+    var(--theme-accent)
+  );
 }
 
 .mode-button.roadmap:hover {
-  background: linear-gradient(45deg, #33FFA3, #33FFFF);
-  transform: translateY(-2px);
+  background: linear-gradient(45deg,
+    color-mix(in srgb, var(--theme-primary) 120%, white),
+    color-mix(in srgb, var(--theme-accent) 120%, white)
+  );
 }
 
 /* Enhanced French Puppy styles */
@@ -654,9 +675,9 @@
   width: 50%; /* Make both buttons take equal width */
   padding: clamp(0.8rem, 1.5vh, 1rem);
   font-size: clamp(1rem, 1.5vw, 1.2rem);
-  background: rgba(0, 255, 159, 0.15);
-  color: #00FF9F;
-  border: 2px solid #00FF9F;
+  background: color-mix(in srgb, var(--theme-primary) 15%, transparent);
+  color: var(--theme-primary);
+  border: 2px solid var(--theme-primary);
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.3s ease;
@@ -670,9 +691,8 @@
 }
 
 .button-group button:hover {
-  background: rgba(0, 255, 159, 0.25);
-  transform: scale(1.05);
-  box-shadow: 0 0 15px rgba(0, 255, 159, 0.3);
+  background: color-mix(in srgb, var(--theme-primary) 25%, transparent);
+  box-shadow: 0 0 15px color-mix(in srgb, var(--theme-primary) 30%, transparent);
 }
 
 /* Remove individual button styles since they're now handled by the group */
@@ -687,9 +707,12 @@
   max-width: min(400px, 90vw);
   padding: clamp(0.8rem, 1.5vh, 1rem);
   margin: clamp(0.5rem, 1vh, 1rem) 0;
-  background: linear-gradient(45deg, #00ff9f33, #00ffff33);
-  border: 2px solid #00ff9f;
-  color: #00ff9f;
+  background: linear-gradient(45deg, 
+    color-mix(in srgb, var(--theme-primary) 20%, transparent),
+    color-mix(in srgb, var(--theme-accent) 20%, transparent)
+  );
+  border: 2px solid var(--theme-primary);
+  color: var(--theme-primary);
   border-radius: 8px;
   cursor: pointer;
   font-size: clamp(1rem, 1.5vw, 1.2rem);
@@ -705,9 +728,11 @@
 }
 
 .settings-button-fixed:hover {
-  background: linear-gradient(45deg, #00ff9f66, #00ffff66);
-  transform: scale(1.05);
-  box-shadow: 0 0 15px rgba(0, 255, 159, 0.3);
+  background: linear-gradient(45deg,
+    color-mix(in srgb, var(--theme-primary) 40%, transparent),
+    color-mix(in srgb, var(--theme-accent) 40%, transparent)
+  );
+  box-shadow: 0 0 15px color-mix(in srgb, var(--theme-primary) 30%, transparent);
 }
 
 /* Add hover effect for icons */
@@ -722,9 +747,9 @@ button:hover > *:first-child {
   width: 100%;
   padding: 1rem;
   font-size: 1.2rem;
-  background: rgba(0, 255, 159, 0.15);
-  color: #00FF9F;
-  border: 2px solid #00FF9F;
+  background: color-mix(in srgb, var(--theme-primary) 15%, transparent);
+  color: var(--theme-primary);
+  border: 2px solid var(--theme-primary);
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.3s ease;
@@ -739,21 +764,20 @@ button:hover > *:first-child {
 
 .achievements-button:hover,
 .unlockables-button:hover {
-  background: rgba(0, 255, 159, 0.25);
-  transform: scale(1.05);
-  box-shadow: 0 0 15px rgba(0, 255, 159, 0.3);
+  background: color-mix(in srgb, var(--theme-primary) 25%, transparent);
+  box-shadow: 0 0 15px color-mix(in srgb, var(--theme-primary) 30%, transparent);
 }
 
-/* Update the continue and tutorial button styles to match */
+/* Update the continue and tutorial button styles */
 .continue-button,
 .tutorial-button,
 .stats-button {
   width: 100%;
   padding: 1rem;
   font-size: 1.2rem;
-  background: rgba(0, 255, 159, 0.15);
-  color: #00FF9F;
-  border: 2px solid #00FF9F;
+  background: color-mix(in srgb, var(--theme-primary) 15%, transparent);
+  color: var(--theme-primary);
+  border: 2px solid var(--theme-primary);
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.3s ease;
@@ -769,9 +793,9 @@ button:hover > *:first-child {
 .continue-button:hover,
 .tutorial-button:hover,
 .stats-button:hover {
-  background: rgba(0, 255, 159, 0.25);
+  background: color-mix(in srgb, var(--theme-primary) 25%, transparent);
   transform: scale(1.05);
-  box-shadow: 0 0 15px rgba(0, 255, 159, 0.3);
+  box-shadow: 0 0 15px color-mix(in srgb, var(--theme-primary) 30%, transparent);
 }
 
 .version-number {
@@ -779,7 +803,7 @@ button:hover > *:first-child {
   bottom: 10px;
   right: 10px;
   font-size: clamp(10px, 1vw, 12px);
-  color: rgba(0, 255, 159, 0.6);
+  color: color-mix(in srgb, var(--theme-primary, #00FF9F) 60%, transparent);
   font-family: monospace;
   padding: clamp(4px, 0.5vw, 8px) clamp(6px, 0.8vw, 12px);
   background: rgba(26, 26, 46, 0.6);
@@ -789,7 +813,7 @@ button:hover > *:first-child {
 }
 
 .version-number:hover {
-  color: rgba(0, 255, 159, 0.9);
+  color: color-mix(in srgb, var(--theme-primary, #00FF9F) 90%, transparent);
   background: rgba(26, 26, 46, 0.8);
 }
 
@@ -820,15 +844,19 @@ button:hover > *:first-child {
 }
 
 .mode-button.puzzle {
-  background: linear-gradient(45deg, #9C27B0, #673AB7);
-  border: 2px solid rgba(255, 255, 255, 0.2);
-  color: white;
+  background: linear-gradient(45deg,
+    var(--theme-secondary),
+    var(--theme-accent)
+  );
+  border: 2px solid color-mix(in srgb, var(--theme-primary) 20%, transparent);
+  color: var(--theme-background);
 }
 
 .mode-button.puzzle:hover {
-  background: linear-gradient(45deg, #BA68C8, #7E57C2);
-  transform: translateY(-2px);
-  box-shadow: 0 0 20px rgba(156, 39, 176, 0.3);
+  background: linear-gradient(45deg,
+    color-mix(in srgb, var(--theme-secondary) 120%, white),
+    color-mix(in srgb, var(--theme-accent) 120%, white)
+  );
 }
 
 .mode-button.puzzle .mode-title {
@@ -839,4 +867,23 @@ button:hover > *:first-child {
 
 .mode-button.puzzle svg {
   font-size: 1.2em;
+}
+
+/* Update the hover text styles */
+.hoverText {
+  display: inline-block;
+  color: var(--theme-primary);
+  transition: all 0.3s ease;
+}
+
+.hoverText:hover {
+  color: var(--theme-accent);
+  text-shadow: 0 0 30px color-mix(in srgb, var(--theme-accent) 60%, transparent);
+  transform: translateY(-2px) scale(1.1);
+}
+
+/* Specifically for roadmap modal */
+.roadmap-modal .modal-header h2 {
+  color: var(--theme-primary);
+  text-shadow: 0 0 10px color-mix(in srgb, var(--theme-primary) 30%, transparent);
 }

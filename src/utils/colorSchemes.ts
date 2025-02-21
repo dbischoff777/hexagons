@@ -1,29 +1,40 @@
-import { ColorScheme } from '../types/colors'
-
-// Regular color scheme
-export const DEFAULT_SCHEME: ColorScheme = {
-  name: 'Default',
-  colors: [
-    '#FF1177', // Pink
-    '#FFE900', // Yellow
-    '#00FF9F', // Green
-    '#00FFFF', // Cyan
-    '#4D4DFF', // Blue
-    '#B14FFF'  // Purple
-  ]
+// Define the pattern type
+interface ColorPatterns {
+  [key: string]: string;
 }
 
-// Color blind friendly scheme
-export const COLORBLIND_SCHEME: ColorScheme = {
-  name: 'Colorblind',
-  colors: [
-    '#FF8B8B', // Light Red
-    '#FFD700', // Gold
-    '#4FB477', // Sage Green
-    '#7EC8E3', // Sky Blue
-    '#000000', // Black
-    '#FFFFFF'  // White
-  ],
+// Base color scheme interface
+export interface ColorScheme {
+  background: string;
+  primary: string;
+  secondary: string;
+  accent: string;
+  text?: string;
+}
+
+// Extended interface for colorblind scheme
+interface ColorBlindScheme extends ColorScheme {
+  patterns?: ColorPatterns;
+}
+
+// Update DEFAULT_SCHEME to match the interface
+export const DEFAULT_SCHEME = {
+  colors: {
+    background: '#1a1a2e',
+    primary: '#00FF9F',
+    secondary: '#00CCFF',
+    accent: '#FF1177',
+    text: '#FFFFFF'
+  }
+} as const;
+
+// Update colorblind scheme to match the interface
+export const COLORBLIND_SCHEME: ColorBlindScheme = {
+  background: '#1a1a2e',
+  primary: '#FF8B8B',   // Light Red
+  secondary: '#FFD700', // Gold
+  accent: '#4FB477',    // Sage Green
+  text: '#FFFFFF',
   patterns: {
     '#FF8B8B': `
       <pattern id="pattern-circles" patternUnits="userSpaceOnUse" width="10" height="10">
@@ -43,17 +54,6 @@ export const COLORBLIND_SCHEME: ColorScheme = {
     '#7EC8E3': `
       <pattern id="pattern-zigzag" patternUnits="userSpaceOnUse" width="10" height="10">
         <path d="M0 2 L5 8 L10 2" stroke="currentColor" fill="none" stroke-width="2"/>
-      </pattern>
-    `,
-    '#000000': `
-      <pattern id="pattern-dots" patternUnits="userSpaceOnUse" width="10" height="10">
-        <circle cx="2" cy="2" r="1" fill="currentColor"/>
-        <circle cx="8" cy="8" r="1" fill="currentColor"/>
-      </pattern>
-    `,
-    '#FFFFFF': `
-      <pattern id="pattern-cross" patternUnits="userSpaceOnUse" width="10" height="10">
-        <path d="M3 3 L7 7 M7 3 L3 7" stroke="currentColor" stroke-width="2"/>
       </pattern>
     `
   }
