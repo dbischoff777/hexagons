@@ -584,7 +584,7 @@
 .exit-button {
   position: fixed;
   top: 1.625rem;  /* Changed from 95px to 20px */
-  right: 20px;
+  right: 2vw;
   padding: 8px 16px;
   border: 2px solid #FF4D6D;
   background: rgba(255, 77, 109, 0.1);
