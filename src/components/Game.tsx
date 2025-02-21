@@ -687,12 +687,6 @@ const Game: React.FC<GameProps> = ({
             newTile.edges = [...newTile.edges.slice(3), ...newTile.edges.slice(0, 3)];
           }
 
-          console.log('Created new tile:', { 
-            newTile, 
-            hasPowerUp: !!newTile.powerUp,
-            powerUpType: newTile.powerUp?.type 
-          });
-
           // If it's a mirror tile, update its edges based on adjacent tiles
           if (newTile.type === 'mirror') {
             const { tile: updatedTile, points: mirrorPoints } = updateMirrorTileEdges(newTile, placedTiles);
@@ -726,13 +720,6 @@ const Game: React.FC<GameProps> = ({
               hasBeenMatched: tile.hasBeenMatched || hasMatchingEdges(tile, initialPlacedTiles, settings.isColorBlind),
               powerUp: tile.powerUp
             };
-            if (tile.q === q && tile.r === r) {
-              console.log('New tile in placedTiles:', { 
-                tile: updated, 
-                hasPowerUp: !!updated.powerUp,
-                powerUpType: updated.powerUp?.type 
-              });
-            }
             return updated;
           });
 
@@ -799,24 +786,11 @@ const Game: React.FC<GameProps> = ({
               
               // Debug logging
               const isComplete = validPositions === occupiedPositions && validPositions === 37; // Hexagonal grid with radius 3 should have 37 tiles
-              console.log('Grid full check:', {
-                totalTiles: updatedTiles.length,
-                expectedTiles: validPositions,
-                tiles: updatedTiles.map(t => `(${t.q},${t.r})`).sort(),
-                validPositions,
-                occupiedPositions,
-                validCoords: validCoords.sort(),
-                missingCoords,
-                isComplete,
-                radius,
-                cols
-              });
               
               return isComplete;
             })();
 
             if (isGridFullNow) {
-              console.log('Grid full condition met!');
               const wrapper = wrapperRef.current;
               const canvas = canvasRef.current;
               
@@ -907,11 +881,6 @@ const Game: React.FC<GameProps> = ({
           if (selectedTile.powerUp) {
             // Find the newly placed tile in the updated tiles array
             const placedPowerUpTile = newPlacedTiles.find(t => t.q === q && t.r === r);
-            console.log('Found power-up tile before activation:', {
-              found: !!placedPowerUpTile,
-              tile: placedPowerUpTile,
-              powerUpType: placedPowerUpTile?.powerUp?.type
-            });
             if (placedPowerUpTile) {
               activatePowerUp(placedPowerUpTile);
             }
@@ -990,7 +959,6 @@ const Game: React.FC<GameProps> = ({
                 type: 'combo'
               });
               handleScoreChange(score + comboBonus);
-              //console.log('Setting lastAction for combo:', { type: 'combo', value: combo.count });
               setLastAction({ type: 'combo', value: combo.count });
             }
           } else {
@@ -1213,12 +1181,10 @@ const Game: React.FC<GameProps> = ({
   // Add power-up activation handler
   const activatePowerUp = (tile: PlacedTile) => {
     if (!tile.powerUp) {
-      console.log('No power-up found on tile:', tile);
       return;
     }
 
     const { type } = tile.powerUp;
-    console.log('Activating power-up:', { type, tile });
     soundManager.playSound('powerUp');
 
     switch (type) {
@@ -1226,16 +1192,13 @@ const Game: React.FC<GameProps> = ({
         // Get the current tiles from state to ensure we have the latest state
         const currentTiles = [...placedTiles, tile]; // Include the new tile
         const adjacentTiles = getAdjacentTiles(tile, currentTiles);
-        console.log('Color shift - adjacent tiles:', adjacentTiles);
         const randomColor = COLORS[Math.floor(Math.random() * COLORS.length)];
         
         const updatedTiles = currentTiles.map(t => {
           if (t.q === tile.q && t.r === tile.r) {
-            console.log('Preserving power-up tile:', tile);
             return tile;
           }
           if (adjacentTiles.includes(t)) {
-            console.log('Updating adjacent tile color:', t);
             return {
               ...t,
               edges: t.edges.map(() => ({ color: randomColor }))
@@ -1244,7 +1207,6 @@ const Game: React.FC<GameProps> = ({
           return t;
         });
         
-        console.log('Final updated tiles:', updatedTiles);
         setPlacedTiles(updatedTiles);
         break;
       case 'freeze':
