@@ -182,7 +182,7 @@
   align-items: center;
   max-width: calc(100vh - 160px);
   max-height: calc(100vh - 160px);
-  border: 2px solid blue;  /* Debug border */
+  z-index: 1;  /* Create new stacking context */
 }
 
 /* Canvas wrapper - container for canvas and animations */
@@ -195,6 +195,7 @@
   justify-content: center;
   align-items: center;
   transform-origin: center;
+  z-index: 1;  /* Place below animations */
 }
 
 .game-board canvas {
@@ -204,22 +205,24 @@
   object-fit: contain;
   transform-origin: center;
   transform: scale(var(--scale));  /* Keep scale only on canvas */
+  z-index: 1;  /* Place below animations */
 }
 
 /* Grid clear animation positioning */
 .grid-full {
-  animation: gridClear 1.2s cubic-bezier(0.4, 0, 0.2, 1);
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
-  z-index: 1;
+  z-index: 2;
+  transform-origin: center;
+  transform: none;
+  overflow: visible; /* Allow tiles to overflow */
 }
 
 .grid-full::before {
   content: '';
   position: absolute;
-  inset: -20px;
   background: radial-gradient(
     circle at center,
     rgba(0, 255, 159, 0.6) 0%,
@@ -231,32 +234,59 @@
   animation: gridClearOverlay 1.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Tile flash animation */
+/* Move tile-flash to be within grid-full */
 .tile-flash {
   position: absolute;
-  left: 50%;  /* Center in canvas-wrapper */
-  top: 50%;   /* Center in canvas-wrapper */
-  width: calc(var(--tile-size, 60px) * 0.866);
-  height: var(--tile-size, 60px);
+  transform-origin: center;
   clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
   background: rgba(0, 255, 159, 0.4);
   pointer-events: none;
   opacity: 0;
-  transform-origin: center;
-  transform: translate(-50%, -50%) scale(var(--scale));  /* Center and scale */
+  z-index: 2;
 }
 
-/* Ring-based animations */
-.ring-0 { animation: flashTile 0.4s ease-out 0s; }     /* Center */
-.ring-1 { animation: flashTile 0.4s ease-out 0.1s; }   /* First ring */
-.ring-2 { animation: flashTile 0.4s ease-out 0.2s; }   /* Second ring */
-.ring-3 { animation: flashTile 0.4s ease-out 0.3s; }   /* Outer ring */
+/* Update the animations */
+.ring-0 { animation: flashTile 0.4s ease-out 0s forwards; }
+.ring-1 { animation: flashTile 0.4s ease-out 0.1s forwards; }
+.ring-2 { animation: flashTile 0.4s ease-out 0.2s forwards; }
+.ring-3 { animation: flashTile 0.4s ease-out 0.3s forwards; }
 
-/* Hexagonal ripple effect */
-.hex-ripple {
+@keyframes flashTile {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.8);
+  }
+  50% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+/* Debug styles */
+.tile-flash::after {
+  content: attr(data-coords);
   position: absolute;
-  left: 50%;  /* Center in canvas-wrapper */
-  top: 50%;   /* Center in canvas-wrapper */
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: white;
+  font-size: 10px;
+  z-index: 3;
+  background: rgba(0, 0, 0, 0.5);
+  padding: 2px 4px;
+  border-radius: 2px;
+  white-space: nowrap;
+}
+
+/* Move hex-ripple to be within game-board */
+.grid-full .hex-ripple {
+  position: absolute;
+  top: 50%;
+  left: 50%;
   width: calc(var(--tile-size, 60px) * 0.866);
   height: var(--tile-size, 60px);
   background: transparent;
@@ -264,37 +294,22 @@
   clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
   opacity: 0;
   transform-origin: center;
-  transform: translate(-50%, -50%) scale(var(--scale));  /* Center and scale */
+  z-index: 2;  /* Place above canvas */
 }
 
+/* Hexagonal ripple effect */
 .ripple-1 { animation: hexRipple 1.2s ease-out 0s; }
 .ripple-2 { animation: hexRipple 1.2s ease-out 0.2s; }
 .ripple-3 { animation: hexRipple 1.2s ease-out 0.4s; }
 
-/* Update animations to maintain centering */
-@keyframes flashTile {
-  0% {
-    opacity: 0;
-    transform: translate(-50%, -50%) scale(calc(0.8 * var(--game-scale)));
-  }
-  50% {
-    opacity: 1;
-    transform: translate(-50%, -50%) scale(calc(1.1 * var(--game-scale)));
-  }
-  100% {
-    opacity: 0;
-    transform: translate(-50%, -50%) scale(calc(1 * var(--game-scale)));
-  }
-}
-
 @keyframes hexRipple {
   0% {
     opacity: 1;
-    transform: translate(-50%, -50%) scale(calc(1 * var(--game-scale)));
+    transform: translate(-50%, -50%) scale(1);
   }
   100% {
     opacity: 0;
-    transform: translate(-50%, -50%) scale(calc(2.5 * var(--game-scale)));
+    transform: translate(-50%, -50%) scale(2.5);
   }
 }
 

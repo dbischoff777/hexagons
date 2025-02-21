@@ -1952,7 +1952,7 @@ const Game: React.FC<GameProps> = ({
           ...prev,
           points: prev.points + pointsEarned
         };
-        saveUpgradeState(newState);
+        saveUpgradeState(newState); 
         return newState;
       });
     }
@@ -1988,19 +1988,23 @@ const Game: React.FC<GameProps> = ({
     const canvas = canvasRef.current;
     
     if (wrapper && canvas) {
-      // First clean up any existing animations
       cleanupGridAnimations(wrapper);
       
-      // Get scaling factors for animations
+      // Get the game board scale from CSS variable
+      const boardScale = parseFloat(getComputedStyle(document.documentElement)
+        .getPropertyValue('--scale')) || 1;
+      
+      // Get canvas dimensions and scale
       const rect = canvas.getBoundingClientRect();
-      const scaleX = rect.width / canvas.width;
-      const scaleY = rect.height / canvas.height;
+      const scaleX = (rect.width / canvas.width) * boardScale;
+      const scaleY = (rect.height / canvas.height) * boardScale;
       
       wrapper.classList.add('grid-full');
       
-      // Set theme colors as CSS variables
+      // Set theme colors and tile size as CSS variables
       wrapper.style.setProperty('--theme-primary', theme.colors.primary);
       wrapper.style.setProperty('--theme-accent', theme.colors.accent);
+      wrapper.style.setProperty('--tile-size', `${tileSize * scaleX}px`);
       
       // Create ripple effects
       for (let i = 1; i <= 3; i++) {
@@ -2015,62 +2019,34 @@ const Game: React.FC<GameProps> = ({
         const ring = getRingNumber(tile.q, tile.r);
         flash.className = `tile-flash ring-${ring}`;
         
-        // Get canvas position
+        // Get canvas position relative to center
         const { x: canvasX, y: canvasY } = hexToPixel(tile.q, tile.r, centerX, centerY, tileSize);
         
-        // Convert to screen coordinates
-        const screenX = canvasX * scaleX;
-        const screenY = canvasY * scaleY;
+        // Calculate position relative to wrapper center
+        const wrapperCenterX = wrapper.offsetWidth / 2;
+        const wrapperCenterY = wrapper.offsetHeight / 2;
         
-        // Set position using transformed coordinates
-        flash.style.left = `${screenX}px`;
-        flash.style.top = `${screenY}px`;
+        // Calculate final position with offset from center
+        const finalX = wrapperCenterX + (canvasX - centerX) * scaleX;
+        const finalY = wrapperCenterY + (canvasY - centerY) * scaleY;
         
-        // Scale the flash effect size
+        // Position the flash element using absolute positioning
+        flash.style.left = `${finalX}px`;
+        flash.style.top = `${finalY}px`;
+        flash.style.transform = 'translate(-50%, -50%)';
+        
+        // Set size based on tile size and scale
         const scaledSize = tileSize * scaleX;
-        flash.style.width = `${scaledSize}px`;
+        flash.style.width = `${scaledSize * 0.866}px`; // Hex width is height * 0.866
         flash.style.height = `${scaledSize}px`;
         
         wrapper.appendChild(flash);
       });
 
-      // Calculate grid clear points with combo multiplier
-      const gridClearPoints = GRID_CLEAR_POINTS * (combo.count > 0 ? combo.multiplier : 1);
-      
-      // Store current score before update
-      const previousScore = score;
-      
-      // Update score including any previous points
-      const newScore = previousScore + gridClearPoints;
-      setScore(newScore);
-      
-      // Update objectives if in daily challenge
-      if (isDailyChallenge) {
-        updateObjectives(0, combo.count, newScore);
-      }
-      
-      // Add score popup
-      addScorePopup({
-        score: gridClearPoints,
-        x: centerX,
-        y: centerY,
-        type: 'clear',
-        emoji: '✨',
-        text: 'Grid Clear!'
-      });
-
-      // Play sound effect
-      soundManager.playSound('gridClear');
-      
       // Clean up effects after animation
-      const cleanupTimeout = setTimeout(() => {
+      setTimeout(() => {
         cleanupGridAnimations(wrapper);
-        
-        // Reset the grid after cleanup
-        setPlacedTiles([createInitialTile()]);
       }, 1200);
-
-      return () => clearTimeout(cleanupTimeout);
     }
   };
 
