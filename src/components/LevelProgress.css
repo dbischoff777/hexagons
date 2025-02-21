@@ -16,6 +16,7 @@
   flex-direction: column;
   margin-top: 0;
   transform-origin: left top;
+  border: 2px solid #FF4D6D;
 }
 
 /* Mobile adjustments */

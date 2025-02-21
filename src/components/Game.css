@@ -583,7 +583,7 @@
 /* Update exit button positioning */
 .exit-button {
   position: fixed;
-  top: 20px;  /* Changed from 95px to 20px */
+  top: 1.625rem;  /* Changed from 95px to 20px */
   right: 20px;
   padding: 8px 16px;
   border: 2px solid #FF4D6D;
