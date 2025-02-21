@@ -156,51 +156,31 @@ type GridPosition = [number, number];
 // Define the exact positions we expect in a radius 3 hexagonal grid
 const VALID_POSITIONS: GridPosition[] = [
   // Center
-  [0, 0] as GridPosition,
+  [0, 0],
   // Inner ring (6 positions)
-  [0, -1] as GridPosition, 
-  [1, -1] as GridPosition, 
-  [1, 0] as GridPosition, 
-  [0, 1] as GridPosition, 
-  [-1, 1] as GridPosition, 
-  [-1, 0] as GridPosition,
+  [1, -1], [1, 0], [0, 1], [-1, 1], [-1, 0], [0, -1],
   // Middle ring (12 positions)
-  [0, -2] as GridPosition, 
-  [1, -2] as GridPosition, 
-  [2, -1] as GridPosition, 
-  [2, 0] as GridPosition, 
-  [1, 1] as GridPosition, 
-  [0, 2] as GridPosition,  // This position was missing in the tiles array
-  [-1, 2] as GridPosition, 
-  [-2, 1] as GridPosition, 
-  [-2, 0] as GridPosition, 
-  [-1, -1] as GridPosition, 
-  [-2, -1] as GridPosition, 
-  [-1, -2] as GridPosition,
+  [2, -2], [2, -1], [2, 0],
+  [1, 1], [0, 2], [-1, 2],
+  [-2, 2], [-2, 1], [-2, 0],
+  [-1, -1], [0, -2], [1, -2],
   // Outer ring (18 positions)
-  [0, -3] as GridPosition, 
-  [1, -3] as GridPosition, 
-  [2, -2] as GridPosition, 
-  [3, -1] as GridPosition, 
-  [3, 0] as GridPosition, 
-  [2, 1] as GridPosition,
-  [1, 2] as GridPosition, 
-  [0, 3] as GridPosition, 
-  [-1, 3] as GridPosition, 
-  [-2, 2] as GridPosition, 
-  [-3, 1] as GridPosition, 
-  [-3, 0] as GridPosition,
-  [-2, -2] as GridPosition, 
-  [-3, -1] as GridPosition, 
-  [-3, -2] as GridPosition, 
-  [-2, -3] as GridPosition, 
-  [-1, -3] as GridPosition, 
-  [-3, -3] as GridPosition
+  [3, -3], [3, -2], [3, -1], [3, 0],
+  [2, 1], [1, 2], [0, 3], [-1, 3],
+  [-2, 3], [-3, 3], [-3, 2], [-3, 1],
+  [-3, 0], [-2, -1], [-1, -2], [0, -3],
+  [1, -3], [2, -3]
 ].sort((a, b) => {
-  // Sort by q then r for consistent ordering
-  if (a[0] !== b[0]) return a[0] - b[0];
-  return a[1] - b[1];
-});
+  // Sort by ring number first, then by angle
+  const ringA = Math.max(Math.abs(a[0]), Math.abs(a[1]), Math.abs(-a[0]-a[1]));
+  const ringB = Math.max(Math.abs(b[0]), Math.abs(b[1]), Math.abs(-b[0]-b[1]));
+  if (ringA !== ringB) return ringA - ringB;
+  
+  // Within same ring, sort by angle
+  const angleA = Math.atan2(a[1], a[0]);
+  const angleB = Math.atan2(b[1], b[0]);
+  return angleA - angleB;
+}) as GridPosition[];
 
 // Add this helper function to get ring number for a position
 const getRingNumber = (q: number, r: number): number => {
@@ -2013,14 +1993,14 @@ const Game: React.FC<GameProps> = ({
         wrapper.appendChild(ripple);
       }
       
-      // Create flash effects for each tile position
-      placedTiles.forEach(tile => {
+      // Create flash effects for all valid positions in the grid
+      VALID_POSITIONS.forEach(([q, r]) => {
         const flash = document.createElement('div');
-        const ring = getRingNumber(tile.q, tile.r);
+        const ring = getRingNumber(q, r);
         flash.className = `tile-flash ring-${ring}`;
         
         // Get canvas position relative to center
-        const { x: canvasX, y: canvasY } = hexToPixel(tile.q, tile.r, centerX, centerY, tileSize);
+        const { x: canvasX, y: canvasY } = hexToPixel(q, r, centerX, centerY, tileSize);
         
         // Calculate position relative to wrapper center
         const wrapperCenterX = wrapper.offsetWidth / 2;
