@@ -1,4 +1,4 @@
-export type PopupType = 'score' | 'combo' | 'quick' | 'clear' | 'wrong';
+export type PopupType = 'score' | 'combo' | 'quick' | 'clear' | 'wrong' | 'bonus';
 
 export interface ScorePopupData {
   id: number;

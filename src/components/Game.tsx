@@ -66,15 +66,9 @@ import { formatScore } from '../utils/formatNumbers';
 import SpringModal from './SpringModal'
 import { handleKeyboardPlacement, loadKeyBindings } from '../utils/keyBindingsUtils'
 import CustomCursor from './CustomCursor';
+import { createDebugLogger } from '../utils/debugUtils';
 
-// Replace the DEBUG object at the top
-const DEBUG = {
-  log: (message: string, data: any) => {
-    if (import.meta.env.DEV) {  // Use Vite's env variable instead of process
-      console.log(`[Game] ${message}:`, data);
-    }
-  }
-};
+const DEBUG = createDebugLogger('Game');
 
 interface GameProps {
   musicEnabled: boolean
@@ -343,6 +337,12 @@ const Game: React.FC<GameProps> = ({
   // Add this state to track the current grid position
   const [currentGridPosition, setCurrentGridPosition] = useState<{ q: number, r: number }>({ q: 0, r: 0 });
 
+  // Add this state to track initialization
+  const [isInitializing, setIsInitializing] = useState(false);
+
+  // Add this at the top with other refs
+  const lastStateRef = useRef<string>('');
+
   const awardUpgradePoints = useCallback((points: number) => {
     setUpgradeState(prev => ({
       ...prev,
@@ -368,7 +368,9 @@ const Game: React.FC<GameProps> = ({
 
   // Update the initialization effect
   useEffect(() => {
-    if (!isInitialized && isLevelMode) {
+    if (!isInitialized && !isInitializing && isLevelMode) {
+      setIsInitializing(true);
+      
       // Get current level info based on score
       const { currentBlock, currentLevel } = getCurrentLevelInfo(score);
       
@@ -385,24 +387,87 @@ const Game: React.FC<GameProps> = ({
         source: 'Game initialization'
       });
       
-      // Always update target score in level mode
-      onStartGame(true, effectiveTargetScore);
+      // Only update target score if it's not already set
+      if (!targetScore) {
+        onStartGame(true, effectiveTargetScore);
+      }
       setIsInitialized(true);
+      setIsInitializing(false);
     }
-  }, [isLevelMode, isInitialized, score, onStartGame]);
+  }, [isLevelMode, isInitialized, isInitializing, score, onStartGame, targetScore]);
 
-  // Remove the separate debug logging effects and replace with single effect
+  // Create constants for log messages to ensure consistency
+  const LOG_MESSAGES = {
+    PROPS_RECEIVED: 'Game props received',
+    STATE_UPDATED: 'Game state updated'
+  } as const;
+
+  // Add a memo for the game state to prevent unnecessary updates
+  const gameState = useMemo(() => ({
+    isLevelMode,
+    targetScore,
+    currentBlock,
+    currentLevel,
+    isDailyChallenge,
+    isGameOver,
+    score,
+    timedMode,
+    isInitialized,
+    rotationEnabled
+  }), [
+    isLevelMode,
+    targetScore,
+    currentBlock,
+    currentLevel,
+    isDailyChallenge,
+    isGameOver,
+    score,
+    timedMode,
+    isInitialized,
+    rotationEnabled
+  ]);
+
+  // Single effect for state updates
   useEffect(() => {
-    DEBUG.log('Game state updated', {
-      isLevelMode,
-      targetScore,
-      currentBlock,
-      currentLevel,
-      isDailyChallenge,
-      score,
-      isGameOver
-    });
-  }, [isLevelMode, targetScore, currentBlock, currentLevel, isDailyChallenge, score, isGameOver]);
+    if (!isInitialized) return;
+    
+    const stateKey = JSON.stringify(gameState);
+    if (stateKey !== lastStateRef.current) {
+      lastStateRef.current = stateKey;
+      DEBUG.log(LOG_MESSAGES.STATE_UPDATED, gameState);
+    }
+  }, [isInitialized, gameState]);
+
+  // Add a memo for props to prevent unnecessary updates
+  const gameProps = useMemo(() => ({
+    isLevelMode,
+    targetScore,
+    currentBlock,
+    currentLevel,
+    isDailyChallenge,
+    timedMode
+  }), [
+    isLevelMode,
+    targetScore,
+    currentBlock,
+    currentLevel,
+    isDailyChallenge,
+    timedMode
+  ]);
+
+  // Single effect for props updates
+  useEffect(() => {
+    const propsKey = JSON.stringify(gameProps);
+    if (propsKey !== lastPropsRef.current) {
+      lastPropsRef.current = propsKey;
+      DEBUG.log(LOG_MESSAGES.PROPS_RECEIVED, gameProps);
+    }
+  }, [gameProps]);
+
+  // Add this ref at the top with other refs
+  const lastPropsRef = useRef<string>('');
+
+  // Remove any other debug logging effects
 
   // 1. Modify handleScoreChange to be more efficient
   const handleScoreChange = useCallback((newScore: number) => {
@@ -1936,6 +2001,20 @@ const Game: React.FC<GameProps> = ({
     if (wrapper && canvas) {
       cleanupGridAnimations(wrapper);
       
+      // Add grid clear bonus to score
+      const gridBonus = GRID_CLEAR_POINTS;  // 1000 points
+      handleScoreChange(score + gridBonus);
+      
+      // Add score popup for grid clear
+      addScorePopup({
+        score: gridBonus,
+        x: canvas.width / 2,
+        y: canvas.height / 2 - 100,
+        emoji: '🌟',
+        text: 'Grid Clear Bonus!',
+        type: 'bonus'
+      });
+      
       // Get the game board scale from CSS variable
       const boardScale = parseFloat(getComputedStyle(document.documentElement)
         .getPropertyValue('--scale')) || 1;
@@ -2479,7 +2558,7 @@ const Game: React.FC<GameProps> = ({
   // Add a helper function to handle tile placement effects
   const handleTilePlacement = (newTile: PlacedTile, currentTiles: PlacedTile[]) => {
     // Use centralized matching logic
-    const { matchCount, updatedTiles, score: matchScore } = handleTileMatches(
+    const { matchCount, updatedTiles } = handleTileMatches(  // Remove matchScore from destructuring
       newTile,
       currentTiles,
       settings,
@@ -2503,7 +2582,7 @@ const Game: React.FC<GameProps> = ({
 
     // Check for grid full condition
     if (isGridFull(updatedTiles, cols)) {
-      const { matchingTiles, gridBonus, newComboState } = handleGridClearEffects(
+      const { matchingTiles, newComboState } = handleGridClearEffects(
         updatedTiles,
         settings,
         combo

@@ -12,6 +12,9 @@ import { useAccessibility } from '../contexts/AccessibilityContext';
 import { DEFAULT_SCHEME } from '../utils/colorSchemes';
 import CustomCursor from './CustomCursor';
 import './LevelRoadmap.css';
+import { createDebugLogger } from '../utils/debugUtils';
+
+const DEBUG = createDebugLogger('LevelRoadmap');
 
 // Add this interface for the reward type
 interface Reward {
@@ -37,25 +40,24 @@ const LevelRoadmap: React.FC<LevelRoadmapProps> = ({ currentPoints, onStartGame 
     pointsForNextLevel 
   } = getCurrentLevelInfo(currentPoints);
 
-  const handleLevelClick = (isCompleted: boolean, targetScore: number, blockNumber: number, levelNumber: number) => {
-    // For level 1-1, set a minimum target score
-    const actualTargetScore = (blockNumber === 1 && levelNumber === 1) ? 10000 : targetScore;
+  const handleLevelClick = (blockNumber: number, levelNumber: number) => {
+    const block = LEVEL_BLOCKS[blockNumber - 1];
+    const currentLevel = block.levels[levelNumber - 1];
+    // Get next level's score (either next level in block or first level of next block)
+    const nextLevel = block.levels[levelNumber] || 
+      (LEVEL_BLOCKS[blockNumber]?.levels[0]);
+    const targetScore = nextLevel?.pointsRequired ?? 100000;
     
-    console.log('Starting level game from roadmap:', {
-      isCompleted,
-      targetScore: actualTargetScore,
+    DEBUG.log('Starting level game from roadmap:', {
       blockNumber,
       levelNumber,
       isLevelMode: true,
-      source: 'LevelRoadmap click'
+      targetScore,
+      currentLevel,
+      nextLevel: nextLevel || 'none'
     });
     
-    // Level 1-1 is always playable
-    if (isCompleted || (blockNumber === 1 && levelNumber === 1)) {
-      // Force isLevelMode to true
-      const isLevelMode = true;
-      onStartGame(false, actualTargetScore, isLevelMode);
-    }
+    onStartGame(true, targetScore, true);
   };
 
   const renderBlock = (block: LevelBlock, currentPoints: number) => {
@@ -115,8 +117,6 @@ const LevelRoadmap: React.FC<LevelRoadmapProps> = ({ currentPoints, onStartGame 
                 key={levelInfo.level}
                 className={`level-cell ${isCurrentLevel ? 'current' : ''} ${isCompleted ? 'completed' : ''}`}
                 onClick={() => handleLevelClick(
-                  isCompleted, 
-                  levelInfo.pointsRequired, 
                   block.blockNumber, 
                   levelInfo.level
                 )}

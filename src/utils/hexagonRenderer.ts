@@ -1,4 +1,4 @@
-import { PlacedTile } from '../types'
+import { Edge, PlacedTile } from '../types'
 import { AccessibilitySettings } from '../types/accessibility'
 import { drawAccessibilityOverlay } from './accessibilityUtils'
 import { getPowerUpColor } from './themeUtils'
@@ -121,7 +121,7 @@ export const drawHexagonWithColoredEdges = ({
   if (tile?.edges) {
     applyBaseStyles(ctx, tile, isMatched, theme, x, y, size);
     drawHexagonShape(ctx, points);
-    drawEdges(ctx, tile, points, isSelected, settings, isMatched);
+    drawEdges(ctx, x, y, size, tile.edges, settings, isSelected, tile);
     if (tile?.value > 0 || tile?.isJoker || tile?.powerUp || tile?.type === 'mirror') {
       drawSpecialTile(ctx, x, y, size, tile, isSelected, showInfoBox && isSelected, theme);
     }
@@ -247,41 +247,51 @@ function drawHexagonShape(ctx: CanvasRenderingContext2D, points: [number, number
 }
 
 function drawEdges(
-  ctx: CanvasRenderingContext2D,
-  tile: PlacedTile,
-  points: [number, number][],
+  ctx: CanvasRenderingContext2D, 
+  x: number, 
+  y: number, 
+  size: number, 
+  edges: Edge[], 
+  settings: any,
   isSelected: boolean,
-  settings: AccessibilitySettings,
-  isMatched: boolean
+  tile: PlacedTile
 ) {
-  for (let i = 0; i < 6; i++) {
-    const start = points[i]
-    const end = points[(i + 1) % 6]
+  edges.forEach((edge, i) => {
+    const angle = (i * Math.PI) / 3;
+    const nextAngle = ((i + 1) * Math.PI) / 3;
+    
+    const startX = x + size * Math.cos(angle);
+    const startY = y + size * Math.sin(angle);
+    const endX = x + size * Math.cos(nextAngle);
+    const endY = y + size * Math.sin(nextAngle);
+    
+    const gradient = ctx.createLinearGradient(startX, startY, endX, endY);
     
     if (settings.isColorBlind) {
-      ctx.strokeStyle = isMatched ? '#FFFFFF' : '#888888'
-      ctx.lineWidth = isSelected ? 6 : 4
+      ctx.setLineDash([5, 5]);
+      ctx.lineWidth = isSelected ? 6 : 4;
     } else {
-      const color = tile.edges[i].color
+      const color = tile.isJoker ? '#FFFFFF' : edge.color;
       
       if (tile.isJoker) {
-        ctx.strokeStyle = '#FFFFFF'
-        ctx.shadowColor = '#FFFFFF'
-        ctx.shadowBlur = 10
+        gradient.addColorStop(0, `${color}FF`);
+        gradient.addColorStop(0.5, `${color}AA`);
+        gradient.addColorStop(1, `${color}FF`);
       } else {
-        const gradient = ctx.createLinearGradient(start[0], start[1], end[0], end[1])
-        gradient.addColorStop(0, color)
-        gradient.addColorStop(1, color)
-        ctx.strokeStyle = gradient
+        gradient.addColorStop(0, color);
+        gradient.addColorStop(1, color);
       }
-      ctx.lineWidth = isSelected ? 7 : 5
+      
+      ctx.strokeStyle = gradient;
+      ctx.lineWidth = 4;
     }
     
-    ctx.beginPath()
-    ctx.moveTo(start[0], start[1])
-    ctx.lineTo(end[0], end[1])
-    ctx.stroke()
-  }
+    ctx.beginPath();
+    ctx.moveTo(startX, startY);
+    ctx.lineTo(endX, endY);
+    ctx.stroke();
+    ctx.setLineDash([]);
+  });
 }
 
 // Update the drawSpecialTile function to handle each type separately

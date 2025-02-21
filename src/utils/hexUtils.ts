@@ -67,7 +67,7 @@ export const createTileWithRandomEdges = (
   // Create the edges based on whether it's a power-up tile
   let edges: Edge[];
   if (powerUp) {
-    const color = getPowerUpColor(powerUp.type, colorScheme, theme);
+    const color = getPowerUpColor(powerUp.type, colorScheme);
     edges = Array(6).fill(null).map(() => ({ color }));
   } else {
     edges = Array(6).fill(null).map(() => ({

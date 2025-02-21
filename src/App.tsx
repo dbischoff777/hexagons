@@ -5,7 +5,7 @@ import StartPage from './components/StartPage'
 import SoundManager from './utils/soundManager'
 import { AccessibilityProvider } from './contexts/AccessibilityContext'
 import { GameState } from './types'
-import { loadGameState, saveGameState } from './utils/gameStateUtils'
+import { clearSavedGame, loadGameState, saveGameState } from './utils/gameStateUtils'
 import PageTransition from './components/PageTransition'
 import { getCurrentLevelInfo, getPlayerProgress, getNextLevelInfo, LEVEL_BLOCKS } from './utils/progressionUtils'
 import PreventContextMenu from './components/PreventContextMenu'
@@ -13,6 +13,7 @@ import { KeyBindings } from './types/index'
 import { loadKeyBindings, saveKeyBindings } from './utils/keyBindingsUtils'
 import SettingsModal from './components/SettingsModal'
 import HexPuzzleMode from './components/HexPuzzleMode'
+import { createDebugLogger } from './utils/debugUtils'
 
 interface CurrentGame {
   isLevelMode: boolean;
@@ -20,6 +21,8 @@ interface CurrentGame {
   currentBlock?: number;
   currentLevel?: number;
 }
+
+const DEBUG = createDebugLogger('App')
 
 function App() {
   const [gameStarted, setGameStarted] = useState(false)
@@ -95,47 +98,85 @@ function App() {
   // Handler for StartPage component
   const handleStartGame = (
     withTimer: boolean, 
-    isDailyChallenge?: boolean,
-    isPuzzleMode?: boolean
+    targetScore?: number,
+    isLevelMode?: boolean
   ) => {
-    console.log('Starting game with:', { withTimer, isDailyChallenge, isPuzzleMode });
+    DEBUG.log('Starting game with', {
+      withTimer,
+      targetScore: targetScore || 'default',
+      isLevelMode,
+      currentGame // Log current game state
+    });
+    
+    // Clear previous game state first
+    setCurrentGame(null);
+    setSavedGameState(null);
+    levelCompleteRef.current = false;
+
+    if (isLevelMode) {
+      const progress = getPlayerProgress();
+      const { currentBlock, currentLevel } = getCurrentLevelInfo(progress.points);
+      
+      DEBUG.log('Setting up level mode', {
+        currentBlock,
+        currentLevel,
+        targetScore: targetScore || 'default',
+        isLevelMode
+      });
+
+      setCurrentGame({
+        isLevelMode: true,
+        targetScore: Number(targetScore) || 100000,
+        currentBlock,
+        currentLevel
+      });
+    }
+    
     setTimedMode(withTimer);
-    setIsPuzzleMode(!!isPuzzleMode);
-    setIsDailyChallenge(!!isDailyChallenge);
     setGameStarted(true);
   };
 
   const handleLevelComplete = (isComplete: boolean) => {
-    console.log('handleLevelComplete called with:', isComplete);
+    DEBUG.log('handleLevelComplete called', { isComplete });
     levelCompleteRef.current = isComplete;
     setShowLevelComplete(isComplete);
   };
 
   const handleExitGame = (forcedExit = false) => {
-    console.log('handleExitGame called', {
+    DEBUG.log('handleExitGame called', {
       currentGame,
-      showLevelComplete: levelCompleteRef.current,
+      showLevelComplete,
       isExiting,
       nextGameState,
       forcedExit
     });
-
-    // Allow exit if forced, level complete, or not in level mode
-    if (forcedExit || levelCompleteRef.current || !currentGame?.isLevelMode) {
-      console.log('Exiting game - forced or level complete');
-      setIsExiting(true);
-      setNextGameState({ started: false, timed: false });
-      setCurrentGame(null);
-      setIsDailyChallenge(false);
-      setSavedGameState(null);
-      levelCompleteRef.current = false;
-      return;
-    }
     
-    // Block normal exits during level mode
-    if (currentGame?.isLevelMode) {
-      console.log('Blocking exit - active level mode');
-      return;
+    if (forcedExit || showLevelComplete) {
+      DEBUG.log('Exiting game', { 
+        reason: forcedExit ? 'forced' : 'level complete',
+        gameState: {
+          gameStarted,
+          showLevelComplete,
+          isExiting,
+          nextGameState
+        }
+      });
+      
+      setGameStarted(false);
+      setShowLevelComplete(false);
+      setIsExiting(false);
+      setNextGameState(null);
+      clearSavedGame();
+      
+      DEBUG.log('Game state after exit', {
+        gameStarted: false,
+        showLevelComplete: false,
+        isExiting: false,
+        nextGameState: null
+      });
+    } else {
+      DEBUG.log('Setting exit confirmation', { isExiting: true });
+      setIsExiting(true);
     }
   };
 
@@ -250,7 +291,7 @@ function App() {
                   onStartGame={handleGameStart}
                   savedGameState={savedGameState}
                   isDailyChallenge={isDailyChallenge}
-                  isLevelMode={true}
+                  isLevelMode={currentGame?.isLevelMode ?? false}
                   targetScore={currentGame?.targetScore}
                   currentBlock={currentGame?.currentBlock}
                   currentLevel={currentGame?.currentLevel}
@@ -261,7 +302,14 @@ function App() {
               )
             ) : (
               <StartPage 
-                onStartGame={handleStartGame}
+                onStartGame={(withTimer, isDailyChallenge, isPuzzleMode) => {
+                  // Convert to new signature, preserve targetScore
+                  handleStartGame(
+                    withTimer, 
+                    currentGame?.targetScore, // Pass through existing target score
+                    withTimer && !isDailyChallenge && !isPuzzleMode
+                  );
+                }}
                 onMusicToggle={handleMusicToggle}
                 onSoundToggle={handleSoundToggle}
                 musicEnabled={musicEnabled}

@@ -1,16 +1,11 @@
+import { ColorScheme } from '../types/colors';
+
 // Define the pattern type
 interface ColorPatterns {
   [key: string]: string;
 }
 
-// Base color scheme interface
-export interface ColorScheme {
-  background: string;
-  primary: string;
-  secondary: string;
-  accent: string;
-  text?: string;
-}
+// No need for local ColorScheme interface since we import it
 
 // Extended interface for colorblind scheme
 interface ColorBlindScheme extends ColorScheme {
@@ -18,7 +13,8 @@ interface ColorBlindScheme extends ColorScheme {
 }
 
 // Update DEFAULT_SCHEME to match the interface
-export const DEFAULT_SCHEME = {
+export const DEFAULT_SCHEME: ColorScheme = {
+  name: 'default',
   colors: {
     background: '#1a1a2e',
     primary: '#00FF9F',
@@ -26,15 +22,18 @@ export const DEFAULT_SCHEME = {
     accent: '#FF1177',
     text: '#FFFFFF'
   }
-} as const;
+};
 
 // Update colorblind scheme to match the interface
-export const COLORBLIND_SCHEME: ColorBlindScheme = {
-  background: '#1a1a2e',
-  primary: '#FF8B8B',   // Light Red
-  secondary: '#FFD700', // Gold
-  accent: '#4FB477',    // Sage Green
-  text: '#FFFFFF',
+export const COLORBLIND_SCHEME: ColorScheme = {
+  name: 'colorblind',
+  colors: {
+    background: '#1a1a2e',
+    primary: '#FF8B8B',   // Light Red
+    secondary: '#FFD700', // Gold
+    accent: '#4FB477',    // Sage Green
+    text: '#FFFFFF'
+  },
   patterns: {
     '#FF8B8B': `
       <pattern id="pattern-circles" patternUnits="userSpaceOnUse" width="10" height="10">

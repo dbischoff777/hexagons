@@ -20,6 +20,7 @@ import { FaPuzzlePiece } from 'react-icons/fa'
 import CustomCursor from './CustomCursor'
 import { useAccessibility } from '../contexts/AccessibilityContext'
 import { DEFAULT_SCHEME } from '../utils/colorSchemes'
+import { createDebugLogger } from '../utils/debugUtils'
 
 interface StartPageProps {
   onStartGame: (
@@ -107,6 +108,8 @@ const BUTTON_HOVER_PHRASES = {
   ],
 };
 
+const DEBUG = createDebugLogger('StartPage');
+
 const StartPage: React.FC<StartPageProps> = ({
   onStartGame,
   musicEnabled,
@@ -171,21 +174,36 @@ const StartPage: React.FC<StartPageProps> = ({
     return () => document.removeEventListener('mousemove', handleMouseMove)
   }, [])
 
-  const handleNewGame = (timedMode: boolean, isDailyChallenge?: boolean, isPuzzleMode?: boolean) => {
-    console.log('handleNewGame called with:', { timedMode, isDailyChallenge, isPuzzleMode });
+  const handleNewGame = (timedMode: boolean) => {
+    DEBUG.log('handleNewGame called', {
+      timedMode,
+      isDailyChallenge: undefined,
+      isPuzzleMode: undefined,
+      hasSavedGame: !!hasSavedGame
+    });
+    
     if (hasSavedGame) {
-      setShowConfirmModal(true)
-      setPendingGameMode(timedMode)
+      setShowConfirmModal(true);
+      setPendingGameMode(timedMode);
     } else {
-      console.log('Calling onStartGame with:', { timedMode, isDailyChallenge, isPuzzleMode });
-      onStartGame(timedMode, isDailyChallenge, isPuzzleMode)
+      DEBUG.log('Calling onStartGame with', {
+        timedMode,
+        isDailyChallenge: undefined,
+        isPuzzleMode: undefined
+      });
+      onStartGame(timedMode, false, false);
     }
-  }
+  };
 
   const handleContinueGame = () => {
     const savedGame = loadGameState()
     if (savedGame) {
-      onStartGame(savedGame.timedMode, undefined)
+      DEBUG.log('Continuing saved game with', {
+        timedMode: savedGame.timedMode,
+        isDailyChallenge: false,
+        isPuzzleMode: false
+      });
+      onStartGame(savedGame.timedMode, false, false);
     }
   }
 
@@ -231,7 +249,7 @@ const StartPage: React.FC<StartPageProps> = ({
           tutorial={true}
           onExit={handleCloseTutorial}
           onSkipTutorial={handleCloseTutorial}
-          onStartGame={(withTimer) => onStartGame(withTimer, undefined)}
+          onStartGame={(withTimer) => onStartGame(withTimer, false, false)}
           isLevelMode={false}
           onLevelComplete={() => {}}
           showLevelComplete={false}
@@ -338,7 +356,7 @@ const StartPage: React.FC<StartPageProps> = ({
               <div className="mode-selection">
                 <button 
                   className="mode-button timed" 
-                  onClick={() => handleNewGame(true, undefined, undefined)}
+                  onClick={() => handleNewGame(true)}
                   onMouseEnter={() => handleButtonHover('timed')}
                 >
                   <span className="mode-title">⏱️ TIMED MODE</span>
@@ -347,7 +365,7 @@ const StartPage: React.FC<StartPageProps> = ({
                 
                 <button 
                   className="mode-button zen" 
-                  onClick={() => handleNewGame(false, undefined, undefined)}
+                  onClick={() => handleNewGame(false)}
                   onMouseEnter={() => handleButtonHover('zen')}
                 >
                   <span className="mode-title">🍃 ZEN MODE</span>
@@ -365,7 +383,7 @@ const StartPage: React.FC<StartPageProps> = ({
 
                 <button 
                   className="mode-button daily" 
-                  onClick={() => handleNewGame(false, true, undefined)}
+                  onClick={() => handleNewGame(false)}
                   onMouseEnter={() => handleButtonHover('daily')}
                 >
                   <span className="mode-title">📅 DAILY CHALLENGE</span>
@@ -433,11 +451,11 @@ const StartPage: React.FC<StartPageProps> = ({
           <button 
             className="level-complete__button level-complete__button--danger"
             onClick={() => {
-              clearSavedGame()
+              clearSavedGame();
               if (pendingGameMode !== null) {
-                onStartGame(pendingGameMode)
+                onStartGame(pendingGameMode, false, false);
               }
-              setShowConfirmModal(false)
+              setShowConfirmModal(false);
             }}
           >
             START NEW GAME
