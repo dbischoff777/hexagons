@@ -160,6 +160,7 @@
   flex-direction: column;
   justify-content: center;
   align-items: center;
+  gap: min(20px, 2vh);
   margin: 0;
   padding: 0;
   overflow: visible;
@@ -1000,22 +1001,22 @@
   pointer-events: all;
   z-index: 100;
   padding: clamp(10px, 2vh, 20px);
-  border-radius: clamp(10px, 2vw, 20px);
-  border: 2px solid rgba(var(--hex-color), 0.2);
   transition: all 0.3s ease;
 }
 
 .next-tiles {
   display: flex;
   flex-direction: column;
-  gap: clamp(5px, 2.5vh, 10px);
+  gap: min(15px, 2vw);
+  justify-content: center;
   align-items: center;
+  width: 100%;
 }
 
 .next-tile {
+  width: min(80px, 15vw);
+  height: min(80px, 15vw);
   position: relative;
-  width: clamp(60px, 10vw, 100px);
-  height: clamp(60px, 10vw, 100px);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -1064,7 +1065,8 @@
 @media (max-width: 768px) {
   .next-tiles-container {
     position: fixed;
-    bottom: 10px;
+    height: fit-content;
+    top: 75%;
     left: 50%;
     transform: translateX(-50%);
     width: min(90vw, 400px);
@@ -1072,6 +1074,7 @@
     justify-content: center;
     padding: 8px;
     gap: 10px;
+    border: 1px solid red;
   }
 
   .next-tiles {
