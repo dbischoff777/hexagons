@@ -383,7 +383,9 @@ const StartPage: React.FC<StartPageProps> = ({
 
                 <button 
                   className="mode-button daily" 
-                  onClick={() => handleNewGame(false)}
+                  onClick={() => {
+                    onStartGame(false, true, false)
+                  }}
                   onMouseEnter={() => handleButtonHover('daily')}
                 >
                   <span className="mode-title">📅 DAILY CHALLENGE</span>

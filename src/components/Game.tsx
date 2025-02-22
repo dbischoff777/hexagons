@@ -67,6 +67,8 @@ import SpringModal from './SpringModal'
 import { handleKeyboardPlacement, loadKeyBindings } from '../utils/keyBindingsUtils'
 import CustomCursor from './CustomCursor';
 import { createDebugLogger } from '../utils/debugUtils';
+import DailyChallengeHUD from './DailyChallengeHUD';
+import { DailyObjective } from '../types/dailyChallenge';
 
 const DEBUG = createDebugLogger('Game');
 
@@ -2601,6 +2603,29 @@ const Game: React.FC<GameProps> = ({
     }
   };
 
+  // Add state for daily challenge objectives
+  const [dailyObjectives, setDailyObjectives] = useState<DailyObjective[]>(() => {
+    if (isDailyChallenge) {
+      return getDailyChallenge().objectives;
+    }
+    return [];
+  });
+
+  // Update objectives when score changes
+  useEffect(() => {
+    if (isDailyChallenge) {
+      const updatedObjectives = dailyObjectives.map(obj => {
+        if (obj.type === 'score') {
+          return { ...obj, current: score };
+        }
+        // Add other objective updates as needed
+        return obj;
+      });
+      setDailyObjectives(updatedObjectives);
+      updateDailyChallengeProgress(updatedObjectives, score);
+    }
+  }, [score, isDailyChallenge]);
+
   return (
     <div 
       className={`game ${tutorial ? 'tutorial-mode' : ''}`}
@@ -2995,6 +3020,11 @@ const Game: React.FC<GameProps> = ({
             EXIT GAME
           </button>
         </SpringModal>
+      )}
+
+      {/* Add DailyChallengeHUD */}
+      {isDailyChallenge && (
+        <DailyChallengeHUD objectives={dailyObjectives} />
       )}
     </div>
   )
