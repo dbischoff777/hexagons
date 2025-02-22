@@ -983,6 +983,12 @@
   z-index: 100;
   transform-origin: left top;
   transform: scale(var(--ui-scale, 1));
+  background: var(--background-dark, rgba(13, 13, 26, 0.6));
+  backdrop-filter: blur(10px);
+  border: 2px solid rgba(var(--theme-accent), 0.2);
+  box-shadow: 
+    0 4px 20px rgba(var(--theme-accent), 0.1),
+    0 0 30px rgba(0, 0, 0, 0.2);
 }
 
 .score::before {
@@ -990,18 +996,27 @@
   font-size: 0.7em;
   text-transform: uppercase;
   letter-spacing: 2px;
-  color: rgba(255, 255, 255, 0.7);
+  color: rgba(255, 255, 255, 0.8);
   margin-bottom: 2px;
+  text-shadow: 0 0 10px rgba(var(--theme-accent), 0.3);
 }
 
 .score-value {
   font-size: min(1.4em, 4vw);
   font-weight: bold;
-  color: var(--hex-color);
+  color: var(--theme-accent);
   text-shadow: 
-    0 0 10px rgba(var(--hex-color), 0.5),
-    0 0 20px rgba(var(--hex-color), 0.3);
+    0 0 10px rgba(var(--theme-accent), 0.5),
+    0 0 20px rgba(var(--theme-accent), 0.3);
   letter-spacing: 0.5px;
+}
+
+.score:hover {
+  background: rgba(13, 13, 26, 0.7);
+  border-color: rgba(var(--theme-accent), 0.3);
+  box-shadow: 
+    0 6px 25px rgba(var(--theme-accent), 0.15),
+    0 0 35px rgba(0, 0, 0, 0.25);
 }
 
 /* Next tiles container - default positioning (right side) */
@@ -1111,4 +1126,29 @@
     width: clamp(35px, 11vw, 50px);
     height: clamp(35px, 11vw, 50px);
   }
+}
+
+/* Update level progress styling */
+.level-progress {
+  background: var(--background-dark, rgba(13, 13, 26, 0.6));
+  backdrop-filter: blur(10px);
+  border: 2px solid rgba(var(--theme-accent), 0.2);
+  box-shadow: 
+    0 4px 20px rgba(var(--theme-accent), 0.1),
+    0 0 30px rgba(0, 0, 0, 0.2);
+}
+
+.level-progress__bar {
+  background: linear-gradient(
+    90deg,
+    rgba(var(--theme-accent), 0.3) 0%,
+    rgba(var(--theme-accent), 0.6) 100%
+  );
+}
+
+.level-progress__text {
+  color: var(--theme-accent);
+  text-shadow: 
+    0 0 10px rgba(var(--theme-accent), 0.5),
+    0 0 20px rgba(var(--theme-accent), 0.3);
 }

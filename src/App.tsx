@@ -99,13 +99,15 @@ function App() {
   const handleStartGame = (
     withTimer: boolean, 
     targetScore?: number,
-    isLevelMode?: boolean
+    isLevelMode?: boolean,
+    isPuzzle?: boolean
   ) => {
     DEBUG.log('Starting game with', {
       withTimer,
       targetScore: targetScore || 'default',
       isLevelMode,
-      currentGame // Log current game state
+      isPuzzle,
+      currentGame
     });
     
     // Clear previous game state first
@@ -113,17 +115,13 @@ function App() {
     setSavedGameState(null);
     levelCompleteRef.current = false;
 
+    // Set puzzle mode state if applicable
+    setIsPuzzleMode(!!isPuzzle);
+
     if (isLevelMode) {
       const progress = getPlayerProgress();
       const { currentBlock, currentLevel } = getCurrentLevelInfo(progress.points);
       
-      DEBUG.log('Setting up level mode', {
-        currentBlock,
-        currentLevel,
-        targetScore: targetScore || 'default',
-        isLevelMode
-      });
-
       setCurrentGame({
         isLevelMode: true,
         targetScore: Number(targetScore) || 100000,
@@ -303,11 +301,12 @@ function App() {
             ) : (
               <StartPage 
                 onStartGame={(withTimer, isDailyChallenge, isPuzzleMode) => {
-                  // Convert to new signature, preserve targetScore
+                  // Pass through the puzzle mode parameter
                   handleStartGame(
                     withTimer, 
-                    currentGame?.targetScore, // Pass through existing target score
-                    withTimer && !isDailyChallenge && !isPuzzleMode
+                    currentGame?.targetScore,
+                    withTimer && !isDailyChallenge && !isPuzzleMode,
+                    isPuzzleMode // Pass isPuzzleMode to handleStartGame
                   );
                 }}
                 onMusicToggle={handleMusicToggle}
