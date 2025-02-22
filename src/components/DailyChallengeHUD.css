@@ -7,27 +7,32 @@
   border-radius: 10px;
   padding: 15px;
   color: white;
-  min-width: 250px;
+  min-width: min(250px, 80vw);
   z-index: 10;
+  backdrop-filter: blur(10px);
+  transform-origin: top right;
+  transform: scale(var(--ui-scale, 1));
+  transition: all 0.3s ease;
 }
 
 .daily-challenge-hud h3 {
   margin: 0 0 15px 0;
   text-align: center;
   color: #00FF9F;
+  font-size: clamp(1rem, 4vw, 1.2rem);
 }
 
 .objectives-container {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: clamp(8px, 2vw, 10px);
 }
 
 .objective {
   position: relative;
   display: flex;
   align-items: center;
-  padding: 10px;
+  padding: clamp(8px, 2vw, 10px);
   background: rgba(0, 255, 159, 0.1);
   border-radius: 8px;
   overflow: hidden;
@@ -38,8 +43,8 @@
 }
 
 .objective-icon {
-  font-size: 1.2em;
-  margin-right: 10px;
+  font-size: clamp(1rem, 4vw, 1.2em);
+  margin-right: clamp(8px, 2vw, 10px);
 }
 
 .objective-progress {
@@ -48,12 +53,12 @@
 }
 
 .objective-text {
-  font-size: 0.9em;
+  font-size: clamp(0.8rem, 3vw, 0.9em);
   color: #00FF9F;
 }
 
 .objective-numbers {
-  font-size: 1.1em;
+  font-size: clamp(0.9rem, 3.5vw, 1.1em);
   font-weight: bold;
 }
 
@@ -65,4 +70,73 @@
   background: rgba(0, 255, 159, 0.1);
   transition: width 0.3s ease;
   z-index: 0;
+}
+
+/* Mobile Scaling */
+@media (max-width: 768px) {
+  .daily-challenge-hud {
+    --ui-scale: 0.85;
+    padding: 10px;
+    min-width: min(200px, 70vw);
+  }
+
+  .objective {
+    padding: 8px;
+  }
+
+  .objectives-container {
+    gap: 6px;
+  }
+
+  .objective-icon {
+    font-size: clamp(0.9rem, 3.5vw, 1.1em);
+    margin-right: 6px;
+  }
+
+  .objective-text {
+    font-size: clamp(0.7rem, 2.8vw, 0.8em);
+  }
+
+  .objective-numbers {
+    font-size: clamp(0.8rem, 3vw, 0.9em);
+  }
+}
+
+/* Smaller devices (like Pixel 7) */
+@media (max-width: 412px) {
+  .daily-challenge-hud {
+    --ui-scale: 0.75;
+    padding: 8px;
+    min-width: min(180px, 65vw);
+  }
+
+  .daily-challenge-hud h3 {
+    margin: 0 0 10px 0;
+    font-size: clamp(0.9rem, 3.5vw, 1rem);
+  }
+
+  .objective {
+    padding: 6px;
+  }
+
+  .objectives-container {
+    gap: 4px;
+  }
+}
+
+/* Very small devices */
+@media (max-width: 360px) {
+  .daily-challenge-hud {
+    --ui-scale: 0.7;
+    min-width: min(160px, 60vw);
+    padding: 6px;
+  }
+
+  .objective {
+    padding: 5px;
+  }
+
+  .objectives-container {
+    gap: 3px;
+  }
 } 
