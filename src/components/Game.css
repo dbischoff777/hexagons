@@ -88,6 +88,9 @@
   overflow: hidden;
   z-index: 1;
   background: transparent;
+  contain: content;
+  will-change: transform;
+  transform: translateZ(0);
 }
 
 .game-container::before {
@@ -1151,4 +1154,8 @@
   text-shadow: 
     0 0 10px rgba(var(--theme-accent), 0.5),
     0 0 20px rgba(var(--theme-accent), 0.3);
+}
+
+.hexagon {
+  contain: layout style paint;
 }

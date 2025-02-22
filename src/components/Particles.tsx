@@ -8,8 +8,8 @@ interface ParticlesProps {
   height?: number   // Add height prop
 }
 
-const MAX_PARTICLES = 369;  // Maximum number of particles regardless of intensity
-const BASE_PARTICLES = 200; // Base number of particles at 0.5 intensity
+const MAX_PARTICLES = 210;  // Maximum number of particles regardless of intensity
+const BASE_PARTICLES = 80; // Base number of particles at 0.5 intensity
 const DEPTH = 2;
 
 const Particles: React.FC<ParticlesProps> = ({ 
