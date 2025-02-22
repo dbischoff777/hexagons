@@ -1159,3 +1159,34 @@
 .hexagon {
   contain: layout style paint;
 }
+
+/* Add after game-statistics class */
+
+.fps-debug {
+  position: fixed;
+  bottom: 10px;
+  right: 10px;
+  background: rgba(0, 0, 0, 0.7);
+  color: #00FF9F;
+  padding: 5px 10px;
+  border-radius: 4px;
+  font-family: monospace;
+  font-size: 14px;
+  z-index: 1000;
+  pointer-events: none;
+  border: 1px solid rgba(0, 255, 159, 0.3);
+  text-shadow: 0 0 5px rgba(0, 255, 159, 0.5);
+}
+
+/* Add high/medium/low FPS indicator colors */
+.fps-debug.high {
+  color: #00FF9F; /* Green for good FPS */
+}
+
+.fps-debug.medium {
+  color: #FFE900; /* Yellow for medium FPS */
+}
+
+.fps-debug.low {
+  color: #FF1177; /* Red for low FPS */
+}

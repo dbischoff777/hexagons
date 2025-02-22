@@ -204,6 +204,50 @@ const cleanupGridAnimations = (wrapper: HTMLElement) => {
   elements.forEach((el: Element) => el.remove());
 };
 
+// Add this component inside Game.tsx but before your main Game component
+const FPSCounter = () => {
+  const [fps, setFps] = useState(0);
+  const frameCount = useRef(0);
+  const lastTime = useRef(performance.now());
+
+  useEffect(() => {
+    let animationFrameId: number;
+
+    const tick = () => {
+      frameCount.current++;
+      const now = performance.now();
+      const delta = now - lastTime.current;
+
+      if (delta >= 1000) {
+        const currentFps = Math.round((frameCount.current * 1000) / delta);
+        setFps(currentFps);
+        frameCount.current = 0;
+        lastTime.current = now;
+      }
+
+      animationFrameId = requestAnimationFrame(tick);
+    };
+
+    tick();
+
+    return () => {
+      cancelAnimationFrame(animationFrameId);
+    };
+  }, []);
+
+  const getFpsClass = () => {
+    if (fps >= 55) return 'high';
+    if (fps >= 30) return 'medium';
+    return 'low';
+  };
+
+  return (
+    <div className={`fps-debug ${getFpsClass()}`}>
+      FPS: {fps}
+    </div>
+  );
+};
+
 const Game: React.FC<GameProps> = ({ 
   musicEnabled, 
   soundEnabled, 
@@ -3026,6 +3070,7 @@ const Game: React.FC<GameProps> = ({
       {isDailyChallenge && (
         <DailyChallengeHUD objectives={dailyObjectives} />
       )}
+      <FPSCounter />
     </div>
   )
 }
