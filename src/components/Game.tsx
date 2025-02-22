@@ -2670,6 +2670,32 @@ const Game: React.FC<GameProps> = ({
     }
   }, [score, isDailyChallenge]);
 
+  // Add these sharing functions inside the Game component
+  const getShareMessage = () => {
+    if (!showLevelComplete) {
+      return '🎮 Just played Hex Puzzle!\n🔥 Can you beat my score?';
+    }
+    
+    return `🎮 Just completed Level ${showLevelComplete.level} in Hex Puzzle!\n` +
+      `🎯 Score: ${showLevelComplete.score.toLocaleString()}\n` +
+      `✨ Target: ${showLevelComplete.targetScore.toLocaleString()}\n` +
+      `${showLevelComplete.bonusPoints > 0 ? `🌟 Bonus: +${showLevelComplete.bonusPoints}\n` : ''}` +
+      `🔥 Can you beat my score?`;
+  };
+
+  const handleShare = (platform: 'whatsapp' | 'x' | 'facebook') => {  // Change 'twitter' to 'x'
+    const message = encodeURIComponent(getShareMessage());
+    const url = encodeURIComponent(window.location.href);
+
+    const shareUrls = {
+      whatsapp: `https://wa.me/?text=${message}`,
+      x: `https://x.com/intent/tweet?text=${message}&url=${url}`,  // Update URL
+      facebook: `https://www.facebook.com/sharer/sharer.php?u=${url}&quote=${message}`
+    };
+
+    window.open(shareUrls[platform], '_blank', 'noopener,noreferrer');
+  };
+
   return (
     <div 
       className={`game ${tutorial ? 'tutorial-mode' : ''}`}
@@ -3023,6 +3049,31 @@ const Game: React.FC<GameProps> = ({
                   <span className="level-complete__stat-value">+{showLevelComplete.bonusPoints}</span>
                 </div>
               )}
+            </div>
+            <div className="level-complete__share">
+              <div className="level-complete__share-text">
+                Share your achievement!
+              </div>
+              <div className="level-complete__share-buttons">
+                <button 
+                  className="share-button whatsapp"
+                  onClick={() => handleShare('whatsapp')}
+                >
+                  📱 WhatsApp
+                </button>
+                <button 
+                  className="share-button x"
+                  onClick={() => handleShare('x')}
+                >
+                  🐦 X
+                </button>
+                <button 
+                  className="share-button facebook"
+                  onClick={() => handleShare('facebook')}
+                >
+                  👥 Facebook
+                </button>
+              </div>
             </div>
             <div className="level-complete__buttons">
               <button 

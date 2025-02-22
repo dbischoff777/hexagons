@@ -1059,6 +1059,32 @@ const HexPuzzleMode: React.FC<HexPuzzleModeProps> = ({ onComplete, onExit }) => 
     }
   }, [cursorPos]);
 
+  // Add this function near the other helper functions
+  const getShareMessage = (stats: { timeTaken: number, score: number, totalPieces: number }) => {
+    const minutes = Math.floor(stats.timeTaken / 60);
+    const seconds = Math.round(stats.timeTaken % 60);
+    
+    return `🧩 Just completed a Hex Puzzle!\n` +
+      `⭐ Score: ${stats.score.toLocaleString()}\n` +
+      `⏱️ Time: ${minutes}m ${seconds}s\n` +
+      `🎯 Pieces: ${stats.totalPieces}\n` +
+      `🔥 Can you beat my score?`;
+  };
+
+  // Add this function near getShareMessage
+  const handleShare = (platform: 'whatsapp' | 'x' | 'facebook', stats: typeof completionStats) => {
+    const message = encodeURIComponent(getShareMessage(stats));
+    const url = encodeURIComponent(window.location.href);
+
+    const shareUrls = {
+      whatsapp: `https://wa.me/?text=${message}`,
+      x: `https://x.com/intent/tweet?text=${message}&url=${url}`,
+      facebook: `https://www.facebook.com/sharer/sharer.php?u=${url}&quote=${message}`
+    };
+
+    window.open(shareUrls[platform], '_blank', 'noopener,noreferrer');
+  };
+
   return (
     <PreventContextMenu>
       <CustomCursor 
@@ -1246,20 +1272,47 @@ const HexPuzzleMode: React.FC<HexPuzzleModeProps> = ({ onComplete, onExit }) => 
           }}
           title="Puzzle Completed!"
           message={
-            <div className="completion-stats">
-              <div className="completion-stat">
-                <label>Time</label>
-                <span>{Math.floor(completionStats.timeTaken / 60)}m {Math.round(completionStats.timeTaken % 60)}s</span>
+            <>
+              <div className="completion-stats">
+                <div className="completion-stat">
+                  <label>Time</label>
+                  <span>{Math.floor(completionStats.timeTaken / 60)}m {Math.round(completionStats.timeTaken % 60)}s</span>
+                </div>
+                <div className="completion-stat">
+                  <label>Score</label>
+                  <span>{completionStats.score}</span>
+                </div>
+                <div className="completion-stat">
+                  <label>Pieces Placed</label>
+                  <span>{completionStats.totalPieces}</span>
+                </div>
               </div>
-              <div className="completion-stat">
-                <label>Score</label>
-                <span>{completionStats.score}</span>
+              <div className="level-complete__share">
+                <div className="level-complete__share-text">
+                  Share your achievement!
+                </div>
+                <div className="level-complete__share-buttons">
+                  <button 
+                    className="share-button whatsapp"
+                    onClick={() => handleShare('whatsapp', completionStats)}
+                  >
+                    📱 WhatsApp
+                  </button>
+                  <button 
+                    className="share-button x"
+                    onClick={() => handleShare('x', completionStats)}
+                  >
+                    🐦 X
+                  </button>
+                  <button 
+                    className="share-button facebook"
+                    onClick={() => handleShare('facebook', completionStats)}
+                  >
+                    👥 Facebook
+                  </button>
+                </div>
               </div>
-              <div className="completion-stat">
-                <label>Pieces Placed</label>
-                <span>{completionStats.totalPieces}</span>
-              </div>
-            </div>
+            </>
           }
         >
           <button 
@@ -1277,6 +1330,7 @@ const HexPuzzleMode: React.FC<HexPuzzleModeProps> = ({ onComplete, onExit }) => 
         {scorePopups.map(popup => (
           <ScorePopup key={popup.id} popup={popup} />
         ))}
+        
       </div>
     </PreventContextMenu>
   );

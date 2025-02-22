@@ -167,4 +167,66 @@
   .level-complete__button {
     width: 100%;
   }
+}
+
+/* Add after existing styles */
+.level-complete__share {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(0, 255, 159, 0.2);
+}
+
+.level-complete__share-text {
+  color: #ffffff;
+  font-size: 14px;
+  margin-bottom: 15px;
+  opacity: 0.8;
+}
+
+.level-complete__share-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+}
+
+.share-button {
+  padding: 8px 15px;
+  border-radius: 4px;
+  border: none;
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  transition: all 0.2s ease;
+}
+
+.share-button:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.1);
+}
+
+.share-button.whatsapp {
+  background: #25D366;
+}
+
+.share-button.twitter {
+  background: #1DA1F2;
+}
+
+.share-button.facebook {
+  background: #4267B2;
+}
+
+@media (max-width: 480px) {
+  .level-complete__share-buttons {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .share-button {
+    width: 100%;
+    justify-content: center;
+  }
 } 
