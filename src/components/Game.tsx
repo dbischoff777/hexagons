@@ -517,8 +517,7 @@ const Game: React.FC<GameProps> = ({
 
   // 1. Modify handleScoreChange to be more efficient
   const handleScoreChange = useCallback((newScore: number) => {
-    // Always set previous score before updating current score
-    setPreviousScore(score);
+    setPreviousScore(score); // Store current score as previous
     setScore(newScore);
   }, [score]);
 
@@ -2058,19 +2057,12 @@ const Game: React.FC<GameProps> = ({
     if (wrapper && canvas) {
       cleanupGridAnimations(wrapper);
       
-      // Add grid clear bonus to score
-      const gridBonus = GRID_CLEAR_POINTS;  // 1000 points
-      handleScoreChange(score + gridBonus);
+      // Calculate grid clear points with combo multiplier
+      const gridClearPoints = GRID_CLEAR_POINTS * (combo.count > 0 ? combo.multiplier : 1);
       
-      // Add score popup for grid clear
-      addScorePopup({
-        score: gridBonus,
-        x: canvas.width / 2,
-        y: canvas.height / 2 - 100,
-        emoji: '🌟',
-        text: 'Grid Clear Bonus!',
-        type: 'bonus'
-      });
+      // Always add to current score
+      const newScore = score + gridClearPoints;
+      handleScoreChange(newScore);
       
       // Get the game board scale from CSS variable
       const boardScale = parseFloat(getComputedStyle(document.documentElement)
@@ -2095,51 +2087,30 @@ const Game: React.FC<GameProps> = ({
         wrapper.appendChild(ripple);
       }
       
-      // Create flash effects for all valid positions in the grid
+      // Create flash effects for all valid positions
       VALID_POSITIONS.forEach(([q, r]) => {
         const flash = document.createElement('div');
         const ring = getRingNumber(q, r);
         flash.className = `tile-flash ring-${ring}`;
-          
-        // Get canvas position relative to center
+        
         const { x: canvasX, y: canvasY } = hexToPixel(q, r, centerX, centerY, tileSize);
-
-        // Calculate position relative to wrapper center
         const wrapperCenterX = wrapper.offsetWidth / 2;
         const wrapperCenterY = wrapper.offsetHeight / 2;
         
-        // Calculate final position with offset from center
         const finalX = wrapperCenterX + (canvasX - centerX) * scaleX;
         const finalY = wrapperCenterY + (canvasY - centerY) * scaleY;
         
-        // Position the flash element using absolute positioning
         flash.style.left = `${finalX}px`;
         flash.style.top = `${finalY}px`;
         flash.style.transform = 'translate(-50%, -50%)';
         
-        // Set size based on tile size and scale
         const scaledSize = tileSize * scaleX;
-        flash.style.width = `${scaledSize * 0.866}px`; // Hex width is height * 0.866
+        flash.style.width = `${scaledSize * 0.866}px`;
         flash.style.height = `${scaledSize}px`;
         
         wrapper.appendChild(flash);
       });
 
-      // Calculate grid clear points with combo multiplier
-      const gridClearPoints = GRID_CLEAR_POINTS * (combo.count > 0 ? combo.multiplier : 1);
-      
-      // Store current score before update
-      const previousScore = score;
-      
-      // Update score including any previous points
-      const newScore = previousScore + gridClearPoints;
-      setScore(newScore);
-      
-      // Update objectives if in daily challenge
-      if (isDailyChallenge) {
-        updateObjectives(0, combo.count, newScore);
-      }
-      
       // Add score popup
       addScorePopup({
         score: gridClearPoints,
@@ -2150,14 +2121,17 @@ const Game: React.FC<GameProps> = ({
         text: 'Grid Clear!'
       });
 
+      // Update objectives if in daily challenge
+      if (isDailyChallenge) {
+        updateObjectives(0, combo.count, newScore);
+      }
+
       // Play sound effect
       soundManager.playSound('gridClear');
 
       // Clean up effects after animation
       const cleanupTimeout = setTimeout(() => {
         cleanupGridAnimations(wrapper);
-        
-        // Reset the grid after cleanup
         setPlacedTiles([createInitialTile()]);
       }, 1200);
 
