@@ -150,38 +150,37 @@ function App() {
     isPuzzle?: boolean,
     isDaily?: boolean
   ) => {
-    DEBUG.log('Starting game with', {
-      withTimer,
-      targetScore: targetScore || 'default',
-      isLevelMode,
-      isPuzzle,
-      isDaily,
-      currentGame
-    });
+    // Clean up previous game instance
+    soundManager.stopBackgroundMusic();
+    soundManager.stopAllSounds();
+    clearSavedGame();
     
-    // Clear previous game state first
+    // Reset all game-related states
     setCurrentGame(null);
     setSavedGameState(null);
     levelCompleteRef.current = false;
-
-    // Set game mode states
-    setIsPuzzleMode(!!isPuzzle);
-    setIsDailyChallenge(!!isDaily);
-
-    if (isLevelMode) {
-      const progress = getPlayerProgress();
-      const { currentBlock, currentLevel } = getCurrentLevelInfo(progress.points);
-      
-      setCurrentGame({
-        isLevelMode: true,
-        targetScore: Number(targetScore) || 100000,
-        currentBlock,
-        currentLevel
-      });
-    }
+    setShowLevelComplete(false);
     
-    setTimedMode(withTimer);
-    setGameStarted(true);
+    // Small delay to ensure cleanup is complete before starting new game
+    requestAnimationFrame(() => {
+      setIsPuzzleMode(!!isPuzzle);
+      setIsDailyChallenge(!!isDaily);
+
+      if (isLevelMode) {
+        const progress = getPlayerProgress();
+        const { currentBlock, currentLevel } = getCurrentLevelInfo(progress.points);
+        
+        setCurrentGame({
+          isLevelMode: true,
+          targetScore: Number(targetScore) || 100000,
+          currentBlock,
+          currentLevel
+        });
+      }
+      
+      setTimedMode(withTimer);
+      setGameStarted(true);
+    });
   };
 
   const handleLevelComplete = (isComplete: boolean) => {

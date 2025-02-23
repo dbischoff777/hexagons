@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useCallback, useMemo } from 'react'
+import { useEffect, useRef, useState, useCallback, useMemo, useLayoutEffect } from 'react'
 import { PowerUpState, ComboState, GameState, PlacedTile } from '../types/index'
 import { createTileWithRandomEdges, hexToPixel, getAdjacentTiles, getAdjacentDirection, COLORS, updateMirrorTileEdges } from '../utils/hexUtils'
 import { INITIAL_TIME, formatTime, isGridFull } from '../utils/gameUtils'
@@ -1542,9 +1542,20 @@ const Game: React.FC<GameProps> = ({
     }
   }
 
-  // Modify the exit handler to handle both normal exits and level complete exits
+  // Remove the duplicate handleExit declarations and combine their functionality
   const handleExit = useCallback(() => {
+    // Perform cleanup before showing exit prompt
     setShowExitPrompt(true);
+    
+    // Clear any ongoing animations or effects
+    setAnimatingTiles([]);
+    setParticleIntensity(0.5);
+    setBackgroundGlow('');
+    
+    // Reset game state
+    if (wrapperRef.current) {
+      cleanupGridAnimations(wrapperRef.current);
+    }
   }, []);
 
   // Add new function to handle actual exit
@@ -2695,6 +2706,48 @@ const Game: React.FC<GameProps> = ({
 
     window.open(shareUrls[platform], '_blank', 'noopener,noreferrer');
   };
+
+  // Add cleanup effect with correct types
+  useLayoutEffect(() => {
+    // Cleanup function that runs when component unmounts or when game exits
+    return () => {
+      // Clear all timeouts and intervals using window
+      const timeoutId = window.setTimeout(() => {}, 0);
+      for (let i = timeoutId; i >= 0; i--) {
+        window.clearTimeout(i);
+      }
+
+      // Clear all animation frames using window
+      const animationFrameId = window.requestAnimationFrame(() => {});
+      for (let i = animationFrameId; i >= 0; i--) {
+        window.cancelAnimationFrame(i);
+      }
+
+      // Clean up grid animations
+      const wrapper = wrapperRef.current;
+      if (wrapper) {
+        cleanupGridAnimations(wrapper);
+      }
+
+      // Stop all sounds
+      soundManager.stopBackgroundMusic();
+    };
+  }, []); // Empty dependency array means this runs once on mount and cleanup on unmount
+
+  // Add game over cleanup effect
+  useEffect(() => {
+    if (isGameOver) {
+      // Clear animations and effects
+      setAnimatingTiles([]);
+      setParticleIntensity(0.5);
+      setBackgroundGlow('');
+      
+      // Clean up grid animations
+      if (wrapperRef.current) {
+        cleanupGridAnimations(wrapperRef.current);
+      }
+    }
+  }, [isGameOver]);
 
   return (
     <div 

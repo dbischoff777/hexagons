@@ -76,6 +76,17 @@ export class SoundManager {
     this.backgroundMusic.pause()
     this.backgroundMusic.currentTime = 0
   }
+
+  public stopAllSounds(): void {
+    // Stop all sound effects
+    Object.values(this.sounds).forEach(sound => {
+      sound.pause();
+      sound.currentTime = 0;
+    });
+    
+    // Also stop background music
+    this.stopBackgroundMusic();
+  }
 }
 
 export default SoundManager
