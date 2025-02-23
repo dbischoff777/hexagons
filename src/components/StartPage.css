@@ -115,33 +115,45 @@
 
 .play-button {
   width: 100%;
-  padding: 1.5rem;
-  font-size: 2rem;
-  background: linear-gradient(45deg,
-    color-mix(in srgb, var(--theme-primary) 15%, transparent),
-    color-mix(in srgb, var(--theme-accent) 15%, transparent)
+  padding: 1.8rem;
+  font-size: 2.2rem;
+  background: linear-gradient(
+    45deg,
+    color-mix(in srgb, var(--theme-primary) 40%, transparent),
+    color-mix(in srgb, var(--theme-accent) 40%, transparent)
   );
-  border: 2px solid var(--theme-primary);
-  border-radius: 1rem;
+  border: 2px solid color-mix(in srgb, var(--theme-primary) 80%, transparent);
+  border-radius: 1.2rem;
   color: var(--theme-primary);
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   font-weight: bold;
-  letter-spacing: 0.2rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.8rem;
-  margin: 1rem 0;
+  letter-spacing: 0.3rem;
+  text-shadow: 0 0 10px color-mix(in srgb, var(--theme-primary) 50%, transparent);
+  position: relative;
+  overflow: hidden;
+  backdrop-filter: blur(5px);
+  box-shadow: 
+    0 0 20px color-mix(in srgb, var(--theme-primary) 20%, transparent),
+    inset 0 0 15px color-mix(in srgb, var(--theme-primary) 10%, transparent);
 }
 
 .play-button:hover {
-  background: linear-gradient(45deg,
-    color-mix(in srgb, var(--theme-primary) 25%, transparent),
-    color-mix(in srgb, var(--theme-accent) 25%, transparent)
+  background: linear-gradient(
+    45deg,
+    color-mix(in srgb, var(--theme-primary) 50%, transparent),
+    color-mix(in srgb, var(--theme-accent) 50%, transparent)
   );
-  transform: translateY(-2px);
-  box-shadow: 0 0 20px color-mix(in srgb, var(--theme-primary) 30%, transparent);
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: 
+    0 0 30px color-mix(in srgb, var(--theme-primary) 30%, transparent),
+    inset 0 0 20px color-mix(in srgb, var(--theme-primary) 20%, transparent);
+  text-shadow: 0 0 15px color-mix(in srgb, var(--theme-primary) 70%, transparent);
+  letter-spacing: 0.4rem;
+}
+
+.play-button:active {
+  transform: translateY(1px) scale(0.98);
 }
 
 .mode-selection {
@@ -160,19 +172,51 @@
   flex-direction: column;
   align-items: center;
   gap: 0.5rem;
-  padding: clamp(1rem, 2vh, 1.5rem);
+  padding: clamp(1.2rem, 2.5vh, 1.8rem);
   border-radius: clamp(0.5rem, 1vw, 1rem);
   cursor: pointer;
   transition: all 0.3s ease;
-  border: 2px solid var(--theme-primary);
-  background: color-mix(in srgb, var(--theme-primary) 15%, transparent);
+  border: 2px solid color-mix(in srgb, var(--theme-primary) 60%, transparent);
+  background: linear-gradient(
+    45deg,
+    color-mix(in srgb, var(--theme-primary) 20%, transparent),
+    color-mix(in srgb, var(--theme-accent) 20%, transparent)
+  );
   color: var(--theme-primary);
+  box-shadow: 
+    0 0 15px color-mix(in srgb, var(--theme-primary) 15%, transparent),
+    inset 0 0 10px color-mix(in srgb, var(--theme-primary) 10%, transparent);
+  backdrop-filter: blur(3px);
+  position: relative;
+  overflow: hidden;
+}
+
+.mode-button::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(
+    circle,
+    color-mix(in srgb, var(--theme-primary) 10%, transparent),
+    transparent 70%
+  );
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.mode-button:hover::before {
+  opacity: 1;
 }
 
 .mode-button:hover {
-  background: color-mix(in srgb, var(--theme-primary) 25%, transparent);
-  transform: translateY(-2px);
-  box-shadow: 0 0 20px color-mix(in srgb, var(--theme-primary) 30%, transparent);
+  transform: translateY(-3px);
+  box-shadow: 
+    0 0 25px color-mix(in srgb, var(--theme-primary) 25%, transparent),
+    inset 0 0 15px color-mix(in srgb, var(--theme-primary) 15%, transparent);
+  border-color: color-mix(in srgb, var(--theme-primary) 80%, transparent);
 }
 
 .mode-button.timed {
@@ -211,10 +255,9 @@
 }
 
 .mode-title {
-  font-size: clamp(1.2rem, 2.5vw, 1.5rem);
-  font-weight: bold;
-  letter-spacing: 0.1rem;
-  color: var(--theme-primary);
+  position: relative;
+  text-shadow: 0 0 10px color-mix(in srgb, var(--theme-primary) 50%, transparent);
+  font-size: clamp(1.3rem, 2.8vw, 1.6rem);
 }
 
 .mode-desc {
@@ -383,7 +426,7 @@
 .modal-content::-webkit-scrollbar-thumb:hover {
   background: var(--scrollbar-hover);
 }
-
+  
 .achievements-modal {
   min-height: 80vh;
   padding: 30px;
@@ -918,4 +961,74 @@ button:hover > *:first-child {
 .roadmap-modal .modal-header h2 {
   color: var(--theme-primary);
   text-shadow: 0 0 10px color-mix(in srgb, var(--theme-primary) 30%, transparent);
+}
+
+/* Remove individual pulsing animations */
+.mode-button i, 
+.mode-button svg,
+.mode-button span:first-child {
+  transition: transform 0.3s ease;
+  animation: sharedPulse 3s ease-in-out infinite;
+  /* Use the same animation-delay for all icons to sync them */
+  animation-delay: 0s;
+}
+
+/* Single shared pulsing animation */
+@keyframes sharedPulse {
+  0%, 100% { 
+    transform: scale(1);
+    filter: brightness(1);
+  }
+  50% { 
+    transform: scale(1.1);
+    filter: brightness(1.2);
+  }
+}
+
+/* Synchronized hover effect */
+.mode-button:hover i,
+.mode-button:hover svg,
+.mode-button:hover span:first-child {
+  animation: sharedPulseHover 1.5s ease-in-out infinite;
+  /* Keep hover animations in sync too */
+  animation-delay: 0s;
+}
+
+@keyframes sharedPulseHover {
+  0%, 100% { 
+    transform: scale(1.1);
+    filter: brightness(1.2);
+  }
+  50% { 
+    transform: scale(1.2);
+    filter: brightness(1.4);
+  }
+}
+
+/* Make shine effect synchronized too */
+.mode-button::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    45deg,
+    transparent,
+    color-mix(in srgb, var(--theme-primary) 10%, transparent) 45%,
+    color-mix(in srgb, var(--theme-primary) 20%, transparent) 50%,
+    color-mix(in srgb, var(--theme-primary) 10%, transparent) 55%,
+    transparent
+  );
+  transform: rotate(45deg);
+  /* Slower, synchronized shine */
+  animation: sharedShine 4s linear infinite;
+  /* All buttons start shine from same position */
+  animation-delay: 0s;
+}
+
+@keyframes sharedShine {
+  0% { transform: translateX(-200%) rotate(45deg); }
+  100% { transform: translateX(200%) rotate(45deg); }
 }
