@@ -19,10 +19,27 @@
   width: min(90vw, 800px);
   max-height: 90vh;
   overflow-y: auto;
+  margin: 0 auto;
+  box-sizing: border-box;
   
   /* Firefox scrollbar */
   scrollbar-width: thin;
   scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+}
+
+@media (max-width: 768px) {
+  .unlockables-container {
+    width: min(95vw, 600px);
+  }
+}
+
+@media (max-width: 480px) {
+  .unlockables-container {
+    width: 100%;
+    max-width: 400px;
+    padding: 1rem;
+    border-radius: 0.75rem;
+  }
 }
 
 /* Webkit scrollbar styles */
