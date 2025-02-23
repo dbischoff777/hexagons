@@ -3,6 +3,8 @@
   width: min(1400px, 95vw);
   margin: 0 auto;
   color: var(--theme-text);
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
 }
 
 .achievements-view h2 {
@@ -61,6 +63,8 @@
   gap: clamp(20px, 3vw, 25px);
   padding: clamp(8px, 1.2vw, 10px);
   width: 100%;
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
 }
 
 .achievement-card {
@@ -303,4 +307,46 @@
 .achievement-card.locked p {
   color: color-mix(in srgb, var(--theme-text) 60%, transparent);
   font-style: italic;
+}
+
+/* Webkit scrollbar styles */
+.achievements-view::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.achievements-view::-webkit-scrollbar-track {
+  background: var(--scrollbar-track);
+  border-radius: 4px;
+}
+
+.achievements-view::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: 4px;
+  border: 2px solid var(--scrollbar-track);
+}
+
+.achievements-view::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-hover);
+}
+
+/* Webkit scrollbar styles */
+.achievements-grid::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.achievements-grid::-webkit-scrollbar-track {
+  background: var(--scrollbar-track);
+  border-radius: 4px;
+}
+
+.achievements-grid::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: 4px;
+  border: 2px solid var(--scrollbar-track);
+}
+
+.achievements-grid::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-hover);
 } 

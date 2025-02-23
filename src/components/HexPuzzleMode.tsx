@@ -236,6 +236,13 @@ const HexPuzzleMode: React.FC<HexPuzzleModeProps> = ({ onComplete, onExit }) => 
   // Add cursor position state for custom cursor
   const [cursorPos, setCursorPos] = useState({ x: 0, y: 0 });
 
+  // Add this style object near the top of the component
+  const scrollbarStyle = {
+    '--scrollbar-thumb': isColorBlind ? currentScheme.colors.primary : theme.colors.primary,
+    '--scrollbar-track': `${theme.colors.background}66`,
+    '--scrollbar-hover': isColorBlind ? `${currentScheme.colors.primary}CC` : `${theme.colors.primary}CC`
+  } as React.CSSProperties;
+
   // Load image and initialize puzzle
   useEffect(() => {
     if (!currentPuzzle || !isPuzzleStarted) return;
@@ -941,6 +948,10 @@ const HexPuzzleMode: React.FC<HexPuzzleModeProps> = ({ onComplete, onExit }) => 
         role="region" 
         aria-label="Puzzle Selection Menu"
         onKeyDown={handleKeyNavigation}
+        style={{
+          ...scrollbarStyle,
+          '--card-glow': isColorBlind ? colors[2] : theme.colors.primary
+        } as React.CSSProperties}
       >
         <h2 className="puzzle-selector-title">Select a Puzzle</h2>
         

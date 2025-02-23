@@ -260,13 +260,19 @@ const StartPage: React.FC<StartPageProps> = ({
   }
 
   return (
-    <div className="start-page" style={{
-      '--theme-primary': isColorBlind ? DEFAULT_SCHEME.colors.primary : theme.colors.primary,
-      '--theme-secondary': isColorBlind ? DEFAULT_SCHEME.colors.secondary : theme.colors.secondary,
-      '--theme-accent': isColorBlind ? DEFAULT_SCHEME.colors.accent : theme.colors.accent,
-      '--theme-background': isColorBlind ? DEFAULT_SCHEME.colors.background : theme.colors.background,
-      '--theme-text': isColorBlind ? DEFAULT_SCHEME.colors.text : theme.colors.text,
-    } as React.CSSProperties}>
+    <div 
+      className="start-page"
+      style={{
+        '--theme-primary': isColorBlind ? DEFAULT_SCHEME.colors.primary : theme.colors.primary,
+        '--theme-secondary': isColorBlind ? DEFAULT_SCHEME.colors.secondary : theme.colors.secondary,
+        '--theme-accent': isColorBlind ? DEFAULT_SCHEME.colors.accent : theme.colors.accent,
+        '--theme-background': isColorBlind ? DEFAULT_SCHEME.colors.background : theme.colors.background,
+        '--theme-text': isColorBlind ? DEFAULT_SCHEME.colors.text : theme.colors.text,
+        '--scrollbar-thumb': isColorBlind ? DEFAULT_SCHEME.colors.primary : theme.colors.primary,
+        '--scrollbar-track': `${isColorBlind ? DEFAULT_SCHEME.colors.background : theme.colors.background}40`,
+        '--scrollbar-hover': `${isColorBlind ? DEFAULT_SCHEME.colors.primary : theme.colors.primary}CC`,
+      } as React.CSSProperties}
+    >
       <CustomCursor 
         color={isColorBlind ? DEFAULT_SCHEME.colors.primary : theme.colors.primary}
         hide={false}
@@ -466,8 +472,23 @@ const StartPage: React.FC<StartPageProps> = ({
       )}
 
       {showAchievements && (
-        <div className="modal-overlay" onClick={() => setShowAchievements(false)}>
-          <div className="modal-content achievements-modal">
+        <div 
+          className="modal-overlay" 
+          onClick={() => setShowAchievements(false)}
+          style={{
+            '--scrollbar-thumb': isColorBlind ? DEFAULT_SCHEME.colors.primary : theme.colors.primary,
+            '--scrollbar-track': `${theme.colors.background}66`,
+            '--scrollbar-hover': isColorBlind ? DEFAULT_SCHEME.colors.primary : theme.colors.primary
+          } as React.CSSProperties}
+        >
+          <div 
+            className="modal-content achievements-modal"
+            style={{
+              '--scrollbar-thumb': isColorBlind ? DEFAULT_SCHEME.colors.primary : theme.colors.primary,
+              '--scrollbar-track': `${theme.colors.background}66`,
+              '--scrollbar-hover': isColorBlind ? DEFAULT_SCHEME.colors.primary : theme.colors.primary
+            } as React.CSSProperties}
+          >
             <AchievementsView onClose={() => setShowAchievements(false)} />
           </div>
         </div>
@@ -496,12 +517,27 @@ const StartPage: React.FC<StartPageProps> = ({
       )}
 
       {showLevelRoadmap && (
-        <div className="modal-overlay" onClick={(e) => {
-          if (e.target === e.currentTarget) {
-            setShowLevelRoadmap(false)
-          }
-        }}>
-          <div className="modal-content roadmap-modal">
+        <div 
+          className="modal-overlay" 
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setShowLevelRoadmap(false)
+            }
+          }}
+          style={{
+            '--scrollbar-thumb': isColorBlind ? DEFAULT_SCHEME.colors.primary : theme.colors.primary,
+            '--scrollbar-track': `${theme.colors.background}66`,
+            '--scrollbar-hover': isColorBlind ? DEFAULT_SCHEME.colors.primary : theme.colors.primary
+          } as React.CSSProperties}
+        >
+          <div 
+            className="modal-content roadmap-modal"
+            style={{
+              '--scrollbar-thumb': isColorBlind ? DEFAULT_SCHEME.colors.primary : theme.colors.primary,
+              '--scrollbar-track': `${theme.colors.background}66`,
+              '--scrollbar-hover': isColorBlind ? DEFAULT_SCHEME.colors.primary : theme.colors.primary
+            } as React.CSSProperties}
+          >
             <div className="modal-header">
               <h2>Level Roadmap</h2>
             </div>

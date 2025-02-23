@@ -41,6 +41,9 @@ const AchievementsView: React.FC<AchievementsViewProps> = ({ onClose }) => {
         '--theme-accent': isColorBlind ? DEFAULT_SCHEME.colors.accent : theme.colors.accent,
         '--theme-background': isColorBlind ? DEFAULT_SCHEME.colors.background : theme.colors.background,
         '--theme-text': isColorBlind ? DEFAULT_SCHEME.colors.text : theme.colors.text,
+        '--scrollbar-thumb': isColorBlind ? DEFAULT_SCHEME.colors.primary : theme.colors.primary,
+        '--scrollbar-track': `${theme.colors.background}66`,
+        '--scrollbar-hover': isColorBlind ? `${DEFAULT_SCHEME.colors.primary}CC` : `${theme.colors.primary}CC`
       } as React.CSSProperties}
     >
       <h2>Achievements</h2>

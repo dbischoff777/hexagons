@@ -3,17 +3,25 @@ import './App.css'
 import Game from './components/Game'
 import StartPage from './components/StartPage'
 import SoundManager from './utils/soundManager'
-import { AccessibilityProvider } from './contexts/AccessibilityContext'
+import { AccessibilityProvider, useAccessibility } from './contexts/AccessibilityContext'
 import { GameState } from './types'
 import { clearSavedGame, loadGameState, saveGameState } from './utils/gameStateUtils'
 import PageTransition from './components/PageTransition'
-import { getCurrentLevelInfo, getPlayerProgress, getNextLevelInfo, LEVEL_BLOCKS } from './utils/progressionUtils'
+import { 
+  getCurrentLevelInfo, 
+  getPlayerProgress, 
+  getNextLevelInfo, 
+  LEVEL_BLOCKS,
+  getTheme,
+  PROGRESSION_KEY
+} from './utils/progressionUtils'
 import PreventContextMenu from './components/PreventContextMenu'
 import { KeyBindings } from './types/index'
 import { loadKeyBindings, saveKeyBindings } from './utils/keyBindingsUtils'
 import SettingsModal from './components/SettingsModal'
 import HexPuzzleMode from './components/HexPuzzleMode'
 import { createDebugLogger } from './utils/debugUtils'
+import { DEFAULT_SCHEME } from './utils/colorSchemes'
 
 interface CurrentGame {
   isLevelMode: boolean;
@@ -48,6 +56,38 @@ function App() {
   const [keyBindings, setKeyBindings] = useState<KeyBindings>(loadKeyBindings());
   const [isSettingsOpen, setSettingsOpen] = useState(false);
   const [isPuzzleMode, setIsPuzzleMode] = useState(false);
+  const { settings } = useAccessibility();
+  const isColorBlind = settings.isColorBlind;
+  const [theme, setTheme] = useState(() => {
+    const playerProgress = getPlayerProgress();
+    return getTheme(playerProgress.selectedTheme || 'default');
+  });
+
+  useEffect(() => {
+    const handleStorageChange = () => {
+      const playerProgress = getPlayerProgress();
+      const selectedTheme = playerProgress.selectedTheme || 'default';
+      setTheme(getTheme(selectedTheme));
+    };
+
+    // Run once on mount
+    handleStorageChange();
+
+    // Listen for storage events (from other tabs)
+    window.addEventListener('storage', (e) => {
+      if (e.key === PROGRESSION_KEY) {
+        handleStorageChange();
+      }
+    });
+
+    // Create a custom event for local changes
+    window.addEventListener('themeChange', handleStorageChange);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('themeChange', handleStorageChange);
+    };
+  }, []);
 
   // Load saved game state on component mount
   useEffect(() => {
@@ -70,6 +110,13 @@ function App() {
   useEffect(() => {
     soundManager.setSoundEnabled(soundEnabled)
   }, [soundEnabled])
+
+  // Add this effect to update theme when colorblind settings change
+  useEffect(() => {
+    const playerProgress = getPlayerProgress();
+    const selectedTheme = playerProgress.selectedTheme || 'default';
+    setTheme(getTheme(selectedTheme));
+  }, [settings.isColorBlind]); // Re-run when colorblind setting changes
 
   // Handler for Game component
   const handleGameStart = (withTimer: boolean, targetScore?: number) => {
@@ -266,7 +313,19 @@ function App() {
           isExiting={isExiting}
           onExitComplete={handleTransitionComplete}
         >
-          <div className="app">
+          <div 
+            className="app"
+            style={{
+              '--theme-primary': isColorBlind ? DEFAULT_SCHEME.colors.primary : theme.colors.primary,
+              '--theme-secondary': isColorBlind ? DEFAULT_SCHEME.colors.secondary : theme.colors.secondary,
+              '--theme-accent': isColorBlind ? DEFAULT_SCHEME.colors.accent : theme.colors.accent,
+              '--theme-background': isColorBlind ? DEFAULT_SCHEME.colors.background : theme.colors.background,
+              '--theme-text': isColorBlind ? DEFAULT_SCHEME.colors.text : theme.colors.text,
+              '--scrollbar-thumb': isColorBlind ? DEFAULT_SCHEME.colors.primary : theme.colors.primary,
+              '--scrollbar-track': `${isColorBlind ? DEFAULT_SCHEME.colors.background : theme.colors.background}40`,
+              '--scrollbar-hover': `${isColorBlind ? DEFAULT_SCHEME.colors.primary : theme.colors.primary}CC`,
+            } as React.CSSProperties}
+          >
             {gameStarted ? (
               isPuzzleMode ? (
                 <HexPuzzleMode

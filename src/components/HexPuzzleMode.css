@@ -675,6 +675,31 @@
   margin: 0 auto;
   padding: clamp(15px, 3vh, 30px);
   overflow-y: auto;
+  
+  /* Firefox scrollbar */
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+}
+
+/* Webkit scrollbar styles */
+.puzzle-selector::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.puzzle-selector::-webkit-scrollbar-track {
+  background: var(--scrollbar-track);
+  border-radius: 4px;
+}
+
+.puzzle-selector::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: 4px;
+  border: 2px solid var(--scrollbar-track);
+}
+
+.puzzle-selector::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-hover);
 }
 
 .puzzle-selector-title {
@@ -779,6 +804,31 @@
   gap: clamp(10px, 2vw, 20px);
   width: 100%;
   padding: 0.5rem;
+  
+  /* Firefox scrollbar */
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+}
+
+/* Webkit scrollbar styles */
+.puzzle-grid::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.puzzle-grid::-webkit-scrollbar-track {
+  background: var(--scrollbar-track);
+  border-radius: 4px;
+}
+
+.puzzle-grid::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: 4px;
+  border: 2px solid var(--scrollbar-track);
+}
+
+.puzzle-grid::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-hover);
 }
 
 .puzzle-card {
