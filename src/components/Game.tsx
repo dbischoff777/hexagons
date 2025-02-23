@@ -69,6 +69,7 @@ import CustomCursor from './CustomCursor';
 import { createDebugLogger } from '../utils/debugUtils';
 import DailyChallengeHUD from './DailyChallengeHUD';
 import { DailyObjective } from '../types/dailyChallenge';
+import { ScoreHandler } from '../utils/scoreHandler';
 
 const DEBUG = createDebugLogger('Game');
 
@@ -287,7 +288,8 @@ const Game: React.FC<GameProps> = ({
     savedGameState?.nextTiles ?? createTiles(3, upgradeState)
   );
 
-  const [score, setScore] = useState<number>(savedGameState?.score ?? 0)
+  const [scoreHandler] = useState(() => new ScoreHandler(savedGameState?.score ?? 0));
+
   const [timeLeft, setTimeLeft] = useState<number>(
     savedGameState?.timeLeft ?? (timedMode ? INITIAL_TIME : Infinity)
   )
@@ -374,9 +376,6 @@ const Game: React.FC<GameProps> = ({
     isRotating: false
   });
 
-  // Keep the state
-  const [previousScore, setPreviousScore] = useState(0);
-
   // Add these calculations based on the canvas size
   const tileSize = 40;
 
@@ -418,7 +417,7 @@ const Game: React.FC<GameProps> = ({
       setIsInitializing(true);
       
       // Get current level info based on score
-      const { currentBlock, currentLevel } = getCurrentLevelInfo(score);
+      const { currentBlock, currentLevel } = getCurrentLevelInfo(scoreHandler.getScore());
       
       // Get next level info using the utility function
       const nextLevel = getNextLevelInfo(currentBlock, currentLevel, LEVEL_BLOCKS);
@@ -440,7 +439,7 @@ const Game: React.FC<GameProps> = ({
       setIsInitialized(true);
       setIsInitializing(false);
     }
-  }, [isLevelMode, isInitialized, isInitializing, score, onStartGame, targetScore]);
+  }, [isLevelMode, isInitialized, isInitializing, scoreHandler.getScore(), onStartGame, targetScore]);
 
   // Create constants for log messages to ensure consistency
   const LOG_MESSAGES = {
@@ -456,7 +455,7 @@ const Game: React.FC<GameProps> = ({
     currentLevel,
     isDailyChallenge,
     isGameOver,
-    score,
+    score: scoreHandler.getScore(),
     timedMode,
     isInitialized,
     rotationEnabled
@@ -467,7 +466,7 @@ const Game: React.FC<GameProps> = ({
     currentLevel,
     isDailyChallenge,
     isGameOver,
-    score,
+    scoreHandler.getScore(),
     timedMode,
     isInitialized,
     rotationEnabled
@@ -517,9 +516,8 @@ const Game: React.FC<GameProps> = ({
 
   // 1. Modify handleScoreChange to be more efficient
   const handleScoreChange = useCallback((newScore: number) => {
-    setPreviousScore(score); // Store current score as previous
-    setScore(newScore);
-  }, [score]);
+    scoreHandler.setScore(newScore);
+  }, [scoreHandler]);
 
   // Move addTileAnimation outside useEffect and memoize it
   const addTileAnimation = useCallback((q: number, r: number, type: 'place' | 'match' | 'hint') => {
@@ -815,7 +813,7 @@ const Game: React.FC<GameProps> = ({
               });
               
               // Update score
-              handleScoreChange(score + mirrorPoints);
+              handleScoreChange(scoreHandler.addPoints(mirrorPoints));
               soundManager.playSound('mirror');
             }
           }
@@ -957,7 +955,7 @@ const Game: React.FC<GameProps> = ({
             
             // Update all states
             setPlacedTiles(updatedTiles);
-            handleScoreChange(score + basePoints);
+            handleScoreChange(scoreHandler.addPoints(basePoints));
             addTileAnimation(q, r, 'match');
             setLastAction({ type: 'match', value: basePoints });
             
@@ -1031,9 +1029,9 @@ const Game: React.FC<GameProps> = ({
                   type: 'quick'
                 });
 
-                handleScoreChange(score + quickBonus);
+                handleScoreChange(scoreHandler.addPoints(quickBonus));
                 setTimeout(() => {
-                  handleScoreChange(score + quickBonus);
+                  handleScoreChange(scoreHandler.addPoints(quickBonus));
                 }, 50);
               }, 200);
             }
@@ -1068,7 +1066,7 @@ const Game: React.FC<GameProps> = ({
                 text: comboInfo?.text ?? 'Combo!',
                 type: 'combo'
               });
-              handleScoreChange(score + comboBonus);
+              handleScoreChange(scoreHandler.addPoints(comboBonus));
               setLastAction({ type: 'combo', value: combo.count });
             }
           } else {
@@ -1102,12 +1100,12 @@ const Game: React.FC<GameProps> = ({
             setPreviousState({
               placedTiles,
               nextTiles,
-              score
+              score: scoreHandler.getScore()
             });
 
             // Calculate base score from matches
             const baseMatchScore = matchCount * 5;
-            let newTotalScore = score + baseMatchScore;
+            let newTotalScore = scoreHandler.addPoints(baseMatchScore);
 
             // Check if grid is full and there are matches
             const isGridFullWithMatches = matchCount > 0 && isGridFull(newPlacedTiles, cols);
@@ -1122,7 +1120,7 @@ const Game: React.FC<GameProps> = ({
               const clearBonus = calculateScore(totalMatchScore * multiplier * 2, upgradeState, powerUps, combo);
               
               // Add clear bonus to total score
-              newTotalScore += clearBonus;
+              newTotalScore = scoreHandler.addPoints(clearBonus);
 
               // Show clear bonus popup
               const clearInfo = getFeedbackForClear(clearBonus);
@@ -1483,12 +1481,14 @@ const Game: React.FC<GameProps> = ({
       const gameStartTime = tutorialState.active ? gameEndTime : loadGameState()?.startTime ?? gameEndTime
       const playTime = (gameEndTime - gameStartTime) / 1000
       
+      const finalScore = scoreHandler.getScore();
+      
       // Update player's points with their score
-      updatePlayerPoints(score)
+      updatePlayerPoints(finalScore)
 
       // Update achievements with time
       updateAchievements({
-        highestScore: Math.max(score, getStatistics().highScore),
+        highestScore: Math.max(finalScore, getStatistics().highScore),
         highestCombo: Math.max(combo.count, getStatistics().longestCombo),
         fastestGameTime: Math.min(playTime, getStatistics().fastestGameTime || Infinity)
       });
@@ -1496,15 +1496,15 @@ const Game: React.FC<GameProps> = ({
       // Update statistics
       updateStatistics({
         gamesPlayed: 1,
-        totalScore: score,
-        highScore: Math.max(score, getStatistics().highScore),
+        totalScore: finalScore,
+        highScore: Math.max(finalScore, getStatistics().highScore),
         totalPlayTime: playTime,
         longestCombo: Math.max(combo.count, getStatistics().longestCombo),
         lastPlayed: new Date().toISOString()
       });
       clearSavedGame();
     }
-  }, [isGameOver, score, combo.count]);
+  }, [isGameOver, combo.count]);
 
   // Modify the auto-save effect
   useEffect(() => {
@@ -1512,7 +1512,7 @@ const Game: React.FC<GameProps> = ({
       const gameState: GameState = {
         placedTiles,
         nextTiles,
-        score,
+        score: scoreHandler.getScore(),
         timeLeft,
         moveHistory: previousState ? [previousState] : [],
         startTime: loadGameState()?.startTime ?? Date.now(),
@@ -1528,14 +1528,14 @@ const Game: React.FC<GameProps> = ({
       }
       saveGameState(gameState)
     }
-  }, [placedTiles, nextTiles, score, timeLeft, previousState, isGameOver, tutorialState.active, rotationState.boardRotation, powerUps, combo, musicEnabled, soundEnabled, companion])
+  }, [placedTiles, nextTiles, timeLeft, previousState, isGameOver, tutorialState.active, rotationState.boardRotation, powerUps, combo, musicEnabled, soundEnabled, companion])
 
   // Add this function to handle undoing moves
   const handleUndo = () => {
     if (previousState) {
       setPlacedTiles(previousState.placedTiles)
       setNextTiles(previousState.nextTiles)
-      setScore(previousState.score)
+      handleScoreChange(previousState.score);
       setPreviousState(null)
       soundManager.playSound('undo')
     }
@@ -1602,12 +1602,12 @@ const Game: React.FC<GameProps> = ({
       
       // Save achievement state with current values
       updateAchievements({
-        highestScore: Math.max(score, getStatistics().highScore),
+        highestScore: Math.max(scoreHandler.getScore(), getStatistics().highScore),
         highestCombo: Math.max(combo.count, getStatistics().longestCombo),
         totalTilesPlaced: placedTiles.length
       });
     }
-  }, [newAchievements, score, combo.count, placedTiles.length]);
+  }, [newAchievements, scoreHandler.getScore(), combo.count, placedTiles.length]);
 
   // Add this new function in the Game component
   const checkAchievements = ({
@@ -1692,7 +1692,7 @@ const Game: React.FC<GameProps> = ({
     const updatedObjectives = dailyChallenge.objectives.map(obj => {
       switch (obj.type) {
         case 'score':
-          return { ...obj, current: Math.min(newScore ?? score, obj.target) };
+          return { ...obj, current: Math.min(newScore ?? scoreHandler.getScore(), obj.target) };
         case 'matches':
           return { ...obj, current: Math.min(obj.current + matchCount, obj.target) };
         case 'combos':
@@ -1707,7 +1707,7 @@ const Game: React.FC<GameProps> = ({
       objectives: updatedObjectives
     } : null);
 
-    updateDailyChallengeProgress(updatedObjectives, newScore ?? score);
+    updateDailyChallengeProgress(updatedObjectives, newScore ?? scoreHandler.getScore());
 
     // Show completion screen instead of immediate exit
     if (isDailyChallengeCompleted(updatedObjectives)) {
@@ -1769,7 +1769,7 @@ const Game: React.FC<GameProps> = ({
       
       // Load the rest of the saved state
       setNextTiles(savedGameState.nextTiles);
-      setScore(savedGameState.score);
+      handleScoreChange(savedGameState.score);
       setTimeLeft(savedGameState.timeLeft);
       setPowerUps(savedGameState.powerUps);
       setCombo(savedGameState.combo);
@@ -1783,30 +1783,30 @@ const Game: React.FC<GameProps> = ({
   useEffect(() => {
     // Increase intensity based on score milestones
     const baseIntensity = 0.3;
-    const scoreMultiplier = Math.min(score / 1000, 1);
+    const scoreMultiplier = Math.min(scoreHandler.getScore() / 1000, 1);
     setParticleIntensity(baseIntensity + scoreMultiplier * 0.7);
 
     // Change particle color based on score and matches
-    if (score > 1000) {
+    if (scoreHandler.getScore() > 1000) {
       setParticleColor(theme.colors.accent);
-    } else if (score > 500) {
+    } else if (scoreHandler.getScore() > 500) {
       setParticleColor(theme.colors.secondary);
     } else {
       setParticleColor(theme.colors.primary);
     }
-  }, [score, theme]);
+  }, [scoreHandler.getScore(), theme]);
 
   // Add this effect to handle background changes
   useEffect(() => {
     const getBackgroundGlow = () => {
-      if (score > 1500) return `radial-gradient(circle, ${theme.colors.accent}22 0%, ${theme.colors.background} 70%)`;
-      if (score > 1000) return `radial-gradient(circle, ${theme.colors.secondary}22 0%, ${theme.colors.background} 60%)`;
-      if (score > 500) return `radial-gradient(circle, ${theme.colors.primary}22 0%, ${theme.colors.background} 50%)`;
+      if (scoreHandler.getScore() > 1500) return `radial-gradient(circle, ${theme.colors.accent}22 0%, ${theme.colors.background} 70%)`;
+      if (scoreHandler.getScore() > 1000) return `radial-gradient(circle, ${theme.colors.secondary}22 0%, ${theme.colors.background} 60%)`;
+      if (scoreHandler.getScore() > 500) return `radial-gradient(circle, ${theme.colors.primary}22 0%, ${theme.colors.background} 50%)`;
       return `radial-gradient(circle, ${theme.colors.background} 0%, ${theme.colors.background} 100%)`;
     };
 
     setBackgroundGlow(getBackgroundGlow());
-  }, [score, theme]);
+  }, [scoreHandler.getScore(), theme]);
 
   // Add match animation effect
   useEffect(() => {
@@ -2013,7 +2013,7 @@ const Game: React.FC<GameProps> = ({
       // ... existing game over code ...
 
       // Award upgrade points based on score
-      const pointsEarned = Math.floor(score / 100); // 1 point per 100 score
+      const pointsEarned = Math.floor(scoreHandler.getScore() / 100); // 1 point per 100 score
       setUpgradeState(prev => {
         const newState = {
           ...prev,
@@ -2023,7 +2023,7 @@ const Game: React.FC<GameProps> = ({
         return newState;
       });
     }
-  }, [isGameOver, score]);
+  }, [isGameOver, scoreHandler.getScore()]);
 
   // Modify the match handling code to award points for multiple matches
   const handleMatches = (matchCount: number) => {
@@ -2033,7 +2033,8 @@ const Game: React.FC<GameProps> = ({
         UPGRADE_POINT_REWARDS.match.bonus
       );
       const totalPoints = UPGRADE_POINT_REWARDS.match.base + bonusPoints;
-      awardUpgradePoints(totalPoints);
+      const newScore = scoreHandler.addPoints(totalPoints);
+      handleScoreChange(newScore);
     }
   };
 
@@ -2045,7 +2046,8 @@ const Game: React.FC<GameProps> = ({
         UPGRADE_POINT_REWARDS.combo.bonus
       );
       const totalPoints = UPGRADE_POINT_REWARDS.combo.base + bonusPoints;
-      awardUpgradePoints(totalPoints);
+      const newScore = scoreHandler.addPoints(totalPoints);
+      handleScoreChange(newScore);
     }
   }, [combo.count]);
 
@@ -2058,10 +2060,14 @@ const Game: React.FC<GameProps> = ({
       cleanupGridAnimations(wrapper);
       
       // Calculate grid clear points with combo multiplier
-      const gridClearPoints = GRID_CLEAR_POINTS * (combo.count > 0 ? combo.multiplier : 1);
+      const gridClearPoints = scoreHandler.calculateScore(
+        GRID_CLEAR_POINTS,
+        powerUps,
+        combo
+      );
       
-      // Always add to current score
-      const newScore = score + gridClearPoints;
+      // Update score
+      const newScore = scoreHandler.addPoints(gridClearPoints);
       handleScoreChange(newScore);
       
       // Get the game board scale from CSS variable
@@ -2182,17 +2188,17 @@ const Game: React.FC<GameProps> = ({
 
   // Update the checkLevelCompletion function
   const checkLevelCompletion = useCallback(() => {
-    if (!isLevelMode || isGameOver || !score || !currentBlock || !currentLevel) return;
+    if (!isLevelMode || isGameOver || !scoreHandler.getScore() || !currentBlock || !currentLevel) return;
 
     const effectiveTargetScore = targetScore ?? 10000;
     
-    if (score >= effectiveTargetScore && !isLevelComplete) {
+    if (scoreHandler.getScore() >= effectiveTargetScore && !isLevelComplete) {
       // Unlock the next level in progression system
-      const completion = unlockNextLevel(score, currentBlock, currentLevel);
+      const completion = unlockNextLevel(scoreHandler.getScore(), currentBlock, currentLevel);
       
       if (completion) {
         // Calculate bonus points based on how much we exceeded the target
-        const bonusPoints = Math.floor((score - effectiveTargetScore) / 100);
+        const bonusPoints = Math.floor((scoreHandler.getScore() - effectiveTargetScore) / 100);
         
         // Show level complete modal with completion data
         setShowLevelComplete({
@@ -2212,7 +2218,7 @@ const Game: React.FC<GameProps> = ({
   }, [
       isLevelMode,
     isGameOver,
-    score,
+    scoreHandler.getScore(),
     currentBlock,
     currentLevel,
       targetScore,
@@ -2324,7 +2330,7 @@ const Game: React.FC<GameProps> = ({
   const resetGame = () => {
     setPlacedTiles([createInitialTile()]);
     setNextTiles(createTiles(3, upgradeState));
-    setScore(0);
+    handleScoreChange(0);
     setTimeLeft(timedMode ? INITIAL_TIME : Infinity);
     setIsGameOver(false);
     setSelectedTileIndex(null);
@@ -2549,7 +2555,7 @@ const Game: React.FC<GameProps> = ({
                 handleTilePlacement(newTile, placedTiles);
               },
               onScoreUpdate: (newScore) => {
-                handleScoreChange(score + newScore);
+                handleScoreChange(scoreHandler.addPoints(newScore));
               },
               onComboUpdate: (newComboState) => {
                 setCombo(newComboState);
@@ -2581,7 +2587,7 @@ const Game: React.FC<GameProps> = ({
     centerX,
     centerY,
     handleScoreChange,
-    score,
+    scoreHandler,
     addScorePopup,
     rotationState.boardRotation
   ]);
@@ -2645,15 +2651,15 @@ const Game: React.FC<GameProps> = ({
     if (isDailyChallenge) {
       const updatedObjectives = dailyObjectives.map(obj => {
         if (obj.type === 'score') {
-          return { ...obj, current: score };
+          return { ...obj, current: scoreHandler.getScore() };
         }
         // Add other objective updates as needed
         return obj;
       });
       setDailyObjectives(updatedObjectives);
-      updateDailyChallengeProgress(updatedObjectives, score);
+      updateDailyChallengeProgress(updatedObjectives, scoreHandler.getScore());
     }
-  }, [score, isDailyChallenge]);
+  }, [scoreHandler.getScore(), isDailyChallenge]);
 
   // Add these sharing functions inside the Game component
   const getShareMessage = () => {
@@ -2764,7 +2770,7 @@ const Game: React.FC<GameProps> = ({
       <div className="game-hud">
         <div className="score" data-label="">
           <span className="score-value">
-            {formatScore(score)}
+            {formatScore(scoreHandler.getScore())}
           </span>
         </div>
         <div className="timer-container">
@@ -3026,7 +3032,7 @@ const Game: React.FC<GameProps> = ({
       {showLevelRoadmap && (
         <div className="roadmap-overlay">
           <LevelRoadmap 
-            currentPoints={score} 
+            currentPoints={scoreHandler.getScore()} 
             onStartGame={(withTimer) => {
               setShowLevelRoadmap(false);
               onGameOver();
