@@ -3103,13 +3103,13 @@ const Game: React.FC<GameProps> = ({
           variant="danger"
         >
           <button 
-            className="level-complete__button"
+            className="modal-button cancel"
             onClick={() => setShowExitPrompt(false)}
           >
             CONTINUE PLAYING
           </button>
           <button 
-            className="level-complete__button level-complete__button--danger"
+            className="modal-button confirm danger"
             onClick={confirmExit}
           >
             EXIT GAME
