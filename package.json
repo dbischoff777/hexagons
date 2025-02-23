@@ -11,10 +11,12 @@
   },
   "dependencies": {
     "@types/animejs": "^3.1.13",
+    "@types/firebase": "^2.4.32",
     "@types/three": "^0.173.0",
     "animejs": "^3.2.2",
     "cors": "^2.8.5",
     "express": "^4.21.2",
+    "firebase": "^11.3.1",
     "lodash": "^4.17.21",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",

@@ -2,8 +2,6 @@ import React, { useState, useEffect } from 'react'
 import './StartPage.css'
 import Game from './Game'
 import { loadGameState, clearSavedGame } from '../utils/gameStateUtils'
-import StatisticsPage from './StatisticsPage'
-import AchievementsView from './AchievementsView'
 import UnlockablesMenu from './UnlockablesMenu'
 import { setTheme, setCompanion, getPlayerProgress, getTheme } from '../utils/progressionUtils'
 import LevelRoadmap from './LevelRoadmap'
@@ -16,11 +14,12 @@ import { APP_VERSION } from '../constants/version'
 import styles from '../styles/bubbleText.module.css'
 import HexagonGrid from './HexagonGrid'
 import SpringModal from './SpringModal'
-import { FaPuzzlePiece } from 'react-icons/fa'
+import { FaPuzzlePiece, FaUser, FaArrowLeft } from 'react-icons/fa'
 import CustomCursor from './CustomCursor'
 import { useAccessibility } from '../contexts/AccessibilityContext'
 import { DEFAULT_SCHEME } from '../utils/colorSchemes'
 import { createDebugLogger } from '../utils/debugUtils'
+import ProfilePage from './ProfilePage'
 
 interface StartPageProps {
   onStartGame: (
@@ -106,6 +105,11 @@ const BUTTON_HOVER_PHRASES = {
     "*curious head tilt* Ready to solve a puzzle? 🧩",
     "*excited tail wag* Let's piece it together! ✨",
   ],
+  unlocks: [
+    "*curious sniff* Let's see what we've earned! 🎁",
+    "*tail wag* Time to check our treasures! ✨",
+    "*excited bounce* Show me the goodies! 🌟",
+  ],
 };
 
 const DEBUG = createDebugLogger('StartPage');
@@ -119,14 +123,13 @@ const StartPage: React.FC<StartPageProps> = ({
 }) => {
   const [showGameModes, setShowGameModes] = useState(false)
   const [showTutorial, setShowTutorial] = useState(false)
-  const [showStatistics, setShowStatistics] = useState(false)
   const [hasSavedGame, setHasSavedGame] = useState(false)
   const [showConfirmModal, setShowConfirmModal] = useState(false)
   const [pendingGameMode, setPendingGameMode] = useState<boolean | null>(null)
-  const [showAchievements, setShowAchievements] = useState(false)
   const [showUnlockables, setShowUnlockables] = useState(false)
   const [showLevelRoadmap, setShowLevelRoadmap] = useState(false)
   const [showCustomize, setShowCustomize] = useState(false)
+  const [showProfile, setShowProfile] = useState(false)
   const { settings } = useAccessibility()
   const isColorBlind = settings.isColorBlind
   const playerProgress = getPlayerProgress()
@@ -234,10 +237,6 @@ const StartPage: React.FC<StartPageProps> = ({
     }, 300) // Match this with your transition duration
   }
 
-  if (showStatistics) {
-    return <StatisticsPage onBack={() => setShowStatistics(false)} />
-  }
-
   if (showTutorial) {
     return (
       <PageTransition isExiting={isTutorialExiting}>
@@ -283,6 +282,13 @@ const StartPage: React.FC<StartPageProps> = ({
         gap={4}
         hover={true}
       />
+      <button 
+        className="profile-button"
+        onClick={() => setShowProfile(true)}
+      >
+        <FaUser />
+      </button>
+
       <div className="start-container">
         <h1 className="game-title">
           {"HEXMATCH".split("").map((letter, idx) => (
@@ -321,35 +327,19 @@ const StartPage: React.FC<StartPageProps> = ({
                   📖 Play Tutorial
                 </button>
                 <button 
-                  className="stats-button"
-                  onClick={() => setShowStatistics(true)}
-                  onMouseEnter={() => handleButtonHover('statistics')}
+                  className="unlocks-button"
+                  onClick={() => setShowUnlockables(true)}
+                  onMouseEnter={() => handleButtonHover('unlocks')}
                 >
-                  📊 Statistics
+                  🎁 Unlocks
                 </button>
                 <button 
-                  className="achievements-button"
-                  onClick={() => setShowAchievements(true)}
-                  onMouseEnter={() => handleButtonHover('achievements')}
+                  className="customize-button"
+                  onClick={() => setShowCustomize(true)}
+                  onMouseEnter={() => handleButtonHover('customize')}
                 >
-                  🏆 Achievements
+                  🎨 Customize
                 </button>
-                <div className="button-group">
-                  <button 
-                    className="unlockables-button"
-                    onClick={() => setShowUnlockables(true)}
-                    onMouseEnter={() => handleButtonHover('unlockables')}
-                  >
-                    🎁 Unlocks
-                  </button>
-                  <button 
-                    className="customize-button"
-                    onClick={() => setShowCustomize(true)}
-                    onMouseEnter={() => handleButtonHover('customize')}
-                  >
-                    🎨 Customize
-                  </button>
-                </div>
                 <button 
                   className="settings-button-fixed"
                   onClick={onOpenSettings}
@@ -471,29 +461,6 @@ const StartPage: React.FC<StartPageProps> = ({
         </SpringModal>
       )}
 
-      {showAchievements && (
-        <div 
-          className="modal-overlay" 
-          onClick={() => setShowAchievements(false)}
-          style={{
-            '--scrollbar-thumb': isColorBlind ? DEFAULT_SCHEME.colors.primary : theme.colors.primary,
-            '--scrollbar-track': `${theme.colors.background}66`,
-            '--scrollbar-hover': isColorBlind ? DEFAULT_SCHEME.colors.primary : theme.colors.primary
-          } as React.CSSProperties}
-        >
-          <div 
-            className="modal-content achievements-modal"
-            style={{
-              '--scrollbar-thumb': isColorBlind ? DEFAULT_SCHEME.colors.primary : theme.colors.primary,
-              '--scrollbar-track': `${theme.colors.background}66`,
-              '--scrollbar-hover': isColorBlind ? DEFAULT_SCHEME.colors.primary : theme.colors.primary
-            } as React.CSSProperties}
-          >
-            <AchievementsView onClose={() => setShowAchievements(false)} />
-          </div>
-        </div>
-      )}
-
       {showUnlockables && (
         <UnlockablesMenu
           onSelectTheme={(themeId) => {
@@ -549,6 +516,30 @@ const StartPage: React.FC<StartPageProps> = ({
                 onStartGame(withTimer)
               }}
             />
+          </div>
+        </div>
+      )}
+
+      {showProfile && (
+        <div 
+          className="modal-overlay"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setShowProfile(false);
+            }
+          }}
+        >
+          <div className="modal-content profile-modal">
+            <div className="modal-header">
+              <h2>Player Profile</h2>
+              <button 
+                className="modal-close-button"
+                onClick={() => setShowProfile(false)}
+              >
+                <FaArrowLeft /> Back
+              </button>
+            </div>
+            <ProfilePage onClose={() => setShowProfile(false)} />
           </div>
         </div>
       )}
