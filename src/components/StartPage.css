@@ -117,10 +117,13 @@
   width: 100%;
   padding: 1.5rem;
   font-size: 2rem;
-  background: var(--theme-primary, #00FF9F);
-  border: none;
+  background: linear-gradient(45deg,
+    color-mix(in srgb, var(--theme-primary) 15%, transparent),
+    color-mix(in srgb, var(--theme-accent) 15%, transparent)
+  );
+  border: 2px solid var(--theme-primary);
   border-radius: 1rem;
-  color: var(--theme-background, #1a1a2e);
+  color: var(--theme-primary);
   cursor: pointer;
   transition: all 0.3s ease;
   font-weight: bold;
@@ -133,8 +136,12 @@
 }
 
 .play-button:hover {
+  background: linear-gradient(45deg,
+    color-mix(in srgb, var(--theme-primary) 25%, transparent),
+    color-mix(in srgb, var(--theme-accent) 25%, transparent)
+  );
   transform: translateY(-2px);
-  box-shadow: 0 0 30px color-mix(in srgb, var(--theme-primary, #00FF9F) 40%, transparent);
+  box-shadow: 0 0 20px color-mix(in srgb, var(--theme-primary) 30%, transparent);
 }
 
 .mode-selection {
@@ -157,45 +164,63 @@
   border-radius: clamp(0.5rem, 1vw, 1rem);
   cursor: pointer;
   transition: all 0.3s ease;
-  border: none;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.8rem;
-  margin: 0;
-  font-size: clamp(1rem, 2vw, 1.2rem);
-}
-
-.mode-button.timed {
-  background: var(--theme-primary, #00FF9F);
-  color: var(--theme-background, #1a1a2e);
-}
-
-.mode-button.zen {
-  background: transparent;
-  border: 2px solid var(--theme-primary, #00FF9F);
-  color: var(--theme-primary, #00FF9F);
+  border: 2px solid var(--theme-primary);
+  background: color-mix(in srgb, var(--theme-primary) 15%, transparent);
+  color: var(--theme-primary);
 }
 
 .mode-button:hover {
+  background: color-mix(in srgb, var(--theme-primary) 25%, transparent);
   transform: translateY(-2px);
-  box-shadow: 0 0 20px rgba(0, 255, 159, 0.3);
+  box-shadow: 0 0 20px color-mix(in srgb, var(--theme-primary) 30%, transparent);
+}
+
+.mode-button.timed {
+  background: linear-gradient(45deg,
+    color-mix(in srgb, var(--theme-primary) 15%, transparent),
+    color-mix(in srgb, var(--theme-accent) 15%, transparent)
+  );
+}
+
+.mode-button.zen {
+  background: linear-gradient(45deg,
+    color-mix(in srgb, var(--theme-secondary) 15%, transparent),
+    color-mix(in srgb, var(--theme-primary) 15%, transparent)
+  );
+}
+
+.mode-button.roadmap {
+  background: linear-gradient(45deg,
+    color-mix(in srgb, var(--theme-primary) 15%, transparent),
+    color-mix(in srgb, var(--theme-secondary) 15%, transparent)
+  );
+}
+
+.mode-button.daily {
+  background: linear-gradient(45deg,
+    color-mix(in srgb, var(--theme-accent) 15%, transparent),
+    color-mix(in srgb, var(--theme-primary) 15%, transparent)
+  );
+}
+
+.mode-button.puzzle {
+  background: linear-gradient(45deg,
+    color-mix(in srgb, var(--theme-secondary) 15%, transparent),
+    color-mix(in srgb, var(--theme-accent) 15%, transparent)
+  );
 }
 
 .mode-title {
   font-size: clamp(1.2rem, 2.5vw, 1.5rem);
   font-weight: bold;
   letter-spacing: 0.1rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.8rem;
-  margin-bottom: 0.3rem;
+  color: var(--theme-primary);
 }
 
 .mode-desc {
   font-size: clamp(0.8rem, 1.5vw, 1rem);
   opacity: 0.8;
+  color: var(--theme-primary);
 }
 
 @keyframes glow {
@@ -260,7 +285,10 @@
   width: 100%;
   padding: 1rem;
   font-size: 1.2rem;
-  background: color-mix(in srgb, var(--theme-primary) 15%, transparent);
+  background: linear-gradient(45deg,
+    color-mix(in srgb, var(--theme-primary) 15%, transparent),
+    color-mix(in srgb, var(--theme-accent) 15%, transparent)
+  );
   color: var(--theme-primary);
   border: 2px solid var(--theme-primary);
   border-radius: 8px;
@@ -276,9 +304,12 @@
 }
 
 .continue-button:hover {
-  background: color-mix(in srgb, var(--theme-primary) 25%, transparent);
-  transform: scale(1.05);
-  box-shadow: 0 0 15px color-mix(in srgb, var(--theme-primary) 30%, transparent);
+  background: linear-gradient(45deg,
+    color-mix(in srgb, var(--theme-primary) 25%, transparent),
+    color-mix(in srgb, var(--theme-accent) 25%, transparent)
+  );
+  transform: translateY(-2px);
+  box-shadow: 0 0 20px color-mix(in srgb, var(--theme-primary) 30%, transparent);
 }
 
 .stats-button {
@@ -454,18 +485,10 @@
   box-shadow: 0 0 15px color-mix(in srgb, var(--theme-primary) 30%, transparent);
 }
 
-.mode-button.daily {
-  background: linear-gradient(45deg, 
-    var(--theme-accent),
-    var(--theme-secondary)
-  );
-  border: 2px solid color-mix(in srgb, var(--theme-primary) 20%, transparent);
-}
-
 .mode-button.daily:hover {
   background: linear-gradient(45deg,
     color-mix(in srgb, var(--theme-accent) 120%, white),
-    color-mix(in srgb, var(--theme-secondary) 120%, white)
+    color-mix(in srgb, var(--theme-primary) 120%, white)
   );
 }
 
@@ -515,13 +538,6 @@
 .close-button:hover {
   color: var(--theme-accent);
   transform: scale(1.1);
-}
-
-.mode-button.roadmap {
-  background: linear-gradient(45deg,
-    var(--theme-primary),
-    var(--theme-accent)
-  );
 }
 
 .mode-button.roadmap:hover {
