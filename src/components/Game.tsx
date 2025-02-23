@@ -1066,8 +1066,10 @@ const Game: React.FC<GameProps> = ({
                 text: comboInfo?.text ?? 'Combo!',
                 type: 'combo'
               });
-              handleScoreChange(scoreHandler.addPoints(comboBonus));
               setLastAction({ type: 'combo', value: combo.count });
+              
+              // Single score update
+              handleScoreChange(scoreHandler.getScore() + comboBonus);
             }
           } else {
             // Reset combo if no match
@@ -2067,8 +2069,7 @@ const Game: React.FC<GameProps> = ({
       );
       
       // Update score
-      const newScore = scoreHandler.addPoints(gridClearPoints);
-      handleScoreChange(newScore);
+      handleScoreChange(gridClearPoints);
       
       // Get the game board scale from CSS variable
       const boardScale = parseFloat(getComputedStyle(document.documentElement)
@@ -2129,7 +2130,7 @@ const Game: React.FC<GameProps> = ({
 
       // Update objectives if in daily challenge
       if (isDailyChallenge) {
-        updateObjectives(0, combo.count, newScore);
+        updateObjectives(0, combo.count, scoreHandler.getScore());
       }
 
       // Play sound effect
