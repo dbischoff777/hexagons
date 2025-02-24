@@ -2120,87 +2120,44 @@ const Game: React.FC<GameProps> = ({
     };
   }, [handleKeyPress]);
 
-  // Helper function to find next valid position in the grid
-  const getNextGridPosition = useCallback((currentQ: number, currentR: number, direction: 'up' | 'down' | 'left' | 'right', rotation: number) => {
-    const isRotated = Math.abs(rotation % 360) >= 90 && Math.abs(rotation % 360) < 270;
-
-    // Keep the same direction
-    let effectiveDirection = direction;
-    if (isRotated) {
-      switch (direction) {
-        case 'up': effectiveDirection = 'up'; break;
-        case 'down': effectiveDirection = 'down'; break;
-        case 'left': effectiveDirection = 'left'; break;
-        case 'right': effectiveDirection = 'right'; break;
-      }
+  // Keep the moveTile function simple but update mouse position
+  const moveTile = useCallback((direction: 'up' | 'down' | 'left' | 'right') => {
+    if (!currentGridPosition) {
+      // Start from center if no position selected
+      setCurrentGridPosition({ q: 0, r: 0 });
+      const { x, y } = hexToPixel(0, 0, centerX, centerY, tileSize);
+      setMousePosition({ x, y });
+      return;
     }
 
-    // Calculate next position based on effective direction
-    let nextQ = currentQ;
-    let nextR = currentR;
+    let { q, r } = currentGridPosition;
 
-    switch (effectiveDirection) {
-      case 'right':
-        nextQ += 1;
-        break;
-      case 'left':
-        nextQ -= 1;
-        break;
+    switch (direction) {
       case 'up':
-        nextR -= 1;
+        r--;
         break;
       case 'down':
-        nextR += 1;
+        r++;
+        break;
+      case 'left':
+        q--;
+        break;
+      case 'right':
+        q++;
         break;
     }
 
-    // Calculate s-coordinate
-    const nextS = -nextQ - nextR;
+    // Calculate s-coordinate for cubic coordinates
+    const s = -q - r;
 
-    // Validate position using the same bounds check as rendering
-    if (Math.max(Math.abs(nextQ), Math.abs(nextR), Math.abs(nextS)) <= Math.floor(cols/2)) {
-      // Check if position is occupied, considering rotation
-      const checkQ = isRotated ? -nextQ : nextQ;
-      const checkR = isRotated ? -nextR : nextR;
-      
-      const isOccupied = placedTiles.some(tile => 
-        tile.q === checkQ && tile.r === checkR
-      );
-
-      if (!isOccupied) {
-        return { q: nextQ, r: nextR };
-      }
-    }
-
-    // Return original position if new position is invalid
-    return { q: currentQ, r: currentR };
-  }, [cols, placedTiles]);
-
-  // Keep the moveTile function simple
-  const moveTile = useCallback((direction: 'up' | 'down' | 'left' | 'right') => {
-    if (selectedTileIndex === null) return;
-
-    const { q: nextQ, r: nextR } = getNextGridPosition(
-      currentGridPosition.q,
-      currentGridPosition.r,
-      direction,
-      rotationState.boardRotation
-    );
-
-    if (nextQ !== currentGridPosition.q || nextR !== currentGridPosition.r) {
-      setCurrentGridPosition({ q: nextQ, r: nextR });
-      const { x, y } = hexToPixel(nextQ, nextR, centerX, centerY, tileSize);
+    // Check if new position is within hex grid bounds
+    const maxDistance = Math.floor(cols/2);
+    if (Math.max(Math.abs(q), Math.abs(r), Math.abs(s)) <= maxDistance) {
+      setCurrentGridPosition({ q, r });
+      const { x, y } = hexToPixel(q, r, centerX, centerY, tileSize);
       setMousePosition({ x, y });
     }
-  }, [
-    selectedTileIndex,
-    currentGridPosition,
-    rotationState.boardRotation,
-    centerX,
-    centerY,
-    tileSize,
-    getNextGridPosition
-  ]);
+  }, [currentGridPosition, centerX, centerY, tileSize, cols]);
 
   // Reset grid position when selecting a new tile
   useEffect(() => {
