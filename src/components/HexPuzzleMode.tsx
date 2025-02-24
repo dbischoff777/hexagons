@@ -1131,7 +1131,11 @@ const HexPuzzleMode: React.FC<HexPuzzleModeProps> = ({ onComplete, onExit }) => 
         ) : (
           // Show puzzle game once puzzle is selected
           <>
-            <LevelProgress progress={playerProgress} />
+          <LevelProgress 
+            level={playerProgress.level}
+            experience={playerProgress.experience}
+            nextLevelXP={playerProgress.experienceToNext}
+          />
             <div className="score" data-label="Score">
               <div className="score-value">{score}</div>
             </div>

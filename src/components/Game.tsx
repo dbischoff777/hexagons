@@ -2442,10 +2442,14 @@ const Game: React.FC<GameProps> = ({
       className={`game ${tutorial ? 'tutorial-mode' : ''}`}
       ref={wrapperRef}
       onContextMenu={handleContextMenu}
+      style={{
+        '--theme-accent': theme.colors.accent,
+        '--theme-secondary': theme.colors.secondary,
+      } as React.CSSProperties}
     >
       <CustomCursor 
         color={theme.colors.primary}
-        hide={selectedTileIndex !== null} // Only hide when a tile is selected
+        hide={selectedTileIndex !== null}
       />
       <div className="particles-container">
         <Particles 
@@ -2456,7 +2460,12 @@ const Game: React.FC<GameProps> = ({
         />
       </div>
       <div className="game-header">
-        <LevelProgress progress={playerProgress} />
+        <LevelProgress 
+          level={playerProgress.level}
+          experience={playerProgress.experience}
+          nextLevelXP={playerProgress.experienceToNext}
+          theme={theme}
+        />
       </div>
       {tutorialState.active ? (
         <div className="tutorial-buttons">
@@ -2476,7 +2485,10 @@ const Game: React.FC<GameProps> = ({
         </button>
       )}
       <div className="game-hud">
-        <div className="score" data-label="">
+        <div 
+          className="score" 
+          data-label=""
+        >
           <span className="score-value">
             {formatScore(scoreHandler.getScore())}
           </span>

@@ -693,9 +693,9 @@
   top: 1.625rem;  /* Changed from 95px to 20px */
   right: 2vw;
   padding: 8px 16px;
-  border: 2px solid #FF4D6D;
+  border: 2px solid var(--theme-accent);
   background: rgba(255, 77, 109, 0.1);
-  color: #FF4D6D;
+  color: var(--theme-accent);
   border-radius: 4px;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -704,11 +704,17 @@
   align-items: center;
   gap: 5px;
   z-index: 10;
+  box-shadow: 
+    0 0 15px var(--theme-accent),
+    inset 0 0 10px var(--theme-accent);
 }
 
 .exit-button:hover {
-  background: rgba(255, 77, 109, 0.2);
-  transform: scale(1.05);
+  background: var(--theme-accent);
+  color: var(--background-dark);
+  box-shadow: 
+    0 0 20px var(--theme-accent),
+    inset 0 0 15px var(--theme-secondary);
 }
 
 .exit-button::before {
@@ -986,12 +992,15 @@
   z-index: 100;
   transform-origin: left top;
   transform: scale(var(--ui-scale, 1));
-  background: var(--background-dark, rgba(13, 13, 26, 0.6));
   backdrop-filter: blur(10px);
   border: 2px solid rgba(var(--theme-accent), 0.2);
   box-shadow: 
     0 4px 20px rgba(var(--theme-accent), 0.1),
     0 0 30px rgba(0, 0, 0, 0.2);
+  color: var(--theme-accent);
+  text-shadow: 
+    0 0 10px var(--theme-accent),
+    0 0 20px var(--theme-accent);
 }
 
 .score::before {
@@ -1009,8 +1018,8 @@
   font-weight: bold;
   color: var(--theme-accent);
   text-shadow: 
-    0 0 10px rgba(var(--theme-accent), 0.5),
-    0 0 20px rgba(var(--theme-accent), 0.3);
+    0 0 10px var(--theme-accent),
+    0 0 20px var(--theme-accent);
   letter-spacing: 0.5px;
 }
 
@@ -1131,31 +1140,6 @@
   }
 }
 
-/* Update level progress styling */
-.level-progress {
-  background: var(--background-dark, rgba(13, 13, 26, 0.6));
-  backdrop-filter: blur(10px);
-  border: 2px solid rgba(var(--theme-accent), 0.2);
-  box-shadow: 
-    0 4px 20px rgba(var(--theme-accent), 0.1),
-    0 0 30px rgba(0, 0, 0, 0.2);
-}
-
-.level-progress__bar {
-  background: linear-gradient(
-    90deg,
-    rgba(var(--theme-accent), 0.3) 0%,
-    rgba(var(--theme-accent), 0.6) 100%
-  );
-}
-
-.level-progress__text {
-  color: var(--theme-accent);
-  text-shadow: 
-    0 0 10px rgba(var(--theme-accent), 0.5),
-    0 0 20px rgba(var(--theme-accent), 0.3);
-}
-
 .hexagon {
   contain: layout style paint;
 }
@@ -1189,4 +1173,50 @@
 
 .fps-debug.low {
   color: #FF1177; /* Red for low FPS */
+}
+
+/* Modal buttons */
+.modal-button {
+  padding: 12px 24px;
+  border-radius: 4px;
+  font-weight: bold;
+  transition: all 0.2s ease;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+/* Continue button - uses accent color */
+.modal-button.cancel {
+  background: transparent;
+  border: 2px solid var(--theme-accent);
+  color: var(--theme-accent);
+  box-shadow: 
+    0 0 15px var(--theme-accent),
+    inset 0 0 10px var(--theme-accent);
+}
+
+.modal-button.cancel:hover {
+  background: var(--theme-accent);
+  color: var(--background-dark);
+  box-shadow: 
+    0 0 20px var(--theme-accent),
+    inset 0 0 15px var(--theme-secondary);
+}
+
+/* Exit button - uses warning/danger color */
+.modal-button.confirm.danger {
+  background: transparent;
+  border: 2px solid #FF4D6D;
+  color: #FF4D6D;
+  box-shadow: 
+    0 0 15px rgba(255, 77, 109, 0.3),
+    inset 0 0 10px rgba(255, 77, 109, 0.2);
+}
+
+.modal-button.confirm.danger:hover {
+  background: #FF4D6D;
+  color: var(--background-dark);
+  box-shadow: 
+    0 0 20px rgba(255, 77, 109, 0.4),
+    inset 0 0 15px rgba(255, 77, 109, 0.3);
 }
