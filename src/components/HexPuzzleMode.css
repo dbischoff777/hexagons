@@ -644,6 +644,7 @@
   margin: 0 auto;
   padding: clamp(15px, 3vh, 30px);
   overflow-y: auto;
+  overflow-x: hidden;
   
   /* Firefox scrollbar */
   scrollbar-width: thin;
