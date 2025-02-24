@@ -993,7 +993,7 @@
   box-shadow: 
     0 4px 20px rgba(var(--theme-secondary), 0.1),
     0 0 30px rgba(0, 0, 0, 0.2);
-  color: var(--theme-primary);
+  color: var(--theme-accent);
   text-shadow: 
     0 0 10px var(--theme-secondary),
     0 0 20px var(--theme-secondary);
@@ -1004,17 +1004,17 @@
   font-size: 0.7em;
   text-transform: uppercase;
   letter-spacing: 2px;
-  color: rgba(var(--theme-primary));
+  color: rgba(var(--theme-accent));
   margin-bottom: 2px;
-  text-shadow: 0 0 10px rgba(var(--theme-secondary), 0.3);
+  text-shadow: 0 0 10px rgba(var(--theme-accent), 0.3);
 }
 
 .score-value {
   font-size: min(1.4em, 4vw);
   font-weight: bold;
-  color: var(--theme-primary);
+  color: var(--theme-accent);
   text-shadow: 
-    0 0 10px var(--theme-secondary),
+    0 0 10px var(--theme-accent),
     0 0 20px var(--theme-secondary);
   letter-spacing: 0.5px;
 }

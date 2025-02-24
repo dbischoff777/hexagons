@@ -7,9 +7,9 @@
   padding: min(12px, 1.5vh) min(20px, 2vw);
   background: var(--background-dark);
   backdrop-filter: blur(10px);
-  border: 2px solid var(--theme-primary);
+  border: 2px solid var(--theme-accent);
   box-shadow: 
-    0 4px 20px var(--theme-primary),
+    0 4px 20px var(--theme-accent),
     0 0 30px rgba(0, 0, 0, 0.2);
   z-index: 100;
   display: flex;
@@ -39,10 +39,9 @@
 
 .hex-level-number {
   font-weight: bold;
-  color: var(--theme-primary);
+  color: var(--theme-accent);
   font-size: clamp(1.2rem, 1.4vw, 1.6rem);
   text-shadow: 
-    0 0 0.625rem var(--theme-primary),
     0 0 1.25rem var(--theme-secondary);
   letter-spacing: 0.03125rem;
 }
@@ -50,7 +49,7 @@
 .hex-xp-info {
   font-size: clamp(0.8rem, 0.9vw, 1rem);
   opacity: 0.95;
-  color: var(--theme-primary);
+  color: var(--theme-accent);
   display: flex;
   gap: 0.5rem;
   margin-left: auto;
