@@ -1,4 +1,4 @@
-.modal-overlay {
+.confirm-modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
@@ -10,10 +10,10 @@
   align-items: center;
   z-index: 1000;
   backdrop-filter: blur(5px);
-  animation: fadeIn 0.2s ease-out;
+  animation: confirmFadeIn 0.2s ease-out;
 }
 
-.modal-content {
+.confirm-modal-content {
   background: color-mix(in srgb, var(--theme-background) 95%, black);
   border: 2px solid var(--theme-primary);
   border-radius: 10px;
@@ -28,77 +28,86 @@
   scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
 }
 
-.modal-content p {
+.confirm-modal-content p {
   font-size: 1.2rem;
   margin-bottom: 25px;
   color: var(--theme-primary);
 }
 
-.modal-buttons {
+.confirm-modal-buttons {
   display: flex;
   justify-content: center;
   gap: 20px;
 }
 
-.modal-button {
-  padding: 10px 25px;
-  border-radius: 5px;
-  font-size: 1rem;
-  cursor: pointer;
+/* Modal buttons */
+.confirm-modal-button {
+  padding: 12px 24px;
+  border-radius: 4px;
+  font-weight: bold;
   transition: all 0.2s ease;
   text-transform: uppercase;
   letter-spacing: 1px;
 }
 
-.modal-button.confirm {
-  background: #FF4D4D;
-  border: none;
-  color: white;
-  box-shadow: 0 0 10px rgba(255, 77, 77, 0.3);
-}
-
-.modal-button.cancel {
+/* Continue button - uses accent color */
+.confirm-modal-button.cancel {
   background: transparent;
-  border: 2px solid var(--theme-primary);
-  color: var(--theme-primary);
+  border: 1px solid var(--theme-accent);
+  color: var(--theme-accent);
+  box-shadow: 
+    0 0 15px var(--theme-accent),
+    inset 0 0 10px var(--theme-accent);
 }
 
-.modal-button:hover {
-  transform: translateY(-2px);
+.confirm-modal-button.cancel:hover {
+  background: var(--theme-accent);
+  color: var(--background-dark);
+  box-shadow: 
+    0 0 20px var(--theme-accent),
+    inset 0 0 15px var(--theme-secondary);
 }
 
-.modal-button.confirm:hover {
-  background: #FF6666;
-  box-shadow: 0 0 15px rgba(255, 77, 77, 0.4);
+/* Exit button - uses warning/danger color */
+.confirm-modal-button.confirm.danger {
+  background: transparent;
+  border: 1px solid var(--theme-accent);
+  color: #FF4D6D;
+  box-shadow: 
+    0 0 15px rgba(255, 77, 109, 0.3),
+    inset 0 0 10px rgba(255, 77, 109, 0.2);
 }
 
-.modal-button.cancel:hover {
-  background: color-mix(in srgb, var(--theme-primary) 10%, transparent);
-  box-shadow: 0 0 15px color-mix(in srgb, var(--theme-primary) 30%, transparent);
+.confirm-modal-button.confirm.danger:hover {
+  background: #FF4D6D;
+  color: var(--background-dark);
+  box-shadow: 
+    0 0 20px rgba(255, 77, 109, 0.4),
+    inset 0 0 15px rgba(255, 77, 109, 0.3);
 }
 
-@keyframes fadeIn {
+@keyframes confirmFadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
 }
 
 /* Webkit scrollbar styles */
-.modal-content::-webkit-scrollbar {
+.confirm-modal-content::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
 
-.modal-content::-webkit-scrollbar-track {
+.confirm-modal-content::-webkit-scrollbar-track {
   background: var(--scrollbar-track);
   border-radius: 4px;
 }
 
-.modal-content::-webkit-scrollbar-thumb {
+.confirm-modal-content::-webkit-scrollbar-thumb {
   background: color-mix(in srgb, var(--scrollbar-thumb) 80%, transparent);
   border-radius: 4px;
   border: 2px solid var(--scrollbar-track);
 }
 
-.modal-content::-webkit-scrollbar-thumb:hover {
+.confirm-modal-content::-webkit-scrollbar-thumb:hover {
   background: var(--scrollbar-hover);
 } 

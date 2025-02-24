@@ -693,9 +693,9 @@
   top: 1.625rem;  /* Changed from 95px to 20px */
   right: 2vw;
   padding: 8px 16px;
-  border: 2px solid var(--theme-accent);
+  border: 2px solid var(--theme-primary);
   background: rgba(255, 77, 109, 0.1);
-  color: var(--theme-accent);
+  color: var(--theme-primary);
   border-radius: 4px;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -704,9 +704,6 @@
   align-items: center;
   gap: 5px;
   z-index: 10;
-  box-shadow: 
-    0 0 15px var(--theme-accent),
-    inset 0 0 10px var(--theme-accent);
 }
 
 .exit-button:hover {
@@ -993,14 +990,13 @@
   transform-origin: left top;
   transform: scale(var(--ui-scale, 1));
   backdrop-filter: blur(10px);
-  border: 2px solid rgba(var(--theme-accent), 0.2);
   box-shadow: 
-    0 4px 20px rgba(var(--theme-accent), 0.1),
+    0 4px 20px rgba(var(--theme-secondary), 0.1),
     0 0 30px rgba(0, 0, 0, 0.2);
-  color: var(--theme-accent);
+  color: var(--theme-primary);
   text-shadow: 
-    0 0 10px var(--theme-accent),
-    0 0 20px var(--theme-accent);
+    0 0 10px var(--theme-secondary),
+    0 0 20px var(--theme-secondary);
 }
 
 .score::before {
@@ -1008,18 +1004,18 @@
   font-size: 0.7em;
   text-transform: uppercase;
   letter-spacing: 2px;
-  color: rgba(255, 255, 255, 0.8);
+  color: rgba(var(--theme-primary));
   margin-bottom: 2px;
-  text-shadow: 0 0 10px rgba(var(--theme-accent), 0.3);
+  text-shadow: 0 0 10px rgba(var(--theme-secondary), 0.3);
 }
 
 .score-value {
   font-size: min(1.4em, 4vw);
   font-weight: bold;
-  color: var(--theme-accent);
+  color: var(--theme-primary);
   text-shadow: 
-    0 0 10px var(--theme-accent),
-    0 0 20px var(--theme-accent);
+    0 0 10px var(--theme-secondary),
+    0 0 20px var(--theme-secondary);
   letter-spacing: 0.5px;
 }
 
@@ -1173,50 +1169,4 @@
 
 .fps-debug.low {
   color: #FF1177; /* Red for low FPS */
-}
-
-/* Modal buttons */
-.modal-button {
-  padding: 12px 24px;
-  border-radius: 4px;
-  font-weight: bold;
-  transition: all 0.2s ease;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-}
-
-/* Continue button - uses accent color */
-.modal-button.cancel {
-  background: transparent;
-  border: 2px solid var(--theme-accent);
-  color: var(--theme-accent);
-  box-shadow: 
-    0 0 15px var(--theme-accent),
-    inset 0 0 10px var(--theme-accent);
-}
-
-.modal-button.cancel:hover {
-  background: var(--theme-accent);
-  color: var(--background-dark);
-  box-shadow: 
-    0 0 20px var(--theme-accent),
-    inset 0 0 15px var(--theme-secondary);
-}
-
-/* Exit button - uses warning/danger color */
-.modal-button.confirm.danger {
-  background: transparent;
-  border: 2px solid #FF4D6D;
-  color: #FF4D6D;
-  box-shadow: 
-    0 0 15px rgba(255, 77, 109, 0.3),
-    inset 0 0 10px rgba(255, 77, 109, 0.2);
-}
-
-.modal-button.confirm.danger:hover {
-  background: #FF4D6D;
-  color: var(--background-dark);
-  box-shadow: 
-    0 0 20px rgba(255, 77, 109, 0.4),
-    inset 0 0 15px rgba(255, 77, 109, 0.3);
 }

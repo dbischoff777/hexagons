@@ -438,7 +438,7 @@ const StartPage: React.FC<StartPageProps> = ({
           variant="danger"
         >
           <button 
-            className="level-complete__button"
+            className="modal-button cancel"
             onClick={() => {
               setShowConfirmModal(false)
               setPendingGameMode(null)
@@ -447,7 +447,7 @@ const StartPage: React.FC<StartPageProps> = ({
             CANCEL
           </button>
           <button 
-            className="level-complete__button level-complete__button--danger"
+            className="modal-button confirm danger"
             onClick={() => {
               clearSavedGame();
               if (pendingGameMode !== null) {

@@ -1,27 +1,38 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import './LevelProgress.css';
-import { PlayerProgress } from '../types/progression';
-import { Theme } from '../types/theme';
+import { getTheme, getPlayerProgress } from '../utils/progressionUtils';
 
 interface LevelProgressProps {
   level: number;
   experience: number;
   nextLevelXP: number;
-  theme?: Theme;
 }
 
 const LevelProgress: React.FC<LevelProgressProps> = ({ 
   level, 
   experience, 
-  nextLevelXP,
-  theme 
+  nextLevelXP
 }) => {
   const progress = Math.min((experience / nextLevelXP) * 100, 100);
+  const [currentTheme, setCurrentTheme] = useState(() => {
+    const playerProgress = getPlayerProgress();
+    return getTheme(playerProgress.selectedTheme || 'default');
+  });
 
-  const style = theme ? {
-    '--theme-accent': theme.colors.accent,
-    '--theme-secondary': theme.colors.secondary,
-  } as React.CSSProperties : undefined;
+  useEffect(() => {
+    const handleThemeChange = () => {
+      const playerProgress = getPlayerProgress();
+      setCurrentTheme(getTheme(playerProgress.selectedTheme || 'default'));
+    };
+
+    window.addEventListener('themeChanged', handleThemeChange);
+    return () => window.removeEventListener('themeChanged', handleThemeChange);
+  }, []);
+  
+  const style = {
+    '--theme-accent': currentTheme.colors.accent,
+    '--theme-secondary': currentTheme.colors.secondary,
+  } as React.CSSProperties;
 
   return (
     <div className="hex-level-progress" style={style}>

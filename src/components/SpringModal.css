@@ -156,24 +156,24 @@
 
 /* Primary action button */
 .modal-button.cancel {
-  background: color-mix(in srgb, var(--theme-primary) 10%, transparent);
-  border: 2px solid var(--theme-primary);
-  color: var(--theme-primary);
-}
-
-.modal-button.cancel:hover {
-  background: color-mix(in srgb, var(--theme-primary) 20%, transparent);
-  box-shadow: 0 0 15px color-mix(in srgb, var(--theme-primary) 30%, transparent);
-}
-
-/* Dangerous/Destructive action button */
-.modal-button.confirm.danger {
   background: color-mix(in srgb, var(--theme-accent) 10%, transparent);
   border: 2px solid var(--theme-accent);
   color: var(--theme-accent);
 }
 
-.modal-button.confirm.danger:hover {
+.modal-button.cancel:hover {
   background: color-mix(in srgb, var(--theme-accent) 20%, transparent);
   box-shadow: 0 0 15px color-mix(in srgb, var(--theme-accent) 30%, transparent);
+}
+
+/* Dangerous/Destructive action button */
+.modal-button.confirm.danger {
+  background: color-mix(in srgb, var(--theme-primary) 10%, transparent);
+  border: 2px solid var(--theme-primary);
+  color: var(--theme-primary);
+}
+
+.modal-button.confirm.danger:hover {
+  background: color-mix(in srgb, var(--theme-primary) 20%, transparent);
+  box-shadow: 0 0 15px color-mix(in srgb, var(--theme-primary) 30%, transparent);
 } 

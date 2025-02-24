@@ -404,6 +404,7 @@ export const setTheme = (themeId: string): void => {
   const progress = getPlayerProgress();
   progress.selectedTheme = themeId;
   localStorage.setItem(PROGRESSION_KEY, JSON.stringify(progress));
+  window.dispatchEvent(new Event('themeChanged'));
 };
 
 export interface LevelBlock {

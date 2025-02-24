@@ -2464,7 +2464,6 @@ const Game: React.FC<GameProps> = ({
           level={playerProgress.level}
           experience={playerProgress.experience}
           nextLevelXP={playerProgress.experienceToNext}
-          theme={theme}
         />
       </div>
       {tutorialState.active ? (
