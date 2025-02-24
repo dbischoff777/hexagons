@@ -34,9 +34,9 @@
   background: transparent;
 
   /* Theme variables */
-  --hex-color: var(--primary-color, #00FF9F);
-  --accent-color: var(--accent-color, #FF1177);
-  --background-dark: rgba(13, 13, 26, 0.6);
+  --hex-color: var(--theme-accent);
+  --accent-color: var(--theme-secondary);
+  --background-dark: rgba(13, 13, 26, 0.95);
   --glow-opacity: 0.2;
   --border-opacity: 0.3;
   --cursor-color: var(--hex-color, #00FF9F);
@@ -717,7 +717,7 @@
   padding: 1rem;
   margin-bottom: 2rem;
   width: 100%;
-  max-width: 600px;
+  max-width: min(600px, calc(100% - 40px));
   margin: 0 auto 2rem;
 }
 
@@ -731,9 +731,9 @@
 .difficulty-filter {
   padding: 0.6rem 1.5rem;
   border-radius: 0.5rem;
-  border: 2px solid rgba(var(--hex-color), 0.3);
+  border: 2px solid var(--theme-accent);
   background: rgba(0, 0, 0, 0.3);
-  color: #fff;
+  color: var(--theme-accent);
   cursor: pointer;
   transition: all 0.2s ease;
   font-size: 1rem;
@@ -744,19 +744,16 @@
 }
 
 .difficulty-filter:hover {
-  background: rgba(var(--hex-color), 0.1);
-  border-color: rgba(var(--hex-color), 0.5);
-  transform: translateY(-2px);
-  box-shadow: 0 0 15px rgba(var(--hex-color), 0.2);
+  background: color-mix(in srgb, var(--theme-accent) 20%, transparent);
+  box-shadow: 0 0 15px var(--theme-accent);
 }
 
 .difficulty-filter.active {
-  background: rgba(var(--hex-color), 0.2);
-  border-color: var(--hex-color);
+  background: color-mix(in srgb, var(--theme-accent) 30%, transparent);
+  border-color: var(--theme-accent);
   box-shadow: 
-    0 0 15px rgba(var(--hex-color), 0.3),
-    0 0 30px rgba(var(--hex-color), 0.1);
-  transform: translateY(-2px);
+    0 0 15px var(--theme-accent),
+    0 0 30px var(--theme-accent);
 }
 
 .results-summary {
@@ -838,7 +835,7 @@
   overflow: hidden;
   transition: all 0.3s ease;
   cursor: pointer;
-  border: 2px solid rgba(var(--hex-color), 0.2);
+  border: 2px solid var(--theme-accent);
   padding: 0;
   width: 100%;
   aspect-ratio: 3/4;
@@ -849,9 +846,9 @@
 .puzzle-card:hover,
 .puzzle-card:focus {
   transform: translateY(-4px);
-  border-color: var(--hex-color);
+  border-color: var(--theme-accent);
   box-shadow: 
-    0 0 20px rgba(var(--hex-color), 0.2),
+    0 0 20px var(--theme-accent),
     0 4px 8px rgba(0, 0, 0, 0.3);
 }
 
@@ -881,10 +878,10 @@
 }
 
 .puzzle-info h3 {
-  color: var(--hex-color);
+  color: var(--theme-accent);
   margin: 0 0 0.5rem 0;
   font-size: clamp(1rem, 2vw, 1.25rem);
-  text-shadow: 0 0 10px rgba(var(--hex-color), 0.3);
+  text-shadow: 0 0 10px var(--theme-accent);
 }
 
 .puzzle-info p {
@@ -1047,28 +1044,25 @@
 
 /* Update ring selector styles */
 .ring-selector {
-  background: rgba(0, 0, 0, 0.3);
+  background: rgba(13, 13, 26, 0.8);
+  border: 2px solid var(--theme-accent);
+  box-shadow: 
+    0 0 20px var(--theme-accent),
+    0 0 40px rgba(0, 0, 0, 0.3);
   border-radius: 12px;
-  border: 2px solid rgba(var(--hex-color), 0.2);
   padding: 1.5rem;
   margin: 2rem auto;
   width: 100%;
-  max-width: 400px;
+  max-width: min(400px, calc(100% - 40px));
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 1rem;
-  box-shadow: 
-    0 0 20px rgba(var(--hex-color), 0.1),
-    0 0 40px rgba(0, 0, 0, 0.3);
 }
 
 .ring-selector label {
-  color: var(--hex-color);
-  font-size: 1.1rem;
-  text-transform: uppercase;
-  letter-spacing: 2px;
-  text-shadow: 0 0 10px rgba(var(--hex-color), 0.3);
+  color: var(--theme-accent);
+  text-shadow: 0 0 10px var(--theme-accent);
 }
 
 .ring-controls {
@@ -1085,9 +1079,9 @@
   width: 48px;
   height: 48px;
   border-radius: 50%;
-  border: 2px solid rgba(var(--hex-color), 0.3);
+  border: 2px solid var(--theme-accent);
   background: rgba(0, 0, 0, 0.3);
-  color: var(--hex-color);
+  color: var(--theme-accent);
   font-weight: bold;
   font-size: 1.5rem;
   transition: all 0.2s ease;
@@ -1098,9 +1092,9 @@
 }
 
 .ring-controls button:not(:disabled):hover {
-  background: rgba(var(--hex-color), 0.1);
-  transform: scale(1.1);
-  box-shadow: 0 0 15px rgba(var(--hex-color), 0.2);
+  background: var(--theme-accent);
+  color: var(--background-dark);
+  box-shadow: 0 0 15px var(--theme-accent);
 }
 
 .ring-controls button:disabled {
@@ -1161,4 +1155,41 @@
   .hex-puzzle-score {
     top: calc(5px + 54px + 5px); /* mobile top + mobile height + gap */
   }
-} 
+}
+
+/* Update ring selector styles for small screens */
+@media (max-width: 412px) {
+  .ring-selector {
+    width: calc(100% - 32px);
+    margin: 1rem auto;
+    padding: 1rem;
+    gap: 0.5rem;
+  }
+
+  .ring-controls {
+    gap: 1rem;
+    width: 100%;
+    justify-content: space-between;
+    padding: 0.75rem;
+  }
+
+  .ring-controls button {
+    width: 36px;
+    height: 36px;
+    font-size: 1.2rem;
+    padding: 0;
+  }
+
+  .ring-controls span {
+    min-width: 80px;
+    font-size: 1rem;
+  }
+
+  .ring-selector label {
+    font-size: 1rem;
+  }
+
+  .pieces-count {
+    font-size: 0.875rem;
+  }
+}
