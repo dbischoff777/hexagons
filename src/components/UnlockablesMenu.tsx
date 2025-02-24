@@ -173,6 +173,12 @@ const UnlockablesMenu: React.FC<UnlockablesMenuProps> = ({
     return null;
   };
 
+  const handleThemeSelect = (themeId: string) => {
+    onSelectTheme(themeId);
+    // Dispatch theme change event
+    window.dispatchEvent(new Event('themeChanged'));
+  };
+
   return (
     <div 
       className="unlockables-overlay" 
@@ -209,9 +215,9 @@ const UnlockablesMenu: React.FC<UnlockablesMenuProps> = ({
                 <div 
                   key={theme.id}
                   className={`theme-item ${isUnlocked ? 'unlocked' : 'locked'} ${
-                    theme.id === 'default' ? 'selected' : ''
+                    theme.id === progress.selectedTheme ? 'selected' : ''
                   } ${timeRemaining ? 'seasonal' : ''}`}
-                  onClick={() => isUnlocked && onSelectTheme(theme.id)}
+                  onClick={() => isUnlocked && handleThemeSelect(theme.id)}
                 >
                   <canvas 
                     className="theme-preview"

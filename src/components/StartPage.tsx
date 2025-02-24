@@ -132,8 +132,10 @@ const StartPage: React.FC<StartPageProps> = ({
   const [showProfile, setShowProfile] = useState(false)
   const { settings } = useAccessibility()
   const isColorBlind = settings.isColorBlind
-  const playerProgress = getPlayerProgress()
-  const theme = getTheme(playerProgress.selectedTheme || 'default')
+  const [currentTheme, setCurrentTheme] = useState(() => {
+    const playerProgress = getPlayerProgress();
+    return getTheme(playerProgress.selectedTheme || 'default');
+  });
   const [puppyPhrase, setPuppyPhrase] = useState(() => 
     PUPPY_PHRASES[Math.floor(Math.random() * PUPPY_PHRASES.length)]
   )
@@ -176,6 +178,16 @@ const StartPage: React.FC<StartPageProps> = ({
     document.addEventListener('mousemove', handleMouseMove)
     return () => document.removeEventListener('mousemove', handleMouseMove)
   }, [])
+
+  useEffect(() => {
+    const handleThemeChange = () => {
+      const playerProgress = getPlayerProgress();
+      setCurrentTheme(getTheme(playerProgress.selectedTheme || 'default'));
+    };
+
+    window.addEventListener('themeChanged', handleThemeChange);
+    return () => window.removeEventListener('themeChanged', handleThemeChange);
+  }, []);
 
   const handleNewGame = (timedMode: boolean) => {
     DEBUG.log('handleNewGame called', {
@@ -262,22 +274,22 @@ const StartPage: React.FC<StartPageProps> = ({
     <div 
       className="start-page"
       style={{
-        '--theme-primary': isColorBlind ? DEFAULT_SCHEME.colors.primary : theme.colors.primary,
-        '--theme-secondary': isColorBlind ? DEFAULT_SCHEME.colors.secondary : theme.colors.secondary,
-        '--theme-accent': isColorBlind ? DEFAULT_SCHEME.colors.accent : theme.colors.accent,
-        '--theme-background': isColorBlind ? DEFAULT_SCHEME.colors.background : theme.colors.background,
-        '--theme-text': isColorBlind ? DEFAULT_SCHEME.colors.text : theme.colors.text,
-        '--scrollbar-thumb': isColorBlind ? DEFAULT_SCHEME.colors.primary : theme.colors.primary,
-        '--scrollbar-track': `${isColorBlind ? DEFAULT_SCHEME.colors.background : theme.colors.background}40`,
-        '--scrollbar-hover': `${isColorBlind ? DEFAULT_SCHEME.colors.primary : theme.colors.primary}CC`,
+        '--theme-primary': isColorBlind ? DEFAULT_SCHEME.colors.primary : currentTheme.colors.primary,
+        '--theme-secondary': isColorBlind ? DEFAULT_SCHEME.colors.secondary : currentTheme.colors.secondary,
+        '--theme-accent': isColorBlind ? DEFAULT_SCHEME.colors.accent : currentTheme.colors.accent,
+        '--theme-background': isColorBlind ? DEFAULT_SCHEME.colors.background : currentTheme.colors.background,
+        '--theme-text': isColorBlind ? DEFAULT_SCHEME.colors.text : currentTheme.colors.text,
+        '--scrollbar-thumb': isColorBlind ? DEFAULT_SCHEME.colors.primary : currentTheme.colors.primary,
+        '--scrollbar-track': `${isColorBlind ? DEFAULT_SCHEME.colors.background : currentTheme.colors.background}40`,
+        '--scrollbar-hover': `${isColorBlind ? DEFAULT_SCHEME.colors.primary : currentTheme.colors.primary}CC`,
       } as React.CSSProperties}
     >
       <CustomCursor 
-        color={isColorBlind ? DEFAULT_SCHEME.colors.primary : theme.colors.primary}
+        color={isColorBlind ? DEFAULT_SCHEME.colors.primary : currentTheme.colors.primary}
         hide={false}
       />
       <HexagonGrid 
-        color={isColorBlind ? DEFAULT_SCHEME.colors.primary : theme.colors.primary}
+        color={isColorBlind ? DEFAULT_SCHEME.colors.primary : currentTheme.colors.primary}
         size={30}
         gap={4}
         hover={true}
@@ -492,24 +504,24 @@ const StartPage: React.FC<StartPageProps> = ({
             }
           }}
           style={{
-            '--scrollbar-thumb': isColorBlind ? DEFAULT_SCHEME.colors.primary : theme.colors.primary,
-            '--scrollbar-track': `${theme.colors.background}66`,
-            '--scrollbar-hover': isColorBlind ? DEFAULT_SCHEME.colors.primary : theme.colors.primary
+            '--scrollbar-thumb': isColorBlind ? DEFAULT_SCHEME.colors.primary : currentTheme.colors.primary,
+            '--scrollbar-track': `${currentTheme.colors.background}66`,
+            '--scrollbar-hover': isColorBlind ? DEFAULT_SCHEME.colors.primary : currentTheme.colors.primary
           } as React.CSSProperties}
         >
           <div 
             className="modal-content roadmap-modal"
             style={{
-              '--scrollbar-thumb': isColorBlind ? DEFAULT_SCHEME.colors.primary : theme.colors.primary,
-              '--scrollbar-track': `${theme.colors.background}66`,
-              '--scrollbar-hover': isColorBlind ? DEFAULT_SCHEME.colors.primary : theme.colors.primary
+              '--scrollbar-thumb': isColorBlind ? DEFAULT_SCHEME.colors.primary : currentTheme.colors.primary,
+              '--scrollbar-track': `${currentTheme.colors.background}66`,
+              '--scrollbar-hover': isColorBlind ? DEFAULT_SCHEME.colors.primary : currentTheme.colors.primary
             } as React.CSSProperties}
           >
             <div className="modal-header">
               <h2>Level Roadmap</h2>
             </div>
             <LevelRoadmap 
-              currentPoints={playerProgress.points || 0} 
+              currentPoints={getPlayerProgress().points || 0} 
               onStartGame={(withTimer) => {
                 clearSavedGame()
                 setShowLevelRoadmap(false)

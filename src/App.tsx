@@ -64,28 +64,27 @@ function App() {
   });
 
   useEffect(() => {
-    const handleStorageChange = () => {
+    const handleThemeChange = () => {
       const playerProgress = getPlayerProgress();
       const selectedTheme = playerProgress.selectedTheme || 'default';
       setTheme(getTheme(selectedTheme));
     };
 
-    // Run once on mount
-    handleStorageChange();
-
-    // Listen for storage events (from other tabs)
+    // Listen for both storage and custom theme change events
+    window.addEventListener('themeChanged', handleThemeChange);
     window.addEventListener('storage', (e) => {
       if (e.key === PROGRESSION_KEY) {
-        handleStorageChange();
+        handleThemeChange();
       }
     });
 
-    // Create a custom event for local changes
-    window.addEventListener('themeChange', handleStorageChange);
-
     return () => {
-      window.removeEventListener('storage', handleStorageChange);
-      window.removeEventListener('themeChange', handleStorageChange);
+      window.removeEventListener('themeChanged', handleThemeChange);
+      window.removeEventListener('storage', (e) => {
+        if (e.key === PROGRESSION_KEY) {
+          handleThemeChange();
+        }
+      });
     };
   }, []);
 

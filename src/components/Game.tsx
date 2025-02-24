@@ -322,11 +322,14 @@ const Game: React.FC<GameProps> = ({
   const [dailyChallenge, setDailyChallenge] = useState<DailyChallenge | null>(null)
   const [showDailyComplete, setShowDailyComplete] = useState(false)
   const [playerProgress, setPlayerProgress] = useState(getPlayerProgress())
-  const theme = getTheme(playerProgress.selectedTheme || 'default')
+  const [currentTheme, setCurrentTheme] = useState(() => {
+    const playerProgress = getPlayerProgress();
+    return getTheme(playerProgress.selectedTheme || 'default');
+  });
   const [showLevelRoadmap, setShowLevelRoadmap] = useState(false)
   const [newBadges, setNewBadges] = useState<Badge[]>([])
   const [particleIntensity, setParticleIntensity] = useState(0.5)
-  const [particleColor, setParticleColor] = useState(theme.colors.primary)
+  const [particleColor, setParticleColor] = useState(currentTheme.colors.primary)
   const [backgroundGlow, setBackgroundGlow] = useState('');
   const [animatingTiles, setAnimatingTiles] = useState<{ q: number, r: number, type: 'place' | 'match' | 'hint' }[]>([]);
   const [companion, setCompanion] = useState<Companion>(() => {
@@ -588,7 +591,7 @@ const Game: React.FC<GameProps> = ({
             if (Math.max(Math.abs(q), Math.abs(r), Math.abs(s)) <= Math.floor(cols/2)) {
               const { x, y } = hexToPixel(q, r, centerX, centerY, tileSize)
               drawHexagonWithColoredEdges({
-                ctx, x, y, size: tileSize, settings, theme, selectedTileIndex, animatingTiles
+                ctx, x, y, size: tileSize, settings, theme: currentTheme, selectedTileIndex, animatingTiles
               })
             }
           }
@@ -601,7 +604,7 @@ const Game: React.FC<GameProps> = ({
           const isSelected = selectedTileIndex !== null && tile === placedTiles[selectedTileIndex]
           
           drawHexagonWithColoredEdges({
-            ctx, x, y, size: tileSize, tile, isMatched, isSelected, settings, theme, selectedTileIndex, animatingTiles
+            ctx, x, y, size: tileSize, tile, isMatched, isSelected, settings, theme: currentTheme, selectedTileIndex, animatingTiles
           })
         })
 
@@ -618,7 +621,7 @@ const Game: React.FC<GameProps> = ({
             tile: nextTiles[selectedTileIndex],
             isSelected: true,
             settings,
-            theme,
+            theme: currentTheme,
             selectedTileIndex,
             animatingTiles,
             showInfoBox: true,  // Show info box for cursor tile
@@ -1536,25 +1539,25 @@ const Game: React.FC<GameProps> = ({
 
     // Change particle color based on score and matches
     if (scoreHandler.getScore() > 1000) {
-      setParticleColor(theme.colors.accent);
+      setParticleColor(currentTheme.colors.accent);
     } else if (scoreHandler.getScore() > 500) {
-      setParticleColor(theme.colors.secondary);
+      setParticleColor(currentTheme.colors.secondary);
     } else {
-      setParticleColor(theme.colors.primary);
+      setParticleColor(currentTheme.colors.primary);
     }
-  }, [scoreHandler.getScore(), theme]);
+  }, [scoreHandler.getScore(), currentTheme]);
 
   // Add this effect to handle background changes
   useEffect(() => {
     const getBackgroundGlow = () => {
-      if (scoreHandler.getScore() > 1500) return `radial-gradient(circle, ${theme.colors.accent}22 0%, ${theme.colors.background} 70%)`;
-      if (scoreHandler.getScore() > 1000) return `radial-gradient(circle, ${theme.colors.secondary}22 0%, ${theme.colors.background} 60%)`;
-      if (scoreHandler.getScore() > 500) return `radial-gradient(circle, ${theme.colors.primary}22 0%, ${theme.colors.background} 50%)`;
-      return `radial-gradient(circle, ${theme.colors.background} 0%, ${theme.colors.background} 100%)`;
+      if (scoreHandler.getScore() > 1500) return `radial-gradient(circle, ${currentTheme.colors.accent}22 0%, ${currentTheme.colors.background} 70%)`;
+      if (scoreHandler.getScore() > 1000) return `radial-gradient(circle, ${currentTheme.colors.secondary}22 0%, ${currentTheme.colors.background} 60%)`;
+      if (scoreHandler.getScore() > 500) return `radial-gradient(circle, ${currentTheme.colors.primary}22 0%, ${currentTheme.colors.background} 50%)`;
+      return `radial-gradient(circle, ${currentTheme.colors.background} 0%, ${currentTheme.colors.background} 100%)`;
     };
 
     setBackgroundGlow(getBackgroundGlow());
-  }, [scoreHandler.getScore(), theme]);
+  }, [scoreHandler.getScore(), currentTheme]);
 
   // Add match animation effect
   useEffect(() => {
@@ -1791,8 +1794,8 @@ const Game: React.FC<GameProps> = ({
       const scaleY = (rect.height / canvas.height) * boardScale;
       
       // Set theme colors and tile size as CSS variables
-      wrapper.style.setProperty('--theme-primary', theme.colors.primary);
-      wrapper.style.setProperty('--theme-accent', theme.colors.accent);
+      wrapper.style.setProperty('--theme-primary', currentTheme.colors.primary);
+      wrapper.style.setProperty('--theme-accent', currentTheme.colors.accent);
       wrapper.style.setProperty('--tile-size', `${tileSize * scaleX}px`);
       
       // Create ripple effects
@@ -1958,10 +1961,10 @@ const Game: React.FC<GameProps> = ({
 
   // Add this effect to update theme colors
   useEffect(() => {
-    document.documentElement.style.setProperty('--theme-accent', theme.colors.accent);
-    document.documentElement.style.setProperty('--theme-secondary', theme.colors.secondary);
-    document.documentElement.style.setProperty('--theme-background', theme.colors.background);
-  }, [theme]);
+    document.documentElement.style.setProperty('--theme-accent', currentTheme.colors.accent);
+    document.documentElement.style.setProperty('--theme-secondary', currentTheme.colors.secondary);
+    document.documentElement.style.setProperty('--theme-background', currentTheme.colors.background);
+  }, [currentTheme]);
 
   // Add this helper function outside the component
   const getRandomPhrase = (phrases: readonly string[]): string => {
@@ -2437,18 +2440,28 @@ const Game: React.FC<GameProps> = ({
     }
   }, [isGameOver]);
 
+  useEffect(() => {
+    const handleThemeChange = () => {
+      const playerProgress = getPlayerProgress();
+      setCurrentTheme(getTheme(playerProgress.selectedTheme || 'default'));
+    };
+
+    window.addEventListener('themeChanged', handleThemeChange);
+    return () => window.removeEventListener('themeChanged', handleThemeChange);
+  }, []);
+
   return (
     <div 
       className={`game ${tutorial ? 'tutorial-mode' : ''}`}
       ref={wrapperRef}
       onContextMenu={handleContextMenu}
       style={{
-        '--theme-accent': theme.colors.accent,
-        '--theme-secondary': theme.colors.secondary,
+        '--theme-accent': currentTheme.colors.accent,
+        '--theme-secondary': currentTheme.colors.secondary,
       } as React.CSSProperties}
     >
       <CustomCursor 
-        color={theme.colors.primary}
+        color={currentTheme.colors.primary}
         hide={selectedTileIndex !== null}
       />
       <div className="particles-container">
