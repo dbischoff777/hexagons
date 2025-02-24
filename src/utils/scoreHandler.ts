@@ -7,6 +7,7 @@ export class ScoreHandler {
   constructor(initialScore: number = 0) {
     this.currentScore = initialScore;
     this.previousScore = initialScore;
+    console.log('ScoreHandler initialized with:', initialScore);
   }
 
   // Get current score
@@ -21,6 +22,11 @@ export class ScoreHandler {
 
   // Update score with new value
   setScore(newScore: number): number {
+    console.log('ScoreHandler setScore:', {
+      previous: this.currentScore,
+      new: newScore,
+      change: newScore - this.currentScore
+    });
     this.previousScore = this.currentScore;
     this.currentScore = newScore;
     return this.currentScore;
@@ -28,6 +34,11 @@ export class ScoreHandler {
 
   // Add points to current score
   addPoints(points: number): number {
+    console.log('ScoreHandler addPoints:', {
+      current: this.currentScore,
+      adding: points,
+      newTotal: this.currentScore + points
+    });
     return this.setScore(this.currentScore + points);
   }
 
@@ -49,6 +60,14 @@ export class ScoreHandler {
       multiplier *= combo.multiplier;
     }
 
-    return Math.round(basePoints * multiplier);
+    const finalScore = Math.round(basePoints * multiplier);
+    console.log('ScoreHandler calculateScore:', {
+      basePoints,
+      powerUpMultiplier: powerUps.multiplier.active ? powerUps.multiplier.value : 1,
+      comboMultiplier: combo.multiplier,
+      totalMultiplier: multiplier,
+      finalScore
+    });
+    return finalScore;
   }
 } 

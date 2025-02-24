@@ -44,16 +44,10 @@ import bulldogConfig from '../config/bulldogConfig.json'
 import { animateRotation, rotateTileEdges, setupRotationTimer } from '../utils/rotationUtils';
 import '../styles/rotation.css';
 import { 
+  getFeedbackForScore,
+  handleTileMatches,
+  updateTileValues,
   hasMatchingEdges, 
-  updateTileValues, 
-  getFeedbackForScore, 
-  getFeedbackForCombo,
-  getRandomFeedback,
-  getFeedbackForClear,
-  calculateScore,
-  handleTileMatches, 
-  handleGridClearEffects, 
-  shouldPlayMatchSound
 } from '../utils/matchingUtils';
 import { RotationState } from '../utils/rotationUtils';
 import { createInitialTile, createTiles } from '../utils/tileFactory';
@@ -514,9 +508,13 @@ const Game: React.FC<GameProps> = ({
 
   // Remove any other debug logging effects
 
-  // 1. Modify handleScoreChange to be more efficient
-  const handleScoreChange = useCallback((newScore: number) => {
-    scoreHandler.setScore(newScore);
+  // 1. Modify handleScoreChange to be more efficient and add debugging
+  const handleScoreChange = useCallback((points: number) => {
+    console.log('handleScoreChange called with points:', points, {
+      currentScore: scoreHandler.getScore(),
+      willBecome: scoreHandler.getScore() + points
+    });
+    scoreHandler.addPoints(points);
   }, [scoreHandler]);
 
   // Move addTileAnimation outside useEffect and memoize it
@@ -813,7 +811,7 @@ const Game: React.FC<GameProps> = ({
               });
               
               // Update score
-              handleScoreChange(scoreHandler.addPoints(mirrorPoints));
+              handleScoreChange(mirrorPoints);
               soundManager.playSound('mirror');
             }
           }
@@ -854,133 +852,26 @@ const Game: React.FC<GameProps> = ({
 
           // Inside handleClick where we handle matches
           if (matchCount > 0) {
-            const basePoints = matchCount * 5;
-            const matchScore = calculateScore(basePoints, upgradeState, powerUps, combo);
-            
-            // Batch all state updates together
-            const updatedTiles = newPlacedTiles.map(tile => ({
-              ...tile,
-              value: tile.hasBeenMatched ? matchScore : tile.value
-            }));
-            
-            // Improved grid full check with debug logging
-            const isGridFullNow = (() => {
-              // Count valid positions
-              let validPositions = 0;
-              let occupiedPositions = 0;
-              let validCoords: string[] = [];
-              let missingCoords: string[] = [];
-              
-              // Calculate the radius of the hexagonal grid
-              const radius = Math.floor(cols/2);
-              
-              // Check each position in the grid
-              for (let q = -radius; q <= radius; q++) {
-                // Calculate r bounds for this q
-                const r1 = Math.max(-radius, -q-radius);
-                const r2 = Math.min(radius, -q+radius);
-                
-                for (let r = r1; r <= r2; r++) {
-                  validPositions++;
-                  validCoords.push(`(${q},${r})`);
-                  
-                  if (updatedTiles.some(tile => tile.q === q && tile.r === r)) {
-                    occupiedPositions++;
-                  } else {
-                    missingCoords.push(`(${q},${r})`);
-                  }
-                }
-              }
-              
-              // Debug logging
-              const isComplete = validPositions === occupiedPositions && validPositions === 37; // Hexagonal grid with radius 3 should have 37 tiles
-              
-              return isComplete;
-            })();
-
-            if (isGridFullNow) {
-              const wrapper = wrapperRef.current;
-              const canvas = canvasRef.current;
-              
-              if (wrapper && canvas && !wrapper.classList.contains('grid-full')) {
-                wrapper.classList.add('grid-full');
-                
-                // Get scaling factors
-                const rect = canvas.getBoundingClientRect();
-                const displayWidth = rect.width;
-                const displayHeight = rect.height;
-                const scaleX = displayWidth / canvas.width;
-                const scaleY = displayHeight / canvas.height;
-                
-                // Create ripple effects
-                for (let i = 1; i <= 3; i++) {
-                  const ripple = document.createElement('div');
-                  ripple.className = `hex-ripple ripple-${i}`;
-                  wrapper.appendChild(ripple);
-                }
-                
-                // Create flash effects for each tile position
-                VALID_POSITIONS.forEach(([q, r]) => {
-                  const ring = getRingNumber(q, r);
-                  const flash = document.createElement('div');
-                  flash.className = `tile-flash ring-${ring}`;
-                  
-                  // Get canvas position
-                  const { x: canvasX, y: canvasY } = hexToPixel(q, r, centerX, centerY, tileSize);
-                  
-                  // Convert to screen coordinates
-                  const screenX = canvasX * scaleX;
-                  const screenY = canvasY * scaleY;
-                  
-                  // Set position using transformed coordinates
-                  flash.style.left = `${screenX}px`;
-                  flash.style.top = `${screenY}px`;
-                  
-                  // Scale the flash effect size
-                  const scaledSize = tileSize * scaleX;
-                  flash.style.width = `${scaledSize}px`;
-                  flash.style.height = `${scaledSize}px`;
-                  
-                  wrapper.appendChild(flash);
-                });
-                
-                // Clean up effects after animation
-                setTimeout(() => {
-                  wrapper.classList.remove('grid-full');
-                  const elements = wrapper.querySelectorAll('.hex-ripple, .tile-flash');
-                  elements.forEach(el => el.remove());
-                }, 1200);
-              }
-            }
-            
-            // Update all states
-            setPlacedTiles(updatedTiles);
-            handleScoreChange(scoreHandler.addPoints(basePoints));
+            handleTilePlacement(updatedPlacedTile, newPlacedTiles);
+            setPlacedTiles(newPlacedTiles);
             addTileAnimation(q, r, 'match');
-            setLastAction({ type: 'match', value: basePoints });
-            
+            setLastAction({ type: 'match', value: matchCount * SCORING_CONFIG.baseMatch });
+
+            // Remove grid clear check here since it's handled in the effect
             addScorePopup({
-              score: basePoints,
+              score: matchCount * SCORING_CONFIG.baseMatch,
               x: canvas.width / 2,
               y: canvas.height / 2 - 100,
-              emoji: getFeedbackForScore(basePoints).emoji,
+              emoji: getFeedbackForScore(matchCount * SCORING_CONFIG.baseMatch).emoji,
               text: matchCount === 1 ? 'Edge Match!' : 'Multiple Matches!',
               type: 'score'
             });
-            
-            // Call handlers after state updates
-            handleMatches(matchCount);
           }
 
           // Check for matches for grid-full bonus
           const matchingTiles = newPlacedTiles.filter((tile: PlacedTile) => 
             hasMatchingEdges(tile, newPlacedTiles, settings.isColorBlind)
           );
-          
-          // Additional bonus for clearing tiles when grid is full
-          if (matchingTiles.length >= 3 && isGridFull(newPlacedTiles, cols)) {
-            handleGridClear();
-          }
           
           // Update board with new tile
           setPlacedTiles(newPlacedTiles)
@@ -999,87 +890,6 @@ const Game: React.FC<GameProps> = ({
           newTiles[selectedTileIndex] = createTileWithRandomEdges(0, 0);
           setNextTiles(newTiles)
           setSelectedTileIndex(null)
-
-          // Update combo only if there's a match
-          if (matchCount > 0) {
-            const now = Date.now();
-            const timeSinceLastPlacement = now - combo.lastPlacementTime;
-            const quickPlacement = timeSinceLastPlacement < 2000;
-
-            // Handle quick placement bonus with dynamic multiplier
-            if (quickPlacement) {
-              const quickMultiplier = calculateDynamicMultiplier(
-                SCORING_CONFIG.quickPlacement.baseMultiplier,
-                SCORING_CONFIG.quickPlacement.levelScaling,
-                SCORING_CONFIG.quickPlacement.maxMultiplier,
-                playerProgress.level,
-                combo.count // Use combo count to increase quick bonus
-              );
-              
-              const quickBonus = Math.round(matchCount * SCORING_CONFIG.baseMatch * quickMultiplier);
-              const quickInfo = getRandomFeedback('QUICK');
-              
-              setTimeout(() => {
-                addScorePopup({
-                  score: quickBonus,
-                  x: canvas.width / 2,
-                  y: canvas.height / 2 + 25,
-                  emoji: quickInfo.emoji,
-                  text: `${quickInfo.text}`,
-                  type: 'quick'
-                });
-
-                handleScoreChange(scoreHandler.addPoints(quickBonus));
-                setTimeout(() => {
-                  handleScoreChange(scoreHandler.addPoints(quickBonus));
-                }, 50);
-              }, 200);
-            }
-
-            // Update the combo handling with dynamic multiplier
-            const newComboState = {
-              count: quickPlacement ? combo.count + 1 : 1,
-              timer: 3,
-              multiplier: calculateDynamicMultiplier(
-                SCORING_CONFIG.combo.baseMultiplier,
-                SCORING_CONFIG.combo.levelScaling,
-                SCORING_CONFIG.combo.maxMultiplier,
-                playerProgress.level,
-                quickPlacement ? combo.count + 1 : 1
-              ),
-              lastPlacementTime: now
-            };
-
-            setCombo(newComboState);
-
-            // Calculate base match score with combo multiplier
-            const baseMatchScore = matchCount * SCORING_CONFIG.baseMatch;
-            const comboBonus = Math.round(baseMatchScore * (newComboState.multiplier - 1));
-            
-            if (comboBonus > 0) {
-              const comboInfo = getFeedbackForCombo(newComboState.count);
-              addScorePopup({
-                score: comboBonus,
-                x: canvas.width / 2,
-                y: canvas.height / 2 + 50,
-                emoji: comboInfo?.emoji ?? '🔥',
-                text: comboInfo?.text ?? 'Combo!',
-                type: 'combo'
-              });
-              setLastAction({ type: 'combo', value: combo.count });
-              
-              // Single score update
-              handleScoreChange(scoreHandler.getScore() + comboBonus);
-            }
-          } else {
-            // Reset combo if no match
-            setCombo({
-              count: 0,
-              timer: 0,
-              multiplier: 1,
-              lastPlacementTime: 0
-            });
-          }
 
           // When selecting a tile, calculate potential matches
           if (settings.showMatchHints || settings.isColorBlind) {
@@ -1105,85 +915,21 @@ const Game: React.FC<GameProps> = ({
               score: scoreHandler.getScore()
             });
 
-            // Calculate base score from matches
-            const baseMatchScore = matchCount * 5;
-            let newTotalScore = scoreHandler.addPoints(baseMatchScore);
-
-            // Check if grid is full and there are matches
-            const isGridFullWithMatches = matchCount > 0 && isGridFull(newPlacedTiles, cols);
-            
-            if (isGridFullWithMatches) {
-              // Calculate clear bonus
-              const matchingTiles = newPlacedTiles.filter(tile => 
-                hasMatchingEdges(tile, newPlacedTiles, settings.isColorBlind)
-              );
-              const totalMatchScore = matchingTiles.reduce((sum, tile) => sum + tile.value, 0);
-              const multiplier = matchingTiles.length;
-              const clearBonus = calculateScore(totalMatchScore * multiplier * 2, upgradeState, powerUps, combo);
-              
-              // Add clear bonus to total score
-              newTotalScore = scoreHandler.addPoints(clearBonus);
-
-              // Show clear bonus popup
-              const clearInfo = getFeedbackForClear(clearBonus);
-              addScorePopup({
-                score: clearBonus,
-                x: canvas.width / 2,
-                y: canvas.height / 2 - 50,
-                emoji: clearInfo?.emoji ?? '✨',
-                text: clearInfo?.text ?? 'Clear!',
-                type: 'clear'
-              });
-            }
+            // Remove grid clear check from here since it's handled in the effect
+            // const isGridFullWithMatches = isGridFull(newPlacedTiles, cols);
+            // if (isGridFullWithMatches) { ... }
 
             // Check for achievements
             checkAchievements({
               tilesPlaced: 1,
               comboCount: combo.count,
-              score: newTotalScore,
-              clearBonus: isGridFullWithMatches
+              score: scoreHandler.getScore(),
+              clearBonus: false // Let the effect handle grid clear
             });
-
-            // Update the score with the total including clear bonus
-            handleScoreChange(newTotalScore);
 
             // Update daily challenge objectives
             if (isDailyChallenge) {
-              updateObjectives(matchCount, combo.count, newTotalScore);
-            }
-
-            // Check for level completion with the new total score
-            if (isLevelMode && targetScore && newTotalScore >= targetScore && !isGameOver) {
-              const levelInfo = getCurrentLevelInfo(newTotalScore);
-              
-              setIsGameOver(true);
-              
-              // Calculate bonus points
-              const bonusPoints = Math.floor((newTotalScore - targetScore) / 100);
-              
-              // Get completion info from unlockNextLevel
-              const completion = unlockNextLevel(newTotalScore, levelInfo.currentBlock, levelInfo.currentLevel);
-              
-              if (completion) {
-                // Get next level info to determine if there is a next level to unlock
-                const nextLevelInfo = getNextLevelInfo(levelInfo.currentBlock, levelInfo.currentLevel, LEVEL_BLOCKS);
-                
-                // Show congratulations modal
-                setShowLevelComplete({
-                  ...completion,
-                  targetScore: targetScore, // Use the prop directly
-                  bonusPoints: bonusPoints,
-                  message: 'Level Complete!',
-                  isNextLevelUnlock: !!nextLevelInfo // Set based on whether next level exists
-                });
-                
-                // Update player progress
-                const progress = getPlayerProgress();
-                progress.points = Math.max(progress.points || 0, newTotalScore);
-                localStorage.setItem(PROGRESSION_KEY, JSON.stringify(progress));
-                
-                onGameOver();
-              }
+              updateObjectives(matchCount, combo.count, scoreHandler.getScore());
             }
           }
 
@@ -2027,49 +1773,13 @@ const Game: React.FC<GameProps> = ({
     }
   }, [isGameOver, scoreHandler.getScore()]);
 
-  // Modify the match handling code to award points for multiple matches
-  const handleMatches = (matchCount: number) => {
-    if (matchCount >= UPGRADE_POINT_REWARDS.match.threshold) {
-      const bonusPoints = Math.floor(
-        (matchCount - UPGRADE_POINT_REWARDS.match.threshold) * 
-        UPGRADE_POINT_REWARDS.match.bonus
-      );
-      const totalPoints = UPGRADE_POINT_REWARDS.match.base + bonusPoints;
-      const newScore = scoreHandler.addPoints(totalPoints);
-      handleScoreChange(newScore);
-    }
-  };
-
-  // Modify the combo handling code
-  useEffect(() => {
-    if (combo.count >= UPGRADE_POINT_REWARDS.combo.threshold) {
-      const bonusPoints = Math.floor(
-        (combo.count - UPGRADE_POINT_REWARDS.combo.threshold) * 
-        UPGRADE_POINT_REWARDS.combo.bonus
-      );
-      const totalPoints = UPGRADE_POINT_REWARDS.combo.base + bonusPoints;
-      const newScore = scoreHandler.addPoints(totalPoints);
-      handleScoreChange(newScore);
-    }
-  }, [combo.count]);
-
-  // Update the handleGridClear function
-  const handleGridClear = () => {
+  const handleGridClear = (points: number) => {
     const wrapper = wrapperRef.current;
     const canvas = canvasRef.current;
     
     if (wrapper && canvas) {
       cleanupGridAnimations(wrapper);
-      
-      // Calculate grid clear points with combo multiplier
-      const gridClearPoints = scoreHandler.calculateScore(
-        GRID_CLEAR_POINTS,
-        powerUps,
-        combo
-      );
-      
-      // Update score
-      handleScoreChange(gridClearPoints);
+      wrapper.classList.add('grid-full');
       
       // Get the game board scale from CSS variable
       const boardScale = parseFloat(getComputedStyle(document.documentElement)
@@ -2079,8 +1789,6 @@ const Game: React.FC<GameProps> = ({
       const rect = canvas.getBoundingClientRect();
       const scaleX = (rect.width / canvas.width) * boardScale;
       const scaleY = (rect.height / canvas.height) * boardScale;
-      
-      wrapper.classList.add('grid-full');
       
       // Set theme colors and tile size as CSS variables
       wrapper.style.setProperty('--theme-primary', theme.colors.primary);
@@ -2117,40 +1825,53 @@ const Game: React.FC<GameProps> = ({
         
         wrapper.appendChild(flash);
       });
-
+  
       // Add score popup
       addScorePopup({
-        score: gridClearPoints,
+        score: points,
         x: centerX,
         y: centerY,
         type: 'clear',
         emoji: '✨',
         text: 'Grid Clear!'
       });
-
-      // Update objectives if in daily challenge
-      if (isDailyChallenge) {
-        updateObjectives(0, combo.count, scoreHandler.getScore());
-      }
-
+  
       // Play sound effect
-      soundManager.playSound('gridClear');
-
+      if (soundEnabled) {
+        soundManager.playSound('gridClear');
+      }
+  
       // Clean up effects after animation
       const cleanupTimeout = setTimeout(() => {
         cleanupGridAnimations(wrapper);
         setPlacedTiles([createInitialTile()]);
       }, 1200);
-
+  
       return () => clearTimeout(cleanupTimeout);
     }
   };
 
-  // Update the grid full check
+  // Update the grid full check effect
   useEffect(() => {
     const checkGridFull = () => {
       if (isGridFull(placedTiles, cols) && !isGameOver && !tutorialState.active) {
-        handleGridClear();
+        // Calculate grid clear points with all bonuses
+        const gridClearPoints = scoreHandler.calculateScore(GRID_CLEAR_POINTS, powerUps, combo);
+        
+        // Clear tiles first
+        setPlacedTiles([createInitialTile()]);
+        
+        // Then add score and trigger animations
+        handleScoreChange(gridClearPoints);
+        handleGridClear(gridClearPoints);
+
+        // Update objectives if in daily challenge
+        if (isDailyChallenge) {
+          updateObjectives(0, combo.count, scoreHandler.getScore());
+        }
+
+        // Award experience for grid clear
+        awardExperience('clear', EXPERIENCE_VALUES.clear);
       }
     };
 
@@ -2234,17 +1955,6 @@ const Game: React.FC<GameProps> = ({
       checkLevelCompletion();
     }
   }, [checkLevelCompletion, isLevelComplete]);
-
-  // Add this effect to check for grid full condition
-  useEffect(() => {
-    if (isGridFull(placedTiles, cols) && !isGameOver && !tutorialState.active) {
-      // Clear the grid
-      handleGridClear();
-      
-      // Reset the grid
-      setPlacedTiles([createInitialTile()]);
-    }
-  }, [placedTiles, cols, isGameOver, tutorialState.active, handleGridClear]);
 
   // Add this effect to update theme colors
   useEffect(() => {
@@ -2552,11 +2262,12 @@ const Game: React.FC<GameProps> = ({
                 newTiles[selectedTileIndex] = createTileWithRandomEdges(0, 0);
                 setNextTiles(newTiles);
                 setSelectedTileIndex(null);
-                // Handle matches, combos, and other effects
-                handleTilePlacement(newTile, placedTiles);
+
+                // Only add animation, don't call handleTilePlacement
+                addTileAnimation(newTile.q, newTile.r, 'match');
               },
               onScoreUpdate: (newScore) => {
-                handleScoreChange(scoreHandler.addPoints(newScore));
+                handleScoreChange(newScore);
               },
               onComboUpdate: (newComboState) => {
                 setCombo(newComboState);
@@ -2596,7 +2307,7 @@ const Game: React.FC<GameProps> = ({
   // Add a helper function to handle tile placement effects
   const handleTilePlacement = (newTile: PlacedTile, currentTiles: PlacedTile[]) => {
     // Use centralized matching logic
-    const { matchCount, updatedTiles } = handleTileMatches(  // Remove matchScore from destructuring
+    const { matchCount } = handleTileMatches(
       newTile,
       currentTiles,
       settings,
@@ -2606,38 +2317,77 @@ const Game: React.FC<GameProps> = ({
     );
 
     if (matchCount > 0) {
-      // Handle matches, scoring, and effects
-      handleMatches(matchCount);
-      
+      const basePoints = matchCount * SCORING_CONFIG.baseMatch;
+      const now = Date.now();
+      const timeSinceLastPlacement = now - combo.lastPlacementTime;
+      const quickPlacement = timeSinceLastPlacement < 2000;
+
+      const newComboState = {
+        count: quickPlacement ? combo.count + 1 : 1,
+        timer: 3,
+        multiplier: calculateDynamicMultiplier(
+          SCORING_CONFIG.combo.baseMultiplier,
+          SCORING_CONFIG.combo.levelScaling,
+          SCORING_CONFIG.combo.maxMultiplier,
+          playerProgress.level,
+          quickPlacement ? combo.count + 1 : 1
+        ),
+        lastPlacementTime: now
+      };
+      setCombo(newComboState);
+
+      // Calculate all score components in one place
+      const comboBonus = Math.round(basePoints * (newComboState.multiplier - 1));
+      const quickBonus = quickPlacement ? Math.round(basePoints * 0.5) : 0;
+      const matchBonus = matchCount >= UPGRADE_POINT_REWARDS.match.threshold ? 
+        UPGRADE_POINT_REWARDS.match.base + 
+        Math.floor((matchCount - UPGRADE_POINT_REWARDS.match.threshold) * UPGRADE_POINT_REWARDS.match.bonus) : 0;
+
+      // Single score update
+      const totalPoints = basePoints + comboBonus + quickBonus + matchBonus;
+      handleScoreChange(totalPoints);
+
       // Add match animation
       addTileAnimation(newTile.q, newTile.r, 'match');
 
-      // Play match sound if enabled
-      if (soundEnabled && shouldPlayMatchSound(matchCount)) {
+      // Play match sound
+      if (soundEnabled) {
         soundManager.playSound('match');
       }
-    }
 
-    // Check for grid full condition
-    if (isGridFull(updatedTiles, cols)) {
-      const { matchingTiles, newComboState } = handleGridClearEffects(
-        updatedTiles,
-        settings,
-        combo
-      );
+      // Add popups for each score component
+      addScorePopup({
+        score: basePoints,
+        x: centerX,
+        y: centerY - 100,
+        emoji: getFeedbackForScore(basePoints).emoji,
+        text: matchCount === 1 ? 'Edge Match!' : 'Multiple Matches!',
+        type: 'score'
+      });
 
-      if (matchingTiles.length > 0) {
-        handleGridClear();
-        setCombo(newComboState);
+      if (comboBonus > 0) {
+        addScorePopup({
+          score: comboBonus,
+          x: centerX,
+          y: centerY + 50,
+          emoji: '🔥',
+          text: 'Combo!',
+          type: 'combo'
+        });
+      }
+
+      if (quickBonus > 0) {
+        addScorePopup({
+          score: quickBonus,
+          x: centerX,
+          y: centerY + 25,
+          emoji: '⚡',
+          text: 'Quick!',
+          type: 'quick'
+        });
       }
     }
-
-    // Update tutorial state if needed
-    if (tutorialState.active) {
-      setTutorialState(prev => ({ ...prev, hasPlaced: true }));
-      progressTutorial();
-    }
-  };
+  }
 
   // Add state for daily challenge objectives
   const [dailyObjectives, setDailyObjectives] = useState<DailyObjective[]>(() => {
