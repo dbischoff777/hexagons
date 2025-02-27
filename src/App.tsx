@@ -22,6 +22,8 @@ import SettingsModal from './components/SettingsModal'
 import HexPuzzleMode from './components/HexPuzzleMode'
 import { createDebugLogger } from './utils/debugUtils'
 import { DEFAULT_SCHEME } from './utils/colorSchemes'
+import SimonMode from './modes/SimonMode'
+import { SimonDifficulty } from './types/simon'
 
 interface CurrentGame {
   isLevelMode: boolean;
@@ -58,10 +60,12 @@ function App() {
   const [isPuzzleMode, setIsPuzzleMode] = useState(false);
   const { settings } = useAccessibility();
   const isColorBlind = settings.isColorBlind;
-  const [theme, setTheme] = useState(() => {
+  const [theme, setTheme] = useState(() => {  
     const playerProgress = getPlayerProgress();
     return getTheme(playerProgress.selectedTheme || 'default');
   });
+  const [isSimonMode, setIsSimonMode] = useState(false);
+  const [simonDifficulty, setSimonDifficulty] = useState<SimonDifficulty>('easy');
 
   useEffect(() => {
     const handleThemeChange = () => {
@@ -147,7 +151,8 @@ function App() {
     targetScore?: number,
     isLevelMode?: boolean,
     isPuzzle?: boolean,
-    isDaily?: boolean
+    isDaily?: boolean,
+    isSimon?: boolean
   ) => {
     // Clean up previous game instance
     soundManager.stopBackgroundMusic();
@@ -164,6 +169,7 @@ function App() {
     requestAnimationFrame(() => {
       setIsPuzzleMode(!!isPuzzle);
       setIsDailyChallenge(!!isDaily);
+      setIsSimonMode(!!isSimon);
 
       if (isLevelMode) {
         const progress = getPlayerProgress();
@@ -325,7 +331,21 @@ function App() {
             } as React.CSSProperties}
           >
             {gameStarted ? (
-              isPuzzleMode ? (
+              isSimonMode ? (
+                <SimonMode
+                  onGameOver={() => {
+                    setGameStarted(false);
+                    setIsSimonMode(false);
+                  }}
+                  onExit={() => {
+                    setGameStarted(false);
+                    setIsSimonMode(false);
+                  }}
+                  difficulty={simonDifficulty}
+                  onDifficultyChange={setSimonDifficulty}
+                  soundEnabled={soundEnabled}
+                />
+              ) : isPuzzleMode ? (
                 <HexPuzzleMode
                   onComplete={() => {
                     soundManager.playSound('achievement');
@@ -360,13 +380,14 @@ function App() {
               )
             ) : (
               <StartPage 
-                onStartGame={(withTimer, isDailyChallenge, isPuzzleMode) => {
+                onStartGame={(withTimer, isDailyChallenge, isPuzzleMode, isSimonMode) => {
                   handleStartGame(
                     withTimer, 
                     currentGame?.targetScore,
-                    withTimer && !isDailyChallenge && !isPuzzleMode,
+                    withTimer && !isDailyChallenge && !isPuzzleMode && !isSimonMode,
                     isPuzzleMode,
-                    isDailyChallenge
+                    isDailyChallenge,
+                    isSimonMode
                   );
                 }}
                 onMusicToggle={handleMusicToggle}

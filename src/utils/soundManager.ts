@@ -87,6 +87,44 @@ export class SoundManager {
     // Also stop background music
     this.stopBackgroundMusic();
   }
+
+  /**
+   * Plays a sound for a specific tile
+   * @param tileIndex The index of the tile (0-6)
+   */
+  playTileSound(tileIndex: number) {
+    const frequencies = [
+      261.63, // C4
+      293.66, // D4
+      329.63, // E4
+      349.23, // F4
+      392.00, // G4
+      440.00, // A4
+      493.88  // B4
+    ];
+
+    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+
+    oscillator.type = 'sine';
+    oscillator.frequency.value = frequencies[tileIndex % frequencies.length];
+
+    gainNode.gain.setValueAtTime(0, audioContext.currentTime);
+    gainNode.gain.linearRampToValueAtTime(0.5, audioContext.currentTime + 0.01);
+    gainNode.gain.linearRampToValueAtTime(0, audioContext.currentTime + 0.3);
+
+    oscillator.start(audioContext.currentTime);
+    oscillator.stop(audioContext.currentTime + 0.3);
+
+    // Clean up
+    setTimeout(() => {
+      audioContext.close();
+    }, 1000);
+  }
 }
 
 export default SoundManager

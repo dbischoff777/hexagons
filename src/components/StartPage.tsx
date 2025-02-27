@@ -14,7 +14,7 @@ import { APP_VERSION } from '../constants/version'
 import styles from '../styles/bubbleText.module.css'
 import HexagonGrid from './HexagonGrid'
 import SpringModal from './SpringModal'
-import { FaPuzzlePiece, FaUser, FaArrowLeft } from 'react-icons/fa'
+import { FaPuzzlePiece, FaUser, FaArrowLeft, FaRegLightbulb, FaMemory, FaBrain } from 'react-icons/fa'
 import CustomCursor from './CustomCursor'
 import { useAccessibility } from '../contexts/AccessibilityContext'
 import { DEFAULT_SCHEME } from '../utils/colorSchemes'
@@ -25,7 +25,8 @@ interface StartPageProps {
   onStartGame: (
     withTimer: boolean, 
     isDailyChallenge?: boolean,
-    isPuzzleMode?: boolean
+    isPuzzleMode?: boolean,
+    isSimonMode?: boolean
   ) => void
   onMusicToggle: (enabled: boolean) => void
   onSoundToggle: (enabled: boolean) => void
@@ -206,7 +207,7 @@ const StartPage: React.FC<StartPageProps> = ({
         isDailyChallenge: undefined,
         isPuzzleMode: undefined
       });
-      onStartGame(timedMode, false, false);
+      onStartGame(timedMode, false, false, false);
     }
   };
 
@@ -218,7 +219,7 @@ const StartPage: React.FC<StartPageProps> = ({
         isDailyChallenge: false,
         isPuzzleMode: false
       });
-      onStartGame(savedGame.timedMode, false, false);
+      onStartGame(savedGame.timedMode, false, false, false);
     }
   }
 
@@ -249,6 +250,11 @@ const StartPage: React.FC<StartPageProps> = ({
     }, 300) // Match this with your transition duration
   }
 
+  const handleStartSimon = () => {
+    DEBUG.log('Starting Simon Says mode');
+    onStartGame(false, false, false, true);
+  };
+
   if (showTutorial) {
     return (
       <PageTransition isExiting={isTutorialExiting}>
@@ -260,7 +266,7 @@ const StartPage: React.FC<StartPageProps> = ({
           tutorial={true}
           onExit={handleCloseTutorial}
           onSkipTutorial={handleCloseTutorial}
-          onStartGame={(withTimer) => onStartGame(withTimer, false, false)}
+          onStartGame={(withTimer) => onStartGame(withTimer, false, false, false)}
           isLevelMode={false}
           onLevelComplete={() => {}}
           showLevelComplete={false}
@@ -392,7 +398,7 @@ const StartPage: React.FC<StartPageProps> = ({
                 <button 
                   className="mode-button daily" 
                   onClick={() => {
-                    onStartGame(false, true, false)
+                    onStartGame(false, true, false, false)
                   }}
                   onMouseEnter={() => handleButtonHover('daily')}
                 >
@@ -402,7 +408,7 @@ const StartPage: React.FC<StartPageProps> = ({
 
                 <button 
                   className="mode-button puzzle"
-                  onClick={() => onStartGame(false, false, true)}
+                  onClick={() => onStartGame(false, false, true, false)}
                   onMouseEnter={() => handleButtonHover('puzzle')}
                 >
                   <div className="mode-title">
@@ -410,6 +416,19 @@ const StartPage: React.FC<StartPageProps> = ({
                   </div>
                   <div className="mode-desc">
                     Solve the hex image puzzle!
+                  </div>
+                </button>
+
+                <button 
+                  className="mode-button simon"
+                  onClick={handleStartSimon}
+                  onMouseEnter={() => handleButtonHover('puzzle')}
+                >
+                  <div className="mode-title">
+                    <FaBrain /> Simon Says
+                  </div>
+                  <div className="mode-desc">
+                    Follow the sequence pattern!
                   </div>
                 </button>
 
@@ -463,7 +482,7 @@ const StartPage: React.FC<StartPageProps> = ({
             onClick={() => {
               clearSavedGame();
               if (pendingGameMode !== null) {
-                onStartGame(pendingGameMode, false, false);
+                onStartGame(pendingGameMode, false, false, false);
               }
               setShowConfirmModal(false);
             }}
@@ -525,7 +544,7 @@ const StartPage: React.FC<StartPageProps> = ({
               onStartGame={(withTimer) => {
                 clearSavedGame()
                 setShowLevelRoadmap(false)
-                onStartGame(withTimer)
+                onStartGame(withTimer, false, false, false)
               }}
             />
           </div>

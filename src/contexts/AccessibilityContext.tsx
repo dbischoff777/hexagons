@@ -1,11 +1,20 @@
 import React, { createContext, useContext, useState } from 'react'
 import { AccessibilitySettings } from '../types/accessibility'
 
+export interface AccessibilitySettings {
+  isColorBlind: boolean;
+  showMatchHints: boolean;
+  showLabels: boolean;
+  showEdgeNumbers: boolean;
+  usePatterns: boolean;
+}
+
 const defaultSettings: AccessibilitySettings = {
   isColorBlind: false,
   showEdgeNumbers: false,
   showMatchHints: false,
-  usePatterns: true
+  usePatterns: true,
+  showLabels: true
 }
 
 const AccessibilityContext = createContext<{

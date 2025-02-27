@@ -163,4 +163,45 @@ export const getAdjacentDirection = (fromQ: number, fromR: number, toQ: number, 
   
   // Return -1 if not adjacent
   return -1;
+};
+
+/**
+ * Converts pixel coordinates to hex coordinates
+ * @param x The x coordinate relative to the center
+ * @param y The y coordinate relative to the center
+ * @param size The size of the hexagon
+ * @returns The hex coordinates {q, r}
+ */
+export const pixelToHex = (x: number, y: number, size: number) => {
+  const q = ((Math.sqrt(3)/3 * x - 1/3 * y) / size);
+  const r = ((2/3 * y) / size);
+  return roundHex(q, r);
+};
+
+/**
+ * Rounds floating point hex coordinates to the nearest hex
+ * @param q The q coordinate
+ * @param r The r coordinate
+ * @returns The rounded hex coordinates {q, r}
+ */
+const roundHex = (q: number, r: number) => {
+  let s = -q - r;
+  
+  let rq = Math.round(q);
+  let rr = Math.round(r);
+  let rs = Math.round(s);
+  
+  const qDiff = Math.abs(rq - q);
+  const rDiff = Math.abs(rr - r);
+  const sDiff = Math.abs(rs - s);
+  
+  if (qDiff > rDiff && qDiff > sDiff) {
+    rq = -rr - rs;
+  } else if (rDiff > sDiff) {
+    rr = -rq - rs;
+  } else {
+    rs = -rq - rr;
+  }
+  
+  return { q: rq, r: rr };
 }; 

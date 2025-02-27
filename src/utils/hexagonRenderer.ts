@@ -24,6 +24,10 @@ interface HexagonRenderProps {
   animatingTiles: { q: number, r: number, type: 'place' | 'match' | 'hint' }[]
   showInfoBox?: boolean
   isCursorTile?: boolean
+  isSimonMode?: boolean
+  simonTileIndex?: number
+  isSimonActive?: boolean
+  isSimonSequence?: boolean
 }
 
 // Add these type-specific constants at the top
@@ -54,6 +58,17 @@ const TILE_STYLES = {
       icon: '✨',
       text: 'Double Points (15s)'
     }
+  },
+  simon: {
+    colors: [
+      '#FF0000', // Red - Center
+      '#00FF00', // Green - Right
+      '#0000FF', // Blue - Bottom Right
+      '#FFFF00', // Yellow - Bottom Left
+      '#FF00FF', // Magenta - Left
+      '#00FFFF', // Cyan - Top Left
+      '#FF8000'  // Orange - Top Right
+    ]
   }
 } as const;
 
@@ -92,7 +107,11 @@ export const drawHexagonWithColoredEdges = ({
   selectedTileIndex,
   animatingTiles,
   showInfoBox = false,
-  isCursorTile = false
+  isCursorTile = false,
+  isSimonMode = false,
+  simonTileIndex,
+  isSimonActive = false,
+  isSimonSequence = false
 }: HexagonRenderProps) => {
   // Check if parent element has grid-full class
   const canvas = ctx.canvas;
@@ -107,34 +126,38 @@ export const drawHexagonWithColoredEdges = ({
     ctx.filter = 'brightness(1.2)'; // Increase brightness during animation
   }
 
-  // Draw valid placement highlight
-  if (selectedTileIndex !== null && !isGridFullAnimation) {
-    drawPlacementHighlight(ctx, points);
-  }
-
-  // Draw selection highlight
-  if (isSelected && !isGridFullAnimation) {
-    drawSelectionHighlight(ctx, points, x, y, size);
-  }
-
-  // Apply base styles and draw
-  if (tile?.edges) {
-    applyBaseStyles(ctx, tile, isMatched, theme, x, y, size);
-    drawHexagonShape(ctx, points);
-    drawEdges(ctx, x, y, size, tile.edges, settings, isSelected, tile);
-    if (tile?.value > 0 || tile?.isJoker || tile?.powerUp || tile?.type === 'mirror') {
-      drawSpecialTile(ctx, x, y, size, tile, isSelected, showInfoBox && isSelected, theme);
+  if (isSimonMode) {
+    drawSimonTile(ctx, x, y, size, points, simonTileIndex || 0, isSimonActive, isSimonSequence, theme);
+  } else {
+    // Draw valid placement highlight
+    if (selectedTileIndex !== null && !isGridFullAnimation) {
+      drawPlacementHighlight(ctx, points);
     }
-  }
 
-  // Handle animations
-  if (tile && !isGridFullAnimation) {
-    handleAnimations(ctx, tile, animatingTiles, x, y, theme);
-  }
+    // Draw selection highlight
+    if (isSelected && !isGridFullAnimation) {
+      drawSelectionHighlight(ctx, points, x, y, size);
+    }
 
-  // Add match glow
-  if (isMatched) {
-    drawMatchGlow(ctx, points, theme);
+    // Apply base styles and draw
+    if (tile?.edges) {
+      applyBaseStyles(ctx, tile, isMatched, theme, x, y, size);
+      drawHexagonShape(ctx, points);
+      drawEdges(ctx, x, y, size, tile.edges, settings, isSelected, tile);
+      if (tile?.value > 0 || tile?.isJoker || tile?.powerUp || tile?.type === 'mirror') {
+        drawSpecialTile(ctx, x, y, size, tile, isSelected, showInfoBox && isSelected, theme);
+      }
+    }
+
+    // Handle animations
+    if (tile && !isGridFullAnimation) {
+      handleAnimations(ctx, tile, animatingTiles, x, y, theme);
+    }
+
+    // Add match glow
+    if (isMatched) {
+      drawMatchGlow(ctx, points, theme);
+    }
   }
 
   ctx.restore();
@@ -148,6 +171,7 @@ function drawPlacementHighlight(ctx: CanvasRenderingContext2D, points: [number, 
     else ctx.lineTo(point[0], point[1])
   })
   ctx.closePath()
+  
   
   const pulseIntensity = PULSE_ANIMATION(Date.now())
   ctx.fillStyle = `rgba(0, 255, 159, ${pulseIntensity * 0.5})`
@@ -633,4 +657,67 @@ function drawTileValue(
   ctx.fillText(value.toString(), x, y)
   
   ctx.shadowBlur = 0
+}
+
+// Add Simon-specific rendering functions
+function drawSimonTile(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  size: number,
+  points: [number, number][],
+  tileIndex: number,
+  isActive: boolean,
+  isSequence: boolean,
+  theme: HexagonRenderProps['theme']
+) {
+  const color = TILE_STYLES.simon.colors[tileIndex];
+  
+  // Draw base hexagon
+  ctx.beginPath();
+  points.forEach((point, i) => {
+    if (i === 0) ctx.moveTo(point[0], point[1]);
+    else ctx.lineTo(point[0], point[1]);
+  });
+  ctx.closePath();
+
+  // Create gradient for base fill
+  const gradient = ctx.createRadialGradient(
+    x, y - size/3, size/6,
+    x, y, size * 1.3
+  );
+  gradient.addColorStop(0, `${color}FF`);
+  gradient.addColorStop(0.4, `${color}CC`);
+  gradient.addColorStop(0.7, `${color}99`);
+  gradient.addColorStop(1, `${color}44`);
+  
+  ctx.fillStyle = gradient;
+  ctx.fill();
+
+  // Add glow effect when active
+  if (isActive) {
+    ctx.save();
+    
+    // Pulsing glow
+    const time = Date.now();
+    const pulseIntensity = Math.sin(time / 200) * 0.2 + 0.8;
+    
+    // Outer glow
+    ctx.shadowColor = color;
+    ctx.shadowBlur = 20 + Math.sin(time / 200) * 10;
+    ctx.lineWidth = 4;
+    ctx.strokeStyle = `${color}FF`;
+    ctx.stroke();
+    
+    // Inner glow
+    const innerGlow = ctx.createRadialGradient(x, y, 0, x, y, size);
+    innerGlow.addColorStop(0, `${color}${Math.floor(pulseIntensity * 255).toString(16).padStart(2, '0')}`);
+    innerGlow.addColorStop(1, `${color}00`);
+    
+    ctx.fillStyle = innerGlow;
+    ctx.fill();
+    
+    ctx.restore();
+  }
+
 }
