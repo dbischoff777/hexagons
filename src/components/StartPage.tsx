@@ -14,7 +14,7 @@ import { APP_VERSION } from '../constants/version'
 import styles from '../styles/bubbleText.module.css'
 import HexagonGrid from './HexagonGrid'
 import SpringModal from './SpringModal'
-import { FaPuzzlePiece, FaUser, FaArrowLeft, FaRegLightbulb, FaMemory, FaBrain } from 'react-icons/fa'
+import { FaPuzzlePiece, FaUser, FaArrowLeft, FaBrain, FaCog } from 'react-icons/fa'
 import CustomCursor from './CustomCursor'
 import { useAccessibility } from '../contexts/AccessibilityContext'
 import { DEFAULT_SCHEME } from '../utils/colorSchemes'
@@ -306,6 +306,14 @@ const StartPage: React.FC<StartPageProps> = ({
       >
         <FaUser />
       </button>
+      
+      <button 
+        className="settings-button-fixed"
+        onClick={onOpenSettings}
+        onMouseEnter={() => handleButtonHover('settings')}
+      >
+        <FaCog />
+      </button>
 
       <div className="start-container">
         <h1 className="game-title">
@@ -358,13 +366,7 @@ const StartPage: React.FC<StartPageProps> = ({
                 >
                   🎨 Customize
                 </button>
-                <button 
-                  className="settings-button-fixed"
-                  onClick={onOpenSettings}
-                  onMouseEnter={() => handleButtonHover('settings')}
-                >
-                  ⚙️ Settings
-                </button>
+                
               </>
             ) : (
               <div className="mode-selection">
