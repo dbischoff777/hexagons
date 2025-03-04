@@ -1092,14 +1092,12 @@
 }
 
 .next-tile canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
   width: 100%;
   height: 100%;
-  border-radius: 50%;
   pointer-events: none;
-  transform: scale(var(--scale));
-  box-shadow: 0 0 clamp(8px, 1.5vw, 15px) rgba(0, 255, 159, 0.2);
-  pointer-events: none;
-  transition: transform 0.2s ease;
 }
 
 /* Mobile layout */
@@ -1169,4 +1167,61 @@
 
 .fps-debug.low {
   color: #FF1177; /* Red for low FPS */
+}
+
+.rotate-button {
+  display: none; /* Hidden by default */
+  position: absolute;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.7);
+  border: 2px solid var(--accent-color);
+  color: var(--accent-color);
+  font-size: 24px;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 10;
+  box-shadow: 0 0 10px rgba(var(--accent-rgb), 0.5);
+  transition: all 0.2s ease;
+}
+
+.rotate-button:hover {
+  transform: scale(1.1);
+  box-shadow: 0 0 15px rgba(var(--accent-rgb), 0.7);
+}
+
+.rotate-button:active {
+  transform: scale(0.95);
+}
+
+@media (max-width: 768px) {
+  .rotate-button {
+    display: flex;
+    bottom: auto;
+    top: 66%;
+    right: 115px; /* Position between next tiles and undo button */
+    margin-top: -1px;
+  }
+  
+  .next-tiles-container {
+    position: fixed;
+    height: fit-content;
+    top: 75%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: min(90vw, 400px);
+    flex-direction: row;
+    justify-content: center;
+    padding: 8px;
+    gap: 10px;
+    border: 1px solid red;
+  }
+
+  .next-tiles {
+    flex-direction: row;
+    gap: 10px;
+    margin: 0;
+  }
 }

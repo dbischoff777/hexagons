@@ -2449,6 +2449,27 @@ const Game: React.FC<GameProps> = ({
     return () => window.removeEventListener('themeChanged', handleThemeChange);
   }, []);
 
+  // Add a rotate button for mobile devices
+  const handleRotateButtonClick = () => {
+    if (!rotationEnabled) return;
+    
+    // Rotate the selected tile clockwise (same as pressing 'E')
+    if (selectedTileIndex !== null) {
+      // Update the tile by rotating its edges
+      setNextTiles(prev => 
+        prev.map((tile, idx) => 
+          idx === selectedTileIndex 
+            ? { ...tile, edges: [...tile.edges.slice(-1), ...tile.edges.slice(0, -1)] } 
+            : tile
+        )
+      );
+      
+      if (soundEnabled) {
+        soundManager.playSound('tileRotate');
+      }
+    }
+  };
+
   return (
     <div 
       className={`game ${tutorial ? 'tutorial-mode' : ''}`}
@@ -2886,6 +2907,13 @@ const Game: React.FC<GameProps> = ({
         <DailyChallengeHUD objectives={dailyObjectives} />
       )}
       <FPSCounter />
+      
+      {/* Add the rotate button for mobile devices */}
+      {rotationEnabled && (
+        <div className="rotate-button" onClick={handleRotateButtonClick}>
+          ↻
+        </div>
+      )}
     </div>
   )
 }
