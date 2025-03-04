@@ -2270,7 +2270,6 @@ const Game: React.FC<GameProps> = ({
     const { matchCount } = handleTileMatches(
       newTile,
       currentTiles,
-      settings,
       upgradeState,
       powerUps,
       combo
