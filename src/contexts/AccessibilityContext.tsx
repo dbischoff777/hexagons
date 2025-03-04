@@ -1,5 +1,4 @@
 import React, { createContext, useContext, useState } from 'react'
-import { AccessibilitySettings } from '../types/accessibility'
 
 export interface AccessibilitySettings {
   isColorBlind: boolean;

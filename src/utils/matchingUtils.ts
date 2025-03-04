@@ -272,7 +272,6 @@ export const calculateScore = (
 export const handleTileMatches = (
   newTile: PlacedTile,
   allTiles: PlacedTile[],
-  settings: { isColorBlind: boolean },
   upgradeState: UpgradeState,
   powerUps: PowerUpState,
   combo: ComboState

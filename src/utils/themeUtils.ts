@@ -1,11 +1,7 @@
 import { PowerUpType } from '../types';
-import { ColorScheme } from '../types/colors';
-import { SeasonalTheme } from '../types/progression';
 
 export const getPowerUpColor = (
   type: PowerUpType, 
-  colorScheme?: ColorScheme,
-  theme?: SeasonalTheme
 ): string => {
   // Fixed colors for power-ups regardless of theme/scheme
   switch (type) {

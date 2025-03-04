@@ -3,6 +3,7 @@ import { useAccessibility } from '../contexts/AccessibilityContext';
 import { getPlayerProgress, getTheme } from '../utils/progressionUtils';
 import './BulldogCustomizer.css';
 import bulldogConfig from '../config/bulldogConfig.json';
+import { DEFAULT_SCHEME } from '../utils/colorSchemes';
 import { 
   CustomizationOption, 
   isPresetUnlocked, 
@@ -95,7 +96,7 @@ const BulldogCustomizer: React.FC<CustomizerProps> = ({
     forest: {
       main: '#5a5a5a',
       chest: '#6a6a6a',
-      ears: '#4a4a4a',
+      ears: '#4a4a5a',
       glow: '#32CD32',
       sparkle: '#98FB98',
       collar: '#228B22',

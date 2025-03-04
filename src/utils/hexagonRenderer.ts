@@ -1,6 +1,5 @@
 import { Edge, PlacedTile } from '../types'
 import { AccessibilitySettings } from '../types/accessibility'
-import { drawAccessibilityOverlay } from './accessibilityUtils'
 import { getPowerUpColor } from './themeUtils'
 
 interface HexagonRenderProps {
@@ -468,15 +467,7 @@ function drawPowerUpTile(
   const time = Date.now();
   
   // Get power-up color based on type and theme
-  const powerUpColor = getPowerUpColor(type, undefined, {
-    colors: theme.colors,
-    id: '',
-    name: '',
-    description: '',
-    startDate: '',
-    endDate: '',
-    icon: ''
-  });
+  const powerUpColor = getPowerUpColor(type);
   
   // Pulsing energy field with theme-aware colors
   const pulseSize = size/2 + Math.sin(time / 300) * size/8;

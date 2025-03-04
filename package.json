@@ -10,6 +10,9 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@capacitor/android": "^7.0.1",
+    "@capacitor/cli": "^7.0.1",
+    "@capacitor/core": "^7.0.1",
     "@types/animejs": "^3.1.13",
     "@types/firebase": "^2.4.32",
     "@types/three": "^0.173.0",
