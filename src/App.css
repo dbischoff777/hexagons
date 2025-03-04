@@ -84,3 +84,33 @@
   background: var(--theme-background);
   color: var(--theme-text);
 }
+
+/* Ensure all scrollable containers support touch scrolling */
+.app [class*="container"],
+.app [class*="content"],
+.app [class*="modal"],
+.app [class*="page"],
+.app [class*="scroll"],
+.app [class*="overflow"] {
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-x pan-y;
+  /* Improve drag scrolling */
+  scroll-behavior: smooth;
+}
+
+/* Target elements with overflow styles */
+.app [style*="overflow"],
+.app [class*="scroll"],
+.app [class*="overflow"] {
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-x pan-y;
+  /* Ensure content can be dragged */
+  cursor: grab;
+}
+
+/* When actively scrolling */
+.app [style*="overflow"]:active,
+.app [class*="scroll"]:active,
+.app [class*="overflow"]:active {
+  cursor: grabbing;
+}

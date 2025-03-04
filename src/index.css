@@ -31,6 +31,11 @@
   scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
 }
 
+/* Prevent overscroll bounce effect on mobile */
+html, body {
+  overscroll-behavior: none;
+}
+
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;

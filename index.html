@@ -3,11 +3,298 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>Vite + React + TS</title>
+    <!-- Mobile touch scrolling fix -->
+    <style>
+      /* Basic touch scrolling for all elements */
+      * {
+        -webkit-overflow-scrolling: touch;
+      }
+      
+      /* Fix for iOS momentum scrolling */
+      body {
+        overflow-x: hidden;
+        -webkit-overflow-scrolling: touch;
+      }
+      
+      /* Target all scrollable containers except profile page */
+      [style*="overflow"], 
+      [style*="overflow-y"], 
+      [style*="overflow-x"],
+      .modal-content, 
+      .settings-content,
+      .unlockables-content,
+      .customize-content,
+      .settings-section,
+      .settings-modal,
+      .unlockables-modal,
+      .customize-modal,
+      .achievements-modal,
+      .roadmap-modal,
+      .modal-body,
+      .modal-page,
+      [class*="settings"],
+      [class*="unlockables"],
+      [class*="customize"],
+      [class*="modal"],
+      [class*="scroll"] {
+        -webkit-overflow-scrolling: touch !important;
+        touch-action: auto !important;
+        /* Faster scrolling */
+        scroll-behavior: auto !important;
+        scroll-snap-type: none !important;
+      }
+      
+      /* Ensure scrollable elements have proper cursor */
+      .modal-content, 
+      .settings-content,
+      .unlockables-content,
+      .customize-content,
+      [class*="settings"] [class*="content"],
+      [class*="unlockables"] [class*="content"],
+      [class*="customize"] [class*="content"],
+      [class*="modal"] [class*="content"],
+      [class*="modal"] [class*="page"],
+      [style*="overflow: auto"],
+      [style*="overflow-y: auto"],
+      [style*="overflow: scroll"],
+      [style*="overflow-y: scroll"] {
+        cursor: default;
+      }
+      
+      /* Profile page specific styles - no scrolling */
+      .profile-page {
+        overflow: visible !important;
+        height: auto !important;
+        max-width: 1200px !important;
+        margin: 0 auto !important;
+      }
+      
+      .profile-page-content,
+      .profile-page-view,
+      .profile-overview,
+      .achievements-container,
+      .stats-grid,
+      .profile-page .achievements-view,
+      .profile-page .achievements-grid {
+        overflow: visible !important;
+      }
+      
+      /* Fix for profile page layout */
+      .profile-page-sidebar {
+        position: relative !important;
+      }
+      
+      /* Fix for profile page content */
+      .profile-page-content {
+        width: 100% !important;
+        box-sizing: border-box !important;
+      }
+      
+      @media (max-width: 480px) {
+        .profile-page {
+          display: flex !important;
+          flex-direction: column !important;
+          height: auto !important;
+          padding: 0.75rem !important;
+        }
+        
+        .profile-page-sidebar {
+          position: relative !important;
+          top: 0 !important;
+          width: 100% !important;
+        }
+        
+        /* Only allow horizontal scrolling for nav if needed */
+        .profile-page-nav {
+          overflow-x: auto !important;
+          overflow-y: hidden !important;
+          width: 100% !important;
+        }
+        
+        /* Fix for achievements grid */
+        .profile-page .achievements-grid {
+          grid-template-columns: 1fr !important;
+        }
+      }
+    </style>
   </head>
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
+    
+    <!-- Direct mobile scrolling fix -->
+    <script>
+      (function() {
+        // Simple function to enable scrolling on touch devices
+        function fixMobileScrolling() {
+          // Get all scrollable elements except profile page elements
+          const scrollables = document.querySelectorAll(
+            '.modal-content, .settings-content, .unlockables-content, .customize-content, ' +
+            '.settings-section, .settings-modal, .unlockables-modal, .customize-modal, ' +
+            '.achievements-modal, .roadmap-modal, .modal-body, .modal-page, ' +
+            '[class*="settings"], [class*="unlockables"], [class*="customize"], ' +
+            '[class*="modal"] [class*="content"], [class*="modal"] [class*="page"], [style*="overflow"]'
+          );
+          
+          // Apply scrolling fixes
+          scrollables.forEach(el => {
+            // Skip profile page elements
+            if (el.classList.contains('profile-page') || 
+                el.closest('.profile-page') || 
+                el.classList.contains('profile-page-content') ||
+                el.classList.contains('profile-page-view') ||
+                el.classList.contains('profile-overview') ||
+                el.classList.contains('achievements-container') ||
+                el.classList.contains('stats-grid')) {
+              return;
+            }
+            
+            // Force element to be scrollable if it has content
+            if (el.scrollHeight > 100) {
+              el.style.overflow = 'auto';
+            }
+            
+            // Apply touch scrolling properties
+            el.style.webkitOverflowScrolling = 'touch';
+            el.style.touchAction = 'auto';
+            
+            // Add touch event listeners to handle scrolling manually if needed
+            el.addEventListener('touchstart', function(e) {
+              if (e.target === el || el.contains(e.target)) {
+                // Store the initial touch position
+                el._touchY = e.touches[0].clientY;
+                el._touchX = e.touches[0].clientX;
+                el._scrollTop = el.scrollTop;
+                el._scrollLeft = el.scrollLeft;
+              }
+            }, { passive: true });
+            
+            el.addEventListener('touchmove', function(e) {
+              if (e.target === el || el.contains(e.target)) {
+                if (typeof el._touchY !== 'undefined' && typeof el._scrollTop !== 'undefined') {
+                  // Calculate the distance moved
+                  const touchY = e.touches[0].clientY;
+                  const touchX = e.touches[0].clientX;
+                  const deltaY = el._touchY - touchY;
+                  const deltaX = el._touchX - touchX;
+                  
+                  // Apply the scroll with increased speed (multiply by 2.0)
+                  if (Math.abs(deltaY) > Math.abs(deltaX)) {
+                    el.scrollTop = el._scrollTop + (deltaY * 2.0);
+                  } else {
+                    el.scrollLeft = el._scrollLeft + (deltaX * 2.0);
+                  }
+                }
+              }
+            }, { passive: true });
+          });
+        }
+        
+        // Run on page load
+        document.addEventListener('DOMContentLoaded', function() {
+          // Initial fix
+          fixMobileScrolling();
+          
+          // Force all modals to be scrollable
+          function forceModalsScrollable() {
+            // Target common modal class names (excluding profile page)
+            const modalSelectors = [
+              '.modal-content', '.settings-content', 
+              '.unlockables-content', '.customize-content', '.settings-section',
+              '.settings-modal', '.unlockables-modal', '.customize-modal',
+              '.achievements-modal', '.roadmap-modal', '.modal-body', '.modal-page'
+            ];
+            
+            // Apply to each selector
+            modalSelectors.forEach(selector => {
+              const elements = document.querySelectorAll(selector);
+              elements.forEach(el => {
+                // Skip profile page elements
+                if (el.classList.contains('profile-page') || 
+                    el.closest('.profile-page') || 
+                    el.classList.contains('profile-page-content') ||
+                    el.classList.contains('profile-page-view') ||
+                    el.classList.contains('profile-overview') ||
+                    el.classList.contains('achievements-container') ||
+                    el.classList.contains('stats-grid')) {
+                  return;
+                }
+                
+                // Force scrollable
+                el.style.overflow = 'auto';
+                el.style.webkitOverflowScrolling = 'touch';
+                el.style.touchAction = 'auto';
+                
+                // Add direct event listeners
+                el.ontouchstart = function(e) {
+                  this._touchY = e.touches[0].clientY;
+                  this._touchX = e.touches[0].clientX;
+                  this._scrollTop = this.scrollTop;
+                  this._scrollLeft = this.scrollLeft;
+                };
+                
+                el.ontouchmove = function(e) {
+                  if (typeof this._touchY !== 'undefined') {
+                    const touchY = e.touches[0].clientY;
+                    const touchX = e.touches[0].clientX;
+                    const deltaY = this._touchY - touchY;
+                    const deltaX = this._touchX - touchX;
+                    
+                    // Apply scroll with high speed multiplier
+                    if (Math.abs(deltaY) > Math.abs(deltaX)) {
+                      this.scrollTop = this._scrollTop + (deltaY * 2.5);
+                    } else {
+                      this.scrollLeft = this._scrollLeft + (deltaX * 2.5);
+                    }
+                  }
+                };
+              });
+            });
+          }
+          
+          // Run the force function immediately
+          forceModalsScrollable();
+          
+          // And periodically
+          setInterval(forceModalsScrollable, 300);
+          
+          // Also run when clicking
+          document.addEventListener('click', function() {
+            setTimeout(forceModalsScrollable, 50);
+          });
+          
+          // Only handle horizontal scrolling for profile page nav
+          function setupProfilePageNav() {
+            const profileNav = document.querySelector('.profile-page-nav');
+            if (profileNav) {
+              profileNav.style.overflowX = 'auto';
+              profileNav.style.overflowY = 'hidden';
+              profileNav.style.webkitOverflowScrolling = 'touch';
+            }
+          }
+          
+          // Run profile nav setup
+          document.addEventListener('click', function(e) {
+            if (e.target.closest('.profile-nav-button') || document.querySelector('.profile-page')) {
+              setTimeout(setupProfilePageNav, 50);
+            }
+          });
+          
+          setupProfilePageNav();
+          
+          // Check for profile page nav periodically
+          setInterval(function() {
+            if (document.querySelector('.profile-page')) {
+              setupProfilePageNav();
+            }
+          }, 300);
+        });
+        
+        // Also run periodically to catch dynamically added elements
+        setInterval(fixMobileScrolling, 500);
+      })();
+    </script>
   </body>
 </html>
