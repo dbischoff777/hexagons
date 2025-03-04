@@ -2589,6 +2589,12 @@ const Game: React.FC<GameProps> = ({
         
         {/* Other elements */}
         <div className="next-tiles-container">
+          {/* Add the rotate button for mobile devices */}
+          {rotationEnabled && (
+            <div className="rotate-button" onClick={handleRotateButtonClick}>
+              <span style={{ position: 'relative', zIndex: 51 }}>↻</span>
+            </div>
+          )}
           <div className="next-tiles">
             {nextTiles.map((tile, index) => (
               <div 
@@ -2907,13 +2913,6 @@ const Game: React.FC<GameProps> = ({
         <DailyChallengeHUD objectives={dailyObjectives} />
       )}
       <FPSCounter />
-      
-      {/* Add the rotate button for mobile devices */}
-      {rotationEnabled && (
-        <div className="rotate-button" onClick={handleRotateButtonClick}>
-          ↻
-        </div>
-      )}
     </div>
   )
 }

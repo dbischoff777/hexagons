@@ -878,6 +878,10 @@
   cursor: pointer;
   position: relative;
   overflow: hidden;
+  text-align: center; /* Center the text */
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .undo-button::before {
@@ -1172,37 +1176,73 @@
 .rotate-button {
   display: none; /* Hidden by default */
   position: absolute;
-  width: 50px;
-  height: 50px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
-  background: rgba(0, 0, 0, 0.7);
+  background: rgba(0, 0, 0, 0.8);
   border: 2px solid var(--accent-color);
   color: var(--accent-color);
-  font-size: 24px;
+  font-size: 20px;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  z-index: 10;
-  box-shadow: 0 0 10px rgba(var(--accent-rgb), 0.5);
+  z-index: 50; /* Increased z-index */
+  box-shadow: 0 0 15px rgba(var(--accent-rgb), 0.6);
   transition: all 0.2s ease;
+  text-shadow: 0 0 5px rgba(var(--accent-rgb), 1);
+  left: 10px; /* Position inside the container */
+  top: 50%;
+  transform: translateY(-50%);
+  animation: borderGlow 2s infinite alternate;
+  overflow: hidden;
+}
+
+.rotate-button::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: conic-gradient(
+    transparent, 
+    transparent, 
+    transparent, 
+    var(--accent-color)
+  );
+  animation: rotateGradient 3s linear infinite;
+  opacity: 0.15;
 }
 
 .rotate-button:hover {
-  transform: scale(1.1);
-  box-shadow: 0 0 15px rgba(var(--accent-rgb), 0.7);
+  transform: translateY(-50%) scale(1.1);
+  box-shadow: 0 0 20px rgba(var(--accent-rgb), 0.8);
+  text-shadow: 0 0 8px rgba(var(--accent-rgb), 1);
+  border-color: #fff;
+  color: #fff;
 }
 
 .rotate-button:active {
-  transform: scale(0.95);
+  transform: translateY(-50%) scale(0.95);
+  box-shadow: 0 0 25px rgba(var(--accent-rgb), 1);
+  background: rgba(var(--accent-rgb), 0.3);
+  color: #fff;
+  border-color: var(--accent-color);
+}
+
+@keyframes rotateGradient {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 @media (max-width: 768px) {
   .rotate-button {
     display: flex;
-    bottom: auto;
-    top: 66%;
-    right: 115px; /* Position between next tiles and undo button */
-    margin-top: -1px;
+    left: 10px; /* Keep inside the container for mobile */
   }
   
   .next-tiles-container {
@@ -1216,12 +1256,25 @@
     justify-content: center;
     padding: 8px;
     gap: 10px;
-    border: 1px solid red;
   }
 
   .next-tiles {
     flex-direction: row;
     gap: 10px;
     margin: 0;
+  }
+}
+
+/* For smaller screens, adjust the position */
+@media (max-width: 480px) {
+  .rotate-button {
+    left: 5px;
+    width: 35px;
+    height: 35px;
+    font-size: 18px;
+  }
+  
+  .next-tiles-container {
+    padding: 5px;
   }
 }
